@@ -25,3 +25,9 @@ STACK: Python 3.11+, RDKit, pandas, pydantic, pytest, SQLite (stdlib sqlite3),
 PyYAML. (xtb / stk / DFT added later.) Use a src-layout package `eps`.
 STYLE: type hints, docstrings with the physical meaning + units of every quantity,
 small pure functions, pytest for every module. Units always explicit (V, eV, kcal/mol).
+
+DOCUMENTATION MAINTENANCE:
+At the end of every work unit: (1) overwrite STATUS.md to reflect the new current state
+(phase, what works, placeholders, open debts, next action); (2) prepend a dated entry to
+CHANGELOG.md describing what changed and why. STATUS.md is a mutable snapshot; CHANGELOG.md
+is append-only history. Keep both concise.
