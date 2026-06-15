@@ -1,4 +1,4 @@
-# Joint-Opimization High-Throughput Screening
+# Combinational High-Throughput Screening
 High-Throughput Screening for Joint Optimization of Electropolymerization Chemistries for Organic Mixed Ionic-Electronic Conductors (OMIECs).
 
 Jackson's Lab @UIUC: https://thejacksonlab.github.io/.
