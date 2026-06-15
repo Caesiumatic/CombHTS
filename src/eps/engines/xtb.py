@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from eps.engines.base import CalcRequest, CalcResult, Engine
 from eps.structures import smiles_to_xyz
@@ -14,6 +17,14 @@ from eps.structures import smiles_to_xyz
 HARTREE_TO_EV = 27.211386245988
 HARTREE_TO_KCAL_MOL = 627.5094740631
 XTB_METHOD = "gfn2-xtb"
+
+
+@dataclass(frozen=True)
+class XTBRunOutput:
+    """Raw xTB stdout plus optional structured JSON output."""
+
+    stdout: str
+    parsed_json: dict[str, float | None] | None
 
 
 class XTBEngine(Engine):
@@ -49,15 +60,20 @@ class XTBEngine(Engine):
             value, raw = self._solvation_free_energy(req)
             return CalcResult(value=value, unit="kcal/mol", method=req.method, raw=raw)
         if req.quantity == "optical_gap":
-            stdout = self._run_xtb(req, charge=req.species.charge, multiplicity=req.species.multiplicity)
+            output = self._run_xtb(req, charge=req.species.charge, multiplicity=req.species.multiplicity)
             return CalcResult(
-                value=parse_homo_lumo(stdout),
+                value=_gap_from_output(output),
                 unit="eV",
                 method=req.method,
-                raw={"engine": "XTBEngine", "quantity": req.quantity, "stdout": stdout},
+                raw={
+                    "engine": "XTBEngine",
+                    "quantity": req.quantity,
+                    "stdout": output.stdout,
+                    "parsed_json": output.parsed_json,
+                },
             )
         if req.quantity == "gas_energy":
-            stdout = self._run_xtb(
+            output = self._run_xtb(
                 req,
                 charge=req.species.charge,
                 multiplicity=req.species.multiplicity,
@@ -65,10 +81,15 @@ class XTBEngine(Engine):
                 optimize=True,
             )
             return CalcResult(
-                value=parse_total_energy(stdout) * HARTREE_TO_EV,
+                value=_energy_from_output(output) * HARTREE_TO_EV,
                 unit="eV",
                 method=req.method,
-                raw={"engine": "XTBEngine", "quantity": req.quantity, "stdout": stdout},
+                raw={
+                    "engine": "XTBEngine",
+                    "quantity": req.quantity,
+                    "stdout": output.stdout,
+                    "parsed_json": output.parsed_json,
+                },
             )
         raise NotImplementedError(f"XTBEngine does not implement quantity {req.quantity!r}")
 
@@ -76,24 +97,24 @@ class XTBEngine(Engine):
         initial = req.species
         final_charge = initial.charge + charge_delta
         final_multiplicity = initial.multiplicity + 1
-        solvent_args = solvent_flag(req.xtb_gbsa_name, req.solvent_eps_r)
+        solvent_args = solvent_flag(req.xtb_gbsa_name)
 
-        initial_stdout = self._run_xtb(
+        initial_output = self._run_xtb(
             req,
             charge=initial.charge,
             multiplicity=initial.multiplicity,
             solvent_args=solvent_args,
             optimize=True,
         )
-        final_stdout = self._run_xtb(
+        final_output = self._run_xtb(
             req,
             charge=final_charge,
             multiplicity=final_multiplicity,
             solvent_args=solvent_args,
             optimize=True,
         )
-        initial_energy = parse_total_energy(initial_stdout)
-        final_energy = parse_total_energy(final_stdout)
+        initial_energy = _energy_from_output(initial_output)
+        final_energy = _energy_from_output(final_output)
         delta_eV = (final_energy - initial_energy) * HARTREE_TO_EV
         if charge_delta == -1:
             delta_eV = (initial_energy - final_energy) * HARTREE_TO_EV
@@ -105,32 +126,36 @@ class XTBEngine(Engine):
             "final_charge": final_charge,
             "final_multiplicity": final_multiplicity,
             "solvent_args": solvent_args,
-            "initial_stdout": initial_stdout,
-            "final_stdout": final_stdout,
+            "initial_stdout": initial_output.stdout,
+            "final_stdout": final_output.stdout,
+            "initial_json": initial_output.parsed_json,
+            "final_json": final_output.parsed_json,
         }
 
     def _solvation_free_energy(self, req: CalcRequest) -> tuple[float, dict]:
-        gas_stdout = self._run_xtb(
+        gas_output = self._run_xtb(
             req,
             charge=req.species.charge,
             multiplicity=req.species.multiplicity,
             solvent_args=[],
             optimize=False,
         )
-        solvated_stdout = self._run_xtb(
+        solvated_output = self._run_xtb(
             req,
             charge=req.species.charge,
             multiplicity=req.species.multiplicity,
-            solvent_args=solvent_flag(req.xtb_gbsa_name, req.solvent_eps_r),
+            solvent_args=solvent_flag(req.xtb_gbsa_name),
             optimize=False,
         )
-        gas_energy = parse_total_energy(gas_stdout)
-        solvated_energy = parse_total_energy(solvated_stdout)
+        gas_energy = _energy_from_output(gas_output)
+        solvated_energy = _energy_from_output(solvated_output)
         return (solvated_energy - gas_energy) * HARTREE_TO_KCAL_MOL, {
             "engine": "XTBEngine",
             "quantity": req.quantity,
-            "gas_stdout": gas_stdout,
-            "solvated_stdout": solvated_stdout,
+            "gas_stdout": gas_output.stdout,
+            "solvated_stdout": solvated_output.stdout,
+            "gas_json": gas_output.parsed_json,
+            "solvated_json": solvated_output.parsed_json,
         }
 
     def _run_xtb(
@@ -141,9 +166,9 @@ class XTBEngine(Engine):
         multiplicity: int,
         solvent_args: list[str] | None = None,
         optimize: bool = False,
-    ) -> str:
+    ) -> XTBRunOutput:
         xyz = smiles_to_xyz(req.species.canonical_smiles, charge=charge)
-        args = solvent_args if solvent_args is not None else solvent_flag(req.xtb_gbsa_name, req.solvent_eps_r)
+        args = solvent_args if solvent_args is not None else solvent_flag(req.xtb_gbsa_name)
         with tempfile.TemporaryDirectory(prefix="eps-xtb-") as tmpdir:
             xyz_path = Path(tmpdir) / "input.xyz"
             xyz_path.write_text(xyz, encoding="utf-8")
@@ -157,6 +182,7 @@ class XTBEngine(Engine):
                 "--uhf",
                 str(max(multiplicity - 1, 0)),
                 *args,
+                "--json",
             ]
             if optimize:
                 command.append("--opt")
@@ -167,26 +193,42 @@ class XTBEngine(Engine):
                 capture_output=True,
                 text=True,
             )
+            json_path = Path(tmpdir) / "xtbout.json"
+            parsed_json = None
+            if json_path.exists():
+                parsed_json = parse_xtb_json(json_path.read_text(encoding="utf-8"))
         if completed.returncode != 0:
             raise RuntimeError(
                 "xTB failed with exit code "
                 f"{completed.returncode}.\nSTDOUT:\n{completed.stdout}\nSTDERR:\n{completed.stderr}"
             )
-        return completed.stdout
+        return XTBRunOutput(stdout=completed.stdout, parsed_json=parsed_json)
 
 
-def solvent_flag(xtb_gbsa_name: str | None, eps_r: float | None) -> list[str]:
-    """Return xTB solvent arguments from a GBSA keyword or dielectric constant."""
+def solvent_flag(xtb_gbsa_name: str | None) -> list[str]:
+    """Return xTB ALPB solvent arguments from a versioned solvent keyword."""
 
     if xtb_gbsa_name:
-        return ["--gbsa", xtb_gbsa_name]
-    if eps_r is not None:
-        return ["--alpb", str(eps_r)]
+        return ["--alpb", xtb_gbsa_name]
     return []
 
 
+def parse_xtb_json(json_text: str) -> dict[str, float | None]:
+    """Parse structured xTB JSON text into normalized property keys."""
+
+    data = json.loads(json_text)
+    total_energy = _find_json_number(data, "total energy")
+    homo_lumo_gap = _find_json_number(data, "HOMO-LUMO gap/eV")
+    if total_energy is None:
+        raise ValueError("Could not parse 'total energy' from xtbout.json")
+    return {
+        "total_energy_Eh": total_energy,
+        "homo_lumo_gap_eV": homo_lumo_gap,
+    }
+
+
 def parse_total_energy(stdout: str) -> float:
-    """Parse xTB total energy in Hartree from stdout text."""
+    """Parse the last xTB total energy in Hartree from stdout fallback text."""
 
     patterns = [
         r"TOTAL\s+ENERGY\s+(-?\d+(?:\.\d+)?)\s+Eh",
@@ -194,9 +236,9 @@ def parse_total_energy(stdout: str) -> float:
         r"total\s+energy\s+(-?\d+(?:\.\d+)?)",
     ]
     for pattern in patterns:
-        match = re.search(pattern, stdout, flags=re.IGNORECASE)
-        if match:
-            return float(match.group(1))
+        matches = re.findall(pattern, stdout, flags=re.IGNORECASE)
+        if matches:
+            return float(matches[-1])
     raise ValueError("Could not parse xTB total energy from stdout")
 
 
@@ -213,7 +255,35 @@ def parse_homo_lumo(stdout: str) -> float:
         r"gap\s+(-?\d+(?:\.\d+)?)\s+eV",
     ]
     for pattern in patterns:
-        match = re.search(pattern, stdout, flags=re.IGNORECASE)
-        if match:
-            return float(match.group(1))
+        matches = re.findall(pattern, stdout, flags=re.IGNORECASE)
+        if matches:
+            return float(matches[-1])
     raise ValueError("Could not parse xTB HOMO-LUMO gap from stdout")
+
+
+def _energy_from_output(output: XTBRunOutput) -> float:
+    if output.parsed_json is not None:
+        return float(output.parsed_json["total_energy_Eh"])
+    return parse_total_energy(output.stdout)
+
+
+def _gap_from_output(output: XTBRunOutput) -> float:
+    if output.parsed_json is not None and output.parsed_json["homo_lumo_gap_eV"] is not None:
+        return float(output.parsed_json["homo_lumo_gap_eV"])
+    return parse_homo_lumo(output.stdout)
+
+
+def _find_json_number(data: Any, key: str) -> float | None:
+    if isinstance(data, dict):
+        for candidate_key, value in data.items():
+            if candidate_key == key:
+                return float(value)
+            found = _find_json_number(value, key)
+            if found is not None:
+                return found
+    elif isinstance(data, list):
+        for item in data:
+            found = _find_json_number(item, key)
+            if found is not None:
+                return found
+    return None

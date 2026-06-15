@@ -73,12 +73,14 @@ def test_solvent_xtb_gbsa_names_are_loaded() -> None:
     assert solvents["DMSO"].xtb_gbsa_name == "dmso"
     assert solvents["DMF"].xtb_gbsa_name == "dmf"
     assert solvents["THF"].xtb_gbsa_name == "thf"
-    assert solvents["DCM"].xtb_gbsa_name == "CH2Cl2"
-    assert solvents["propylene carbonate"].xtb_gbsa_name is None
-    assert solvents["GBL"].xtb_gbsa_name is None
-    assert solvents["sulfolane"].xtb_gbsa_name is None
-    assert solvents["NMP"].xtb_gbsa_name is None
-    assert solvents["nitromethane"].xtb_gbsa_name is None
+    assert solvents["DCM"].xtb_gbsa_name == "ch2cl2"
+    assert solvents["nitromethane"].xtb_gbsa_name == "nitromethane"
+    assert solvents["propylene carbonate"].xtb_gbsa_name == "dmso"
+    assert solvents["GBL"].xtb_gbsa_name == "acetonitrile"
+    assert solvents["sulfolane"].xtb_gbsa_name == "dmso"
+    assert solvents["NMP"].xtb_gbsa_name == "dmf"
+    for proxy_name in ("propylene carbonate", "GBL", "sulfolane", "NMP"):
+        assert "ALPB proxy (no native xtb param); nearest dielectric" in solvents[proxy_name].notes
 
 
 def test_solvent_loader_warns_on_implausible_anodic_limit(tmp_path: Path, recwarn) -> None:

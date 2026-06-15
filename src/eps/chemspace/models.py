@@ -25,7 +25,7 @@ class Solvent(BaseModel):
         esw_anodic_V: Approximate anodic stability limit in V on potential_reference.
         esw_cathodic_V: Approximate cathodic stability limit in V on potential_reference.
         potential_reference: Reference electrode for ESW limits, default V vs Ag/AgCl.
-        xtb_gbsa_name: xTB GBSA/ALPB solvent keyword when the solvent is supported.
+        xtb_gbsa_name: xTB ALPB solvent keyword or versioned proxy keyword.
     """
 
     name: str

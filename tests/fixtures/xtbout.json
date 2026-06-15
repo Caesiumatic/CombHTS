@@ -1,0 +1,8 @@
+{
+  "total energy": -36.789012345678,
+  "HOMO-LUMO gap/eV": 2.4567,
+  "metadata": {
+    "program": "xtb",
+    "method": "GFN2-xTB"
+  }
+}
