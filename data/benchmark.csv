@@ -1,0 +1,13 @@
+monomer_name,monomer_smiles,solvent_name,electrolyte,exp_Eox_V_vs_AgAgCl,source_doi_or_ref,notes
+EDOT,C1COc2ccsc2O1,acetonitrile,TBAPF6,1.20,"Adv. Mater. PEDOT review; DOI:10.1002/1521-4095(200011)12:7<481::AID-ADMA481>3.0.CO;2-C","seed approximate electropolymerization onset; verify exact electrode/electrolyte"
+EDOT,C1COc2ccsc2O1,propylene carbonate,TBAPF6,1.15,"Adv. Mater. PEDOT review; DOI:10.1002/1521-4095(200011)12:7<481::AID-ADMA481>3.0.CO;2-C","seed approximate; verify"
+pyrrole,c1cc[nH]c1,acetonitrile,TBAPF6,0.95,"Handbook of Conducting Polymers / polypyrrole CV literature","seed approximate onset; verify reference conversion"
+pyrrole,c1cc[nH]c1,water,H2SO4,0.80,"polypyrrole electropolymerization CV literature","seed approximate aqueous value; pH/reference sensitive"
+thiophene,c1ccsc1,acetonitrile,TBABF4,1.70,"Roncali, Chem. Rev. 1992, DOI:10.1021/cr00012a009","seed approximate; thiophene often reported near 1.7 V vs SCE/Ag-type refs"
+thiophene,c1ccsc1,acetonitrile,TBAPF6,1.75,"Roncali, Chem. Rev. 1992, DOI:10.1021/cr00012a009","seed approximate; verify electrolyte/reference"
+aniline,Nc1ccccc1,acetonitrile,TBAPF6,0.85,"polyaniline electropolymerization CV literature","seed approximate; protonation and water content sensitive"
+aniline,Nc1ccccc1,water,H2SO4,0.75,"polyaniline acid electropolymerization CV literature","seed approximate aqueous acid value; pH/reference sensitive"
+bithiophene,c1cc(sc1)c2ccsc2,acetonitrile,TBABF4,1.25,"Roncali, Chem. Rev. 1992, DOI:10.1021/cr00012a009","seed approximate oligothiophene oxidation onset; verify"
+bithiophene,c1cc(sc1)c2ccsc2,DCM,TBAPF6,1.20,"Roncali, Chem. Rev. 1992, DOI:10.1021/cr00012a009","seed approximate; solvent/reference sensitive"
+3-hexylthiophene,CCCCCCc1ccsc1,acetonitrile,TBAPF6,1.55,"Roncali, Chem. Rev. 1992, DOI:10.1021/cr00012a009","seed approximate substituted thiophene onset; verify"
+carbazole,c1ccc2c(c1)[nH]c3ccccc23,acetonitrile,TBAPF6,1.05,"polycarbazole electropolymerization CV literature","seed approximate; verify"

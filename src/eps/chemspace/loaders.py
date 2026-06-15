@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Iterable, TypeVar
+import warnings
 
 import pandas as pd
 from pydantic import BaseModel
@@ -31,9 +32,19 @@ def load_solvents(path: str | Path | None = None) -> list[Solvent]:
     csv_path = Path(path) if path is not None else DATA_DIR / "solvents.csv"
     rows = _read_csv(
         csv_path,
-        {"name", "smiles", "eps_r", "esw_anodic_V", "esw_cathodic_V", "notes"},
+        {
+            "name",
+            "smiles",
+            "eps_r",
+            "esw_anodic_V",
+            "esw_cathodic_V",
+            "potential_reference",
+            "notes",
+        },
     )
-    return _records_from_rows(rows, Solvent, ("smiles",))
+    solvents = _records_from_rows(rows, Solvent, ("smiles",))
+    _warn_implausible_solvent_windows(solvents)
+    return solvents
 
 
 def load_electrolytes(path: str | Path | None = None) -> list[Electrolyte]:
@@ -96,3 +107,18 @@ def _canonical_field_name(smiles_column: str) -> str:
     if smiles_column == "smiles":
         return "canonical_smiles"
     return f"canonical_{smiles_column}"
+
+
+def _warn_implausible_solvent_windows(solvents: Iterable[Solvent]) -> None:
+    """Warn when solvent ESW limits look like widths rather than Ag/AgCl limits."""
+
+    for solvent in solvents:
+        if solvent.potential_reference == "Ag/AgCl" and solvent.esw_anodic_V > 4.0:
+            warnings.warn(
+                (
+                    f"{solvent.name} has esw_anodic_V={solvent.esw_anodic_V} V vs "
+                    "Ag/AgCl, which is unusually high and may be an ESW width."
+                ),
+                UserWarning,
+                stacklevel=2,
+            )

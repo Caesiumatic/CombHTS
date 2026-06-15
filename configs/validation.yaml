@@ -1,0 +1,3 @@
+tier1_xtb_mae_target_V: 0.30
+tier2_dft_mae_target_V: 0.15
+solvent_esw_mae_target_V: 0.30

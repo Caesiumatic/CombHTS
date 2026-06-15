@@ -20,8 +20,9 @@ class Solvent(BaseModel):
 
     Attributes:
         eps_r: Relative dielectric constant, dimensionless.
-        esw_anodic_V: Approximate anodic stability limit in V vs Ag/AgCl.
-        esw_cathodic_V: Approximate cathodic stability limit in V vs Ag/AgCl.
+        esw_anodic_V: Approximate anodic stability limit in V on potential_reference.
+        esw_cathodic_V: Approximate cathodic stability limit in V on potential_reference.
+        potential_reference: Reference electrode for ESW limits, default V vs Ag/AgCl.
     """
 
     name: str
@@ -30,6 +31,7 @@ class Solvent(BaseModel):
     eps_r: float = Field(gt=0)
     esw_anodic_V: float
     esw_cathodic_V: float
+    potential_reference: str = "Ag/AgCl"
     notes: str = ""
 
 

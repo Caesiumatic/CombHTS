@@ -13,7 +13,7 @@ dependencies = [
     "pydantic",
     "pytest",
     "pyyaml",
-    "rdkit-pypi",
+    "rdkit",
 ]
 
 [project.scripts]
