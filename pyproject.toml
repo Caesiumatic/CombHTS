@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "combhts"
+version = "0.1.0"
+description = "High-throughput virtual screening for electropolymerization triads."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy<2",
+    "pandas",
+    "pydantic",
+    "pytest",
+    "pyyaml",
+    "rdkit-pypi",
+]
+
+[project.scripts]
+eps = "eps.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

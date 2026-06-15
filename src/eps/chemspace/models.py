@@ -1,0 +1,45 @@
+"""Pydantic models for versioned chemical-space records."""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+
+class Monomer(BaseModel):
+    """A polymerizable monomer precursor with neutral canonical SMILES."""
+
+    name: str
+    monomer_class: str
+    smiles: str
+    canonical_smiles: str
+    notes: str = ""
+
+
+class Solvent(BaseModel):
+    """A solvent with dielectric constant and electrochemical stability window.
+
+    Attributes:
+        eps_r: Relative dielectric constant, dimensionless.
+        esw_anodic_V: Approximate anodic stability limit in V vs Ag/AgCl.
+        esw_cathodic_V: Approximate cathodic stability limit in V vs Ag/AgCl.
+    """
+
+    name: str
+    smiles: str
+    canonical_smiles: str
+    eps_r: float = Field(gt=0)
+    esw_anodic_V: float
+    esw_cathodic_V: float
+    notes: str = ""
+
+
+class Electrolyte(BaseModel):
+    """An electrolyte salt with separately canonicalized cation and anion SMILES."""
+
+    salt: str
+    cation_smiles: str
+    canonical_cation_smiles: str
+    anion_smiles: str
+    canonical_anion_smiles: str
+    salt_class: str
+    notes: str = ""

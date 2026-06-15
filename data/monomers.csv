@@ -1,0 +1,16 @@
+name,monomer_class,smiles,notes
+thiophene,heteroaromatic,c1ccsc1,parent thiophene
+EDOT,alkylenedioxythiophene,C1COc2ccsc2O1,"3,4-ethylenedioxythiophene"
+ProDOT,alkylenedioxythiophene,C1COc2ccsc2OC1,"3,4-propylenedioxythiophene; seed SMILES for scaffold"
+3-hexylthiophene,alkylthiophene,CCCCCCc1ccsc1,common P3HT precursor
+bithiophene,oligothiophene,c1cc(sc1)c2ccsc2,"2,2'-bithiophene"
+pyrrole,heteroaromatic,c1cc[nH]c1,parent pyrrole
+EDOP,alkylenedioxypyrrole,C1COc2cc[nH]c2O1,"3,4-ethylenedioxypyrrole"
+furan,heteroaromatic,c1ccoc1,parent furan
+selenophene,heteroaromatic,c1cc[se]c1,parent selenophene
+EDOS,alkylenedioxyselenophene,C1COc2cc[se]c2O1,"3,4-ethylenedioxyselenophene"
+aniline,aniline,Nc1ccccc1,parent aniline
+carbazole,carbazole,c1ccc2c(c1)[nH]c3ccccc23,parent carbazole
+"fluorene 9,9-dioctyl",fluorene,CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,"9,9-dioctylfluorene seed"
+CPDT,fused donor,C1c2ccsc2-c2sccc21,cyclopentadithiophene seed scaffold
+benzothiadiazole-thiophene D-A,donor-acceptor,c1cc(sc1)c2ccc3nsnc3c2,thiophene-benzothiadiazole donor-acceptor unit

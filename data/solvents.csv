@@ -1,0 +1,12 @@
+name,smiles,eps_r,esw_anodic_V,esw_cathodic_V,notes
+acetonitrile,CC#N,37.5,6.0,-2.7,"approx ESW; TODO verify against spec table 2.2"
+DCM,ClCCl,8.9,2.2,-1.8,"dichloromethane; TODO verify ESW"
+propylene carbonate,CC1COC(=O)O1,64.9,6.5,-2.5,"approx ESW; TODO verify against spec table 2.2"
+DMF,CN(C)C=O,36.7,3.5,-2.5,"N,N-dimethylformamide; TODO verify ESW"
+DMSO,CS(=O)C,46.7,4.0,-2.4,"approx ESW; TODO verify against spec table 2.2"
+THF,C1CCOC1,7.6,2.6,-2.4,"tetrahydrofuran; TODO verify ESW"
+nitromethane,C[N+](=O)[O-],35.9,5.0,-1.2,"TODO verify ESW"
+water,O,78.4,1.23,-0.83,"thermodynamic window; TODO align reference/pH with spec"
+GBL,O=C1OCCC1,39.1,5.0,-2.5,"gamma-butyrolactone; TODO verify ESW"
+sulfolane,O=S1(=O)CCCC1,43.3,5.5,-3.0,"TODO verify ESW"
+NMP,CN1CCCC1=O,32.2,3.5,-2.4,"N-methyl-2-pyrrolidone; TODO verify ESW"

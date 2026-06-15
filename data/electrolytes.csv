@@ -1,0 +1,11 @@
+salt,cation_smiles,anion_smiles,salt_class,notes
+TBAPF6,CCCC[N+](CCCC)(CCCC)CCCC,F[P-](F)(F)(F)(F)F,tetraalkylammonium,common nonaqueous electrolyte
+TBABF4,CCCC[N+](CCCC)(CCCC)CCCC,F[B-](F)(F)F,tetraalkylammonium,common nonaqueous electrolyte
+TBAClO4,CCCC[N+](CCCC)(CCCC)CCCC,[O-]Cl(=O)(=O)=O,tetraalkylammonium,perchlorate oxidizer caution
+TBAOTf,CCCC[N+](CCCC)(CCCC)CCCC,FC(F)(F)S(=O)(=O)[O-],tetraalkylammonium,triflate
+TBATFSI,CCCC[N+](CCCC)(CCCC)CCCC,FC(F)(F)S(=O)(=O)[N-]S(=O)(=O)C(F)(F)F,tetraalkylammonium,TFSI
+LiClO4,[Li+],[O-]Cl(=O)(=O)=O,lithium salt,perchlorate oxidizer caution
+LiTFSI,[Li+],FC(F)(F)S(=O)(=O)[N-]S(=O)(=O)C(F)(F)F,lithium salt,TFSI
+NaClO4,[Na+],[O-]Cl(=O)(=O)=O,sodium salt,perchlorate oxidizer caution
+H2SO4,[OH3+],O=S(=O)(O)[O-],acid,bisulfate representation for acid electrolyte
+pTSA,[OH3+],Cc1ccc(S(=O)(=O)[O-])cc1,acid,p-toluenesulfonic acid representation

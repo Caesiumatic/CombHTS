@@ -1,0 +1,7 @@
+weights:
+  window_margin: 0.30
+  anion_stability: 0.20
+  solubility: 0.20
+  dimerization: 0.15
+  band_gap_deviation: 0.15
+target_gap_eV: 1.8

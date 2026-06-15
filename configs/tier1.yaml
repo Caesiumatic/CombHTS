@@ -1,0 +1,4 @@
+filters:
+  min_window_margin_V: 0.3
+  min_anion_stability_margin_V: 0.2
+  max_solvation_dG_kcal_mol: -3.0
