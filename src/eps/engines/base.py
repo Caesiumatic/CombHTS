@@ -41,6 +41,7 @@ class CalcRequest:
         species: Molecular species and electronic state.
         method: Engine method label, such as ``mock-gfn2`` or later ``gfn2-xtb``.
         solvent_eps_r: Relative dielectric constant of the solvent, or None for gas phase.
+        xtb_gbsa_name: Optional xTB GBSA solvent keyword for real xTB backends.
         quantity: Requested quantity. Supported values are listed in
             ``SUPPORTED_QUANTITIES``.
     """
@@ -49,6 +50,7 @@ class CalcRequest:
     method: str
     solvent_eps_r: float | None
     quantity: str
+    xtb_gbsa_name: str | None = None
     supported_quantities: ClassVar[frozenset[str]] = SUPPORTED_QUANTITIES
 
     def __post_init__(self) -> None:

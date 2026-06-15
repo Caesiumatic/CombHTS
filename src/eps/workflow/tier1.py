@@ -52,6 +52,7 @@ class Tier1Result:
 def run_tier1(
     *,
     engine: Engine | None = None,
+    method: str = "mock-gfn2",
     cache_path: str | Path = DEFAULT_CACHE_PATH,
     output_path: str | Path = DEFAULT_OUTPUT_PATH,
     tier1_config_path: str | Path = DEFAULT_TIER1_CONFIG,
@@ -65,10 +66,16 @@ def run_tier1(
     solvents = load_solvents()
     electrolytes = load_electrolytes()
 
-    monomer_table = compute_monomer_table(monomers, engine, cache)
-    monomer_solvent_table = compute_monomer_solvent_table(monomers, solvents, engine, cache)
+    monomer_table = compute_monomer_table(monomers, engine, cache, method=method)
+    monomer_solvent_table = compute_monomer_solvent_table(
+        monomers,
+        solvents,
+        engine,
+        cache,
+        method=method,
+    )
     solvent_table = compute_solvent_table(solvents)
-    anion_table = compute_anion_solvent_table(electrolytes, solvents, engine, cache)
+    anion_table = compute_anion_solvent_table(electrolytes, solvents, engine, cache, method=method)
 
     triads = build_triad_table(
         monomer_table=monomer_table,
@@ -101,6 +108,7 @@ def compute_monomer_table(
     monomers: list[Monomer],
     engine: Engine,
     cache: SQLiteCache,
+    method: str = "mock-gfn2",
 ) -> pd.DataFrame:
     """Compute monomer-only properties once per monomer."""
 
@@ -112,8 +120,8 @@ def compute_monomer_table(
                 "monomer_class": monomer.monomer_class,
                 "monomer_smiles": monomer.smiles,
                 "monomer_canonical_smiles": monomer.canonical_smiles,
-                "optical_gap_eV": polymer_optical_gap(monomer, engine, cache),
-                "dimerization_dG_kcal_mol": dimerization_dG(monomer, engine, cache),
+                "optical_gap_eV": polymer_optical_gap(monomer, engine, cache, method=method),
+                "dimerization_dG_kcal_mol": dimerization_dG(monomer, engine, cache, method=method),
             }
         )
     return pd.DataFrame(rows)
@@ -124,6 +132,7 @@ def compute_monomer_solvent_table(
     solvents: list[Solvent],
     engine: Engine,
     cache: SQLiteCache,
+    method: str = "mock-gfn2",
 ) -> pd.DataFrame:
     """Compute monomer-in-solvent properties over monomer x solvent pairs."""
 
@@ -135,8 +144,20 @@ def compute_monomer_solvent_table(
                     "monomer_canonical_smiles": monomer.canonical_smiles,
                     "solvent_name": solvent.name,
                     "solvent_eps_r": solvent.eps_r,
-                    "monomer_Eox_V": monomer_eox_vs_AgAgCl(monomer, solvent, engine, cache),
-                    "solvation_dG_kcal_mol": monomer_solvation(monomer, solvent, engine, cache),
+                    "monomer_Eox_V": monomer_eox_vs_AgAgCl(
+                        monomer,
+                        solvent,
+                        engine,
+                        cache,
+                        method=method,
+                    ),
+                    "solvation_dG_kcal_mol": monomer_solvation(
+                        monomer,
+                        solvent,
+                        engine,
+                        cache,
+                        method=method,
+                    ),
                 }
             )
     return pd.DataFrame(rows)
@@ -164,6 +185,7 @@ def compute_anion_solvent_table(
     solvents: list[Solvent],
     engine: Engine,
     cache: SQLiteCache,
+    method: str = "mock-gfn2",
 ) -> pd.DataFrame:
     """Compute anion-in-solvent oxidation potentials once per unique anion x solvent."""
 
@@ -175,7 +197,13 @@ def compute_anion_solvent_table(
                 {
                     "anion_canonical_smiles": electrolyte.canonical_anion_smiles,
                     "solvent_name": solvent.name,
-                    "anion_Eox_V": anion_oxidation_potential(electrolyte, solvent, engine, cache),
+                    "anion_Eox_V": anion_oxidation_potential(
+                        electrolyte,
+                        solvent,
+                        engine,
+                        cache,
+                        method=method,
+                    ),
                 }
             )
     return pd.DataFrame(rows)

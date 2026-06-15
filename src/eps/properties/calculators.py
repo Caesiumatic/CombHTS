@@ -24,6 +24,7 @@ def monomer_eox_vs_AgAgCl(
         method=method,
         solvent_eps_r=solvent.eps_r,
         quantity="adiabatic_ip",
+        xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     result = cached_run(cache, engine, req, solvent.name)
     return ip_eV_to_potential_vs_AgAgCl(result.value)
@@ -55,6 +56,7 @@ def anion_oxidation_potential(
         method=method,
         solvent_eps_r=solvent.eps_r,
         quantity="adiabatic_ip",
+        xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     result = cached_run(cache, engine, req, solvent.name)
     return ip_eV_to_potential_vs_AgAgCl(result.value)
@@ -74,6 +76,7 @@ def monomer_solvation(
         method=method,
         solvent_eps_r=solvent.eps_r,
         quantity="solvation_free_energy",
+        xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     return cached_run(cache, engine, req, solvent.name).value
 

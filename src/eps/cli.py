@@ -11,6 +11,15 @@ from eps.validation.benchmark import (
     run_benchmark_validation,
 )
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
+from eps.engines import MockEngine, XTBEngine
+
+
+def _engine_from_name(name: str):
+    if name == "mock":
+        return MockEngine(), "mock-gfn2"
+    if name == "xtb":
+        return XTBEngine(), "gfn2-xtb"
+    raise ValueError(f"Unknown engine {name!r}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,10 +29,12 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     tier1 = subparsers.add_parser("run-tier1", help="Run the mock Tier-1 screening workflow")
+    tier1.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
     tier1.add_argument("--cache", type=Path, default=DEFAULT_CACHE_PATH, help="SQLite cache path")
     tier1.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Ranked CSV output path")
 
-    validate = subparsers.add_parser("validate", help="Run benchmark validation on MockEngine")
+    validate = subparsers.add_parser("validate", help="Run benchmark validation")
+    validate.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
     validate.add_argument(
         "--cache",
         type=Path,
@@ -39,7 +50,8 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "run-tier1":
-        result = run_tier1(cache_path=args.cache, output_path=args.output)
+        engine, method = _engine_from_name(args.engine)
+        result = run_tier1(engine=engine, method=method, cache_path=args.cache, output_path=args.output)
         print(f"Tier 1 total triads: {result.total_triads}")
         print(f"Tier 1 surviving triads: {result.surviving_triads}")
         print(f"Tier 1 retention fraction: {result.retention_fraction:.3f}")
@@ -48,7 +60,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "validate":
-        result = run_benchmark_validation(cache_path=args.cache, report_path=args.report)
+        engine, method = _engine_from_name(args.engine)
+        result = run_benchmark_validation(
+            engine=engine,
+            method=method,
+            cache_path=args.cache,
+            report_path=args.report,
+        )
         status = "PASS" if result.tier1_xtb_pass else "FAIL"
         print(f"Benchmark rows: {len(result.rows)}")
         print(f"MAE before calibration: {result.mae_before_V:.3f} V")

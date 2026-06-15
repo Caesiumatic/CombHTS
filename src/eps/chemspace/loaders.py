@@ -39,9 +39,13 @@ def load_solvents(path: str | Path | None = None) -> list[Solvent]:
             "esw_anodic_V",
             "esw_cathodic_V",
             "potential_reference",
+            "xtb_gbsa_name",
             "notes",
         },
     )
+    for row in rows:
+        if row.get("xtb_gbsa_name") == "":
+            row["xtb_gbsa_name"] = None
     solvents = _records_from_rows(rows, Solvent, ("smiles",))
     _warn_implausible_solvent_windows(solvents)
     return solvents

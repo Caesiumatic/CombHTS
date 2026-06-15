@@ -41,6 +41,7 @@ class BenchmarkValidationResult:
 def run_benchmark_validation(
     *,
     engine: Engine | None = None,
+    method: str = "mock-gfn2",
     cache_path: str | Path = DEFAULT_CACHE_PATH,
     benchmark_path: str | Path = DEFAULT_BENCHMARK_PATH,
     validation_config_path: str | Path = DEFAULT_VALIDATION_CONFIG,
@@ -57,7 +58,7 @@ def run_benchmark_validation(
     for row in benchmark.to_dict(orient="records"):
         solvent = _lookup_solvent(solvents, str(row["solvent_name"]))
         monomer = _benchmark_monomer(row)
-        predicted = monomer_eox_vs_AgAgCl(monomer, solvent, engine, cache)
+        predicted = monomer_eox_vs_AgAgCl(monomer, solvent, engine, cache, method=method)
         experimental = float(row["exp_Eox_V_vs_AgAgCl"])
         rows.append(
             {
