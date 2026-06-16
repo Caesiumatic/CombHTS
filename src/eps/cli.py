@@ -69,12 +69,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         status = "PASS" if result.tier1_xtb_pass else "FAIL"
         print(f"Benchmark rows: {len(result.rows)}")
-        print(f"MAE before calibration: {result.mae_before_V:.3f} V")
-        print(f"MAE after calibration: {result.mae_after_V:.3f} V")
+        print(f"Calibration points (collapsed groups): {result.n_calibration_points}")
+        print(f"MAE before calibration (in-sample): {result.mae_before_V:.3f} V")
+        print(f"MAE after calibration (in-sample): {result.mae_after_V:.3f} V")
+        print(f"MAE after calibration (LOO-CV, headline): {result.loo_mae_after_V:.3f} V")
         print(
-            "Tier-1 xTB target "
-            f"({result.tier1_xtb_target_V:.3f} V after calibration): {status}"
+            "Within-(monomer,solvent) experimental spread (noise floor): "
+            f"{result.within_group_spread_V:.3f} V"
         )
+        print(
+            "Tier-1 gate "
+            f"({result.tier1_xtb_target_V:.3f} V, PROVISIONAL) on LOO-CV: {status}"
+        )
+        print(f"MAE after by medium: {_mae_after_by_medium(result.rows)}")
         print(
             "Calibration: "
             f"y = {result.calibration.slope:.3f} * x + {result.calibration.intercept:.3f}; "
@@ -85,6 +92,16 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.error(f"Unknown command: {args.command}")
     return 2
+
+
+def _mae_after_by_medium(rows) -> str:
+    if "medium" not in rows.columns:
+        return "unavailable"
+    parts = []
+    for medium, group in rows.groupby("medium", sort=True):
+        mae = group["residual_after_V"].abs().mean()
+        parts.append(f"{medium}={mae:.3f} V")
+    return "; ".join(parts)
 
 
 if __name__ == "__main__":

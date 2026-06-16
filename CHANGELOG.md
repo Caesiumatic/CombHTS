@@ -1,6 +1,16 @@
 # Changelog
 
 ## 2026-06-16
+- Replaced the conservative seed re-curation with the provided deep-research benchmark
+  nucleus verbatim, preserving the superseded CSV as
+  `data/benchmark_superseded_codex_v1.csv`.
+- Added medium/tier filtering, duplicate collapsing by (monomer, solvent), leave-one-out
+  CV, within-group spread reporting, and integrity guards for SMILES parsing, library
+  SMILES cross-checks, and native+conversion consistency.
+- Changed the Tier-1 PASS/FAIL validation gate to use LOO-CV instead of in-sample MAE,
+  while keeping the in-sample metrics for continuity.
+- Dropped the EDOT/methanol row to avoid touching the solvent library and retained the
+  VNUHCM 2023 3-hexylthiophene row only as Tier C because of source-condition concerns.
 - Replaced the old approximate benchmark seed with a full provenance CSV schema for
   monomer oxidation potentials: native potential/reference, potential type, conversion
   constant/source, standardized V vs Ag/AgCl value, medium, conditions, DOI/citation,

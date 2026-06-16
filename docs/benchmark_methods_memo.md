@@ -4,7 +4,7 @@ Last updated: 2026-06-16
 
 ## Scope
 
-`data/benchmark.csv` now uses the requested provenance schema. It is intentionally conservative: rows are traceable to a DOI or standard reference, but most are Tier C because exact primary CV tables, electrode setup, scan rates, and potential definitions still need recovery from the original articles. No Tier A rows are present yet, so the table is not ready as a primary calibration set.
+`data/benchmark.csv` now contains a deep-research benchmark nucleus: 11 rows from four source families (Alakhras 2015 thiophene/selenophene; Cocuk 2025 EDOT; Contal 2019 carbazole; VNUHCM 2023 3-hexylthiophene). Tiers are 2 Tier A rows (aqueous EDOT with an explicitly Ag/AgCl-calibrated pseudo-reference), 8 Tier B rows (nonaqueous values with documented caveats), and 1 Tier C row (3-hexylthiophene, downgraded for internal condition/reference inconsistencies). The default validation nucleus is nonaqueous Tier A/B, giving 8 rows collapsed to 5 monomer-solvent calibration points across 4 families.
 
 ## Reference Conversions
 
@@ -29,7 +29,6 @@ Roth, Romero, and Nicewicz collected over 180 common organic redox potentials an
 
 ## Deliberately Excluded Or Downgraded
 
-- Furan and selenophene: not added because I did not recover DOI-backed primary CV values with reference electrode, electrolyte, solvent, and potential type.
-- ProDOT, ProDOT-Me2, and EDOP: PXDOT reviews and Crossref references identify likely source families, but exact monomer oxidation values need primary table verification before inclusion.
-- Fluorene, CPDT, and thiophene-benzothiadiazole donor-acceptor units: common OPV papers often report HOMO-derived CV values vs Fc/Fc+, but those are not necessarily electropolymerization initiation potentials and need separate curation.
-- Extra aqueous aniline/pyrrole rows: kept only as Tier C sanity checks where present in the CSV; exclude from primary calibration because pH, acid, electrode, and film growth history dominate the observed potential.
+- 3-hexylthiophene is retained but downgraded to Tier C because the VNUHCM 2023 methods text has internal reference/electrolyte inconsistencies and an implausible 0.1 mV/s scan rate; it is excluded from default calibration.
+- The EDOT/methanol row was deliberately omitted so the benchmark nucleus does not require modifying the solvent library.
+- Missing target families remain out of the nucleus until primary, condition-complete rows are recovered: pyrrole, aniline, furan, ProDOT, EDOP, fluorene, CPDT, bithiophene, terthiophene, and donor-acceptor thiophene-benzothiadiazole units.

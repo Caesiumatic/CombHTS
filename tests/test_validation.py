@@ -22,8 +22,11 @@ def test_validation_runner_writes_report_with_finite_mock_mae(tmp_path: Path) ->
     assert len(result.rows) >= 10
     assert np.isfinite(result.mae_before_V)
     assert np.isfinite(result.mae_after_V)
+    assert np.isfinite(result.within_group_spread_V)
+    assert result.n_calibration_points >= 2
     assert "residual_before_V" in result.rows.columns
     assert "residual_after_V" in result.rows.columns
+    assert "in_calibration_set" in result.rows.columns
 
     written = pd.read_csv(result.report_path)
     assert len(written) == len(result.rows)
@@ -53,7 +56,22 @@ def test_perfect_synthetic_predictor_has_zero_mae(tmp_path: Path) -> None:
 
     assert result.mae_before_V == pytest.approx(0.0, abs=1e-12)
     assert result.mae_after_V == pytest.approx(0.0, abs=1e-12)
+    assert result.loo_mae_after_V == pytest.approx(0.0, abs=1e-12)
     assert result.tier1_xtb_pass
+
+
+def test_default_real_benchmark_selection_excludes_aqueous_and_tier_c(tmp_path: Path) -> None:
+    result = run_benchmark_validation(
+        engine=MockEngine(),
+        cache_path=tmp_path / "real_selection.sqlite",
+        report_path=tmp_path / "real_selection_report.csv",
+    )
+
+    selected = result.rows["in_calibration_set"]
+    assert not result.rows.loc[result.rows["medium"] == "aqueous", "in_calibration_set"].any()
+    assert not result.rows.loc[result.rows["reliability_tier"] == "C", "in_calibration_set"].any()
+    assert int(selected.sum()) == 8
+    assert result.n_calibration_points == 5
 
 
 class PerfectEoxEngine(Engine):
