@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 import yaml
@@ -126,14 +127,20 @@ def compute_monomer_table(
 
     rows = []
     for monomer in monomers:
+        optical_gap = _safe_calculate(lambda: polymer_optical_gap(monomer, engine, cache, method=method))
+        dimerization = _safe_calculate(lambda: dimerization_dG(monomer, engine, cache, method=method))
         rows.append(
             {
                 "monomer_name": monomer.name,
                 "monomer_class": monomer.monomer_class,
                 "monomer_smiles": monomer.smiles,
                 "monomer_canonical_smiles": monomer.canonical_smiles,
-                "optical_gap_eV": polymer_optical_gap(monomer, engine, cache, method=method),
-                "dimerization_dG_kcal_mol": dimerization_dG(monomer, engine, cache, method=method),
+                "optical_gap_eV": optical_gap.value,
+                "optical_gap_calc_status": optical_gap.status,
+                "optical_gap_calc_error": optical_gap.error,
+                "dimerization_dG_kcal_mol": dimerization.value,
+                "dimerization_calc_status": dimerization.status,
+                "dimerization_calc_error": dimerization.error,
             }
         )
     return pd.DataFrame(rows)
@@ -153,15 +160,32 @@ def compute_monomer_solvent_table(
     rows = []
     for monomer in monomers:
         for solvent in solvents:
-            raw_eox = monomer_eox_vs_AgAgCl(
-                monomer,
-                solvent,
-                engine,
-                cache,
-                method=method,
+            eox = _safe_calculate(
+                lambda: monomer_eox_vs_AgAgCl(
+                    monomer,
+                    solvent,
+                    engine,
+                    cache,
+                    method=method,
+                )
             )
-            calibrated_eox = _apply_linear_calibration(raw_eox, eox_calibration)
-            filter_eox = calibrated_eox if eox_calibration["enabled"] else raw_eox
+            if eox.status == "ok":
+                raw_eox = eox.value
+                calibrated_eox = _apply_linear_calibration(raw_eox, eox_calibration)
+                filter_eox = calibrated_eox if eox_calibration["enabled"] else raw_eox
+            else:
+                raw_eox = float("nan")
+                calibrated_eox = float("nan")
+                filter_eox = float("nan")
+            solvation = _safe_calculate(
+                lambda: monomer_solvation(
+                    monomer,
+                    solvent,
+                    engine,
+                    cache,
+                    method=method,
+                )
+            )
             rows.append(
                 {
                     "monomer_canonical_smiles": monomer.canonical_smiles,
@@ -172,13 +196,11 @@ def compute_monomer_solvent_table(
                     "monomer_Eox_filter_V_vs_AgAgCl": filter_eox,
                     # Deprecated ambiguous alias; prefer the explicit raw/calibrated/filter columns.
                     "monomer_Eox_V": filter_eox,
-                    "solvation_dG_kcal_mol": monomer_solvation(
-                        monomer,
-                        solvent,
-                        engine,
-                        cache,
-                        method=method,
-                    ),
+                    "monomer_Eox_calc_status": eox.status,
+                    "monomer_Eox_calc_error": eox.error,
+                    "solvation_dG_kcal_mol": solvation.value,
+                    "solvation_calc_status": solvation.status,
+                    "solvation_calc_error": solvation.error,
                 }
             )
     return pd.DataFrame(rows)
@@ -214,17 +236,22 @@ def compute_anion_solvent_table(
     rows = []
     for electrolyte in unique_by_anion.values():
         for solvent in solvents:
+            anion_eox = _safe_calculate(
+                lambda: anion_oxidation_potential(
+                    electrolyte,
+                    solvent,
+                    engine,
+                    cache,
+                    method=method,
+                )
+            )
             rows.append(
                 {
                     "anion_canonical_smiles": electrolyte.canonical_anion_smiles,
                     "solvent_name": solvent.name,
-                    "anion_Eox_V": anion_oxidation_potential(
-                        electrolyte,
-                        solvent,
-                        engine,
-                        cache,
-                        method=method,
-                    ),
+                    "anion_Eox_V": anion_eox.value,
+                    "anion_Eox_calc_status": anion_eox.status,
+                    "anion_Eox_calc_error": anion_eox.error,
                 }
             )
     return pd.DataFrame(rows)
@@ -291,10 +318,12 @@ def annotate_tier1_filters(triads: pd.DataFrame, config: dict) -> pd.DataFrame:
     annotated["pass_solvation"] = annotated["solvation_dG_kcal_mol"] < float(
         filters["max_solvation_dG_kcal_mol"]
     )
+    annotated["has_calculation_failure"] = annotated.apply(_has_calculation_failure, axis=1)
     annotated["passes_all_tier1_filters"] = (
         annotated["pass_window_margin"]
         & annotated["pass_anion_stability"]
         & annotated["pass_solvation"]
+        & ~annotated["has_calculation_failure"]
     )
     annotated["failed_filter_reasons"] = annotated.apply(_failed_filter_reasons, axis=1)
     return annotated
@@ -339,6 +368,10 @@ def _apply_linear_calibration(raw_value: float, calibration: dict[str, float | b
 
 def _failed_filter_reasons(row: pd.Series) -> str:
     reasons: list[str] = []
+    failed_calculations = _failed_calculation_reasons(row)
+    if failed_calculations:
+        reasons.append("calculation_failed")
+        reasons.extend(failed_calculations)
     if not bool(row["pass_window_margin"]):
         reasons.append("window_margin")
     if not bool(row["pass_anion_stability"]):
@@ -346,3 +379,37 @@ def _failed_filter_reasons(row: pd.Series) -> str:
     if not bool(row["pass_solvation"]):
         reasons.append("solvation")
     return ";".join(reasons)
+
+
+@dataclass(frozen=True)
+class _CalcOutcome:
+    value: float
+    status: str
+    error: str
+
+
+def _safe_calculate(calculate: Callable[[], float]) -> _CalcOutcome:
+    try:
+        return _CalcOutcome(value=float(calculate()), status="ok", error="")
+    except Exception as exc:  # noqa: BLE001 - audit output must preserve per-property failures.
+        return _CalcOutcome(value=float("nan"), status="failed", error=_concise_error(exc))
+
+
+def _concise_error(exc: Exception) -> str:
+    message = str(exc).splitlines()[0] if str(exc) else exc.__class__.__name__
+    return f"{exc.__class__.__name__}: {message}"[:240]
+
+
+def _has_calculation_failure(row: pd.Series) -> bool:
+    return bool(_failed_calculation_reasons(row))
+
+
+def _failed_calculation_reasons(row: pd.Series) -> list[str]:
+    labels = {
+        "monomer_Eox_calc_status": "monomer_eox_failed",
+        "solvation_calc_status": "solvation_failed",
+        "anion_Eox_calc_status": "anion_eox_failed",
+        "optical_gap_calc_status": "optical_gap_failed",
+        "dimerization_calc_status": "dimerization_failed",
+    }
+    return [label for column, label in labels.items() if row.get(column, "ok") == "failed"]

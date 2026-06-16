@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-16
+- Made Tier-1 robust to per-property xTB failures: monomer Eox, solvation, optical gap,
+  dimerization, and anion Eox exceptions now produce NaN values plus `*_calc_status` and
+  `*_calc_error` audit columns instead of aborting the whole screen.
+- Tier-1 hard-filter annotation now marks calculation failures as non-survivors with
+  `calculation_failed` plus specific reasons such as `monomer_eox_failed`,
+  `solvation_failed`, or `anion_eox_failed`; ranked output excludes failed required
+  properties while all-triads audit output remains complete.
 - Made Tier-1 smoke auditable and calibration-explicit: raw monomer xTB Eox is preserved,
   provisional calibrated monomer Eox is loaded from `configs/tier1.yaml`, the exact filter
   Eox is exposed, and the old `monomer_Eox_V` column is now a backward-compatible alias.

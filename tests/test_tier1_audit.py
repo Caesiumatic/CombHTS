@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from eps.engines import MockEngine
+from eps.engines import CalcRequest, CalcResult, Engine, MockEngine
 from eps.workflow.tier1 import (
     _apply_linear_calibration,
     annotate_tier1_filters,
@@ -112,3 +112,43 @@ def test_zero_survivor_behavior_writes_full_audit_with_reasons(tmp_path: Path) -
     assert len(audit) == result.total_triads
     assert len(audit) == len(result.all_triads)
     assert audit["failed_filter_reasons"].ne("").all()
+
+
+def test_tier1_records_monomer_eox_failure_without_aborting(tmp_path: Path) -> None:
+    target_smiles = "c1cc[se]c1"
+    ranked_path = tmp_path / "tier1_ranked.csv"
+    all_path = tmp_path / "tier1_all.csv"
+
+    result = run_tier1(
+        engine=FailingMonomerEoxEngine(target_smiles),
+        cache_path=tmp_path / "tier1.sqlite",
+        output_path=ranked_path,
+        all_output_path=all_path,
+    )
+
+    failed_rows = result.all_triads[result.all_triads["monomer_canonical_smiles"] == target_smiles]
+    assert not failed_rows.empty
+    assert failed_rows["monomer_Eox_calc_status"].eq("failed").all()
+    assert failed_rows["monomer_Eox_raw_V_vs_AgAgCl"].isna().all()
+    assert failed_rows["failed_filter_reasons"].str.contains("calculation_failed").all()
+    assert failed_rows["failed_filter_reasons"].str.contains("monomer_eox_failed").all()
+    assert target_smiles not in set(result.ranked["monomer_canonical_smiles"])
+
+    audit = pd.read_csv(all_path)
+    assert len(audit) == len(result.all_triads)
+    assert ranked_path.exists()
+
+
+class FailingMonomerEoxEngine(Engine):
+    def __init__(self, failing_smiles: str) -> None:
+        self.failing_smiles = failing_smiles
+        self.delegate = MockEngine()
+
+    def run(self, req: CalcRequest) -> CalcResult:
+        if (
+            req.quantity == "adiabatic_ip"
+            and req.species.charge == 0
+            and req.species.canonical_smiles == self.failing_smiles
+        ):
+            raise RuntimeError("synthetic monomer Eox failure")
+        return self.delegate.run(req)

@@ -2,7 +2,7 @@
 _Last updated: 2026-06-16_
 
 ## Current phase
-Tier-1 smoke auditability refactor complete under MockEngine; rerun xTB smoke with the new all-triads audit output before interpreting zero survivors.
+Tier-1 smoke auditability and per-property failure capture complete under MockEngine; rerun xTB smoke to audit the selenium geometry failure without aborting the screen.
 
 ## What works and is verified
 - Per-species architecture, SQLite caching (idempotent), Engine abstraction, mock-first.
@@ -11,6 +11,7 @@ Tier-1 smoke auditability refactor complete under MockEngine; rerun xTB smoke wi
 - Latest cluster xTB validation completed on the current nucleus: calibration y = 0.623*x - 2.872, LOO-CV MAE after calibration = 0.079 V, Tier-1 gate PASS (PROVISIONAL).
 - Tier-1 workflow now preserves raw monomer xTB Eox, computes provisional calibrated monomer Eox from `configs/tier1.yaml`, exposes the exact filter Eox, and keeps `monomer_Eox_V` only as a backward-compatible alias.
 - Tier-1 now writes a survivor ranked CSV plus an all-triads audit CSV with hard-filter booleans and semicolon-separated failure reasons.
+- Tier-1 now records per-property calculation failures (`*_calc_status`, `*_calc_error`) as NaN-valued audit rows instead of aborting the full screen; failed required calculations are excluded from ranked survivors.
 - Mock Tier-1 CLI verified after the refactor: 1650 total triads, 1540 survivors, audit CSV written with all 1650 rows.
 - XTBEngine: wired, fixture-tested locally; physics correct (IP/EA charge/multiplicity/sign, solvated adiabatic redox via --alpb <name>, xtbout.json parsing).
 - SCS cluster environment previously confirmed: Grid Engine (`qsub`/`qstat`), `xtb/6.4.1`, `--alpb`, `--gbsa`, and `--json`.
@@ -20,10 +21,10 @@ Tier-1 smoke auditability refactor complete under MockEngine; rerun xTB smoke wi
 - dimerization_dG = rescaled gas energy (fake signal).
 - Solvent anodic limits are seed approximations, not literature-verified.
 - Monomer Eox calibration in Tier-1 is provisional and monomer-only; anion_Eox_V is not calibrated.
-- Existing xTB Tier-1 smoke result (8 triads, 0 survivors, ranked CSV header only) predates the all-triads audit CSV and must be rerun to explain failures row by row.
+- Latest xTB Tier-1 smoke reached real xTB on a compute node but aborted on a selenium geometry optimization failure before this failure-capture patch; rerun it to produce `outputs/tier1_xtb_smoke_all.csv`.
 
 ## Open debts (priority order)
-1. (P0 science) Rerun cluster `eps run-tier1 --engine xtb` smoke with the new audit output; confirm `outputs/tier1_xtb_smoke_all.csv` has 8 rows and every failed row explains why it failed.
+1. (P0 science) Rerun the same SGE `eps run-tier1 --engine xtb` smoke with the new failure-capture audit output; confirm `outputs/tier1_xtb_smoke_all.csv` has 8 rows and selenium failures are explicit.
 2. (P0 science) Expand benchmark to >=30 rows across missing families: pyrrole, aniline, furan, ProDOT, EDOP, fluorene, CPDT, bithiophene, terthiophene, and D-A thiophene-benzothiadiazole units.
 3. Verify the Pavlishchuk-Addison conversion DOI and all per-row source DOIs; keep row-level caveats until every source is rechecked.
 4. Evaluate migrating the nonaqueous master scale to Fc/Fc+ rather than aqueous Ag/AgCl.
