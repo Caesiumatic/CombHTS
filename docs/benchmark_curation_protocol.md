@@ -47,6 +47,14 @@ Excluded rows should remain in the CSV when they are useful for provenance or sa
 
 Rows with `calibration_eligible=false` must never enter calibration. The validation harness reports a `calibration_exclusion_reason` for each excluded row.
 
+## Strict Benchmark V1 Status
+
+Strict benchmark v1 contains 14 calibration-eligible collapsed groups after grouping by `monomer_smiles`, `solvent_name`, and `label_type`. The original target of >=30 clean groups was not achieved under the current strict reference-electrode and label-ontology rules.
+
+Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. They are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
+
+Onset and peak labels must not be averaged together. For example, thiophene/acetonitrile has both peak-like and onset-like retained labels, and those remain separate calibration groups.
+
 ## Acceptable Rows
 
 Acceptable calibration examples:

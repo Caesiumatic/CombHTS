@@ -78,8 +78,16 @@ def main(argv: list[str] | None = None) -> int:
             report_path=args.report,
         )
         status = "PASS" if result.tier1_xtb_pass else "FAIL"
-        print(f"Benchmark rows: {len(result.rows)}")
-        print(f"Calibration points (collapsed groups): {result.n_calibration_points}")
+        print(f"Raw benchmark rows: {result.raw_benchmark_rows}")
+        print(f"Calibration-eligible rows: {result.calibration_eligible_rows}")
+        print(f"Collapsed calibration groups: {result.n_calibration_points}")
+        print(f"Counts by label_type: {_format_counts(result.label_type_counts)}")
+        print(f"Counts by medium_class: {_format_counts(result.medium_class_counts)}")
+        if result.n_calibration_points < 30:
+            print(
+                "WARNING: strict benchmark v1 has "
+                f"{result.n_calibration_points} collapsed groups; the >=30 target is not met."
+            )
         print(f"MAE before calibration (in-sample): {result.mae_before_V:.3f} V")
         print(f"MAE after calibration (in-sample): {result.mae_after_V:.3f} V")
         print(f"MAE after calibration (LOO-CV, headline): {result.loo_mae_after_V:.3f} V")
@@ -112,6 +120,12 @@ def _mae_after_by_medium(rows) -> str:
         mae = group["residual_after_V"].abs().mean()
         parts.append(f"{medium}={mae:.3f} V")
     return "; ".join(parts)
+
+
+def _format_counts(counts: dict[str, int]) -> str:
+    if not counts:
+        return "unavailable"
+    return "; ".join(f"{key}={value}" for key, value in counts.items())
 
 
 if __name__ == "__main__":

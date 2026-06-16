@@ -34,6 +34,12 @@ ALLOWED_LABEL_TYPES = {
 }
 CALIBRATION_LABEL_TYPES = {"monomer_oxidation_peak", "monomer_oxidation_onset"}
 ALLOWED_REPORTED_POTENTIAL_TYPES = {"Epa", "Eonset", "E1/2", "setpoint", "not_reported"}
+ALLOWED_REPORTED_POTENTIAL_TYPES |= {
+    "first anodic oxidation value",
+    "irreversible oxidation peak",
+    "irreversible oxidation peak during first anodic scan",
+    "experimental oxidation potential",
+}
 ALLOWED_SOURCE_CONFIDENCE = {"high", "medium", "low", "provisional"}
 ALLOWED_MEDIUM_CLASSES = {"aqueous", "nonaqueous", "mixed"}
 
@@ -43,6 +49,10 @@ class BenchmarkValidationResult:
     """Validation report for benchmark oxidation potentials."""
 
     rows: pd.DataFrame
+    raw_benchmark_rows: int
+    calibration_eligible_rows: int
+    label_type_counts: dict[str, int]
+    medium_class_counts: dict[str, int]
     mae_before_V: float
     mae_after_V: float
     loo_mae_after_V: float
@@ -79,7 +89,7 @@ def run_benchmark_validation(
         monomer = _benchmark_monomer(row)
         predicted = monomer_eox_vs_AgAgCl(monomer, solvent, engine, cache, method=method)
         experimental = float(row["exp_Eox_V_vs_AgAgCl"])
-        group_id = f"{monomer.canonical_smiles}|{row['solvent_name']}"
+        group_id = _benchmark_group_id(row, monomer)
         rows.append(
             {
                 **row,
@@ -101,6 +111,10 @@ def run_benchmark_validation(
         media=media,
         allowed_tiers=allowed_tiers,
     )
+    raw_benchmark_rows = int(len(report))
+    calibration_eligible_rows = _calibration_eligible_count(report)
+    label_type_counts = _value_counts(report, "label_type")
+    medium_class_counts = _value_counts(report, "medium_class")
     calibration_rows = report[report["in_calibration_set"]].copy()
     points = _calibration_points(calibration_rows, collapse_duplicates=collapse_duplicates)
     if len(points) < 2:
@@ -136,6 +150,10 @@ def run_benchmark_validation(
 
     return BenchmarkValidationResult(
         rows=report,
+        raw_benchmark_rows=raw_benchmark_rows,
+        calibration_eligible_rows=calibration_eligible_rows,
+        label_type_counts=label_type_counts,
+        medium_class_counts=medium_class_counts,
         mae_before_V=mae_before,
         mae_after_V=mae_after,
         loo_mae_after_V=loo_mae_after,
@@ -269,9 +287,16 @@ def _validate_benchmark_ontology(frame: pd.DataFrame, path: str | Path) -> None:
                 )
             )
 
-        if not _is_low_or_provisional(row) and _is_blank(row["source_doi"]):
+        if not _is_low_or_provisional(row) and not _has_source_reference(row):
             failures.append(
-                _row_label(row, int(index), "source_doi is required unless source_confidence is low/provisional")
+                _row_label(
+                    row,
+                    int(index),
+                    (
+                        "source_doi is required unless source_doi_or_ref and source_locator "
+                        "are populated, or source_confidence is low/provisional"
+                    ),
+                )
             )
         if not _is_low_or_provisional(row) and _is_blank(row["source_locator"]):
             failures.append(
@@ -310,6 +335,21 @@ def _benchmark_monomer(row: dict[str, object]) -> Monomer:
     )
 
 
+def _benchmark_group_id(row: dict[str, object], monomer: Monomer) -> str:
+    """Return the duplicate-collapse key for experimental labels.
+
+    Strict benchmark v1 keeps peak-like and onset-like monomer oxidation labels
+    separate, so ontology-enabled rows collapse by raw benchmark SMILES, solvent,
+    and label type. Legacy synthetic fixtures without ontology keep the older
+    canonical-smiles/solvent behavior.
+    """
+
+    label_type = str(row.get("label_type", "")).strip()
+    if label_type:
+        return f"{row['monomer_smiles']}|{row['solvent_name']}|{label_type}"
+    return f"{monomer.canonical_smiles}|{row['solvent_name']}"
+
+
 def _lookup_solvent(solvents: dict[str, Solvent], name: str) -> Solvent:
     try:
         return solvents[name]
@@ -334,8 +374,9 @@ def _calibration_mask(
     allowed_tiers: tuple[str, ...] | None,
 ) -> pd.Series:
     mask = pd.Series(True, index=report.index, dtype=bool)
-    if media is not None and "medium" in report.columns:
-        mask &= report["medium"].isin(media)
+    medium_column = _medium_filter_column(report)
+    if media is not None and medium_column is not None:
+        mask &= report[medium_column].isin(media)
     if allowed_tiers is not None and "reliability_tier" in report.columns:
         mask &= report["reliability_tier"].isin(allowed_tiers)
     if _has_ontology_schema(report):
@@ -344,6 +385,8 @@ def _calibration_mask(
         mask &= pd.to_numeric(report["exp_Eox_V_vs_AgAgCl"], errors="coerce").notna()
         for column in _required_calibration_metadata_columns():
             mask &= ~report[column].map(_is_blank)
+        mask &= ~report["source_locator"].map(_is_blank)
+        mask &= report.apply(_has_source_reference, axis=1)
     return mask
 
 
@@ -357,9 +400,10 @@ def _calibration_exclusion_reasons(
         return pd.Series("", index=report.index, dtype=object)
 
     reasons: list[str] = []
+    medium_column = _medium_filter_column(report)
     for _, row in report.iterrows():
         row_reasons: list[str] = []
-        if media is not None and "medium" in report.columns and row["medium"] not in media:
+        if media is not None and medium_column is not None and row[medium_column] not in media:
             row_reasons.append("medium_filter")
         if (
             allowed_tiers is not None
@@ -380,12 +424,24 @@ def _calibration_exclusion_reasons(
         ]
         if missing_metadata:
             row_reasons.append("missing_conversion_metadata:" + ",".join(missing_metadata))
+        if _is_blank(row["source_locator"]):
+            row_reasons.append("missing_source_locator")
+        if not _has_source_reference(row):
+            row_reasons.append("missing_source_reference")
         reasons.append(";".join(row_reasons))
     return pd.Series(reasons, index=report.index, dtype=object)
 
 
 def _has_ontology_schema(frame: pd.DataFrame) -> bool:
     return _ontology_columns().issubset(frame.columns)
+
+
+def _medium_filter_column(report: pd.DataFrame) -> str | None:
+    if _has_ontology_schema(report) and "medium_class" in report.columns:
+        return "medium_class"
+    if "medium" in report.columns:
+        return "medium"
+    return None
 
 
 def _ontology_columns() -> set[str]:
@@ -409,7 +465,6 @@ def _required_calibration_metadata_columns() -> tuple[str, ...]:
         "reported_reference_electrode",
         "converted_reference_electrode",
         "conversion_method",
-        "source_doi",
     )
 
 
@@ -425,6 +480,25 @@ def _is_blank(value: object) -> bool:
 
 def _is_low_or_provisional(row: pd.Series) -> bool:
     return str(row["source_confidence"]).strip().lower() in {"low", "provisional"}
+
+
+def _has_source_reference(row: pd.Series) -> bool:
+    return not _is_blank(row["source_doi"]) or (
+        not _is_blank(row.get("source_doi_or_ref", ""))
+        and not _is_blank(row.get("source_locator", ""))
+    )
+
+
+def _calibration_eligible_count(report: pd.DataFrame) -> int:
+    if _has_ontology_schema(report):
+        return int(report["calibration_eligible"].map(_as_bool).sum())
+    return int(len(report))
+
+
+def _value_counts(report: pd.DataFrame, column: str) -> dict[str, int]:
+    if column not in report.columns:
+        return {}
+    return {str(key): int(value) for key, value in report[column].value_counts(dropna=False).sort_index().items()}
 
 
 def _calibration_points(calibration_rows: pd.DataFrame, *, collapse_duplicates: bool) -> pd.DataFrame:

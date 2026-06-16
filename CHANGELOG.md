@@ -1,6 +1,23 @@
 # Changelog
 
 ## 2026-06-16
+- Implemented strict benchmark v1 from the final curation report: replaced
+  `data/benchmark.csv` with 14 benchmark-ready calibration rows and added
+  `data/benchmark_candidates.csv` with 21 demoted/excluded/unresolved provenance rows.
+- Changed benchmark duplicate collapse to group by `monomer_smiles + solvent_name +
+  label_type`, keeping thiophene/acetonitrile peak-like and onset-like labels separate.
+- Relaxed source metadata validation so `source_doi` may be blank only when
+  `source_doi_or_ref` and `source_locator` are populated; calibration still requires
+  explicit reference-conversion metadata.
+- Added validation reporting fields for raw rows, calibration-eligible rows, collapsed
+  groups, label-type counts, medium-class counts, and a warning when strict groups are
+  below the >=30 target.
+- Added tests for the 14-row strict benchmark, identity Ag/AgCl conversions, source DOI
+  fallback, label-aware grouping, thiophene peak/onset separation, and provenance-file
+  exclusion from default calibration.
+- Documented "Strict benchmark v1 status" in `docs/benchmark_curation_protocol.md`,
+  including the 14-group current state, the unmet >=30 target, candidate-file policy,
+  and the rule that onset and peak labels must not be averaged.
 - Added explicit benchmark label ontology columns to `data/benchmark.csv` so monomer
   oxidation labels, electropolymerization setpoints, polymer-film labels, and unknown/mixed
   rows cannot be silently blended.

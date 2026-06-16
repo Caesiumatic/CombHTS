@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from rdkit import Chem
 
 from eps.engines import CalcRequest, CalcResult, Engine, MockEngine
 from eps.properties.redox import potential_vs_AgAgCl_to_ip_eV
@@ -70,9 +71,117 @@ def test_default_real_benchmark_selection_excludes_aqueous_and_tier_c(tmp_path: 
     selected = result.rows["in_calibration_set"]
     assert not result.rows.loc[result.rows["medium"] == "aqueous", "in_calibration_set"].any()
     assert not result.rows.loc[result.rows["reliability_tier"] == "C", "in_calibration_set"].any()
-    assert int(selected.sum()) == 8
-    assert result.n_calibration_points == 5
+    assert int(selected.sum()) == 14
+    assert result.raw_benchmark_rows == 14
+    assert result.calibration_eligible_rows == 14
+    assert result.n_calibration_points == 14
     assert "calibration_exclusion_reason" in result.rows.columns
+
+
+def test_strict_benchmark_v1_data_shape_and_identity_conversion() -> None:
+    benchmark = pd.read_csv(Path("data/benchmark.csv"), keep_default_na=False)
+    candidates = pd.read_csv(Path("data/benchmark_candidates.csv"), keep_default_na=False)
+
+    assert len(benchmark) == 14
+    assert len(candidates) == 21
+    assert benchmark["calibration_eligible"].map(lambda value: str(value).lower() == "true").all()
+    assert pd.to_numeric(benchmark["exp_Eox_V_vs_AgAgCl"], errors="coerce").notna().all()
+    assert (benchmark["converted_reference_electrode"] == "Ag/AgCl").all()
+    assert (pd.to_numeric(benchmark["conversion_to_AgAgCl_V"], errors="coerce") == 0.0).all()
+
+    for smiles in benchmark["monomer_smiles"]:
+        assert smiles
+        assert Chem.MolFromSmiles(smiles, sanitize=True) is not None
+
+
+def test_strict_benchmark_v1_collapses_by_smiles_solvent_and_label(tmp_path: Path) -> None:
+    result = run_benchmark_validation(
+        engine=MockEngine(),
+        cache_path=tmp_path / "strict_v1.sqlite",
+        report_path=tmp_path / "strict_v1_report.csv",
+    )
+    grouped = result.rows.groupby(["monomer_smiles", "solvent_name", "label_type"], dropna=False).size()
+
+    assert len(grouped) == 14
+    assert result.n_calibration_points == 14
+    thiophene_acn = result.rows[
+        (result.rows["monomer_smiles"] == "c1ccsc1")
+        & (result.rows["solvent_name"] == "acetonitrile")
+    ]
+    assert set(thiophene_acn["label_type"]) == {
+        "monomer_oxidation_peak",
+        "monomer_oxidation_onset",
+    }
+    assert thiophene_acn["group_id"].nunique() == 2
+
+
+def test_source_doi_can_be_blank_with_reference_and_locator(tmp_path: Path) -> None:
+    benchmark_path = tmp_path / "blank_doi_with_ref.csv"
+    _write_ontology_benchmark(
+        benchmark_path,
+        [
+            _ontology_row(
+                "methane",
+                "C",
+                0.50,
+                "monomer_oxidation_onset",
+                True,
+                source_doi="",
+                source_locator="Table 1",
+            ),
+            _ontology_row("ethane", "CC", 1.25, "monomer_oxidation_peak", True),
+        ],
+    )
+
+    result = run_benchmark_validation(
+        engine=PerfectEoxEngine({"C": 0.50, "CC": 1.25}),
+        cache_path=tmp_path / "blank_doi_with_ref.sqlite",
+        benchmark_path=benchmark_path,
+        report_path=tmp_path / "blank_doi_with_ref_report.csv",
+    )
+
+    assert result.n_calibration_points == 2
+    assert result.rows["in_calibration_set"].all()
+
+
+def test_blank_source_doi_requires_reference_or_low_confidence(tmp_path: Path) -> None:
+    benchmark_path = tmp_path / "blank_doi_without_ref.csv"
+    row = _ontology_row(
+        "methane",
+        "C",
+        0.50,
+        "monomer_oxidation_onset",
+        True,
+        source_doi="",
+        source_locator="Table 1",
+    )
+    row["source_doi_or_ref"] = ""
+    _write_ontology_benchmark(
+        benchmark_path,
+        [
+            row,
+            _ontology_row("ethane", "CC", 1.25, "monomer_oxidation_peak", True),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="source_doi"):
+        run_benchmark_validation(
+            engine=PerfectEoxEngine({"C": 0.50, "CC": 1.25}),
+            cache_path=tmp_path / "blank_doi_without_ref.sqlite",
+            benchmark_path=benchmark_path,
+            report_path=tmp_path / "blank_doi_without_ref_report.csv",
+        )
+
+
+def test_benchmark_candidates_are_not_used_for_default_calibration(tmp_path: Path) -> None:
+    result = run_benchmark_validation(
+        engine=MockEngine(),
+        cache_path=tmp_path / "default_no_candidates.sqlite",
+        report_path=tmp_path / "default_no_candidates_report.csv",
+    )
+
+    assert result.raw_benchmark_rows == 14
+    assert "curation_status" not in result.rows.columns
 
 
 def test_electropolymerization_growth_setpoint_is_excluded_from_calibration(tmp_path: Path) -> None:
