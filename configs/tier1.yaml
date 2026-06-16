@@ -2,3 +2,11 @@ filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
   max_solvation_dG_kcal_mol: -3.0
+calibration:
+  monomer_eox:
+    enabled: true
+    scope: monomer_only
+    source: provisional_xtb_validation_2026_06_16
+    slope: 0.623
+    intercept: -2.872
+    notes: "Provisional xTB-to-experimental monomer oxidation calibration from current small benchmark. Do not treat as production-grade."

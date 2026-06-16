@@ -32,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     tier1.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
     tier1.add_argument("--cache", type=Path, default=DEFAULT_CACHE_PATH, help="SQLite cache path")
     tier1.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Ranked CSV output path")
+    tier1.add_argument("--all-output", type=Path, default=None, help="All-triads audit CSV output path")
 
     validate = subparsers.add_parser("validate", help="Run benchmark validation")
     validate.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
@@ -51,12 +52,21 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "run-tier1":
         engine, method = _engine_from_name(args.engine)
-        result = run_tier1(engine=engine, method=method, cache_path=args.cache, output_path=args.output)
+        result = run_tier1(
+            engine=engine,
+            method=method,
+            cache_path=args.cache,
+            output_path=args.output,
+            all_output_path=args.all_output,
+        )
         print(f"Tier 1 total triads: {result.total_triads}")
         print(f"Tier 1 surviving triads: {result.surviving_triads}")
         print(f"Tier 1 retention fraction: {result.retention_fraction:.3f}")
         print(f"Wrote ranked CSV: {result.output_path}")
+        print(f"Wrote all-triads audit CSV: {result.all_output_path}")
         print(f"SQLite cache: {result.cache_path}")
+        if result.surviving_triads == 0:
+            print(f"WARNING: Tier-1 produced zero survivors. See all-triads audit CSV: {result.all_output_path}")
         return 0
 
     if args.command == "validate":

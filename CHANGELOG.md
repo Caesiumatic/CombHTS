@@ -1,6 +1,17 @@
 # Changelog
 
 ## 2026-06-16
+- Made Tier-1 smoke auditable and calibration-explicit: raw monomer xTB Eox is preserved,
+  provisional calibrated monomer Eox is loaded from `configs/tier1.yaml`, the exact filter
+  Eox is exposed, and the old `monomer_Eox_V` column is now a backward-compatible alias.
+- Added all-triads audit output for Tier-1 runs, including hard-filter booleans,
+  `failed_filter_reasons`, raw/calibrated/filter Eox columns, and a zero-survivor CLI
+  warning pointing to the audit CSV.
+- Refactored Tier-1 hard filters to use `monomer_Eox_filter_V_vs_AgAgCl` for solvent-window
+  and anion-stability margins; anion oxidation remains explicitly uncalibrated pending a
+  separate benchmark.
+- Added Tier-1 audit tests for calibration math, margin source, failure reasons, zero-survivor
+  audit behavior, and the backward-compatible `monomer_Eox_V` alias.
 - Replaced the conservative seed re-curation with the provided deep-research benchmark
   nucleus verbatim, preserving the superseded CSV as
   `data/benchmark_superseded_codex_v1.csv`.
