@@ -49,9 +49,9 @@ Rows with `calibration_eligible=false` must never enter calibration. The validat
 
 ## Strict Benchmark V1 Status
 
-Strict benchmark v1 contains 14 calibration-eligible collapsed groups after grouping by `monomer_smiles`, `solvent_name`, and `label_type`. The original target of >=30 clean groups was not achieved under the current strict reference-electrode and label-ontology rules.
+Strict benchmark v1 contains 14 calibration-eligible collapsed groups after grouping by canonical SMILES, `solvent_name`, and `label_type`. The original target of >=30 clean groups was not achieved under the current strict reference-electrode and label-ontology rules.
 
-Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. They are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
+Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. The final curation report supporting strict v1 is archived at `docs/literature/deep_research_benchmark_finalization_20260616.md`. Candidate rows are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
 
 Onset and peak labels must not be averaged together. For example, thiophene/acetonitrile has both peak-like and onset-like retained labels, and those remain separate calibration groups.
 
@@ -59,7 +59,7 @@ Onset and peak labels must not be averaged together. For example, thiophene/acet
 
 Acceptable calibration examples:
 
-- A paper reports monomer Epa in MeCN with electrolyte, working electrode, scan rate, and SCE; the row records SCE as reported, Ag/AgCl as converted, and the conversion source.
+- A paper reports monomer Epa in MeCN with electrolyte, working electrode, scan rate, and SCE; the row records SCE as reported and converts to Ag/AgCl only when the conversion is source-internal, source-calibrated, or explicitly PI-approved. Generic nonaqueous SCE table conversion is not automatically acceptable.
 - A paper reports monomer oxidation onset against an internally calibrated pseudo-reference; the row records the pseudo-reference and source-provided offset.
 
 Unacceptable calibration examples:

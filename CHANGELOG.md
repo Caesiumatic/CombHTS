@@ -1,10 +1,18 @@
 # Changelog
 
 ## 2026-06-16
+- Archived the final benchmark curation report at
+  `docs/literature/deep_research_benchmark_finalization_20260616.md` and linked it from
+  the status/protocol docs as the provenance basis for strict benchmark v1.
+- Changed strict benchmark duplicate group IDs from raw `monomer_smiles + solvent_name +
+  label_type` to canonical SMILES + `solvent_name + label_type`, with a regression test
+  showing equivalent SMILES collapse into one calibration group.
+- Tightened the benchmark protocol's SCE example to require source-internal,
+  source-calibrated, or explicitly PI-approved nonaqueous SCE -> Ag/AgCl conversions.
 - Implemented strict benchmark v1 from the final curation report: replaced
   `data/benchmark.csv` with 14 benchmark-ready calibration rows and added
   `data/benchmark_candidates.csv` with 21 demoted/excluded/unresolved provenance rows.
-- Changed benchmark duplicate collapse to group by `monomer_smiles + solvent_name +
+- Changed benchmark duplicate collapse to group by canonical SMILES + `solvent_name +
   label_type`, keeping thiophene/acetonitrile peak-like and onset-like labels separate.
 - Relaxed source metadata validation so `source_doi` may be blank only when
   `source_doi_or_ref` and `source_locator` are populated; calibration still requires

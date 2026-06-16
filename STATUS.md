@@ -2,7 +2,7 @@
 _Last updated: 2026-06-16_
 
 ## Current phase
-Strict benchmark v1 is integrated: 14 calibration-eligible raw rows, 14 collapsed calibration groups under `monomer_smiles + solvent_name + label_type`, and demoted/unresolved provenance separated into `data/benchmark_candidates.csv`.
+Strict benchmark v1 is integrated: 14 calibration-eligible raw rows, 14 collapsed calibration groups under canonical SMILES + `solvent_name + label_type`, and demoted/unresolved provenance separated into `data/benchmark_candidates.csv`.
 
 Tier-1 xTB smoke auditability and per-property failure capture are verified on Lop with real xTB.
 
@@ -11,6 +11,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 - Redox -> V vs Ag/AgCl conversion is a single tested function with pinned constants.
 - Benchmark validation now enforces explicit label ontology before calibration: `label_type`, `calibration_eligible`, exclusion reason, reported/converted references, conversion method, source reference/locator/confidence, and `medium_class`.
 - Default calibration uses only eligible monomer oxidation labels from `data/benchmark.csv`; `data/benchmark_candidates.csv` is provenance-only.
+- The final scientific curation report is archived at `docs/literature/deep_research_benchmark_finalization_20260616.md`.
 - Strict benchmark v1 has 14 rows, 14 calibration-eligible rows, and 14 collapsed groups: 10 `monomer_oxidation_onset`, 4 `monomer_oxidation_peak`, all `nonaqueous`.
 - Thiophene/acetonitrile peak-like and onset-like rows remain separate groups and are not averaged.
 - xTB Tier-1 smoke completed on Lop through Grid Engine/qsub using real xTB.

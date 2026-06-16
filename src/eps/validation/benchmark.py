@@ -339,14 +339,14 @@ def _benchmark_group_id(row: dict[str, object], monomer: Monomer) -> str:
     """Return the duplicate-collapse key for experimental labels.
 
     Strict benchmark v1 keeps peak-like and onset-like monomer oxidation labels
-    separate, so ontology-enabled rows collapse by raw benchmark SMILES, solvent,
-    and label type. Legacy synthetic fixtures without ontology keep the older
-    canonical-smiles/solvent behavior.
+    separate, so ontology-enabled rows collapse by canonical SMILES, solvent,
+    and label type. Legacy synthetic fixtures without ontology use the same
+    canonical-smiles/solvent behavior without a label component.
     """
 
     label_type = str(row.get("label_type", "")).strip()
     if label_type:
-        return f"{row['monomer_smiles']}|{row['solvent_name']}|{label_type}"
+        return f"{monomer.canonical_smiles}|{row['solvent_name']}|{label_type}"
     return f"{monomer.canonical_smiles}|{row['solvent_name']}"
 
 

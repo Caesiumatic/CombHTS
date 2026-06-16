@@ -100,7 +100,7 @@ def test_strict_benchmark_v1_collapses_by_smiles_solvent_and_label(tmp_path: Pat
         cache_path=tmp_path / "strict_v1.sqlite",
         report_path=tmp_path / "strict_v1_report.csv",
     )
-    grouped = result.rows.groupby(["monomer_smiles", "solvent_name", "label_type"], dropna=False).size()
+    grouped = result.rows.groupby(["canonical_smiles", "solvent_name", "label_type"], dropna=False).size()
 
     assert len(grouped) == 14
     assert result.n_calibration_points == 14
@@ -113,6 +113,31 @@ def test_strict_benchmark_v1_collapses_by_smiles_solvent_and_label(tmp_path: Pat
         "monomer_oxidation_onset",
     }
     assert thiophene_acn["group_id"].nunique() == 2
+
+
+def test_equivalent_smiles_collapse_to_same_benchmark_group(tmp_path: Path) -> None:
+    benchmark_path = tmp_path / "equivalent_smiles.csv"
+    _write_ontology_benchmark(
+        benchmark_path,
+        [
+            _ontology_row("ethanol_a", "CCO", 1.00, "monomer_oxidation_onset", True),
+            _ontology_row("ethanol_b", "OCC", 1.00, "monomer_oxidation_onset", True),
+            _ontology_row("methane", "C", 0.50, "monomer_oxidation_peak", True),
+        ],
+    )
+
+    result = run_benchmark_validation(
+        engine=PerfectEoxEngine({"CCO": 1.00, "C": 0.50}),
+        cache_path=tmp_path / "equivalent_smiles.sqlite",
+        benchmark_path=benchmark_path,
+        report_path=tmp_path / "equivalent_smiles_report.csv",
+    )
+
+    ethanol_rows = result.rows[result.rows["canonical_smiles"] == "CCO"]
+    assert len(ethanol_rows) == 2
+    assert ethanol_rows["group_id"].nunique() == 1
+    assert int(result.rows["in_calibration_set"].sum()) == 3
+    assert result.n_calibration_points == 2
 
 
 def test_source_doi_can_be_blank_with_reference_and_locator(tmp_path: Path) -> None:
