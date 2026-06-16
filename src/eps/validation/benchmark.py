@@ -24,6 +24,19 @@ DEFAULT_VALIDATION_CONFIG = PROJECT_ROOT / "configs" / "validation.yaml"
 DEFAULT_CACHE_PATH = PROJECT_ROOT / "outputs" / "validation_cache.sqlite"
 DEFAULT_REPORT_PATH = PROJECT_ROOT / "outputs" / "validation_report.csv"
 
+ALLOWED_LABEL_TYPES = {
+    "monomer_oxidation_peak",
+    "monomer_oxidation_onset",
+    "electropolymerization_onset",
+    "electropolymerization_growth_setpoint",
+    "polymer_doping_onset",
+    "unknown_or_mixed",
+}
+CALIBRATION_LABEL_TYPES = {"monomer_oxidation_peak", "monomer_oxidation_onset"}
+ALLOWED_REPORTED_POTENTIAL_TYPES = {"Epa", "Eonset", "E1/2", "setpoint", "not_reported"}
+ALLOWED_SOURCE_CONFIDENCE = {"high", "medium", "low", "provisional"}
+ALLOWED_MEDIUM_CLASSES = {"aqueous", "nonaqueous", "mixed"}
+
 
 @dataclass(frozen=True)
 class BenchmarkValidationResult:
@@ -79,6 +92,11 @@ def run_benchmark_validation(
 
     report = pd.DataFrame(rows)
     report["in_calibration_set"] = _calibration_mask(
+        report,
+        media=media,
+        allowed_tiers=allowed_tiers,
+    )
+    report["calibration_exclusion_reason"] = _calibration_exclusion_reasons(
         report,
         media=media,
         allowed_tiers=allowed_tiers,
@@ -147,6 +165,7 @@ def _load_benchmark(path: str | Path) -> pd.DataFrame:
     if len(frame) < 2:
         raise ValueError("benchmark validation requires at least two rows")
     _validate_benchmark_integrity(frame, path)
+    _validate_benchmark_ontology(frame, path)
     return frame
 
 
@@ -207,6 +226,67 @@ def _validate_benchmark_integrity(frame: pd.DataFrame, path: str | Path) -> None
                 )
 
 
+def _validate_benchmark_ontology(frame: pd.DataFrame, path: str | Path) -> None:
+    if not _has_ontology_schema(frame):
+        return
+
+    failures: list[str] = []
+    for index, row in frame.iterrows():
+        label_type = str(row["label_type"])
+        if label_type not in ALLOWED_LABEL_TYPES:
+            failures.append(_row_label(row, int(index), f"invalid label_type {label_type!r}"))
+
+        reported_type = str(row["reported_potential_type"])
+        if reported_type not in ALLOWED_REPORTED_POTENTIAL_TYPES:
+            failures.append(
+                _row_label(row, int(index), f"invalid reported_potential_type {reported_type!r}")
+            )
+
+        confidence = str(row["source_confidence"])
+        if confidence not in ALLOWED_SOURCE_CONFIDENCE:
+            failures.append(_row_label(row, int(index), f"invalid source_confidence {confidence!r}"))
+
+        medium_class = str(row["medium_class"])
+        if medium_class not in ALLOWED_MEDIUM_CLASSES:
+            failures.append(_row_label(row, int(index), f"invalid medium_class {medium_class!r}"))
+
+        eligible = _as_bool(row["calibration_eligible"])
+        if not eligible and _is_blank(row["exclusion_reason"]):
+            failures.append(
+                _row_label(
+                    row,
+                    int(index),
+                    "calibration_eligible is false but exclusion_reason is blank",
+                )
+            )
+
+        if eligible and label_type not in CALIBRATION_LABEL_TYPES:
+            failures.append(
+                _row_label(
+                    row,
+                    int(index),
+                    f"calibration_eligible is true but label_type {label_type!r} is not a monomer oxidation label",
+                )
+            )
+
+        if not _is_low_or_provisional(row) and _is_blank(row["source_doi"]):
+            failures.append(
+                _row_label(row, int(index), "source_doi is required unless source_confidence is low/provisional")
+            )
+        if not _is_low_or_provisional(row) and _is_blank(row["source_locator"]):
+            failures.append(
+                _row_label(
+                    row,
+                    int(index),
+                    "source_locator is required unless source_confidence is low/provisional",
+                )
+            )
+
+    if failures:
+        details = "\n".join(f"  - {failure}" for failure in failures)
+        raise ValueError(f"{path} has invalid benchmark ontology metadata:\n{details}")
+
+
 def _row_label(row: pd.Series, zero_based_index: int, message: str) -> str:
     return (
         f"row {zero_based_index + 2} "
@@ -258,7 +338,93 @@ def _calibration_mask(
         mask &= report["medium"].isin(media)
     if allowed_tiers is not None and "reliability_tier" in report.columns:
         mask &= report["reliability_tier"].isin(allowed_tiers)
+    if _has_ontology_schema(report):
+        mask &= report["calibration_eligible"].map(_as_bool)
+        mask &= report["label_type"].isin(CALIBRATION_LABEL_TYPES)
+        mask &= pd.to_numeric(report["exp_Eox_V_vs_AgAgCl"], errors="coerce").notna()
+        for column in _required_calibration_metadata_columns():
+            mask &= ~report[column].map(_is_blank)
     return mask
+
+
+def _calibration_exclusion_reasons(
+    report: pd.DataFrame,
+    *,
+    media: tuple[str, ...] | None,
+    allowed_tiers: tuple[str, ...] | None,
+) -> pd.Series:
+    if not _has_ontology_schema(report):
+        return pd.Series("", index=report.index, dtype=object)
+
+    reasons: list[str] = []
+    for _, row in report.iterrows():
+        row_reasons: list[str] = []
+        if media is not None and "medium" in report.columns and row["medium"] not in media:
+            row_reasons.append("medium_filter")
+        if (
+            allowed_tiers is not None
+            and "reliability_tier" in report.columns
+            and row["reliability_tier"] not in allowed_tiers
+        ):
+            row_reasons.append("reliability_tier_filter")
+        if not _as_bool(row["calibration_eligible"]):
+            row_reasons.append("calibration_ineligible")
+            if not _is_blank(row["exclusion_reason"]):
+                row_reasons.append(str(row["exclusion_reason"]))
+        if row["label_type"] not in CALIBRATION_LABEL_TYPES:
+            row_reasons.append(f"disallowed_label_type:{row['label_type']}")
+        if pd.isna(pd.to_numeric(row["exp_Eox_V_vs_AgAgCl"], errors="coerce")):
+            row_reasons.append("missing_converted_potential")
+        missing_metadata = [
+            column for column in _required_calibration_metadata_columns() if _is_blank(row[column])
+        ]
+        if missing_metadata:
+            row_reasons.append("missing_conversion_metadata:" + ",".join(missing_metadata))
+        reasons.append(";".join(row_reasons))
+    return pd.Series(reasons, index=report.index, dtype=object)
+
+
+def _has_ontology_schema(frame: pd.DataFrame) -> bool:
+    return _ontology_columns().issubset(frame.columns)
+
+
+def _ontology_columns() -> set[str]:
+    return {
+        "label_type",
+        "calibration_eligible",
+        "exclusion_reason",
+        "reported_potential_type",
+        "reported_reference_electrode",
+        "converted_reference_electrode",
+        "conversion_method",
+        "source_doi",
+        "source_locator",
+        "source_confidence",
+        "medium_class",
+    }
+
+
+def _required_calibration_metadata_columns() -> tuple[str, ...]:
+    return (
+        "reported_reference_electrode",
+        "converted_reference_electrode",
+        "conversion_method",
+        "source_doi",
+    )
+
+
+def _as_bool(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"true", "1", "yes", "y"}
+
+
+def _is_blank(value: object) -> bool:
+    return str(value).strip() == ""
+
+
+def _is_low_or_provisional(row: pd.Series) -> bool:
+    return str(row["source_confidence"]).strip().lower() in {"low", "provisional"}
 
 
 def _calibration_points(calibration_rows: pd.DataFrame, *, collapse_duplicates: bool) -> pd.DataFrame:

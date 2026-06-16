@@ -1,6 +1,17 @@
 # Changelog
 
 ## 2026-06-16
+- Added explicit benchmark label ontology columns to `data/benchmark.csv` so monomer
+  oxidation labels, electropolymerization setpoints, polymer-film labels, and unknown/mixed
+  rows cannot be silently blended.
+- Strengthened benchmark validation: calibration now requires `calibration_eligible=true`,
+  a monomer oxidation `label_type`, converted potential values, and reference-conversion
+  metadata; excluded rows remain in reports with `calibration_exclusion_reason`.
+- Added `docs/benchmark_curation_protocol.md` with rules and examples for clean monomer
+  oxidation benchmarks, reference-electrode conversion metadata, low-confidence rows, and
+  unacceptable calibration labels.
+- Added validation tests for growth-setpoint exclusion, required exclusion reasons,
+  source DOI/locator confidence rules, and eligible-only calibration point counts.
 - Recorded the successful Lop/Grid Engine xTB Tier-1 smoke milestone: 1650 audit rows,
   1273 ranked survivors, 152 calculation-failure audit rows, EDOS monomer_Eox/dimerization
   failures across 110 triads, and PF6 anion_Eox failures across 45 triads.

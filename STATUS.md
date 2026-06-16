@@ -8,6 +8,7 @@ Tier-1 xTB smoke auditability and per-property failure capture verified on Lop w
 - Per-species architecture, SQLite caching (idempotent), Engine abstraction, mock-first.
 - redox -> V vs Ag/AgCl conversion: single tested function, constants pinned (ABS_SHE=4.28, AgAgCl shift=-0.197).
 - Benchmark validation harness: medium/tier filters, duplicate collapse by (monomer, solvent), full-row reporting, leave-one-out CV headline metric, within-group spread noise floor, and integrity guards for SMILES, library SMILES matches, and native+conversion consistency.
+- Benchmark ontology schema is explicit: `label_type`, `calibration_eligible`, exclusion reasons, reported/converted references, conversion method, source DOI/locator/confidence, and medium class are validated before calibration.
 - Latest cluster xTB validation completed on the current nucleus: calibration y = 0.623*x - 2.872, LOO-CV MAE after calibration = 0.079 V, Tier-1 gate PASS (PROVISIONAL).
 - Tier-1 workflow preserves raw monomer xTB Eox, computes provisional calibrated monomer Eox from `configs/tier1.yaml`, exposes the exact filter Eox, and keeps `monomer_Eox_V` only as a backward-compatible alias.
 - Tier-1 writes a survivor ranked CSV plus an all-triads audit CSV with hard-filter booleans, per-property `*_calc_status` / `*_calc_error`, and semicolon-separated failure reasons.
@@ -33,7 +34,7 @@ Tier-1 xTB smoke auditability and per-property failure capture verified on Lop w
 - anion_Eox_V is not calibrated.
 
 ## Open debts (priority order)
-1. (P0 science) Expand benchmark to >=30 clean experimental monomer oxidation potentials across missing families: pyrrole, aniline, furan, ProDOT, EDOP, fluorene, CPDT, bithiophene, terthiophene, and D-A thiophene-benzothiadiazole units.
+1. (P0 science) Expand benchmark to >=30 clean experimental monomer oxidation potentials across missing families using `docs/benchmark_curation_protocol.md`: pyrrole, aniline, furan, ProDOT, EDOP, fluorene, CPDT, bithiophene, terthiophene, and D-A thiophene-benzothiadiazole units.
 2. Verify the Pavlishchuk-Addison conversion DOI and all per-row source DOIs; keep row-level caveats until every source is rechecked.
 3. Evaluate migrating the nonaqueous master scale to Fc/Fc+ rather than aqueous Ag/AgCl.
 4. Replace solvent anodic limits with measured values vs the chosen reference scale; current values are stopgap = cathodic + spec ESW width.
