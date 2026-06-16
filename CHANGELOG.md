@@ -1,6 +1,17 @@
 # Changelog
 
 ## 2026-06-16
+- Replaced the old approximate benchmark seed with a full provenance CSV schema for
+  monomer oxidation potentials: native potential/reference, potential type, conversion
+  constant/source, standardized V vs Ag/AgCl value, medium, conditions, DOI/citation,
+  reliability tier, and row-level caveats. Current curated state is deliberately
+  conservative: 13 traceable rows, 3 Tier B, 10 Tier C, and 0 Tier A.
+- Added `docs/benchmark_methods_memo.md` documenting electrode conversion constants,
+  the nonaqueous liquid-junction caveat, the recommendation to migrate nonaqueous
+  calibration to Fc/Fc+, the xTB thermodynamic-vs-onset/Epa mismatch, realistic MAE
+  expectations, and deliberately excluded monomer families.
+- Updated project status to make primary CV recovery, not more mock/xTB plumbing, the
+  next benchmark-critical action.
 - Recorded the first real cluster xTB validation milestone: SCS Lop/Grid Engine environment confirmed, `xtb/6.4.1` with `--json` and `--alpb <name>` verified on a compute node, `eps run-tier1 --engine mock` completed on the cluster, and `eps validate --engine xtb` completed with MAE 5.398 V before calibration and 0.145 V after in-sample calibration.
 - Updated the living project status to make benchmark curation and queue-safe real xTB Tier-1 execution the next priorities.
 
