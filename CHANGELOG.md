@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-16
+- Recorded the first real cluster xTB validation milestone: SCS Lop/Grid Engine environment confirmed, `xtb/6.4.1` with `--json` and `--alpb <name>` verified on a compute node, `eps run-tier1 --engine mock` completed on the cluster, and `eps validate --engine xtb` completed with MAE 5.398 V before calibration and 0.145 V after in-sample calibration.
+- Updated the living project status to make benchmark curation and queue-safe real xTB Tier-1 execution the next priorities.
+
 ## 2026-06-15
 Back-filled on 2026-06-15 from session history; exact per-milestone dates not recorded.
 
