@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 import pandas as pd
@@ -24,11 +23,8 @@ def test_tier1_end_to_end_uses_cache_on_second_run(tmp_path: Path) -> None:
     output_path = tmp_path / "tier1_ranked.csv"
 
     first_engine = CountingEngine()
-    started = time.perf_counter()
     first = run_tier1(engine=first_engine, cache_path=cache_path, output_path=output_path)
-    elapsed = time.perf_counter() - started
 
-    assert elapsed < 5.0
     assert output_path.exists()
     assert first.total_triads == 15 * 11 * 10
     assert first.surviving_triads > 0

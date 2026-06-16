@@ -4,3 +4,13 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 outputs/
+
+# Cluster / scheduler artifacts
+*.o[0-9]*
+*.e[0-9]*
+*.out
+*.err
+*.pbs
+*.sbatch
+*.sge
+.last_*_jobid

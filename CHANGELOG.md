@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-16
+- Recorded the successful Lop/Grid Engine xTB Tier-1 smoke milestone: 1650 audit rows,
+  1273 ranked survivors, 152 calculation-failure audit rows, EDOS monomer_Eox/dimerization
+  failures across 110 triads, and PF6 anion_Eox failures across 45 triads.
+- Removed the brittle wall-clock assertion from the Tier-1 smoke/cache test; functional
+  cache and output assertions remain.
+- Added `.gitignore` coverage for common scheduler logs, cluster job scripts, and
+  `.last_*_jobid` files while keeping generated outputs ignored.
 - Made Tier-1 robust to per-property xTB failures: monomer Eox, solvation, optical gap,
   dimerization, and anion Eox exceptions now produce NaN values plus `*_calc_status` and
   `*_calc_error` audit columns instead of aborting the whole screen.
