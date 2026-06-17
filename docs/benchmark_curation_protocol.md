@@ -47,11 +47,17 @@ Excluded rows should remain in the CSV when they are useful for provenance or sa
 
 Rows with `calibration_eligible=false` must never enter calibration. The validation harness reports a `calibration_exclusion_reason` for each excluded row.
 
-## Strict Benchmark V2 Status
+## Strict Benchmark V3 Status
 
-Strict benchmark v2 contains 20 calibration-eligible collapsed groups after grouping by canonical SMILES, `solvent_name`, and `label_type`. The original target of >=30 clean groups is still not achieved under the current strict reference-electrode and label-ontology rules.
+Strict benchmark v3 contains 32 calibration-eligible collapsed groups after grouping by canonical SMILES, `solvent_name`, and `label_type`. The original target of >=30 clean groups is now met under the current strict native-Ag/AgCl reference-electrode and label-ontology rules.
 
-Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. The final curation report supporting strict v1 is archived at `docs/literature/deep_research_benchmark_finalization_20260616.md`; strict v2 adds six verified native-Ag/AgCl peak rows from the Cihaner/Onal source family. Candidate rows are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
+The v3 benchmark has 19 `monomer_oxidation_peak` groups and 13 `monomer_oxidation_onset` groups, all `nonaqueous` and all `reference_frame=agagcl`. Current profile counts are `agagcl_peak_relaxed=19`, `agagcl_onset_relaxed=13`, and `agagcl_peak_strict=9`; Fc/Fc+ profiles remain empty/skipped.
+
+New v3 promoted sources are Cakal/Cihaner/Onal 2020 (FTPF/TTPT/STPS peak+onset rows in DCM), Oguzturk/Tirkes/Onal 2015 journal rows for carbazole M1-M4 in MeCN, and Algi et al. 2017 pyridazinedione compounds 5/6 in MeCN. The former M3 thesis 0.98 vs 0.95 V conflict is resolved in favor of the published journal value, 0.98 V.
+
+Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. The final curation report supporting strict v1 is archived at `docs/literature/deep_research_benchmark_finalization_20260616.md`; strict v2 added six verified native-Ag/AgCl peak rows from the Cihaner/Onal source family. Candidate rows are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
+
+Asil/Cihaner/Onal 2009 TTT-Lum is excluded to candidates because its oxidation peak was measured in 0.1 M LiClO4/acetonitrile + 5% BF3-Et2O. That Lewis-acid-modified medium is not clean acetonitrile and is not represented in the repo solvent library.
 
 Onset and peak labels must not be averaged together. For example, thiophene/acetonitrile has both peak-like and onset-like retained labels, and those remain separate calibration groups.
 

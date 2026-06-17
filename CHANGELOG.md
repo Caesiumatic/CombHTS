@@ -1,6 +1,23 @@
 # Changelog
 
 ## 2026-06-17
+- Integrated strict benchmark v3: appended 12 verified native-Ag/AgCl monomer-oxidation
+  rows to `data/benchmark.csv`, bringing the benchmark to 32 calibration-eligible rows
+  and 32 collapsed groups.
+- Recorded the v3 label/profile split: 19 `monomer_oxidation_peak`, 13
+  `monomer_oxidation_onset`, `agagcl_peak_relaxed=19`, `agagcl_onset_relaxed=13`,
+  `agagcl_peak_strict=9`, and empty/skipped Fc/Fc+ profiles.
+- Added Cakal/Cihaner/Onal 2020 FTPF/TTPT/STPS DCM peak+onset rows, Oguzturk/Tirkes/Onal
+  2015 journal carbazole M1-M4 MeCN peak rows with the M3 value resolved to 0.98 V, and
+  Algi et al. 2017 pyridazinedione compounds 5/6 MeCN peak rows.
+- Reconciled `data/benchmark_candidates.csv` from 21 to 19 rows by removing four promoted
+  Oguzturk 2013 MSc-thesis carbazole candidates and adding two parked rows, including
+  Asil/Cihaner/Onal 2009 TTT-Lum excluded for Lewis-acid-modified MeCN + 5% BF3-Et2O.
+- Left `configs/tier1.yaml` unchanged and documented that its mock-derived calibration is
+  stale relative to strict benchmark v3 pending a real xTB `eps validate --engine xtb
+  --all-profiles` refit.
+- Updated validation tests and benchmark curation/status docs for strict benchmark v3 and
+  the now-met >=30 clean-group target.
 - Integrated six verified native-Ag/AgCl monomer-oxidation peak rows into
   `data/benchmark.csv`, moving the strict benchmark from 14 to 20 calibration-eligible
   collapsed groups while keeping `data/benchmark_candidates.csv` at 21 provenance rows.
