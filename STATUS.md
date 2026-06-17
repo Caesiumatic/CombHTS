@@ -16,7 +16,8 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 - Profile point counts: `agagcl_peak_relaxed` = 19, `agagcl_onset_relaxed` = 13, `agagcl_peak_strict` = 9. The Fc/Fc+ profiles remain empty and skipped pending PI approval.
 - New v3 sources: Cakal/Cihaner/Onal 2020 (10.1016/j.jelechem.2020.114000) FTPF/TTPT/STPS peak+onset rows in DCM; Oguzturk/Tirkes/Onal 2015 (10.1016/j.jelechem.2015.04.041) carbazole M1-M4 peak rows in MeCN from the journal, resolving the former M3 thesis conflict with published value 0.98 V; Algi et al. 2017 (10.1007/s10895-016-1978-x) pyridazinedione compounds 5/6 peak rows in MeCN.
 - Asil/Cihaner/Onal 2009 TTT-Lum remains excluded in `data/benchmark_candidates.csv` because it was measured in 0.1 M LiClO4/MeCN + 5% BF3-Et2O, a Lewis-acid-modified medium rather than clean acetonitrile.
-- `configs/tier1.yaml` monomer Eox calibration remains unchanged but is mock-derived and stale relative to strict benchmark v3: slope 0.051941, intercept 1.345652. It must be refit from a real xTB `eps validate --engine xtb --all-profiles` run on v3 before any use.
+- `configs/tier1.yaml` monomer Eox calibration now comes from a real GFN2-xTB `eps validate --all-profiles` run on strict benchmark v3, using `agagcl_peak_strict`: slope 0.725837, intercept -3.145372, R^2 0.889, LOO-CV MAE 0.197 V.
+- SeSeSe (DCM) hit a GFN2-xTB SCF non-convergence and was dropped from the `agagcl_peak_relaxed` fit; it is tier B and does not affect the chosen tier-A strict anchor.
 - OSeO and FSeF share the same canonical SMILES but remain distinct calibration groups because their solvents differ.
 - xTB Tier-1 smoke completed on Lop through Grid Engine/qsub using real xTB: 1650 attempted triads, 1273 ranked survivors, and 152 calculation-failure audit rows captured instead of aborting.
 
@@ -31,14 +32,14 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 - optical_gap = HOMO-LUMO gap on an MMFF geometry, not an optical gap or oligomer result.
 - dimerization_dG = rescaled gas energy and still a fake signal.
 - Solvent anodic limits are provisional seed approximations.
-- Monomer Eox calibration in `configs/tier1.yaml` is stale relative to strict benchmark v3 and must not be used until refit from real xTB profile validation.
+- Monomer Eox calibration in `configs/tier1.yaml` is refit from real xTB on strict v3 (`agagcl_peak_strict`); it is still provisional and screening-grade.
 - Fc/Fc+ profiles are empty placeholders until PI approval and clean native-Fc rows exist.
 - anion_Eox_V is uncalibrated.
 
 ## Open debts
 1. (P0 science, MET) The >=30 clean experimental monomer oxidation group target is met by strict benchmark v3; future promotion still requires PI policy decision or source-level recovery.
-2. Refit benchmark profiles from a real xTB `eps validate --engine xtb --all-profiles` run on strict benchmark v3 before using `configs/tier1.yaml` calibration.
-3. Decide whether peak or onset should be the screening anchor; the current default is `agagcl_peak_relaxed`.
+2. DONE: `configs/tier1.yaml` now uses a real GFN2-xTB `eps validate --all-profiles` run on strict benchmark v3, profile `agagcl_peak_strict`.
+3. Decide whether peak or onset should be the screening anchor; the current recommendation is `agagcl_peak_strict` pending PI sign-off.
 4. Decide whether to fund a separate Fc/Fc+ track; do not force-convert incompatible Ag/Ag+, SCE, or polymer-onset rows to fill it.
 5. Resolve or re-audit candidate/provenance rows in `data/benchmark_candidates.csv`, especially EDOT current rows, nonaqueous SCE/Ag/Ag+/pseudo-reference conversions, mixed solvents, Lewis-acid-modified media, and missing source locators.
 6. Replace solvent anodic limits with measured values vs the chosen reference scale.
@@ -50,7 +51,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 12. Not yet built: Tier-2 DFT adapter, analysis/plots, expanded libraries toward ~100x30x25, HPC orchestration.
 
 ## Immediate next action
-Queue a real xTB all-profile validation on strict benchmark v3, then refit/update calibration only from that run.
+Get PI sign-off on using `agagcl_peak_strict` as the screening calibration anchor.
 
 ## Architecture invariants
 See AGENTS.md: compute per-species, not per-triad; mock-first; data in CSV and thresholds/profiles in YAML; SQLite cache; one pinned redox function.

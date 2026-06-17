@@ -1,6 +1,14 @@
 # Changelog
 
 ## 2026-06-17
+- Refit `configs/tier1.yaml` monomer Eox calibration from a real GFN2-xTB all-profile
+  validation on strict benchmark v3, choosing `agagcl_peak_strict` as the screening anchor:
+  slope=0.725837, intercept=-3.145372, R^2=0.889, LOO-CV MAE=0.197 V.
+- Added xTB SCF-robustness flags (`--iterations 500 --etemp 400`) and per-species failure
+  isolation in the validation runner so one non-converged species does not abort all
+  profiles.
+- Recorded that SeSeSe/DCM SCF non-converged and was excluded from the relaxed peak fit; it
+  is tier B and does not affect the chosen tier-A strict anchor.
 - Integrated strict benchmark v3: appended 12 verified native-Ag/AgCl monomer-oxidation
   rows to `data/benchmark.csv`, bringing the benchmark to 32 calibration-eligible rows
   and 32 collapsed groups.

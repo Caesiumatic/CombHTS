@@ -6,7 +6,7 @@ calibration:
   monomer_eox:
     enabled: true
     scope: monomer_only
-    source: agagcl_peak_relaxed_2026_06_16
-    slope: 0.051941
-    intercept: 1.345652
-    notes: "Profile agagcl_peak_relaxed; n_points=10; LOO-CV MAE=0.466255 V. Provisional xTB-to-experimental monomer oxidation calibration from strict benchmark v2; do not treat as production-grade."
+    source: agagcl_peak_strict_2026_06_17_xtb_v3
+    slope: 0.725837
+    intercept: -3.145372
+    notes: "Profile agagcl_peak_strict; n_points=9; R^2=0.889; in-sample MAE=0.144 V; LOO-CV MAE=0.197 V. Real GFN2-xTB (--iterations 500 --etemp 400, ALPB) on strict benchmark v3 tier-A native-AgAgCl peak rows; provisional screening calibration, not production-grade."
