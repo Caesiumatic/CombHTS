@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from eps.chemspace import load_solvents
+from eps.chemspace import load_electrolytes, load_solvents
 from eps.engines import CalcRequest, CalcResult, Engine, MockEngine, SpeciesSpec
 from eps.engines import XTBEngine
 from eps.properties import (
@@ -15,7 +15,9 @@ from eps.properties import (
     solvent_cathodic_limit,
 )
 from eps.storage import SQLiteCache
-from eps.workflow.tier1 import compute_solvent_table
+from eps.workflow.tier1 import compute_anion_solvent_table, compute_solvent_table
+
+CALIBRATION = {"enabled": True, "slope": 0.725837, "intercept": -3.145372}
 
 
 def _solvent(name: str):
@@ -116,6 +118,47 @@ def test_compute_solvent_table_falls_back_to_csv_on_failure(tmp_path: Path) -> N
     assert row["solvent_anodic_limit_calc_status"] == "failed"
     assert math.isnan(row["solvent_anodic_limit_computed_V"])
     assert row["solvent_anodic_limit_V"] == pytest.approx(solvent.esw_anodic_V)
+
+
+def test_compute_solvent_table_calibrates_anodic_limit(tmp_path: Path) -> None:
+    cache = SQLiteCache(tmp_path / "cache.sqlite")
+    table = compute_solvent_table(
+        load_solvents(), MockEngine(), cache, calibration_config={"monomer_eox": CALIBRATION}
+    )
+
+    expected = CALIBRATION["slope"] * table["solvent_anodic_limit_computed_V"] + CALIBRATION["intercept"]
+    assert table["solvent_anodic_limit_calibrated_V"].to_numpy() == pytest.approx(expected.to_numpy())
+    # Downstream value is the calibrated column, not the raw computed column.
+    assert table["solvent_anodic_limit_V"].to_numpy() == pytest.approx(
+        table["solvent_anodic_limit_calibrated_V"].to_numpy()
+    )
+    assert not (table["solvent_anodic_limit_V"] == table["solvent_anodic_limit_computed_V"]).all()
+    # Cathodic limit stays raw / uncalibrated.
+    assert (table["solvent_cathodic_limit_V"] == table["solvent_cathodic_limit_computed_V"]).all()
+
+
+def test_compute_solvent_table_uses_raw_when_calibration_absent(tmp_path: Path) -> None:
+    cache = SQLiteCache(tmp_path / "cache.sqlite")
+    table = compute_solvent_table(load_solvents(), MockEngine(), cache)
+
+    assert (table["solvent_anodic_limit_V"] == table["solvent_anodic_limit_computed_V"]).all()
+
+
+def test_compute_anion_solvent_table_calibrates_anion_eox(tmp_path: Path) -> None:
+    cache = SQLiteCache(tmp_path / "cache.sqlite")
+    table = compute_anion_solvent_table(
+        load_electrolytes(),
+        load_solvents(),
+        MockEngine(),
+        cache,
+        calibration_config={"monomer_eox": CALIBRATION},
+    )
+
+    expected = CALIBRATION["slope"] * table["anion_Eox_raw_V_vs_AgAgCl"] + CALIBRATION["intercept"]
+    assert table["anion_Eox_filter_V_vs_AgAgCl"].to_numpy() == pytest.approx(expected.to_numpy())
+    assert table["anion_Eox_V"].to_numpy() == pytest.approx(
+        table["anion_Eox_filter_V_vs_AgAgCl"].to_numpy()
+    )
 
 
 @pytest.mark.skipif(shutil.which("xtb") is None, reason="xtb not installed")

@@ -20,7 +20,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T8 | Chemical-space coverage vs weight tuning | open | group-meeting / PI sign-off | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
 | T10 | xTB failure clusters: data problem or engine problem? | open | self (rigor) | one xTB round |
-| T11 | Should the computed solvent anodic limit share the monomer calibration / live on the same scale? | open | group-meeting | scope/policy |
+| T11 | Should the computed solvent anodic limit share the monomer calibration / live on the same scale? | decided | group-meeting | scope/policy |
 
 ## T1 — Screening calibration anchor: peak vs onset
 - **Status**: exploring
@@ -133,14 +133,15 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debts #7, #8, and #9](STATUS.md#open-debts); [CHANGELOG 2026-06-16](CHANGELOG.md#2026-06-16).
 
 ## T11 — Should the computed solvent anodic limit share the monomer calibration / live on the same scale?
-- **Status**: open
+- **Status**: decided (group will be informed, not blocking)
 - **Forum**: group-meeting
 - **Cost**: scope/policy
 - **Question**: Should the newly computed solvent anodic limit be put through the same calibrated linear model as monomer Eox so the two sit on one scale, or stay raw?
 - **Why it matters**: The Tier-1 window filter compares the two directly — `window_margin_V = solvent_anodic_limit_V − monomer_Eox_filter_V_vs_AgAgCl`. If one side is calibrated and the other is raw, the margin (and the 0.3 V gate, the spec §4.1 constraint ①) is computed across a scale mismatch.
-- **Thinking / options**: Spec §4.1 says apply the SAME calibrated linear model to monomers AND solvents. But the repo's calibration (`configs/tier1.yaml`, slope=0.725837, intercept=-3.145372) was fit on monomer benchmark rows only; there is no solvent-anodic benchmark to justify applying it to solvents, and a solvent E^ox is a different chemical regime from the curated monomer-oxidation rows. This pass deliberately leaves the solvent limit RAW, which means `window_margin` currently subtracts a calibrated monomer Eox from a raw solvent limit — a scale mismatch in the same family as the mock-preview trap (T9, where raw vs calibrated values are silently mixed). Options: (a) apply the monomer calibration to solvents as §4.1 literally directs (cheap, but extrapolates a monomer-only fit); (b) fit a separate solvent-anodic calibration (needs a solvent benchmark that does not yet exist); (c) keep both sides raw for the window comparison only; (d) keep as-is and treat the margin as screening-grade until a solvent benchmark exists.
-- **Current lean**: None yet; flag the scale mismatch explicitly and keep the solvent limit raw/screening-grade pending a decision, rather than silently extrapolating the monomer fit.
-- **Resolves when**: The group decides whether the monomer calibration applies to solvents, a separate solvent calibration is funded, or the window comparison is defined on a single agreed scale.
+- **Decision**: Apply the SINGLE oxidation calibration in `configs/tier1.yaml` (slope=0.725837, intercept=-3.145372) to ALL computed OXIDATION potentials — monomer Eox, solvent ANODIC limit, and anion Eox — so every oxidation potential in the screen lives on one calibrated V-vs-Ag/AgCl scale (option (a), generalized to monomer+solvent+anion). This is what spec §4.1 directs ("apply the SAME calibrated linear model to monomers AND solvents"). The solvent CATHODIC limit is a REDUCTION potential and is explicitly EXCLUDED — it stays raw/informational.
+- **Rationale**: In every margin the intercept cancels (both `window_margin` and `anion_stability_margin` are differences of calibrated potentials), so the filter decisions are governed by raw IP differences and are robust to the extrapolation. This also resolves a latent no-op: the anion Eox was previously raw while monomer Eox was calibrated, so `anion_stability_margin` mixed scales and the anion-stability filter was effectively inert; putting the anion on the shared calibration makes that filter LIVE. The window filter is likewise now on one scale.
+- **Caveat (preserved in docs)**: The calibration was fit on monomer data only, so the ABSOLUTE calibrated solvent/anion numbers are screening-grade extrapolations. A future solvent/anion benchmark is the eventual refinement (deferred), not a blocker for the screen.
+- **Resolved**: 2026-06-17 — implemented; the group will be informed at the next meeting (decision is not blocking).
 - **Links**: [T5](#t5--which-placeholder-axis-to-make-real-first); [T9](#t9--the-mock-preview-trap-after-real-xtb-calibration-is-pinned); [configs/tier1.yaml](configs/tier1.yaml); spec §4.1.
 
 ## Decision log
@@ -148,3 +149,4 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - 2026-06-17 — [T1](#t1--screening-calibration-anchor-peak-vs-onset) advanced: `configs/tier1.yaml` was pinned to a real GFN2-xTB `agagcl_peak_strict` fit (slope=0.725837, intercept=-3.145372, LOO-CV MAE=0.197 V) as the screening anchor; PROVISIONAL / pending PI sign-off.
 - 2026-06-17 — [T5](#t5--which-placeholder-axis-to-make-real-first) advanced and corrected: solvent anodic/cathodic limits are now COMPUTED per spec §3.2 (adiabatic ΔSCF on the solvent molecule via the cached Engine), not a literature curation; the residual scale question was split out as the new [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale).
 - 2026-06-17 — [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale) opened: the computed solvent anodic limit is left RAW while monomer Eox is calibrated, so `window_margin_V` currently mixes scales; spec §4.1 vs the monomer-only calibration fit is unresolved.
+- 2026-06-17 — [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale) DECIDED: apply the single `configs/tier1.yaml` oxidation calibration to all computed oxidation potentials (monomer Eox, solvent anodic limit, anion Eox); intercept cancels in every margin, so filters are governed by raw IP differences (spec §4.1). Solvent cathodic/reduction limit stays raw. Also makes the previously inert anion-stability filter LIVE. Absolute calibrated solvent/anion values are screening-grade extrapolations pending a future benchmark; group to be informed, not blocking.

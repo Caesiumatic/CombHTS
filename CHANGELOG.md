@@ -1,6 +1,28 @@
 # Changelog
 
 ## 2026-06-17
+- Decided THINK T11: apply the SINGLE oxidation calibration in `configs/tier1.yaml`
+  (slope=0.725837, intercept=-3.145372) to ALL computed oxidation potentials — monomer Eox,
+  solvent ANODIC limit, and anion Eox — so every oxidation potential lives on one calibrated
+  V-vs-Ag/AgCl scale (spec §4.1). The solvent CATHODIC/reduction limit is excluded and stays
+  raw/informational. The intercept cancels in every margin, so filter decisions are governed
+  by raw IP differences; absolute calibrated solvent/anion values are screening-grade
+  extrapolations (monomer-fit) pending a future benchmark.
+- `configs/tier1.yaml`: `calibration.monomer_eox.scope` changed `monomer_only` →
+  `all_computed_oxidation` and notes expanded; slope/intercept/enabled and the `monomer_eox`
+  key name unchanged.
+- `tier1.py`: renamed `_monomer_eox_calibration` → `_oxidation_calibration`;
+  `compute_solvent_table` now takes an optional `calibration_config` and emits a new
+  `solvent_anodic_limit_calibrated_V` column, with `solvent_anodic_limit_V` using the
+  calibrated anodic value (CSV fallback is never calibrated); `compute_anion_solvent_table`
+  now takes `calibration_config` and emits
+  `anion_Eox_{raw,calibrated,filter}_V_vs_AgAgCl` (keeping `anion_Eox_V` as the filter alias).
+- `build_triad_table`: `anion_stability_margin_V` now uses `anion_Eox_filter_V_vs_AgAgCl`,
+  making the previously inert (raw-vs-calibrated no-op) anion-stability filter LIVE;
+  `window_margin_V` form unchanged but `solvent_anodic_limit_V` now carries the calibrated value.
+- Added MockEngine tests for the calibrated solvent anodic column / used-value rule, the
+  raw-when-disabled default, and the calibrated anion raw/filter columns; full suite green
+  (mock smoke now yields 154 survivors).
 - Made the solvent anodic/cathodic limits spec-faithful: `solvent_anodic_limit` and
   `solvent_cathodic_limit` now COMPUTE the limit from the solvent molecule itself via the
   cached Engine — adiabatic ΔSCF oxidation (`adiabatic_ip`) and reduction (`adiabatic_ea`)
