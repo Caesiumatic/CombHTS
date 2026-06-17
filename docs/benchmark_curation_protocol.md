@@ -1,6 +1,6 @@
 # Benchmark Curation Protocol
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 
 ## Clean Calibration Labels
 
@@ -47,13 +47,23 @@ Excluded rows should remain in the CSV when they are useful for provenance or sa
 
 Rows with `calibration_eligible=false` must never enter calibration. The validation harness reports a `calibration_exclusion_reason` for each excluded row.
 
-## Strict Benchmark V1 Status
+## Strict Benchmark V2 Status
 
-Strict benchmark v1 contains 14 calibration-eligible collapsed groups after grouping by canonical SMILES, `solvent_name`, and `label_type`. The original target of >=30 clean groups was not achieved under the current strict reference-electrode and label-ontology rules.
+Strict benchmark v2 contains 20 calibration-eligible collapsed groups after grouping by canonical SMILES, `solvent_name`, and `label_type`. The original target of >=30 clean groups is still not achieved under the current strict reference-electrode and label-ontology rules.
 
-Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. The final curation report supporting strict v1 is archived at `docs/literature/deep_research_benchmark_finalization_20260616.md`. Candidate rows are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
+Demoted, excluded, and unresolved provenance rows are kept in `data/benchmark_candidates.csv`. The final curation report supporting strict v1 is archived at `docs/literature/deep_research_benchmark_finalization_20260616.md`; strict v2 adds six verified native-Ag/AgCl peak rows from the Cihaner/Onal source family. Candidate rows are not used by default calibration and should be promoted only after a PI policy decision or source-level recovery of the missing reference, locator, solvent, structure, or label metadata.
 
 Onset and peak labels must not be averaged together. For example, thiophene/acetonitrile has both peak-like and onset-like retained labels, and those remain separate calibration groups.
+
+## Calibration Profiles
+
+Calibration is profile-driven. Each profile in `configs/calibration_profiles.yaml` defines one independent linear fit with explicit `reference_frame`, `label_types`, `tiers`, and `media` filters.
+
+Rows from different `reference_frame` values must never enter the same fit. The fit intercept absorbs the reference-electrode offset, so Ag/AgCl and Fc/Fc+ rows are separate calibration families even when both are reported as voltage-like oxidation labels.
+
+Rows from different `label_type` values must also never be co-fitted. `monomer_oxidation_peak` and `monomer_oxidation_onset` are retained as separate profile targets because peak and onset potentials represent different experimental observables.
+
+The legacy `run_benchmark_validation()` no-argument path remains available only as a pooled diagnostic for backward compatibility. Production screening calibration should use `run_calibration_profile()` or `eps validate --profile`, and comparison/audit work should use `eps validate --all-profiles`. Profiles with fewer than two collapsed points are reported as skipped, not fitted.
 
 ## Acceptable Rows
 

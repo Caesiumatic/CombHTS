@@ -7,8 +7,10 @@ from pathlib import Path
 
 from eps.validation.benchmark import (
     DEFAULT_CACHE_PATH as DEFAULT_VALIDATION_CACHE_PATH,
+    DEFAULT_PROFILE_COMPARISON_PATH,
     DEFAULT_REPORT_PATH,
-    run_benchmark_validation,
+    run_all_calibration_profiles,
+    run_calibration_profile,
 )
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
 from eps.engines import MockEngine, XTBEngine
@@ -48,6 +50,22 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_REPORT_PATH,
         help="Validation report CSV path",
     )
+    validate.add_argument(
+        "--profile",
+        default=None,
+        help="Calibration profile name. Defaults to default_screening_profile.",
+    )
+    validate.add_argument(
+        "--all-profiles",
+        action="store_true",
+        help="Run every configured calibration profile and print the comparison table.",
+    )
+    validate.add_argument(
+        "--profile-comparison",
+        type=Path,
+        default=DEFAULT_PROFILE_COMPARISON_PATH,
+        help="Calibration profile comparison CSV path.",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "run-tier1":
@@ -71,13 +89,27 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "validate":
         engine, method = _engine_from_name(args.engine)
-        result = run_benchmark_validation(
+        if args.all_profiles:
+            comparison = run_all_calibration_profiles(
+                engine=engine,
+                method=method,
+                cache_path=args.cache,
+                report_path=args.report,
+                comparison_path=args.profile_comparison,
+            )
+            print(comparison.to_string(index=False))
+            print(f"Wrote calibration profile comparison: {args.profile_comparison}")
+            return 0
+
+        result = run_calibration_profile(
+            args.profile,
             engine=engine,
             method=method,
             cache_path=args.cache,
             report_path=args.report,
         )
         status = "PASS" if result.tier1_xtb_pass else "FAIL"
+        print(f"Calibration profile: {result.profile_name}")
         print(f"Raw benchmark rows: {result.raw_benchmark_rows}")
         print(f"Calibration-eligible rows: {result.calibration_eligible_rows}")
         print(f"Collapsed calibration groups: {result.n_calibration_points}")
@@ -85,8 +117,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Counts by medium_class: {_format_counts(result.medium_class_counts)}")
         if result.n_calibration_points < 30:
             print(
-                "WARNING: strict benchmark v1 has "
-                f"{result.n_calibration_points} collapsed groups; the >=30 target is not met."
+                "WARNING: active calibration profile has "
+                f"{result.n_calibration_points} collapsed groups "
+                f"({result.raw_benchmark_rows} raw benchmark rows total); "
+                "the >=30 target is not met."
             )
         print(f"MAE before calibration (in-sample): {result.mae_before_V:.3f} V")
         print(f"MAE after calibration (in-sample): {result.mae_after_V:.3f} V")

@@ -6,7 +6,7 @@ calibration:
   monomer_eox:
     enabled: true
     scope: monomer_only
-    source: provisional_xtb_validation_2026_06_16
-    slope: 0.623
-    intercept: -2.872
-    notes: "Provisional xTB-to-experimental monomer oxidation calibration from current small benchmark. Do not treat as production-grade."
+    source: agagcl_peak_relaxed_2026_06_16
+    slope: 0.051941
+    intercept: 1.345652
+    notes: "Profile agagcl_peak_relaxed; n_points=10; LOO-CV MAE=0.466255 V. Provisional xTB-to-experimental monomer oxidation calibration from strict benchmark v2; do not treat as production-grade."

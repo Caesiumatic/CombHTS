@@ -9,7 +9,12 @@ from rdkit import Chem
 
 from eps.engines import CalcRequest, CalcResult, Engine, MockEngine
 from eps.properties.redox import potential_vs_AgAgCl_to_ip_eV
-from eps.validation import run_benchmark_validation
+from eps.validation import (
+    load_calibration_profiles,
+    run_all_calibration_profiles,
+    run_benchmark_validation,
+    run_calibration_profile,
+)
 
 
 def test_validation_runner_writes_report_with_finite_mock_mae(tmp_path: Path) -> None:
@@ -71,10 +76,10 @@ def test_default_real_benchmark_selection_excludes_aqueous_and_tier_c(tmp_path: 
     selected = result.rows["in_calibration_set"]
     assert not result.rows.loc[result.rows["medium"] == "aqueous", "in_calibration_set"].any()
     assert not result.rows.loc[result.rows["reliability_tier"] == "C", "in_calibration_set"].any()
-    assert int(selected.sum()) == 14
-    assert result.raw_benchmark_rows == 14
-    assert result.calibration_eligible_rows == 14
-    assert result.n_calibration_points == 14
+    assert int(selected.sum()) == 20
+    assert result.raw_benchmark_rows == 20
+    assert result.calibration_eligible_rows == 20
+    assert result.n_calibration_points == 20
     assert "calibration_exclusion_reason" in result.rows.columns
 
 
@@ -82,12 +87,20 @@ def test_strict_benchmark_v1_data_shape_and_identity_conversion() -> None:
     benchmark = pd.read_csv(Path("data/benchmark.csv"), keep_default_na=False)
     candidates = pd.read_csv(Path("data/benchmark_candidates.csv"), keep_default_na=False)
 
-    assert len(benchmark) == 14
+    assert len(benchmark) == 20
     assert len(candidates) == 21
     assert benchmark["calibration_eligible"].map(lambda value: str(value).lower() == "true").all()
+    assert (benchmark["reference_frame"] == "agagcl").all()
     assert pd.to_numeric(benchmark["exp_Eox_V_vs_AgAgCl"], errors="coerce").notna().all()
     assert (benchmark["converted_reference_electrode"] == "Ag/AgCl").all()
-    assert (pd.to_numeric(benchmark["conversion_to_AgAgCl_V"], errors="coerce") == 0.0).all()
+    conversion = pd.to_numeric(benchmark["conversion_to_AgAgCl_V"], errors="coerce")
+    assert (conversion == 0.0).all()
+    assert (
+        conversion[
+            benchmark["monomer_name"].str.startswith(("FSeF", "FSF", "DFA", "OSeO", "SSeS", "SeSeSe"))
+        ]
+        == 0.0
+    ).all()
 
     for smiles in benchmark["monomer_smiles"]:
         assert smiles
@@ -102,8 +115,8 @@ def test_strict_benchmark_v1_collapses_by_smiles_solvent_and_label(tmp_path: Pat
     )
     grouped = result.rows.groupby(["canonical_smiles", "solvent_name", "label_type"], dropna=False).size()
 
-    assert len(grouped) == 14
-    assert result.n_calibration_points == 14
+    assert len(grouped) == 20
+    assert result.n_calibration_points == 20
     thiophene_acn = result.rows[
         (result.rows["monomer_smiles"] == "c1ccsc1")
         & (result.rows["solvent_name"] == "acetonitrile")
@@ -113,6 +126,95 @@ def test_strict_benchmark_v1_collapses_by_smiles_solvent_and_label(tmp_path: Pat
         "monomer_oxidation_onset",
     }
     assert thiophene_acn["group_id"].nunique() == 2
+
+
+def test_reference_frame_defaults_to_agagcl_when_column_absent(tmp_path: Path) -> None:
+    benchmark_path = tmp_path / "no_reference_frame.csv"
+    _write_ontology_benchmark(
+        benchmark_path,
+        [
+            _ontology_row("methane", "C", 0.50, "monomer_oxidation_onset", True),
+            _ontology_row("ethane", "CC", 1.25, "monomer_oxidation_peak", True),
+        ],
+    )
+
+    result = run_benchmark_validation(
+        engine=PerfectEoxEngine({"C": 0.50, "CC": 1.25}),
+        cache_path=tmp_path / "no_reference_frame.sqlite",
+        benchmark_path=benchmark_path,
+        report_path=tmp_path / "no_reference_frame_report.csv",
+    )
+
+    assert "reference_frame" in result.rows.columns
+    assert (result.rows["reference_frame"] == "agagcl").all()
+
+
+def test_peak_and_onset_profiles_use_disjoint_groups_and_different_fits(tmp_path: Path) -> None:
+    peak = run_calibration_profile(
+        "agagcl_peak_relaxed",
+        engine=MockEngine(),
+        cache_path=tmp_path / "profiles.sqlite",
+        report_path=tmp_path / "peak_report.csv",
+    )
+    onset = run_calibration_profile(
+        "agagcl_onset_relaxed",
+        engine=MockEngine(),
+        cache_path=tmp_path / "profiles.sqlite",
+        report_path=tmp_path / "onset_report.csv",
+    )
+
+    peak_groups = set(peak.rows.loc[peak.rows["in_calibration_set"], "group_id"])
+    onset_groups = set(onset.rows.loc[onset.rows["in_calibration_set"], "group_id"])
+
+    assert peak_groups
+    assert onset_groups
+    assert peak_groups.isdisjoint(onset_groups)
+    assert peak.n_calibration_points == 10
+    assert onset.n_calibration_points == 10
+    assert (
+        peak.calibration.slope,
+        peak.calibration.intercept,
+    ) != pytest.approx((onset.calibration.slope, onset.calibration.intercept))
+
+
+def test_run_all_calibration_profiles_skips_insufficient_points_and_writes_csv(tmp_path: Path) -> None:
+    comparison_path = tmp_path / "profile_comparison.csv"
+
+    comparison = run_all_calibration_profiles(
+        engine=MockEngine(),
+        cache_path=tmp_path / "all_profiles.sqlite",
+        report_path=tmp_path / "profile_report.csv",
+        comparison_path=comparison_path,
+    )
+    configured = load_calibration_profiles()
+
+    assert comparison_path.exists()
+    assert len(comparison) == len(configured["profiles"])
+    skipped = comparison.loc[comparison["profile_name"].str.startswith("fc_")]
+    assert set(skipped["status"]) == {"skipped_insufficient_points"}
+    assert (skipped["n_points"] == 0).all()
+
+    written = pd.read_csv(comparison_path)
+    assert len(written) == len(configured["profiles"])
+
+
+def test_oseo_and_fsef_share_canonical_smiles_but_keep_solvent_groups(tmp_path: Path) -> None:
+    result = run_calibration_profile(
+        "agagcl_peak_relaxed",
+        engine=MockEngine(),
+        cache_path=tmp_path / "oseo_fsef.sqlite",
+        report_path=tmp_path / "oseo_fsef_report.csv",
+    )
+
+    fsef = result.rows[result.rows["monomer_name"].str.startswith("FSeF")].iloc[0]
+    oseo = result.rows[result.rows["monomer_name"].str.startswith("OSeO")].iloc[0]
+
+    assert fsef["canonical_smiles"] == oseo["canonical_smiles"]
+    assert fsef["solvent_name"] == "acetonitrile"
+    assert oseo["solvent_name"] == "DCM"
+    assert fsef["group_id"] != oseo["group_id"]
+    assert bool(fsef["in_calibration_set"])
+    assert bool(oseo["in_calibration_set"])
 
 
 def test_equivalent_smiles_collapse_to_same_benchmark_group(tmp_path: Path) -> None:
@@ -205,7 +307,7 @@ def test_benchmark_candidates_are_not_used_for_default_calibration(tmp_path: Pat
         report_path=tmp_path / "default_no_candidates_report.csv",
     )
 
-    assert result.raw_benchmark_rows == 14
+    assert result.raw_benchmark_rows == 20
     assert "curation_status" not in result.rows.columns
 
 

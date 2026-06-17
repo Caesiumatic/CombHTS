@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -21,8 +22,10 @@ from eps.storage import SQLiteCache
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BENCHMARK_PATH = PROJECT_ROOT / "data" / "benchmark.csv"
 DEFAULT_VALIDATION_CONFIG = PROJECT_ROOT / "configs" / "validation.yaml"
+DEFAULT_CALIBRATION_PROFILES_PATH = PROJECT_ROOT / "configs" / "calibration_profiles.yaml"
 DEFAULT_CACHE_PATH = PROJECT_ROOT / "outputs" / "validation_cache.sqlite"
 DEFAULT_REPORT_PATH = PROJECT_ROOT / "outputs" / "validation_report.csv"
+DEFAULT_PROFILE_COMPARISON_PATH = PROJECT_ROOT / "outputs" / "calibration_profile_comparison.csv"
 
 ALLOWED_LABEL_TYPES = {
     "monomer_oxidation_peak",
@@ -42,6 +45,7 @@ ALLOWED_REPORTED_POTENTIAL_TYPES |= {
 }
 ALLOWED_SOURCE_CONFIDENCE = {"high", "medium", "low", "provisional"}
 ALLOWED_MEDIUM_CLASSES = {"aqueous", "nonaqueous", "mixed"}
+ALLOWED_REFERENCE_FRAMES = {"agagcl", "fc"}
 
 
 @dataclass(frozen=True)
@@ -62,6 +66,7 @@ class BenchmarkValidationResult:
     n_calibration_points: int
     within_group_spread_V: float
     report_path: Path
+    profile_name: str | None = None
 
 
 def run_benchmark_validation(
@@ -74,9 +79,17 @@ def run_benchmark_validation(
     report_path: str | Path = DEFAULT_REPORT_PATH,
     media: tuple[str, ...] | None = ("nonaqueous",),
     allowed_tiers: tuple[str, ...] | None = ("A", "B"),
+    label_types: tuple[str, ...] | None = None,
+    reference_frames: tuple[str, ...] | None = None,
     collapse_duplicates: bool = True,
+    profile_name: str | None = None,
 ) -> BenchmarkValidationResult:
-    """Validate predicted Eox values against benchmark CV data using MockEngine by default."""
+    """Validate predicted Eox values against benchmark CV data using MockEngine by default.
+
+    With no ``label_types`` or ``reference_frames`` filters this retains the legacy pooled
+    diagnostic behavior. Production calibration should use ``run_calibration_profile`` so
+    reference frames and experimental label types are fitted independently.
+    """
 
     engine = engine or MockEngine()
     cache = SQLiteCache(cache_path)
@@ -105,11 +118,15 @@ def run_benchmark_validation(
         report,
         media=media,
         allowed_tiers=allowed_tiers,
+        label_types=label_types,
+        reference_frames=reference_frames,
     )
     report["calibration_exclusion_reason"] = _calibration_exclusion_reasons(
         report,
         media=media,
         allowed_tiers=allowed_tiers,
+        label_types=label_types,
+        reference_frames=reference_frames,
     )
     raw_benchmark_rows = int(len(report))
     calibration_eligible_rows = _calibration_eligible_count(report)
@@ -163,7 +180,157 @@ def run_benchmark_validation(
         n_calibration_points=len(points),
         within_group_spread_V=within_group_spread,
         report_path=output,
+        profile_name=profile_name,
     )
+
+
+def load_calibration_profiles(path: str | Path = DEFAULT_CALIBRATION_PROFILES_PATH) -> dict[str, Any]:
+    """Load calibration-profile definitions from YAML.
+
+    Profiles define independent linear fits with explicit reference-frame, label-type,
+    reliability-tier, and medium filters. No rows are pooled across profile boundaries.
+    """
+
+    with Path(path).open("r", encoding="utf-8") as handle:
+        config = yaml.safe_load(handle) or {}
+    if not isinstance(config, dict):
+        raise ValueError(f"{path} must contain a mapping")
+
+    profiles = config.get("profiles")
+    if not isinstance(profiles, dict) or not profiles:
+        raise ValueError(f"{path} must define a non-empty profiles mapping")
+
+    default_profile = config.get("default_screening_profile")
+    if not isinstance(default_profile, str) or default_profile not in profiles:
+        raise ValueError(f"{path} default_screening_profile must name a configured profile")
+
+    required = {"reference_frame", "label_types", "tiers", "media"}
+    for name, profile in profiles.items():
+        if not isinstance(profile, dict):
+            raise ValueError(f"{path} profile {name!r} must be a mapping")
+        missing = required.difference(profile)
+        if missing:
+            missing_list = ", ".join(sorted(missing))
+            raise ValueError(f"{path} profile {name!r} is missing: {missing_list}")
+        reference_frame = str(profile["reference_frame"])
+        if reference_frame not in ALLOWED_REFERENCE_FRAMES:
+            raise ValueError(
+                f"{path} profile {name!r} has invalid reference_frame {reference_frame!r}"
+            )
+        _validate_profile_sequence(path, name, "label_types", profile["label_types"])
+        _validate_profile_sequence(path, name, "tiers", profile["tiers"])
+        _validate_profile_sequence(path, name, "media", profile["media"])
+
+        invalid_label_types = set(profile["label_types"]).difference(CALIBRATION_LABEL_TYPES)
+        if invalid_label_types:
+            invalid = ", ".join(sorted(invalid_label_types))
+            raise ValueError(f"{path} profile {name!r} has invalid label_types: {invalid}")
+
+    return config
+
+
+def run_calibration_profile(
+    profile_name: str | None = None,
+    *,
+    engine: Engine | None = None,
+    method: str = "mock-gfn2",
+    cache_path: str | Path = DEFAULT_CACHE_PATH,
+    benchmark_path: str | Path = DEFAULT_BENCHMARK_PATH,
+    validation_config_path: str | Path = DEFAULT_VALIDATION_CONFIG,
+    report_path: str | Path = DEFAULT_REPORT_PATH,
+    profiles_path: str | Path = DEFAULT_CALIBRATION_PROFILES_PATH,
+    collapse_duplicates: bool = True,
+) -> BenchmarkValidationResult:
+    """Run one configured calibration profile as an independent linear fit."""
+
+    config = load_calibration_profiles(profiles_path)
+    selected_name = profile_name or str(config["default_screening_profile"])
+    profiles = config["profiles"]
+    if selected_name not in profiles:
+        known = ", ".join(sorted(profiles))
+        raise ValueError(f"Unknown calibration profile {selected_name!r}; known profiles: {known}")
+
+    profile = profiles[selected_name]
+    return run_benchmark_validation(
+        engine=engine,
+        method=method,
+        cache_path=cache_path,
+        benchmark_path=benchmark_path,
+        validation_config_path=validation_config_path,
+        report_path=report_path,
+        media=tuple(profile["media"]),
+        allowed_tiers=tuple(profile["tiers"]),
+        label_types=tuple(profile["label_types"]),
+        reference_frames=(str(profile["reference_frame"]),),
+        collapse_duplicates=collapse_duplicates,
+        profile_name=selected_name,
+    )
+
+
+def run_all_calibration_profiles(
+    *,
+    engine: Engine | None = None,
+    method: str = "mock-gfn2",
+    cache_path: str | Path = DEFAULT_CACHE_PATH,
+    benchmark_path: str | Path = DEFAULT_BENCHMARK_PATH,
+    validation_config_path: str | Path = DEFAULT_VALIDATION_CONFIG,
+    report_path: str | Path = DEFAULT_REPORT_PATH,
+    profiles_path: str | Path = DEFAULT_CALIBRATION_PROFILES_PATH,
+    comparison_path: str | Path = DEFAULT_PROFILE_COMPARISON_PATH,
+    collapse_duplicates: bool = True,
+) -> pd.DataFrame:
+    """Run every configured calibration profile and write a comparison CSV."""
+
+    config = load_calibration_profiles(profiles_path)
+    profile_rows: list[dict[str, object]] = []
+    for profile_name, profile in config["profiles"].items():
+        profile_report_path = _profile_report_path(report_path, profile_name)
+        try:
+            result = run_calibration_profile(
+                profile_name,
+                engine=engine,
+                method=method,
+                cache_path=cache_path,
+                benchmark_path=benchmark_path,
+                validation_config_path=validation_config_path,
+                report_path=profile_report_path,
+                profiles_path=profiles_path,
+                collapse_duplicates=collapse_duplicates,
+            )
+        except ValueError as exc:
+            message = str(exc)
+            if "requires at least two calibration points" not in message:
+                raise
+            profile_rows.append(
+                _profile_comparison_row(
+                    profile_name,
+                    profile,
+                    n_points=_calibration_point_count_from_error(message),
+                    status="skipped_insufficient_points",
+                )
+            )
+            continue
+
+        profile_rows.append(
+            _profile_comparison_row(
+                profile_name,
+                profile,
+                n_points=result.n_calibration_points,
+                slope=result.calibration.slope,
+                intercept=result.calibration.intercept,
+                r2=result.calibration.r2,
+                mae_after_V=result.mae_after_V,
+                loo_mae_after_V=result.loo_mae_after_V,
+                within_group_spread_V=result.within_group_spread_V,
+                status="fit",
+            )
+        )
+
+    comparison = pd.DataFrame(profile_rows)
+    output = Path(comparison_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    comparison.to_csv(output, index=False)
+    return comparison
 
 
 def _load_benchmark(path: str | Path) -> pd.DataFrame:
@@ -176,14 +343,21 @@ def _load_benchmark(path: str | Path) -> pd.DataFrame:
         "source_doi_or_ref",
     }
     frame = pd.read_csv(path, keep_default_na=False)
+    has_reference_frame_column = "reference_frame" in frame.columns
     missing = required.difference(frame.columns)
     if missing:
         missing_list = ", ".join(sorted(missing))
         raise ValueError(f"{path} is missing required columns: {missing_list}")
+    if has_reference_frame_column:
+        frame["reference_frame"] = frame["reference_frame"].map(
+            lambda value: "agagcl" if _is_blank(value) else str(value).strip()
+        )
+    else:
+        frame["reference_frame"] = "agagcl"
     if len(frame) < 2:
         raise ValueError("benchmark validation requires at least two rows")
     _validate_benchmark_integrity(frame, path)
-    _validate_benchmark_ontology(frame, path)
+    _validate_benchmark_ontology(frame, path, validate_reference_frame=has_reference_frame_column)
     return frame
 
 
@@ -244,7 +418,12 @@ def _validate_benchmark_integrity(frame: pd.DataFrame, path: str | Path) -> None
                 )
 
 
-def _validate_benchmark_ontology(frame: pd.DataFrame, path: str | Path) -> None:
+def _validate_benchmark_ontology(
+    frame: pd.DataFrame,
+    path: str | Path,
+    *,
+    validate_reference_frame: bool = False,
+) -> None:
     if not _has_ontology_schema(frame):
         return
 
@@ -267,6 +446,13 @@ def _validate_benchmark_ontology(frame: pd.DataFrame, path: str | Path) -> None:
         medium_class = str(row["medium_class"])
         if medium_class not in ALLOWED_MEDIUM_CLASSES:
             failures.append(_row_label(row, int(index), f"invalid medium_class {medium_class!r}"))
+
+        if validate_reference_frame:
+            reference_frame = str(row["reference_frame"])
+            if reference_frame not in ALLOWED_REFERENCE_FRAMES:
+                failures.append(
+                    _row_label(row, int(index), f"invalid reference_frame {reference_frame!r}")
+                )
 
         eligible = _as_bool(row["calibration_eligible"])
         if not eligible and _is_blank(row["exclusion_reason"]):
@@ -363,6 +549,15 @@ def _load_validation_config(path: str | Path) -> dict:
         return yaml.safe_load(handle)
 
 
+def _validate_profile_sequence(path: str | Path, name: str, key: str, value: object) -> None:
+    if (
+        not isinstance(value, list)
+        or not value
+        or any(not isinstance(item, str) for item in value)
+    ):
+        raise ValueError(f"{path} profile {name!r} field {key!r} must be a non-empty string list")
+
+
 def _mae(residuals: np.ndarray) -> float:
     return float(np.mean(np.abs(residuals)))
 
@@ -372,6 +567,8 @@ def _calibration_mask(
     *,
     media: tuple[str, ...] | None,
     allowed_tiers: tuple[str, ...] | None,
+    label_types: tuple[str, ...] | None,
+    reference_frames: tuple[str, ...] | None,
 ) -> pd.Series:
     mask = pd.Series(True, index=report.index, dtype=bool)
     medium_column = _medium_filter_column(report)
@@ -379,6 +576,10 @@ def _calibration_mask(
         mask &= report[medium_column].isin(media)
     if allowed_tiers is not None and "reliability_tier" in report.columns:
         mask &= report["reliability_tier"].isin(allowed_tiers)
+    if label_types is not None and "label_type" in report.columns:
+        mask &= report["label_type"].isin(label_types)
+    if reference_frames is not None and "reference_frame" in report.columns:
+        mask &= report["reference_frame"].isin(reference_frames)
     if _has_ontology_schema(report):
         mask &= report["calibration_eligible"].map(_as_bool)
         mask &= report["label_type"].isin(CALIBRATION_LABEL_TYPES)
@@ -395,6 +596,8 @@ def _calibration_exclusion_reasons(
     *,
     media: tuple[str, ...] | None,
     allowed_tiers: tuple[str, ...] | None,
+    label_types: tuple[str, ...] | None,
+    reference_frames: tuple[str, ...] | None,
 ) -> pd.Series:
     if not _has_ontology_schema(report):
         return pd.Series("", index=report.index, dtype=object)
@@ -411,6 +614,14 @@ def _calibration_exclusion_reasons(
             and row["reliability_tier"] not in allowed_tiers
         ):
             row_reasons.append("reliability_tier_filter")
+        if label_types is not None and row["label_type"] not in label_types:
+            row_reasons.append(f"label_type_filter:{row['label_type']}")
+        if (
+            reference_frames is not None
+            and "reference_frame" in report.columns
+            and row["reference_frame"] not in reference_frames
+        ):
+            row_reasons.append(f"reference_frame_filter:{row['reference_frame']}")
         if not _as_bool(row["calibration_eligible"]):
             row_reasons.append("calibration_ineligible")
             if not _is_blank(row["exclusion_reason"]):
@@ -537,3 +748,49 @@ def _within_group_spread(calibration_rows: pd.DataFrame) -> float:
     if not spreads:
         return 0.0
     return float(np.mean(spreads))
+
+
+def _profile_report_path(report_path: str | Path, profile_name: str) -> Path:
+    path = Path(report_path)
+    return path.with_name(f"{path.stem}_{profile_name}{path.suffix}")
+
+
+def _profile_comparison_row(
+    profile_name: str,
+    profile: dict[str, object],
+    *,
+    n_points: int,
+    status: str,
+    slope: float | None = None,
+    intercept: float | None = None,
+    r2: float | None = None,
+    mae_after_V: float | None = None,
+    loo_mae_after_V: float | None = None,
+    within_group_spread_V: float | None = None,
+) -> dict[str, object]:
+    return {
+        "profile_name": profile_name,
+        "reference_frame": profile["reference_frame"],
+        "label_types": "|".join(profile["label_types"]),
+        "tiers": "|".join(profile["tiers"]),
+        "media": "|".join(profile["media"]),
+        "n_points": n_points,
+        "slope": slope,
+        "intercept": intercept,
+        "r2": r2,
+        "mae_after_V": mae_after_V,
+        "loo_mae_after_V": loo_mae_after_V,
+        "within_group_spread_V": within_group_spread_V,
+        "status": status,
+    }
+
+
+def _calibration_point_count_from_error(message: str) -> int:
+    marker = "found "
+    if marker not in message:
+        return 0
+    suffix = message.rsplit(marker, maxsplit=1)[-1].strip()
+    try:
+        return int(suffix.split()[0])
+    except (IndexError, ValueError):
+        return 0

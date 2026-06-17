@@ -1,0 +1,32 @@
+# Calibration profiles. Each profile is an INDEPENDENT linear fit (xTB -> experimental Eox).
+# Rows from different reference_frame OR different label_type must NEVER enter the same fit.
+# A profile with < 2 collapsed points is skipped (reported, not fitted, not an error).
+
+default_screening_profile: agagcl_peak_relaxed
+
+profiles:
+  agagcl_peak_strict:
+    reference_frame: agagcl
+    label_types: [monomer_oxidation_peak]
+    tiers: [A]
+    media: [nonaqueous]
+  agagcl_peak_relaxed:
+    reference_frame: agagcl
+    label_types: [monomer_oxidation_peak]
+    tiers: [A, B]
+    media: [nonaqueous]
+  agagcl_onset_relaxed:
+    reference_frame: agagcl
+    label_types: [monomer_oxidation_onset]
+    tiers: [A, B]
+    media: [nonaqueous]
+  fc_peak_strict:
+    reference_frame: fc
+    label_types: [monomer_oxidation_peak]
+    tiers: [A, B]
+    media: [nonaqueous]
+  fc_onset_relaxed:
+    reference_frame: fc
+    label_types: [monomer_oxidation_onset]
+    tiers: [A, B]
+    media: [nonaqueous]

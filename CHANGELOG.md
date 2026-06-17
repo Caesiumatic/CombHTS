@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-06-17
+- Integrated six verified native-Ag/AgCl monomer-oxidation peak rows into
+  `data/benchmark.csv`, moving the strict benchmark from 14 to 20 calibration-eligible
+  collapsed groups while keeping `data/benchmark_candidates.csv` at 21 provenance rows.
+- Preserved the source-level corrections from the curation report: FSeF is 1.06 V and FSF
+  is 1.16 V, and the OSeO/SSeS/SeSeSe source is `J. Electroanal. Chem.` rather than
+  `Organic Electronics`.
+- Refit `configs/tier1.yaml` from `agagcl_peak_relaxed` with n_points=10:
+  slope=0.051941, intercept=1.345652, LOO-CV MAE=0.466255 V.
+- Added a regression test showing OSeO and FSeF share canonical SMILES but remain distinct
+  calibration groups because their solvents differ.
+- Updated `STATUS.md` and the benchmark curation protocol for strict benchmark v2.
+- Added profile-driven benchmark calibration with `configs/calibration_profiles.yaml`.
+  Profiles now fit independently by `reference_frame`, `label_type`, tier, and medium,
+  preventing Ag/AgCl vs Fc/Fc+ pooling and peak/onset co-fitting.
+- Added `reference_frame` as the final `data/benchmark.csv` column and set all 14 strict-v1
+  rows to `agagcl`; loaders default missing or blank values to `agagcl` for backward
+  compatibility.
+- Extended validation with optional `label_types` and `reference_frames` filters,
+  `run_calibration_profile()`, and `run_all_calibration_profiles()`; empty Fc profiles are
+  reported as `skipped_insufficient_points` instead of raising.
+- Changed `eps validate` to run the default screening profile by default and added
+  `--profile` / `--all-profiles` CLI modes with a profile comparison CSV.
+- Added regression tests for reference-frame defaulting, disjoint peak/onset profile group
+  sets, profile fit separation, and all-profile skip/report behavior.
+- Documented calibration profiles in the benchmark curation protocol and updated
+  `STATUS.md` for the profile-driven calibration phase.
+
 ## 2026-06-16
 - Archived the final benchmark curation report at
   `docs/literature/deep_research_benchmark_finalization_20260616.md` and linked it from
