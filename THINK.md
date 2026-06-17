@@ -20,6 +20,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T8 | Chemical-space coverage vs weight tuning | open | group-meeting / PI sign-off | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
 | T10 | xTB failure clusters: data problem or engine problem? | open | self (rigor) | one xTB round |
+| T11 | Should the computed solvent anodic limit share the monomer calibration / live on the same scale? | open | group-meeting | scope/policy |
 
 ## T1 — Screening calibration anchor: peak vs onset
 - **Status**: exploring
@@ -71,8 +72,8 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Cost**: scope/policy
 - **Question**: Four of the five ranking axes are placeholders — which to upgrade first?
 - **Why it matters**: STATUS already warns ranked output is not a recommendation while these are fake; the composite is contaminated by them.
-- **Thinking / options**: Solvent anodic limits feed the top weight (0.30) and are the cheapest fix (literature curation, zero compute, no PI) — best ROI, lights up the other half of constraint ①. `anion_Eox` needs its own benchmark + one xTB round. `optical_gap` and `dimerization_dG` are the hard, structure-aware upgrades (see T6).
-- **Current lean**: Solvent anodic limits next, then anion benchmark.
+- **Thinking / options**: Solvent anodic limits feed the top weight (0.30) and were the lowest-effort fix — but, per spec §3.2, they are a COMPUTED quantity, not a literature curation: the anodic limit is the adiabatic ΔSCF oxidation of the solvent molecule itself, so the fix is one xTB round over the ~30 solvent molecules (reusing the existing per-species/cache machinery, no PI sign-off). That made them the best near-term ROI for lighting up the other half of constraint ①, and they are now computed (see CHANGELOG 2026-06-17). `anion_Eox` needs its own benchmark + one xTB round. `optical_gap` and `dimerization_dG` are the hard, structure-aware upgrades (see T6).
+- **Current lean**: Solvent anodic limits DONE (computed, raw/uncalibrated; the remaining scale question is split out as T11); anion benchmark next.
 - **Resolves when**: The next placeholder upgrade is selected and either opened as concrete work or explicitly parked behind another priority.
 - **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/solvents.csv](data/solvents.csv); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
 
@@ -131,6 +132,19 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Resolves when**: Minimal reproductions show whether the failures come from inputs/structures, xTB convergence settings, ALPB proxy choices, or a need to move methods.
 - **Links**: [STATUS open debts #7, #8, and #9](STATUS.md#open-debts); [CHANGELOG 2026-06-16](CHANGELOG.md#2026-06-16).
 
+## T11 — Should the computed solvent anodic limit share the monomer calibration / live on the same scale?
+- **Status**: open
+- **Forum**: group-meeting
+- **Cost**: scope/policy
+- **Question**: Should the newly computed solvent anodic limit be put through the same calibrated linear model as monomer Eox so the two sit on one scale, or stay raw?
+- **Why it matters**: The Tier-1 window filter compares the two directly — `window_margin_V = solvent_anodic_limit_V − monomer_Eox_filter_V_vs_AgAgCl`. If one side is calibrated and the other is raw, the margin (and the 0.3 V gate, the spec §4.1 constraint ①) is computed across a scale mismatch.
+- **Thinking / options**: Spec §4.1 says apply the SAME calibrated linear model to monomers AND solvents. But the repo's calibration (`configs/tier1.yaml`, slope=0.725837, intercept=-3.145372) was fit on monomer benchmark rows only; there is no solvent-anodic benchmark to justify applying it to solvents, and a solvent E^ox is a different chemical regime from the curated monomer-oxidation rows. This pass deliberately leaves the solvent limit RAW, which means `window_margin` currently subtracts a calibrated monomer Eox from a raw solvent limit — a scale mismatch in the same family as the mock-preview trap (T9, where raw vs calibrated values are silently mixed). Options: (a) apply the monomer calibration to solvents as §4.1 literally directs (cheap, but extrapolates a monomer-only fit); (b) fit a separate solvent-anodic calibration (needs a solvent benchmark that does not yet exist); (c) keep both sides raw for the window comparison only; (d) keep as-is and treat the margin as screening-grade until a solvent benchmark exists.
+- **Current lean**: None yet; flag the scale mismatch explicitly and keep the solvent limit raw/screening-grade pending a decision, rather than silently extrapolating the monomer fit.
+- **Resolves when**: The group decides whether the monomer calibration applies to solvents, a separate solvent calibration is funded, or the window comparison is defined on a single agreed scale.
+- **Links**: [T5](#t5--which-placeholder-axis-to-make-real-first); [T9](#t9--the-mock-preview-trap-after-real-xtb-calibration-is-pinned); [configs/tier1.yaml](configs/tier1.yaml); spec §4.1.
+
 ## Decision log
 
 - 2026-06-17 — [T1](#t1--screening-calibration-anchor-peak-vs-onset) advanced: `configs/tier1.yaml` was pinned to a real GFN2-xTB `agagcl_peak_strict` fit (slope=0.725837, intercept=-3.145372, LOO-CV MAE=0.197 V) as the screening anchor; PROVISIONAL / pending PI sign-off.
+- 2026-06-17 — [T5](#t5--which-placeholder-axis-to-make-real-first) advanced and corrected: solvent anodic/cathodic limits are now COMPUTED per spec §3.2 (adiabatic ΔSCF on the solvent molecule via the cached Engine), not a literature curation; the residual scale question was split out as the new [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale).
+- 2026-06-17 — [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale) opened: the computed solvent anodic limit is left RAW while monomer Eox is calibrated, so `window_margin_V` currently mixes scales; spec §4.1 vs the monomer-only calibration fit is unresolved.

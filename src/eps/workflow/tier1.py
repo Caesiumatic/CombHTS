@@ -26,7 +26,9 @@ from eps.properties import (
     monomer_solvation,
     polymer_optical_gap,
     solvent_anodic_limit,
+    solvent_anodic_limit_csv,
     solvent_cathodic_limit,
+    solvent_cathodic_limit_csv,
 )
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
@@ -80,7 +82,7 @@ def run_tier1(
         method=method,
         calibration_config=tier1_config.get("calibration", {}),
     )
-    solvent_table = compute_solvent_table(solvents)
+    solvent_table = compute_solvent_table(solvents, engine, cache, method=method)
     anion_table = compute_anion_solvent_table(electrolytes, solvents, engine, cache, method=method)
 
     triads = build_triad_table(
@@ -206,21 +208,52 @@ def compute_monomer_solvent_table(
     return pd.DataFrame(rows)
 
 
-def compute_solvent_table(solvents: list[Solvent]) -> pd.DataFrame:
-    """Load solvent stability limits once per solvent."""
+def compute_solvent_table(
+    solvents: list[Solvent],
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = "mock-gfn2",
+) -> pd.DataFrame:
+    """Compute solvent anodic/cathodic limits per spec §3.2 once per solvent.
 
-    return pd.DataFrame(
-        [
+    The anodic and cathodic limits are computed via the cached engine (adiabatic ΔSCF
+    oxidation/reduction of the solvent molecule in its own implicit solvent). If a calc
+    fails, the row falls back to the stopgap CSV value so one solvent does not abort the
+    screen. ``solvent_anodic_limit_V`` is the value used downstream.
+    """
+
+    rows = []
+    for solvent in solvents:
+        anodic = _safe_calculate(
+            lambda: solvent_anodic_limit(solvent, engine, cache, method=method)
+        )
+        cathodic = _safe_calculate(
+            lambda: solvent_cathodic_limit(solvent, engine, cache, method=method)
+        )
+        anodic_csv = solvent_anodic_limit_csv(solvent)
+        cathodic_csv = solvent_cathodic_limit_csv(solvent)
+        anodic_used = anodic.value if anodic.status == "ok" else anodic_csv
+        cathodic_used = cathodic.value if cathodic.status == "ok" else cathodic_csv
+        rows.append(
             {
                 "solvent_name": solvent.name,
                 "solvent_smiles": solvent.smiles,
                 "solvent_canonical_smiles": solvent.canonical_smiles,
-                "solvent_anodic_limit_V": solvent_anodic_limit(solvent),
-                "solvent_cathodic_limit_V": solvent_cathodic_limit(solvent),
+                "solvent_anodic_limit_computed_V": anodic.value,
+                "solvent_anodic_limit_csv_V": anodic_csv,
+                "solvent_anodic_limit_V": anodic_used,
+                "solvent_anodic_limit_source": "computed" if anodic.status == "ok" else "csv_fallback",
+                "solvent_anodic_limit_calc_status": anodic.status,
+                "solvent_anodic_limit_calc_error": anodic.error,
+                "solvent_cathodic_limit_computed_V": cathodic.value,
+                "solvent_cathodic_limit_csv_V": cathodic_csv,
+                "solvent_cathodic_limit_V": cathodic_used,
+                "solvent_cathodic_limit_source": "computed" if cathodic.status == "ok" else "csv_fallback",
+                "solvent_cathodic_limit_calc_status": cathodic.status,
+                "solvent_cathodic_limit_calc_error": cathodic.error,
             }
-            for solvent in solvents
-        ]
-    )
+        )
+    return pd.DataFrame(rows)
 
 
 def compute_anion_solvent_table(

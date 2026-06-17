@@ -31,7 +31,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 ## Placeholders / not yet validated
 - optical_gap = HOMO-LUMO gap on an MMFF geometry, not an optical gap or oligomer result.
 - dimerization_dG = rescaled gas energy and still a fake signal.
-- Solvent anodic limits are provisional seed approximations.
+- Solvent anodic/cathodic limits are now COMPUTED per spec §3.2 (adiabatic ΔSCF oxidation/reduction of the solvent molecule in implicit self-solvent, projected to V vs Ag/AgCl through the pinned redox function). They are raw, uncalibrated, and screening-grade; the cathodic limit (via EA) is informational only and is NOT used in any Tier-1 filter. The stopgap CSV `esw_*_V` values are retained as an explicit per-solvent fallback when the calc fails. The computed solvent limit is NOT yet on the same calibrated scale as monomer Eox (see THINK T11).
 - Monomer Eox calibration in `configs/tier1.yaml` is refit from real xTB on strict v3 (`agagcl_peak_strict`); it is still provisional and screening-grade.
 - Fc/Fc+ profiles are empty placeholders until PI approval and clean native-Fc rows exist.
 - anion_Eox_V is uncalibrated.
@@ -42,7 +42,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 3. Decide whether peak or onset should be the screening anchor; the current recommendation is `agagcl_peak_strict` pending PI sign-off.
 4. Decide whether to fund a separate Fc/Fc+ track; do not force-convert incompatible Ag/Ag+, SCE, or polymer-onset rows to fill it.
 5. Resolve or re-audit candidate/provenance rows in `data/benchmark_candidates.csv`, especially EDOT current rows, nonaqueous SCE/Ag/Ag+/pseudo-reference conversions, mixed solvents, Lewis-acid-modified media, and missing source locators.
-6. Replace solvent anodic limits with measured values vs the chosen reference scale.
+6. Solvent anodic/cathodic limits are now computed per spec §3.2 (adiabatic ΔSCF on the solvent molecule), with CSV as fallback; remaining debt is to put the computed solvent limit on the same calibrated scale as monomer Eox (THINK T11) and validate it against measured values.
 7. Replace the hand-written xtbout.json fixture with a captured real cluster `xtbout.json`; keep checking full ALPB solvent availability for the proxy list.
 8. Get professor sign-off on the 4 ALPB proxy solvents, or move to ddCOSMO with manual epsilon.
 9. In `XTBEngine._run_xtb`, check subprocess return code before parsing `xtbout.json`.

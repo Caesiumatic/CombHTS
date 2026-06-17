@@ -7,7 +7,9 @@ from eps.properties.calculators import (
     monomer_solvation,
     polymer_optical_gap,
     solvent_anodic_limit,
+    solvent_anodic_limit_csv,
     solvent_cathodic_limit,
+    solvent_cathodic_limit_csv,
 )
 from eps.properties.redox import (
     ABS_SHE_V,
@@ -27,5 +29,7 @@ __all__ = [
     "potential_vs_AgAgCl_to_ip_eV",
     "polymer_optical_gap",
     "solvent_anodic_limit",
+    "solvent_anodic_limit_csv",
     "solvent_cathodic_limit",
+    "solvent_cathodic_limit_csv",
 ]
