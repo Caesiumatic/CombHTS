@@ -1,6 +1,27 @@
 # Changelog
 
 ## 2026-06-17
+- Made the solvent anodic/cathodic limits spec-faithful: `solvent_anodic_limit` and
+  `solvent_cathodic_limit` now COMPUTE the limit from the solvent molecule itself via the
+  cached Engine — adiabatic ΔSCF oxidation (`adiabatic_ip`) and reduction (`adiabatic_ea`)
+  in implicit self-solvent, projected to V vs Ag/AgCl through the pinned `redox.py`
+  function (spec §3.2/§4.2) — instead of returning the hardcoded `esw_*_V` CSV stopgap.
+- Kept the CSV `esw_anodic_V`/`esw_cathodic_V` columns as an explicit per-solvent fallback
+  via new `solvent_anodic_limit_csv`/`solvent_cathodic_limit_csv` helpers; if an engine calc
+  fails for a solvent the row falls back to CSV instead of aborting the screen.
+- `compute_solvent_table` now takes `(solvents, engine, cache, method)` and emits twelve audit
+  columns — `solvent_{anodic,cathodic}_limit_{computed_V,csv_V,V,source,calc_status,calc_error}` —
+  where `solvent_anodic_limit_V` remains the value used downstream and `build_triad_table`'s
+  `window_margin_V = solvent_anodic_limit_V − monomer_Eox_filter_V_vs_AgAgCl` is unchanged.
+- Cathodic limit (via EA) documented as informational only and not used in any Tier-1 filter;
+  no calibration is applied to the solvent side in this pass.
+- Added `tests/test_solvent_limits.py` (MockEngine-based: IP/EA projection for acetonitrile
+  and water, cache reuse, CSV fallback on engine failure) plus a live-xtb smoke test guarded
+  by `skipif(shutil.which("xtb") is None)`.
+- Corrected THINK T5 (solvent anodic limits are a COMPUTED quantity, not a zero-compute
+  literature curation) and opened THINK T11 on whether the computed solvent limit should share
+  the monomer calibration / sit on the same scale as the calibrated monomer Eox it is
+  compared against in the window filter.
 - Clarified THINK T1 by separating the purity argument for `agagcl_peak_strict` from the
   conditioning/sample-size argument, which instead favors `agagcl_peak_relaxed`.
 - Updated THINK T1 to flag the current config mismatch: `configs/tier1.yaml` implements

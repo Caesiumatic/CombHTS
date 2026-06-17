@@ -30,14 +30,63 @@ def monomer_eox_vs_AgAgCl(
     return ip_eV_to_potential_vs_AgAgCl(result.value)
 
 
-def solvent_anodic_limit(solvent: Solvent, engine: Engine | None = None) -> float:
-    """Return solvent anodic stability limit in V vs Ag/AgCl from the CSV library."""
+def solvent_anodic_limit(
+    solvent: Solvent,
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = DEFAULT_METHOD,
+) -> float:
+    """Adiabatic ΔSCF oxidation potential of the solvent molecule in its own implicit
+    solvent, in V vs Ag/AgCl (spec §3.2). Raw, uncalibrated, screening-grade."""
+
+    req = CalcRequest(
+        species=SpeciesSpec(solvent.canonical_smiles, charge=0, multiplicity=1),
+        method=method,
+        solvent_eps_r=solvent.eps_r,
+        quantity="adiabatic_ip",
+        xtb_gbsa_name=solvent.xtb_gbsa_name,
+    )
+    result = cached_run(cache, engine, req, solvent.name)
+    return ip_eV_to_potential_vs_AgAgCl(result.value)
+
+
+def solvent_cathodic_limit(
+    solvent: Solvent,
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = DEFAULT_METHOD,
+) -> float:
+    """Adiabatic ΔSCF reduction potential of the solvent molecule in its own implicit
+    solvent, in V vs Ag/AgCl (spec §3.2). Raw, uncalibrated, screening-grade.
+
+    The engine returns the adiabatic EA in eV (E(neutral) − E(anion)); the
+    solvent/solvent⁻ reduction potential projects to V vs Ag/AgCl through the SAME
+    function used for IP: E(vs Ag/AgCl) = EA − 4.28 − 0.197.
+
+    Computed solvent EA via GFN2-xTB is unreliable for closed-shell solvents
+    (unbound anions); this cathodic value is informational only and is NOT used in any
+    Tier-1 filter.
+    """
+
+    req = CalcRequest(
+        species=SpeciesSpec(solvent.canonical_smiles, charge=0, multiplicity=1),
+        method=method,
+        solvent_eps_r=solvent.eps_r,
+        quantity="adiabatic_ea",
+        xtb_gbsa_name=solvent.xtb_gbsa_name,
+    )
+    result = cached_run(cache, engine, req, solvent.name)
+    return ip_eV_to_potential_vs_AgAgCl(result.value)
+
+
+def solvent_anodic_limit_csv(solvent: Solvent) -> float:
+    """Return the stopgap CSV anodic limit in V vs Ag/AgCl, kept as a fallback."""
 
     return solvent.esw_anodic_V
 
 
-def solvent_cathodic_limit(solvent: Solvent, engine: Engine | None = None) -> float:
-    """Return solvent cathodic stability limit in V vs Ag/AgCl from the CSV library."""
+def solvent_cathodic_limit_csv(solvent: Solvent) -> float:
+    """Return the stopgap CSV cathodic limit in V vs Ag/AgCl, kept as a fallback."""
 
     return solvent.esw_cathodic_V
 
