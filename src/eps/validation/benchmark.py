@@ -100,15 +100,25 @@ def run_benchmark_validation(
     for row in benchmark.to_dict(orient="records"):
         solvent = _lookup_solvent(solvents, str(row["solvent_name"]))
         monomer = _benchmark_monomer(row)
-        predicted = monomer_eox_vs_AgAgCl(monomer, solvent, engine, cache, method=method)
         experimental = float(row["exp_Eox_V_vs_AgAgCl"])
         group_id = _benchmark_group_id(row, monomer)
+        try:
+            predicted = monomer_eox_vs_AgAgCl(monomer, solvent, engine, cache, method=method)
+            calc_status = "ok"
+            calc_error = ""
+        except Exception as exc:  # noqa: BLE001 - one bad species must not abort the whole benchmark
+            predicted = float("nan")
+            calc_status = "failed"
+            first_line = str(exc).splitlines()[0] if str(exc) else exc.__class__.__name__
+            calc_error = f"{exc.__class__.__name__}: {first_line}"[:240]
         rows.append(
             {
                 **row,
                 "canonical_smiles": monomer.canonical_smiles,
                 "pred_Eox_V_vs_AgAgCl": predicted,
                 "residual_before_V": predicted - experimental,
+                "monomer_eox_calc_status": calc_status,
+                "monomer_eox_calc_error": calc_error,
                 "group_id": group_id,
             }
         )
@@ -571,6 +581,8 @@ def _calibration_mask(
     reference_frames: tuple[str, ...] | None,
 ) -> pd.Series:
     mask = pd.Series(True, index=report.index, dtype=bool)
+    if "pred_Eox_V_vs_AgAgCl" in report.columns:
+        mask &= pd.to_numeric(report["pred_Eox_V_vs_AgAgCl"], errors="coerce").notna()
     medium_column = _medium_filter_column(report)
     if media is not None and medium_column is not None:
         mask &= report[medium_column].isin(media)

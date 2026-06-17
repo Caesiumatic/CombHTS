@@ -181,6 +181,10 @@ class XTBEngine(Engine):
                 str(charge),
                 "--uhf",
                 str(max(multiplicity - 1, 0)),
+                "--iterations",
+                "500",
+                "--etemp",
+                "400.0",
                 *args,
                 "--json",
             ]
