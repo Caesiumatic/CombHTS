@@ -31,3 +31,8 @@ At the end of every work unit: (1) overwrite STATUS.md to reflect the new curren
 (phase, what works, placeholders, open debts, next action); (2) prepend a dated entry to
 CHANGELOG.md describing what changed and why. STATUS.md is a mutable snapshot; CHANGELOG.md
 is append-only history. Keep both concise.
+THINK.md is the register of open scientific/decision questions (the why/what-if
+layer). At the end of a work unit, if a genuine research question, tradeoff, or sign-off
+need was opened, advanced, or resolved, update the relevant THINK.md entry (open ->
+exploring -> decided/parked) and its Decision log. Keep engineering debt in STATUS.md;
+THINK.md is only for items needing scientific judgment. Do not duplicate STATUS content.

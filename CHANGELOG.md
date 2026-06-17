@@ -1,6 +1,14 @@
 # Changelog
 
 ## 2026-06-17
+- Created `THINK.md` as the living register for open scientific, research, and decision
+  questions, distinct from `STATUS.md` snapshots and `CHANGELOG.md` history.
+- Seeded THINK entries T1-T10 covering calibration anchoring, reference scale,
+  potential-type mismatch, >=30-group framing, placeholder-axis priority, band-gap strategy,
+  deliverable framing, chemical-space expansion, the mock-preview caveat, and xTB failure
+  clusters.
+- Appended the `AGENTS.md` documentation-maintenance clause requiring THINK updates when
+  genuine research questions, tradeoffs, or sign-off needs open, advance, or resolve.
 - Refit `configs/tier1.yaml` monomer Eox calibration from a real GFN2-xTB all-profile
   validation on strict benchmark v3, choosing `agagcl_peak_strict` as the screening anchor:
   slope=0.725837, intercept=-3.145372, R^2=0.889, LOO-CV MAE=0.197 V.
