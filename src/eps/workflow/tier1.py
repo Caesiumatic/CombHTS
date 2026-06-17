@@ -82,8 +82,21 @@ def run_tier1(
         method=method,
         calibration_config=tier1_config.get("calibration", {}),
     )
-    solvent_table = compute_solvent_table(solvents, engine, cache, method=method)
-    anion_table = compute_anion_solvent_table(electrolytes, solvents, engine, cache, method=method)
+    solvent_table = compute_solvent_table(
+        solvents,
+        engine,
+        cache,
+        method=method,
+        calibration_config=tier1_config.get("calibration", {}),
+    )
+    anion_table = compute_anion_solvent_table(
+        electrolytes,
+        solvents,
+        engine,
+        cache,
+        method=method,
+        calibration_config=tier1_config.get("calibration", {}),
+    )
 
     triads = build_triad_table(
         monomer_table=monomer_table,
@@ -158,7 +171,7 @@ def compute_monomer_solvent_table(
 ) -> pd.DataFrame:
     """Compute monomer-in-solvent properties over monomer x solvent pairs."""
 
-    eox_calibration = _monomer_eox_calibration(calibration_config or {})
+    eox_calibration = _oxidation_calibration(calibration_config or {})
     rows = []
     for monomer in monomers:
         for solvent in solvents:
@@ -213,6 +226,7 @@ def compute_solvent_table(
     engine: Engine,
     cache: SQLiteCache,
     method: str = "mock-gfn2",
+    calibration_config: dict | None = None,
 ) -> pd.DataFrame:
     """Compute solvent anodic/cathodic limits per spec §3.2 once per solvent.
 
@@ -220,8 +234,14 @@ def compute_solvent_table(
     oxidation/reduction of the solvent molecule in its own implicit solvent). If a calc
     fails, the row falls back to the stopgap CSV value so one solvent does not abort the
     screen. ``solvent_anodic_limit_V`` is the value used downstream.
+
+    The shared oxidation calibration (T11) is applied to the ANODIC limit only (an
+    oxidation potential); the CATHODIC limit is a reduction potential and stays raw.
+    Calibration defaults to disabled when ``calibration_config`` is None, so direct
+    callers/tests get raw computed values.
     """
 
+    cal = _oxidation_calibration(calibration_config or {})
     rows = []
     for solvent in solvents:
         anodic = _safe_calculate(
@@ -232,7 +252,15 @@ def compute_solvent_table(
         )
         anodic_csv = solvent_anodic_limit_csv(solvent)
         cathodic_csv = solvent_cathodic_limit_csv(solvent)
-        anodic_used = anodic.value if anodic.status == "ok" else anodic_csv
+        if anodic.status == "ok":
+            anodic_calibrated = _apply_linear_calibration(anodic.value, cal)
+            anodic_used = anodic_calibrated if cal["enabled"] else anodic.value
+            anodic_source = "computed"
+        else:
+            # CSV stopgap is already in realistic units; do NOT calibrate it.
+            anodic_calibrated = float("nan")
+            anodic_used = anodic_csv
+            anodic_source = "csv_fallback"
         cathodic_used = cathodic.value if cathodic.status == "ok" else cathodic_csv
         rows.append(
             {
@@ -240,9 +268,10 @@ def compute_solvent_table(
                 "solvent_smiles": solvent.smiles,
                 "solvent_canonical_smiles": solvent.canonical_smiles,
                 "solvent_anodic_limit_computed_V": anodic.value,
+                "solvent_anodic_limit_calibrated_V": anodic_calibrated,
                 "solvent_anodic_limit_csv_V": anodic_csv,
                 "solvent_anodic_limit_V": anodic_used,
-                "solvent_anodic_limit_source": "computed" if anodic.status == "ok" else "csv_fallback",
+                "solvent_anodic_limit_source": anodic_source,
                 "solvent_anodic_limit_calc_status": anodic.status,
                 "solvent_anodic_limit_calc_error": anodic.error,
                 "solvent_cathodic_limit_computed_V": cathodic.value,
@@ -262,9 +291,17 @@ def compute_anion_solvent_table(
     engine: Engine,
     cache: SQLiteCache,
     method: str = "mock-gfn2",
+    calibration_config: dict | None = None,
 ) -> pd.DataFrame:
-    """Compute anion-in-solvent oxidation potentials once per unique anion x solvent."""
+    """Compute anion-in-solvent oxidation potentials once per unique anion x solvent.
 
+    The shared oxidation calibration (T11) is applied to the anion Eox, mirroring the
+    monomer raw/calibrated/filter pattern. Calibration defaults to disabled when
+    ``calibration_config`` is None. On a failed calc all three value columns are NaN
+    (no CSV fallback for anions, mirroring monomer behavior).
+    """
+
+    cal = _oxidation_calibration(calibration_config or {})
     unique_by_anion = {electrolyte.canonical_anion_smiles: electrolyte for electrolyte in electrolytes}
     rows = []
     for electrolyte in unique_by_anion.values():
@@ -278,11 +315,23 @@ def compute_anion_solvent_table(
                     method=method,
                 )
             )
+            if anion_eox.status == "ok":
+                raw_anion = anion_eox.value
+                calibrated_anion = _apply_linear_calibration(raw_anion, cal)
+                filter_anion = calibrated_anion if cal["enabled"] else raw_anion
+            else:
+                raw_anion = float("nan")
+                calibrated_anion = float("nan")
+                filter_anion = float("nan")
             rows.append(
                 {
                     "anion_canonical_smiles": electrolyte.canonical_anion_smiles,
                     "solvent_name": solvent.name,
-                    "anion_Eox_V": anion_eox.value,
+                    "anion_Eox_raw_V_vs_AgAgCl": raw_anion,
+                    "anion_Eox_calibrated_V_vs_AgAgCl": calibrated_anion,
+                    "anion_Eox_filter_V_vs_AgAgCl": filter_anion,
+                    # Backward-compat alias; equals the filter value used downstream.
+                    "anion_Eox_V": filter_anion,
                     "anion_Eox_calc_status": anion_eox.status,
                     "anion_Eox_calc_error": anion_eox.error,
                 }
@@ -331,9 +380,10 @@ def build_triad_table(
     triads["window_margin_V"] = (
         triads["solvent_anodic_limit_V"] - triads["monomer_Eox_filter_V_vs_AgAgCl"]
     )
-    # TODO: anion_Eox_V is not separately calibrated; compare cautiously until an anion benchmark exists.
+    # Anion Eox is now on the shared oxidation calibration (T11); the intercept cancels in
+    # this margin, so the filter is governed by raw IP differences (extrapolated, screening-grade).
     triads["anion_stability_margin_V"] = (
-        triads["anion_Eox_V"] - triads["monomer_Eox_filter_V_vs_AgAgCl"]
+        triads["anion_Eox_filter_V_vs_AgAgCl"] - triads["monomer_Eox_filter_V_vs_AgAgCl"]
     )
     triads["solubility_score"] = -triads["solvation_dG_kcal_mol"]
     return triads
@@ -386,7 +436,8 @@ def infer_all_output_path(output_path: str | Path) -> Path:
     return output.with_name(f"{output.stem}_all{output.suffix or '.csv'}")
 
 
-def _monomer_eox_calibration(config: dict) -> dict[str, float | bool]:
+def _oxidation_calibration(config: dict) -> dict[str, float | bool]:
+    # Single oxidation calibration shared by monomer Eox, solvent anodic limit, and anion Eox (T11).
     monomer_config = config.get("monomer_eox", {})
     return {
         "enabled": bool(monomer_config.get("enabled", False)),
