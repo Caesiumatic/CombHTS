@@ -1,6 +1,17 @@
 # Changelog
 
 ## 2026-06-17
+- Clarified THINK T1 by separating the purity argument for `agagcl_peak_strict` from the
+  conditioning/sample-size argument, which instead favors `agagcl_peak_relaxed`.
+- Updated THINK T1 to flag the current config mismatch: `configs/tier1.yaml` implements
+  `agagcl_peak_strict`, while `configs/calibration_profiles.yaml` defaults validation to
+  `agagcl_peak_relaxed`.
+- Advanced THINK T1 status from `open` to `exploring` and seeded the Decision log with the
+  provisional 2026-06-17 `agagcl_peak_strict` pinning pending PI sign-off.
+- Updated THINK T4 to cross-reference STATUS open debt #1, which marks the >=30 clean-group
+  milestone as MET while T4 questions whether >=30 belongs on the calibration-purity layer.
+- Added a STATUS open debt to reconcile the `tier1.yaml` vs `calibration_profiles.yaml`
+  calibration-anchor mismatch.
 - Created `THINK.md` as the living register for open scientific, research, and decision
   questions, distinct from `STATUS.md` snapshots and `CHANGELOG.md` history.
 - Seeded THINK entries T1-T10 covering calibration anchoring, reference scale,

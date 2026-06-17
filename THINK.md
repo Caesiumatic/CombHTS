@@ -10,7 +10,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 | ID | Title | Status | Forum | Cost |
 | --- | --- | --- | --- | --- |
-| T1 | Screening calibration anchor: peak vs onset | open | group-meeting then PI sign-off | scope/policy |
+| T1 | Screening calibration anchor: peak vs onset | exploring | group-meeting then PI sign-off | scope/policy |
 | T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | open | PI sign-off | scope/policy |
 | T3 | Potential-type mismatch sets the accuracy ceiling | open | self (rigor) | lit-curation (no compute) |
 | T4 | What ">=30 clean groups" actually validates | open | group-meeting | scope/policy |
@@ -22,15 +22,15 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T10 | xTB failure clusters: data problem or engine problem? | open | self (rigor) | one xTB round |
 
 ## T1 — Screening calibration anchor: peak vs onset
-- **Status**: open
+- **Status**: exploring
 - **Forum**: group-meeting then PI sign-off
 - **Cost**: scope/policy
 - **Question**: Which calibration profile should convert every xTB Eox in the screen — `agagcl_peak_strict` (Epa) or `agagcl_onset_relaxed` (Eonset)?
 - **Why it matters**: This single line defines the Eox the whole 50k-triad screen believes; it feeds the constraint-① window filter and the highest composite weight (0.30). Peak vs onset shifts BOTH slope and intercept, so it reshapes the ranking, not just offsets it.
-- **Thinking / options**: Onset is physically closer to where electropolymerization initiates (more faithful to "Eox inside solvent window"); peak has wider chemical diversity (n=19 vs 13), so the linear fit is better conditioned. xTB adiabatic IP is conceptually an E1/2, sitting between onset and peak, so neither matches perfectly.
-- **Current lean**: `agagcl_peak_strict` (current `tier1.yaml` default), pending sign-off.
-- **Resolves when**: The group discusses peak vs onset and the PI signs off on the screening calibration anchor.
-- **Links**: [STATUS open debt #3](STATUS.md#open-debts); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml).
+- **Thinking / options**: Onset is physically closer to where electropolymerization initiates (more faithful to "Eox inside solvent window"). The conditioning / sample-size argument says more points => better-conditioned linear fit; it favors `agagcl_peak_relaxed` (n=19, tiers A+B) over `agagcl_onset_relaxed` (n=13, tiers A+B), and explicitly does NOT support `agagcl_peak_strict` (n=9, tier A only). The purity argument favors `agagcl_peak_strict` because it uses tier-A native-Ag/AgCl rows only, at the cost of the smallest n. xTB adiabatic IP is conceptually an E1/2, sitting between onset and peak, so neither matches perfectly. The repo is also internally inconsistent on this exact question: `configs/tier1.yaml` implements the screen's monomer-Eox calibration from profile `agagcl_peak_strict` (slope=0.725837, intercept=-3.145372), but `configs/calibration_profiles.yaml` sets `default_screening_profile: agagcl_peak_relaxed`. Consequence: a default `eps validate` reports a peak_relaxed fit, while the actual 50k-triad screen's constraint-(1) window filter uses the peak_strict calibration baked into `tier1.yaml`.
+- **Current lean**: `agagcl_peak_strict`, pending sign-off. This lean is chosen on PURITY grounds, not on sample size; the sample-size argument would instead point to `agagcl_peak_relaxed`.
+- **Resolves when**: The group discusses peak vs onset, the PI signs off on the screening calibration anchor, and `configs/tier1.yaml` plus `configs/calibration_profiles.yaml` are reconciled onto one agreed anchor.
+- **Links**: [STATUS open debts #3 and #13](STATUS.md#open-debts); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml).
 
 ## T2 — Master reference scale: Ag/AgCl vs Fc/Fc+
 - **Status**: open
@@ -60,10 +60,10 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Cost**: scope/policy
 - **Question**: Is the >=30 target a CALIBRATION-purity requirement or a VALIDATION-coverage requirement, and are we calibrating the way the brief intends?
 - **Why it matters**: If >=30 is a validation requirement, we should not be straining benchmark purity to feed the calibration fit; the pressure is on the wrong layer.
-- **Thinking / options**: The brief's design is two-stage — calibrate xTB->DFT (self-generated y-values, no reference-electrode heterogeneity, unlimited points), then validate the whole pipeline against experimental CV (>=30 rows, MAE + qualitative rank-order). Because Tier-2 DFT is not built yet, we collapsed calibration to xTB->experimental, which wrongly pushed the >=30 reference-purity burden onto the calibration training set.
+- **Thinking / options**: The brief's design is two-stage — calibrate xTB->DFT (self-generated y-values, no reference-electrode heterogeneity, unlimited points), then validate the whole pipeline against experimental CV (>=30 rows, MAE + qualitative rank-order). Because Tier-2 DFT is not built yet, we collapsed calibration to xTB->experimental, which wrongly pushed the >=30 reference-purity burden onto the calibration training set. Tension with STATUS: STATUS open debt #1 treats the ">=30 clean groups" target as MET / a milestone, whereas T4 questions whether ">=30" should sit on the calibration-purity layer at all.
 - **Current lean**: Record this as the framing to raise; treat current xTB->experimental fit as an explicit interim stand-in until the DFT tier exists.
 - **Resolves when**: The group agrees whether >=30 governs calibration purity, validation coverage, or both, and whether the interim xTB->experimental fit remains acceptable.
-- **Links**: [STATUS open debt #12](STATUS.md#open-debts); [configs/tier1.yaml](configs/tier1.yaml).
+- **Links**: [STATUS open debts #1 and #12](STATUS.md#open-debts); [configs/tier1.yaml](configs/tier1.yaml).
 
 ## T5 — Which placeholder axis to make real first
 - **Status**: open
@@ -133,4 +133,4 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 ## Decision log
 
-- None yet.
+- 2026-06-17 — [T1](#t1--screening-calibration-anchor-peak-vs-onset) advanced: `configs/tier1.yaml` was pinned to a real GFN2-xTB `agagcl_peak_strict` fit (slope=0.725837, intercept=-3.145372, LOO-CV MAE=0.197 V) as the screening anchor; PROVISIONAL / pending PI sign-off.

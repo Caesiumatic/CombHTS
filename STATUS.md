@@ -49,6 +49,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 10. Write queue-safe SGE job script templates for xTB validation/Tier-1 runs; avoid running production calculations in interactive sessions.
 11. Upgrade placeholders: real oligomer assembly -> band gap; real dimer calculation.
 12. Not yet built: Tier-2 DFT adapter, analysis/plots, expanded libraries toward ~100x30x25, HPC orchestration.
+13. Reconcile the calibration-anchor mismatch between `configs/tier1.yaml` (`agagcl_peak_strict`) and `configs/calibration_profiles.yaml` default screening profile (`agagcl_peak_relaxed`).
 
 ## Immediate next action
 Get PI sign-off on using `agagcl_peak_strict` as the screening calibration anchor.
