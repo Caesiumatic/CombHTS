@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-18
+- Added scientific-invariant regression tests (`tests/test_invariants.py`): the pinned
+  redox→V conversion reproduces its constants, is monotonic, and round-trips; the single
+  `tier1.yaml` oxidation calibration (slope 0.725837 / intercept -3.145372) is applied with the
+  identical slope/intercept transform to monomer Eox, the solvent anodic limit, AND anion Eox
+  (T11); `eps sanity` can FAIL (EDOT forced above thiophene → FAIL) and the clean directional
+  ordering passes; the memo always marks both unmeasurable §7 metrics "not computable" and never
+  fabricates a number; and `eps analyze` placeholder/diagnostic labels are present.
 - Added native provenance sidecars: every primary CLI output (`run-tier1`, `validate`, `memo`,
   `analyze`) now also writes `<output>.provenance.json` (`src/eps/provenance.py`) capturing a UTC
   timestamp, git commit short+long + dirty flag, `eps` version, engine/method, SHA-256 of the
