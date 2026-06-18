@@ -2,6 +2,11 @@ filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
   max_solvation_dG_kcal_mol: -3.0
+oligomer:
+  # Oligomer length for the optical-gap calculation (sTDA-xTB / HOMO-LUMO proxy on the n-mer).
+  # n in [4,6] acceptable per directive §4.1; default hexamer. Dimerization uses dimer_n=2.
+  n: 6
+  dimer_n: 2
 calibration:
   monomer_eox:
     enabled: true

@@ -8,7 +8,13 @@ import pytest
 
 from eps.engines import CalcRequest, SpeciesSpec, XTBEngine
 from eps.engines import xtb as xtb_module
-from eps.engines.xtb import parse_homo_lumo, parse_total_energy, parse_xtb_json, solvent_flag
+from eps.engines.xtb import (
+    parse_homo_lumo,
+    parse_stda_lowest_excitation,
+    parse_total_energy,
+    parse_xtb_json,
+    solvent_flag,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -40,6 +46,16 @@ def test_parse_xtb_json_fixture() -> None:
 
     assert parsed["total_energy_Eh"] == pytest.approx(-36.789012345678)
     assert parsed["homo_lumo_gap_eV"] == pytest.approx(2.4567)
+
+
+def test_parse_stda_lowest_excitation_returns_first_state() -> None:
+    text = (FIXTURES / "stda_output.txt").read_text(encoding="utf-8")
+    assert parse_stda_lowest_excitation(text) == pytest.approx(2.2340)
+
+
+def test_parse_stda_lowest_excitation_raises_without_states() -> None:
+    with pytest.raises(ValueError, match="sTDA excitation"):
+        parse_stda_lowest_excitation("no excited states here\n")
 
 
 @pytest.mark.skipif(shutil.which("xtb") is None, reason="xtb not installed")

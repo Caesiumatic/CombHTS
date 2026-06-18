@@ -25,6 +25,7 @@ from eps.properties import (
     monomer_eox_vs_AgAgCl,
     monomer_solvation,
     polymer_optical_gap,
+    polymer_optical_gap_method,
     solvent_anodic_limit,
     solvent_anodic_limit_csv,
     solvent_cathodic_limit,
@@ -32,6 +33,13 @@ from eps.properties import (
 )
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
+from eps.structures.oligomer import (
+    DEFAULT_OLIGOMER_N,
+    PolymerizationSpec,
+    load_polymerization_specs,
+    oligomer_smiles,
+    write_building_block_artifact,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_TIER1_CONFIG = PROJECT_ROOT / "configs" / "tier1.yaml"
@@ -73,7 +81,12 @@ def run_tier1(
     electrolytes = load_electrolytes()
     tier1_config = load_tier1_config(tier1_config_path)
 
-    monomer_table = compute_monomer_table(monomers, engine, cache, method=method)
+    oligomer_config = tier1_config.get("oligomer", {})
+    oligomer_n = int(oligomer_config.get("n", DEFAULT_OLIGOMER_N))
+    polymerization_specs = load_polymerization_specs()
+    monomer_table = compute_monomer_table(
+        monomers, engine, cache, method=method, oligomer_n=oligomer_n, specs=polymerization_specs
+    )
     monomer_solvent_table = compute_monomer_solvent_table(
         monomers,
         solvents,
@@ -118,6 +131,14 @@ def run_tier1(
     all_output.parent.mkdir(parents=True, exist_ok=True)
     all_triads.to_csv(all_output, index=False)
 
+    # Verification artifact: human-reviewable per-monomer coupling chemistry + assembled SMILES.
+    try:
+        write_building_block_artifact(
+            monomers, polymerization_specs, oligomer_n, output.parent / "oligomer_buildingblocks.csv"
+        )
+    except Exception:  # noqa: BLE001 - the artifact must never break the screen.
+        pass
+
     total = len(all_triads)
     survived = len(ranked)
     retention = survived / total if total else 0.0
@@ -138,12 +159,31 @@ def compute_monomer_table(
     engine: Engine,
     cache: SQLiteCache,
     method: str = "mock-gfn2",
+    oligomer_n: int = DEFAULT_OLIGOMER_N,
+    specs: dict[str, PolymerizationSpec] | None = None,
 ) -> pd.DataFrame:
-    """Compute monomer-only properties once per monomer."""
+    """Compute monomer-only properties once per monomer.
 
+    The optical gap is now the sTDA-xTB (or HOMO–LUMO proxy) gap of the assembled n-mer
+    oligomer (directive §3.1/§4.1) rather than a single-monomer placeholder.
+    """
+
+    specs = specs if specs is not None else load_polymerization_specs()
     rows = []
     for monomer in monomers:
-        optical_gap = _safe_calculate(lambda: polymer_optical_gap(monomer, engine, cache, method=method))
+        spec = specs.get(monomer.name)
+        if spec is None:
+            optical_gap = _CalcOutcome(float("nan"), "failed", "no polymerization spec for monomer")
+            gap_method = "none"
+            oligo_smiles = ""
+        else:
+            optical_gap = _safe_calculate(
+                lambda: polymer_optical_gap(monomer, engine, cache, method=method, spec=spec, n=oligomer_n)
+            )
+            gap_method = _safe_str(
+                lambda: polymer_optical_gap_method(monomer, engine, cache, method=method, spec=spec, n=oligomer_n)
+            )
+            oligo_smiles = _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, oligomer_n))
         dimerization = _safe_calculate(lambda: dimerization_dG(monomer, engine, cache, method=method))
         rows.append(
             {
@@ -152,6 +192,10 @@ def compute_monomer_table(
                 "monomer_smiles": monomer.smiles,
                 "monomer_canonical_smiles": monomer.canonical_smiles,
                 "optical_gap_eV": optical_gap.value,
+                "optical_gap_method": gap_method,
+                "optical_gap_oligomer_n": oligomer_n,
+                "optical_gap_oligomer_smiles": oligo_smiles,
+                "optical_gap_coupling_approximate": bool(spec.approximate) if spec else "",
                 "optical_gap_calc_status": optical_gap.status,
                 "optical_gap_calc_error": optical_gap.error,
                 "dimerization_dG_kcal_mol": dimerization.value,
@@ -516,6 +560,15 @@ def _safe_calculate(calculate: Callable[[], float]) -> _CalcOutcome:
         return _CalcOutcome(value=float(calculate()), status="ok", error="")
     except Exception as exc:  # noqa: BLE001 - audit output must preserve per-property failures.
         return _CalcOutcome(value=float("nan"), status="failed", error=_concise_error(exc))
+
+
+def _safe_str(produce: Callable[[], str]) -> str:
+    """Best-effort string metadata (oligomer SMILES, method label); never aborts a row."""
+
+    try:
+        return str(produce())
+    except Exception as exc:  # noqa: BLE001
+        return f"error: {_concise_error(exc)}"
 
 
 def _concise_error(exc: Exception) -> str:
