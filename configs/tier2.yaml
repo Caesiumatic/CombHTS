@@ -1,0 +1,24 @@
+# Tier-2 DFT (Gaussian 16) engine configuration.
+#
+# v1 = GAS-PHASE ADIABATIC IONIZATION ENERGY (deltaE_SCF, geometry optimization only).
+# With smd_solvent: null and use_freq: false the engine computes Eox as the bare
+# electronic-energy difference deltaE_SCF = E_SCF(cation) - E_SCF(neutral) of two gas-phase
+# B3LYP/6-31G(d,p) optimizations. This is the documented v1 rigor level and matches the
+# build-only scaffold's prior hardcoded behavior (solvent_smd=None, no Freq) — now config-driven.
+#
+# DOCUMENTED FUTURE RIGOR TOGGLE: setting smd_solvent (e.g. "acetonitrile") AND use_freq: true
+# upgrades Eox from a gas-phase deltaE_SCF to a SOLVATED delta-G — each species is then optimized
+# in the SMD continuum and a frequency job adds the thermal free-energy correction, so Eox
+# becomes deltaG = G(cation) - G(neutral) in solution. Flipping these two keys is the only
+# change needed; nothing in the engine is hardcoded. (Both off in v1.)
+#
+# This config does NOT pin any production decision: running Tier-2 at scale remains a separate
+# PI / T8 decision. It only parameterizes HOW a Tier-2 Gaussian job is built and run.
+
+method: "B3LYP"            # DFT functional for the route line.
+basis: "6-31G(d,p)"        # Gaussian basis set for the route line.
+smd_solvent: null          # null -> gas phase. Set e.g. "acetonitrile" to add SCRF=(SMD,Solvent=...).
+use_freq: false            # false -> Opt only (deltaE_SCF). true -> add Freq for a thermal delta-G.
+mem: "8GB"                 # Gaussian Link0 %mem (per job). Absent -> g16 uses a small default.
+nprocshared: 8             # Gaussian Link0 %nprocshared (per job). Absent -> g16 runs single-core.
+calibration_set: "benchmark_calibration_eligible"  # which benchmark subset feeds eps calibrate-dft.
