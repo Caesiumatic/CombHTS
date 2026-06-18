@@ -105,6 +105,44 @@ def test_every_library_monomer_has_a_spec_that_assembles() -> None:
             assert not any(a.GetAtomicNum() == 0 for a in mol.GetAtoms())  # no dummies
 
 
+def test_truncate_inert_alkyl_to_methyl_shortens_side_chains_but_keeps_backbone() -> None:
+    from eps.structures.oligomer import truncate_inert_alkyl_to_methyl
+
+    # Dioctylfluorene -> 9,9-dimethylfluorene; 3-hexylthiophene -> 3-methylthiophene.
+    dioctyl = "CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21"
+    truncated, changed = truncate_inert_alkyl_to_methyl(dioctyl)
+    assert changed
+    assert truncated == Chem.MolToSmiles(Chem.MolFromSmiles("CC1(C)c2ccccc2-c2ccccc21"))
+
+    hexyl, changed2 = truncate_inert_alkyl_to_methyl("CCCCCCc1ccsc1")
+    assert changed2
+    assert hexyl == Chem.MolToSmiles(Chem.MolFromSmiles("Cc1ccsc1"))
+
+    # No inert alkyl -> unchanged; the aromatic backbone (and dioxy bridge) is preserved.
+    for clean in ("c1ccsc1", "C1COc2cscc2O1"):
+        out, changed3 = truncate_inert_alkyl_to_methyl(clean)
+        assert changed3 is False
+        assert Chem.MolFromSmiles(out).GetNumAtoms() == Chem.MolFromSmiles(clean).GetNumAtoms()
+
+
+def test_optical_gap_oligomer_truncates_only_when_side_chains_present() -> None:
+    from eps.properties.calculators import optical_gap_oligomer
+
+    specs = load_polymerization_specs()
+    monomers = {m.name: m for m in load_monomers()}
+
+    fluorene_smiles, fluorene_truncated = optical_gap_oligomer(
+        monomers["fluorene 9,9-dioctyl"], specs["fluorene 9,9-dioctyl"], DEFAULT_OLIGOMER_N
+    )
+    assert fluorene_truncated is True
+    assert "CCCCCCCC" not in fluorene_smiles  # the octyl tails are gone
+
+    _, thiophene_truncated = optical_gap_oligomer(
+        monomers["thiophene"], specs["thiophene"], DEFAULT_OLIGOMER_N
+    )
+    assert thiophene_truncated is False
+
+
 def test_polymer_optical_gap_is_computed_on_the_oligomer_not_the_monomer(tmp_path: Path) -> None:
     from eps.engines import CalcRequest, MockEngine, SpeciesSpec
     from eps.properties.calculators import polymer_optical_gap, polymer_optical_gap_method

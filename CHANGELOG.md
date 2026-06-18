@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-06-18 (later 3) — fixes from the first real oligomer harvest
+- Issue 1 (bug): the `fluorene 9,9-dioctyl` n=6 oligomer (416 atoms) failed RDKit 3D embedding,
+  so its `optical_gap_eV` was NaN and all ~110 fluorene triads dropped out of survivors.
+  - For the OPTICAL-GAP oligomer ONLY, long inert saturated alkyl side chains are now truncated
+    to methyl before embedding (`truncate_inert_alkyl_to_methyl`): the gap is a backbone
+    property and saturated chains are electronically innocent. Recorded as
+    `optical_gap_sidechain_truncated` in the all-triads output and the building-blocks artifact.
+    The monomer Eox / solvation / dimerization paths keep the full side chains (unchanged).
+  - Embedding hardened generally (`geometry.py`): ETKDGv3 deterministic embed first, then
+    random-coordinate retries across several seeds with a larger iteration budget; a clear
+    ValueError on total failure (never a silent NaN). The full dioctylfluorene hexamer now
+    embeds even without truncation.
+
 ## 2026-06-18 (later 2) — corrected the alkylenedioxy monomer SMILES (2,3 -> 3,4)
 - Fixed a logged pinned-data error: `data/monomers.csv` stored EDOT/ProDOT/EDOP/EDOS as the
   2,3-dioxy isomer (one α-carbon blocked); corrected to the directive §2.1 3,4-dioxy isomer

@@ -3,7 +3,30 @@ from __future__ import annotations
 import itertools
 import math
 
+import pytest
+
 from eps.structures import smiles_to_xyz
+from eps.structures.oligomer import load_polymerization_specs, oligomer_smiles
+
+
+def test_smiles_to_xyz_embeds_large_dioctylfluorene_hexamer() -> None:
+    # The 416-atom dioctylfluorene n=6 oligomer fails the deterministic embed; the hardened
+    # random-coordinate retries must still produce a geometry (regression for the harvest bug
+    # where the whole fluorene column dropped out with optical_gap = NaN).
+    spec = load_polymerization_specs()["fluorene 9,9-dioctyl"]
+    monomer = next(m for m in __import__("eps.chemspace", fromlist=["load_monomers"]).load_monomers()
+                   if m.name == "fluorene 9,9-dioctyl")
+    hexamer = oligomer_smiles(monomer.canonical_smiles, spec, 6)
+
+    xyz = smiles_to_xyz(hexamer)
+    atom_count = int(xyz.strip().splitlines()[0])
+    assert atom_count == 416
+    assert atom_count == len(xyz.strip().splitlines()) - 2
+
+
+def test_smiles_to_xyz_raises_clear_error_on_unembeddable_input() -> None:
+    with pytest.raises(ValueError, match="Invalid SMILES|failed to embed"):
+        smiles_to_xyz("not a smiles at all !!!")
 
 
 def _parse_xyz_coords(xyz: str) -> list[tuple[float, float, float]]:

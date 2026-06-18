@@ -11,6 +11,7 @@ from eps.structures.oligomer import (
     DIMER_N,
     PolymerizationSpec,
     oligomer_smiles,
+    truncate_inert_alkyl_to_methyl,
 )
 
 DEFAULT_METHOD = "mock-gfn2"
@@ -147,8 +148,21 @@ def monomer_solvation(
     return cached_run(cache, engine, req, solvent.name).value
 
 
-def _optical_gap_request(monomer: Monomer, spec: PolymerizationSpec, method: str, n: int) -> CalcRequest:
+def optical_gap_oligomer(monomer: Monomer, spec: PolymerizationSpec, n: int) -> tuple[str, bool]:
+    """Return the (possibly side-chain-truncated) optical-gap oligomer SMILES + truncated flag.
+
+    Long inert saturated side chains are truncated to methyl for the OPTICAL-GAP oligomer only
+    (they are electronically innocent for the conjugated-backbone gap and otherwise make large
+    hexamers — e.g. dioctylfluorene — fail 3D embedding). The monomer Eox / solvation /
+    dimerization paths keep the full side chains.
+    """
+
     oligo_smiles = oligomer_smiles(monomer.canonical_smiles, spec, n)
+    return truncate_inert_alkyl_to_methyl(oligo_smiles)
+
+
+def _optical_gap_request(monomer: Monomer, spec: PolymerizationSpec, method: str, n: int) -> CalcRequest:
+    oligo_smiles, _ = optical_gap_oligomer(monomer, spec, n)
     return CalcRequest(
         species=SpeciesSpec(oligo_smiles, charge=0, multiplicity=1),
         method=method,

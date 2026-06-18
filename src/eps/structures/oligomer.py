@@ -138,6 +138,52 @@ def oligomer_smiles(monomer_smiles: str, spec: PolymerizationSpec, n: int) -> st
     return Chem.MolToSmiles(assemble_oligomer(building_block, n))
 
 
+def truncate_inert_alkyl_to_methyl(smiles: str) -> tuple[str, bool]:
+    """Trim long inert saturated alkyl substituents down to methyl; return (smiles, truncated).
+
+    The optical / HOMO-LUMO gap is a property of the conjugated backbone; saturated side chains
+    (e.g. the 9,9-dioctyl of polyfluorene, the 3-hexyl of P3HT) are electronically innocent and
+    do not meaningfully shift the gap, but they bloat the oligomer and make large hexamers fail
+    3D embedding. This leaf-trims pure-hydrocarbon sp3 chain carbons until each side chain
+    attached to the conjugated/ring system is at most one carbon (a methyl). Ring carbons,
+    aromatic carbons, and any carbon bonded to a heteroatom are preserved, so the backbone and
+    the dioxy bridges are untouched. Use for the OPTICAL-GAP oligomer ONLY.
+    """
+
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return smiles, False
+    rw = Chem.RWMol(mol)
+    changed = False
+    while True:
+        victim: int | None = None
+        for atom in rw.GetAtoms():
+            if (
+                atom.GetAtomicNum() == 6
+                and not atom.GetIsAromatic()
+                and not atom.IsInRing()
+                and atom.GetDegree() == 1
+            ):
+                neighbor = atom.GetNeighbors()[0]
+                # Delete a terminal saturated carbon only when its sole heavy neighbor is itself
+                # a saturated, non-aromatic, non-ring carbon (i.e. we are mid-chain). This leaves
+                # the carbon directly attached to a ring/heteroatom in place as a methyl.
+                if (
+                    neighbor.GetAtomicNum() == 6
+                    and not neighbor.GetIsAromatic()
+                    and not neighbor.IsInRing()
+                ):
+                    victim = atom.GetIdx()
+                    break
+        if victim is None:
+            break
+        rw.RemoveAtom(victim)
+        changed = True
+    truncated = rw.GetMol()
+    Chem.SanitizeMol(truncated)
+    return Chem.MolToSmiles(truncated), changed
+
+
 def oligomer_xyz(monomer_smiles: str, spec: PolymerizationSpec, n: int, charge: int = 0) -> str:
     """Return a 3D XYZ geometry for the assembled n-mer (via the shared ETKDG path)."""
 
@@ -172,6 +218,20 @@ def write_building_block_artifact(
                 row[label] = oligomer_smiles(monomer.canonical_smiles, spec, length) if spec else ""
             except Exception as exc:  # noqa: BLE001
                 row[label] = f"ASSEMBLY_ERROR: {type(exc).__name__}: {exc}"
+        # Record the side-chain-truncated optical-gap oligomer (used for the band gap only).
+        try:
+            if spec:
+                truncated_smiles, was_truncated = truncate_inert_alkyl_to_methyl(
+                    oligomer_smiles(monomer.canonical_smiles, spec, n)
+                )
+                row[f"optical_gap_oligomer_n{n}_truncated_smiles"] = truncated_smiles
+                row["optical_gap_sidechain_truncated"] = was_truncated
+            else:
+                row[f"optical_gap_oligomer_n{n}_truncated_smiles"] = ""
+                row["optical_gap_sidechain_truncated"] = ""
+        except Exception as exc:  # noqa: BLE001
+            row[f"optical_gap_oligomer_n{n}_truncated_smiles"] = f"ASSEMBLY_ERROR: {type(exc).__name__}: {exc}"
+            row["optical_gap_sidechain_truncated"] = ""
         rows.append(row)
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)

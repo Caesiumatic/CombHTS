@@ -10,6 +10,7 @@ from eps.structures.oligomer import (
     detect_alpha_carbons,
     load_polymerization_specs,
     oligomer_smiles,
+    truncate_inert_alkyl_to_methyl,
     write_building_block_artifact,
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     "load_polymerization_specs",
     "oligomer_smiles",
     "smiles_to_xyz",
+    "truncate_inert_alkyl_to_methyl",
     "write_building_block_artifact",
 ]
