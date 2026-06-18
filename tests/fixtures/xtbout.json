@@ -1,8 +1,19 @@
 {
+  "_comment": "Synthetic-but-schema-faithful xtb --json (xtbout.json) output. Keys and nesting mirror a real GFN2-xTB dump; energies are illustrative. The parser walks recursively for 'total energy' and 'HOMO-LUMO gap/eV'.",
+  "coordinate file": "input.xyz",
+  "method": "GFN2-xTB",
+  "xtb version": "6.4.1",
+  "number of atoms": 9,
+  "number of electrons": 36,
+  "charge": 0,
+  "spin": 0.0,
   "total energy": -36.789012345678,
+  "electronic energy": -37.012345678901,
   "HOMO-LUMO gap/eV": 2.4567,
-  "metadata": {
-    "program": "xtb",
-    "method": "GFN2-xTB"
-  }
+  "HOMO/eV": -9.8765,
+  "LUMO/eV": -7.4198,
+  "dipole/D": [0.0, 0.0, 1.2345],
+  "partial charges": [-0.123, 0.045, 0.078, -0.211, 0.102, 0.067, -0.054, 0.088, 0.012],
+  "convergence": true,
+  "program call": "xtb input.xyz --gfn 2 --json"
 }

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-18
+- Hardened `XTBEngine._run_xtb`: the subprocess return code is now checked and raises the
+  xTB-exit `RuntimeError` BEFORE `xtbout.json` is parsed, so a present-but-garbage JSON can no
+  longer mask a real xTB failure with a JSON `ValueError`. Success path is byte-identical;
+  added a regression test that simulates a nonzero exit with corrupt `xtbout.json` (debt #9).
+- Replaced the hand-written `tests/fixtures/xtbout.json` with a synthetic-but-schema-faithful
+  fixture mirroring real `xtb --json` keys/nesting (`total energy`, `HOMO-LUMO gap/eV`, plus
+  realistic siblings); existing parser tests unchanged (debt #7, fixture part).
+- Version-controlled cluster job templates under `scripts/` (`run_tier1.sge`,
+  `run_validate.sge`, `run_memo.sge`, `run_analyze.sge`) — each starts its SGE directives with
+  `#$ -S /bin/bash` and uses the known-good modules/conda/OMP preamble; `run_analyze` omits the
+  xtb module (read-only). Added `scripts/README.md` documenting `qsub` usage and the `-S`
+  requirement (debt #10). Templates only — not submitted.
+
 ## 2026-06-17
 - Extended the experimental-validation step (directive §7). `eps validate` now additionally
   reports, per calibration profile: Spearman rank correlation ρ (computed with pandas

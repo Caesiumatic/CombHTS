@@ -48,10 +48,10 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 4. Decide whether to fund a separate Fc/Fc+ track; do not force-convert incompatible Ag/Ag+, SCE, or polymer-onset rows to fill it.
 5. Resolve or re-audit candidate/provenance rows in `data/benchmark_candidates.csv`, especially EDOT current rows, nonaqueous SCE/Ag/Ag+/pseudo-reference conversions, mixed solvents, Lewis-acid-modified media, and missing source locators.
 6. Solvent anodic/cathodic limits are computed per spec §3.2 (adiabatic ΔSCF on the solvent molecule), with CSV as fallback; the anodic limit and anion Eox now share the monomer oxidation calibration (THINK T11 decided). Remaining future work is to validate the calibrated solvent/anion values against a measured solvent/anion benchmark (the calibration is currently a monomer-fit extrapolation).
-7. Replace the hand-written xtbout.json fixture with a captured real cluster `xtbout.json`; keep checking full ALPB solvent availability for the proxy list.
+7. ADDRESSED (fixture): `tests/fixtures/xtbout.json` is now schema-faithful (mirrors real `xtb --json` keys/nesting); still worth replacing with a captured real cluster dump when convenient, and keep checking full ALPB solvent availability for the proxy list.
 8. Get professor sign-off on the 4 ALPB proxy solvents. (The ddCOSMO alternative is no longer needed on convergence grounds — T10 decided: 0 anion failures in the clean harvest — but PI sign-off on the ALPB proxies is still outstanding.)
-9. In `XTBEngine._run_xtb`, check subprocess return code before parsing `xtbout.json`.
-10. Write queue-safe SGE job script templates for xTB validation/Tier-1 runs; avoid running production calculations in interactive sessions.
+9. DONE: `XTBEngine._run_xtb` now checks the subprocess return code and raises before parsing `xtbout.json`, so a garbage JSON cannot mask a real xTB failure (regression test added).
+10. DONE (templates): version-controlled SGE templates live in `scripts/` (`run_tier1`, `run_validate`, `run_memo`, `run_analyze`) with a `#$ -S /bin/bash` first directive and the known-good module/conda/OMP preamble; see `scripts/README.md`. Submit via `qsub`, not interactively.
 11. Upgrade placeholders: real oligomer assembly -> band gap; real dimer calculation.
 12. Not yet built: Tier-2 DFT adapter, analysis/plots, expanded libraries toward ~100x30x25, HPC orchestration.
 13. Reconcile the calibration-anchor mismatch between `configs/tier1.yaml` (`agagcl_peak_strict`) and `configs/calibration_profiles.yaml` default screening profile (`agagcl_peak_relaxed`).
