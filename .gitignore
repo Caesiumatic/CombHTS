@@ -13,4 +13,6 @@ outputs/
 *.pbs
 *.sbatch
 *.sge
+# but DO track the version-controlled job templates under scripts/
+!scripts/*.sge
 .last_*_jobid
