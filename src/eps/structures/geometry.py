@@ -6,6 +6,37 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 ETKDG_RANDOM_SEED = 61453
+# Fallback seeds tried (with random starting coordinates) when the deterministic embed fails;
+# large/floppy oligomers (e.g. the dioctylfluorene hexamer) often need random coordinates.
+ETKDG_FALLBACK_SEEDS = (0xC0FFEE, 1, 7, 42, 2024)
+ETKDG_MAX_ITERATIONS = 2000
+
+
+def _embed(canonical_smiles: str):
+    """Embed a 3D conformer, hardening against large/floppy systems.
+
+    Tries the deterministic ETKDGv3 embed first (for reproducibility), then retries with
+    random starting coordinates across several seeds and a larger iteration budget. Raises a
+    clear ValueError if every attempt fails — never returns an un-embedded molecule.
+    """
+
+    mol = Chem.MolFromSmiles(canonical_smiles, sanitize=True)
+    if mol is None:
+        raise ValueError(f"Invalid SMILES for geometry generation: {canonical_smiles}")
+    mol = Chem.AddHs(mol)
+
+    attempts = [(ETKDG_RANDOM_SEED, False)] + [(seed, True) for seed in ETKDG_FALLBACK_SEEDS]
+    for seed, use_random_coords in attempts:
+        params = AllChem.ETKDGv3()
+        params.randomSeed = seed
+        params.useRandomCoords = use_random_coords
+        params.maxIterations = ETKDG_MAX_ITERATIONS
+        if AllChem.EmbedMolecule(mol, params) == 0:
+            return mol
+    raise ValueError(
+        f"RDKit failed to embed SMILES after {len(attempts)} attempts "
+        f"(deterministic + random-coordinate retries): {canonical_smiles}"
+    )
 
 
 def smiles_to_xyz(canonical_smiles: str, charge: int = 0) -> str:
@@ -21,17 +52,7 @@ def smiles_to_xyz(canonical_smiles: str, charge: int = 0) -> str:
         XYZ-format geometry in angstrom.
     """
 
-    mol = Chem.MolFromSmiles(canonical_smiles, sanitize=True)
-    if mol is None:
-        raise ValueError(f"Invalid SMILES for geometry generation: {canonical_smiles}")
-    mol = Chem.AddHs(mol)
-
-    params = AllChem.ETKDGv3()
-    params.randomSeed = ETKDG_RANDOM_SEED
-    params.useRandomCoords = False
-    status = AllChem.EmbedMolecule(mol, params)
-    if status != 0:
-        raise ValueError(f"RDKit failed to embed SMILES: {canonical_smiles}")
+    mol = _embed(canonical_smiles)
 
     if AllChem.MMFFHasAllMoleculeParams(mol):
         AllChem.MMFFOptimizeMolecule(mol, maxIters=500)

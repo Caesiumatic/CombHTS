@@ -24,6 +24,7 @@ from eps.properties import (
     dimerization_dG,
     monomer_eox_vs_AgAgCl,
     monomer_solvation,
+    optical_gap_oligomer,
     polymer_optical_gap,
     polymer_optical_gap_method,
     solvent_anodic_limit,
@@ -182,6 +183,7 @@ def compute_monomer_table(
             dimerization = _CalcOutcome(float("nan"), "failed", "no polymerization spec for monomer")
             gap_method = "none"
             oligo_smiles = ""
+            gap_truncated: bool | str = ""
         else:
             optical_gap = _safe_calculate(
                 lambda: polymer_optical_gap(monomer, engine, cache, method=method, spec=spec, n=oligomer_n)
@@ -189,7 +191,10 @@ def compute_monomer_table(
             gap_method = _safe_str(
                 lambda: polymer_optical_gap_method(monomer, engine, cache, method=method, spec=spec, n=oligomer_n)
             )
-            oligo_smiles = _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, oligomer_n))
+            try:
+                oligo_smiles, gap_truncated = optical_gap_oligomer(monomer, spec, oligomer_n)
+            except Exception as exc:  # noqa: BLE001 - keep audit metadata best-effort.
+                oligo_smiles, gap_truncated = f"error: {_concise_error(exc)}", ""
             dimerization = _safe_calculate(
                 lambda: dimerization_dG(monomer, engine, cache, method=method, spec=spec, dimer_n=dimer_n)
             )
@@ -203,6 +208,7 @@ def compute_monomer_table(
                 "optical_gap_method": gap_method,
                 "optical_gap_oligomer_n": oligomer_n,
                 "optical_gap_oligomer_smiles": oligo_smiles,
+                "optical_gap_sidechain_truncated": gap_truncated,
                 "optical_gap_coupling_approximate": bool(spec.approximate) if spec else "",
                 "optical_gap_calc_status": optical_gap.status,
                 "optical_gap_calc_error": optical_gap.error,
