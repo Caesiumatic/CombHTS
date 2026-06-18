@@ -48,9 +48,32 @@ def test_alpha_building_block_has_two_isotope_dummies() -> None:
 
 
 def test_alpha_building_block_rejects_non_clean_ring() -> None:
-    # The stored EDOT canonical SMILES does not expose two clean α-C–H carbons.
+    # A 2,3-dioxythiophene has one α-carbon blocked, so auto-derivation must refuse it
+    # (this is the WRONG isomer; the library now stores the 3,4-dioxy form, see
+    # test_alkylenedioxy_monomers_have_two_free_alpha_carbons).
     with pytest.raises(ValueError, match="exactly 2 α-carbons"):
         alpha_building_block_smiles("c1cc2c(s1)OCCO2")
+
+
+def test_alkylenedioxy_monomers_have_two_free_alpha_carbons() -> None:
+    """Regression: EDOT/ProDOT/EDOP/EDOS must be the 3,4-dioxy isomer with BOTH α-carbons
+    (adjacent to the ring heteroatom) free (bearing an H) for clean 2,5 coupling. Guards
+    against silently regressing to the 2,3-dioxy isomer (one α blocked)."""
+
+    library = {m.name: m for m in load_monomers()}
+    for name in ("EDOT", "ProDOT", "EDOP", "EDOS"):
+        mol = Chem.MolFromSmiles(library[name].canonical_smiles)
+        assert mol is not None
+        alpha = detect_alpha_carbons(mol)
+        assert len(alpha) == 2, f"{name}: expected 2 α-carbons, got {len(alpha)}"
+        for idx in alpha:
+            atom = mol.GetAtomWithIdx(idx)
+            assert atom.GetTotalNumHs() >= 1, f"{name}: α-carbon {idx} is blocked (no H)"
+            assert any(nb.GetAtomicNum() in {7, 8, 16, 34} for nb in atom.GetNeighbors())
+        # And the spec is now clean α-coupling, not an approximate explicit block.
+        spec = load_polymerization_specs()[name]
+        assert spec.coupling_mode == "alpha"
+        assert spec.approximate is False
 
 
 def test_assemble_thiophene_hexamer_atom_count_and_connectivity() -> None:
