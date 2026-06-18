@@ -7,6 +7,10 @@ oligomer:
   # n in [4,6] acceptable per directive §4.1; default hexamer. Dimerization uses dimer_n=2.
   n: 6
   dimer_n: 2
+  # Lengths for the REPORTED-ONLY oligomer Eox-vs-chain-length descriptor (additive; does NOT
+  # enter any hard filter or the composite score). n=1 (the monomer anchor) is added implicitly
+  # for the classic 1/n infinite-chain extrapolation.
+  eox_oligomer_lengths: [2, 3, 4, 6]
 calibration:
   monomer_eox:
     enabled: true
