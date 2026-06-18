@@ -50,12 +50,18 @@ DEFAULT_TIER1_CONFIG = PROJECT_ROOT / "configs" / "tier1.yaml"
 POINTS_COLUMNS = (
     "monomer_name",
     "canonical_smiles",
+    "label_type",
     "xtb_descriptor",
     "dft_Eox_eV",
     "exp_Eox_V_vs_AgAgCl",
     "dft_calc_status",
     "dft_calc_error",
 )
+
+# The DFT ΔSCF Eox is a thermodynamic PEAK observable, not the kinetically-defined onset, so the
+# DFT->experiment validation (Fit 2) is restricted to peak rows (research review §3.1). Fit 1
+# (xTB->DFT) never touches experiment and uses ALL eligible monomers regardless of label_type.
+PEAK_LABEL_TYPE = "monomer_oxidation_peak"
 
 # Mock DFT uses a DISTINCT method label from the mock xTB descriptor so the two are not the same
 # cached value (different cache key + different MockEngine hash), keeping the fit non-degenerate.
@@ -80,6 +86,8 @@ class DFTCalibrationResult:
     report_path: Path
     json_path: Path
     pinned_xtb_to_exp: dict[str, float] | None = field(default=None)
+    n_dft_to_exp_peak_points: int = 0
+    n_nonpeak_excluded: int = 0
 
 
 def run_dft_calibration(
@@ -139,6 +147,7 @@ def run_dft_calibration(
             {
                 "monomer_name": monomer.name,
                 "canonical_smiles": monomer.canonical_smiles,
+                "label_type": str(record.get("label_type", "")),
                 "xtb_descriptor": xtb_value,
                 "dft_Eox_eV": dft_value,
                 "exp_Eox_V_vs_AgAgCl": exp_eox,
@@ -150,8 +159,14 @@ def run_dft_calibration(
     points = pd.DataFrame(rows, columns=list(POINTS_COLUMNS))
     ok_points = points[points["dft_calc_status"] == "ok"].copy()
 
+    # Fit 1 (xTB->DFT) uses ALL eligible monomers — it never touches experiment, so peak/onset
+    # is irrelevant to it.
     xtb_to_dft = _maybe_fit(ok_points["xtb_descriptor"], ok_points["dft_Eox_eV"])
-    dft_to_exp = _maybe_fit(ok_points["dft_Eox_eV"], ok_points["exp_Eox_V_vs_AgAgCl"])
+    # Fit 2 (DFT->experiment) uses ONLY peak rows: the DFT ΔSCF Eox is a thermodynamic peak
+    # observable, and mixing onset rows adds kinetic noise to the validation.
+    peak_points = ok_points[ok_points["label_type"] == PEAK_LABEL_TYPE].copy()
+    n_nonpeak_excluded = int(len(ok_points) - len(peak_points))
+    dft_to_exp = _maybe_fit(peak_points["dft_Eox_eV"], peak_points["exp_Eox_V_vs_AgAgCl"])
     pinned = _load_pinned_xtb_to_exp(tier1_config_path)
 
     out = Path(outdir)
@@ -176,6 +191,8 @@ def run_dft_calibration(
         report_path,
         points=points,
         ok_points=ok_points,
+        peak_points=peak_points,
+        n_nonpeak_excluded=n_nonpeak_excluded,
         xtb_to_dft=xtb_to_dft,
         dft_to_exp=dft_to_exp,
         pinned=pinned,
@@ -200,6 +217,8 @@ def run_dft_calibration(
         report_path=report_path,
         json_path=json_path,
         pinned_xtb_to_exp=pinned,
+        n_dft_to_exp_peak_points=int(len(peak_points)),
+        n_nonpeak_excluded=n_nonpeak_excluded,
     )
 
 
@@ -231,6 +250,7 @@ def _calibration_monomers(
                 "monomer": monomer,
                 "solvent_name": row["solvent_name"],
                 "exp_Eox_V_vs_AgAgCl": float(row["exp_Eox_V_vs_AgAgCl"]),
+                "label_type": str(row.get("label_type", "")),
             }
         )
     if limit is not None:
@@ -344,6 +364,8 @@ def _write_report(
     *,
     points: pd.DataFrame,
     ok_points: pd.DataFrame,
+    peak_points: pd.DataFrame,
+    n_nonpeak_excluded: int,
     xtb_to_dft: LinearCalibration | None,
     dft_to_exp: LinearCalibration | None,
     pinned: dict[str, float] | None,
@@ -352,6 +374,7 @@ def _write_report(
     xtb_method: str,
     dft_method: str,
     benchmark_path: str | Path,
+    core_monomers: tuple[str, ...] = (),
 ) -> None:
     lines: list[str] = []
     lines.append("# DFT calibration report")
@@ -374,6 +397,7 @@ def _write_report(
     lines.append("## Fit 1 — xTB -> DFT calibration")
     lines.append("")
     lines.append("`dft_Eox_eV = slope * xtb_descriptor_V + intercept` (both broadly an energy/potential; slope ~ dimensionless eV/V).")
+    lines.append(f"Uses ALL {len(ok_points)} eligible monomers (peak + onset): Fit 1 never touches experiment, so label_type is irrelevant to it.")
     lines.append("")
     if xtb_to_dft is not None:
         lines.append(f"- slope = {xtb_to_dft.slope:.6f}")
@@ -383,12 +407,17 @@ def _write_report(
     else:
         lines.append("- INSUFFICIENT POINTS (< 2): fit not computed.")
     lines.append("")
-    lines.append("## Fit 2 — DFT -> experiment validation")
+    lines.append("## Fit 2 — DFT -> experiment validation (PEAK rows only)")
     lines.append("")
     lines.append(
         "`exp_Eox_V_vs_AgAgCl = slope * dft_Eox_eV + intercept`. NOTE: units differ (V vs eV), so "
         "this is a correlation/linear fit, NOT an equality check; the slope carries units of V/eV "
         "and a slope != 1 is expected."
+    )
+    lines.append(
+        f"Fit 2 uses ONLY `{PEAK_LABEL_TYPE}` rows: {len(peak_points)} peak monomers fed the fit; "
+        f"{n_nonpeak_excluded} non-peak (onset) monomer(s) were EXCLUDED. The DFT ΔSCF Eox is a "
+        "thermodynamic peak observable, so onset rows would add kinetic noise to the validation."
     )
     lines.append("")
     if dft_to_exp is not None:
@@ -397,7 +426,7 @@ def _write_report(
         lines.append(f"- R^2 = {dft_to_exp.r2:.4f}")
         lines.append(f"- MAE = {dft_to_exp.mae:.4f} V")
     else:
-        lines.append("- INSUFFICIENT POINTS (< 2): fit not computed.")
+        lines.append(f"- INSUFFICIENT PEAK POINTS (< 2; {len(peak_points)} peak monomer(s)): fit not computed.")
     lines.append("")
     lines.append("## Side-by-side: pinned xTB->experiment vs new xTB->DFT")
     lines.append("")

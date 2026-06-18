@@ -388,6 +388,10 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             print("xTB->DFT fit: INSUFFICIENT POINTS (< 2)")
+        print(
+            f"DFT->experiment fit uses PEAK rows only: {result.n_dft_to_exp_peak_points} peak "
+            f"monomer(s) fed it; {result.n_nonpeak_excluded} onset monomer(s) excluded."
+        )
         if result.dft_to_exp is not None:
             cal = result.dft_to_exp
             print(
@@ -396,7 +400,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"R^2 = {cal.r2:.4f}; MAE = {cal.mae:.4f} V"
             )
         else:
-            print("DFT->experiment fit: INSUFFICIENT POINTS (< 2)")
+            print("DFT->experiment fit: INSUFFICIENT PEAK POINTS (< 2)")
         if result.pinned_xtb_to_exp is not None:
             pinned = result.pinned_xtb_to_exp
             print(
