@@ -14,6 +14,8 @@ dependencies = [
     "pytest",
     "pyyaml",
     "rdkit",
+    "matplotlib",
+    "scikit-learn",
 ]
 
 [project.scripts]
