@@ -1,0 +1,52 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -j y
+#$ -N combhts_dftcal
+#$ -q intel24
+#$ -pe smp 8
+#$ -l h_rt=24:00:00
+# TEMPLATE - do NOT submit blindly. Runs the SMALL DFT-calibration batch with real Gaussian 16.
+#
+# SCOPE: this is the xTB->DFT CALIBRATION batch only: ~32 calibration-eligible benchmark monomers
+# collapsed to their unique canonical SMILES, each one DFT adiabatic_ip = neutral + cation
+# (~= 64 short gas-phase B3LYP/6-31G(d,p) opts). It is DISTINCT from, and far smaller than, the
+# full Tier-2 production screen over all survivors, which remains a SEPARATE PI / T8 decision and
+# is NOT launched here.
+#
+# The leading "#$ -S /bin/bash" is REQUIRED so the scheduler does not misparse this under csh.
+
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load gaussian/g16
+module load anaconda/3-2023.09
+# xtb supplies the xTB descriptor x (the same path as the xTB->experiment calibration).
+module load xtb/6.4.1 2>/dev/null || echo "NOTE: xtb module not found - xtb_descriptor will be recorded as a per-monomer failure and skipped"
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+export OMP_NUM_THREADS="${NSLOTS:-8}"
+export OMP_STACKSIZE=4G
+ulimit -s unlimited || true
+
+# Gaussian writes LARGE scratch (.rwf/.chk/.int) files. Keep them NODE-LOCAL: writing to the
+# networked home dir would blow the storage quota. Use the scheduler's $TMPDIR when present.
+export GAUSS_SCRDIR="${TMPDIR:-/tmp}/g16_scratch_${JOB_ID:-$$}"
+mkdir -p "$GAUSS_SCRDIR"
+cleanup() { rm -rf "$GAUSS_SCRDIR"; }
+trap cleanup EXIT
+
+cd "$HOME/CombHTS"
+
+# v1 Tier-2 = gas-phase adiabatic ionization energy (deltaE_SCF, opt only) per configs/tier2.yaml.
+eps calibrate-dft --engine gaussian --config configs/tier2.yaml
+
+# Inspect before trusting the fit:
+#   column -s, -t outputs/dft_calibration/dft_calibration_points.csv | less -S
+#   less outputs/dft_calibration/report.md
+# The fitted xTB->DFT slope/intercept land in outputs/dft_calibration/xtb_to_dft_calibration.json.
+# This does NOT change configs/tier1.yaml or default_screening_profile.

@@ -1,0 +1,437 @@
+"""DFT calibration workflow (directive §7): calibrate xTB -> DFT, then validate DFT -> experiment.
+
+The brief's two-stage design is: (1) calibrate the cheap xTB descriptor against a DFT
+"ground truth" (self-generated, no reference-electrode heterogeneity), then (2) validate the
+DFT level against experimental CV. This module builds BOTH fits as a NEW artifact. It does NOT
+touch the pinned xTB->experiment calibration in ``configs/tier1.yaml`` or
+``default_screening_profile`` — the screen's default is unchanged pending live numbers + PI.
+
+Mock-first: with ``--engine mock`` (default) every quantity comes from ``MockEngine`` so the
+full plumbing — dedup, per-species caching, both linear fits, the report/json artifacts, and
+per-monomer failure-skip — is testable without xtb or g16. With ``--engine gaussian`` the DFT
+Eox comes from a real Gaussian 16 ``adiabatic_ip`` (gas-phase ΔSCF in v1, per configs/tier2.yaml)
+and the xTB descriptor from real GFN2-xTB.
+
+The xTB DESCRIPTOR is the SAME quantity the existing xTB->experiment calibration uses for its
+benchmark monomers: ``monomer_eox_vs_AgAgCl`` (the adiabatic IP projected to V vs Ag/AgCl through
+the pinned redox function). Reusing it verbatim makes the new xTB->DFT slope/intercept directly
+comparable to the pinned xTB->experiment slope/intercept.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from eps.calibration import LinearCalibration, fit_linear_calibration
+from eps.chemspace import Solvent, load_solvents
+from eps.engines.base import CalcRequest, Engine, SpeciesSpec
+from eps.engines.mock import MockEngine
+from eps.properties import monomer_eox_vs_AgAgCl
+from eps.provenance import git_info
+from eps.storage import SQLiteCache, cached_run
+from eps.validation.benchmark import (
+    DEFAULT_BENCHMARK_PATH,
+    _as_bool,
+    _benchmark_monomer,
+    _load_benchmark,
+)
+from eps.workflow.tier1 import PROJECT_ROOT, load_tier1_config
+
+DEFAULT_OUTDIR = PROJECT_ROOT / "outputs" / "dft_calibration"
+DEFAULT_CACHE_PATH = PROJECT_ROOT / "outputs" / "dft_calibration_cache.sqlite"
+DEFAULT_TIER1_CONFIG = PROJECT_ROOT / "configs" / "tier1.yaml"
+
+POINTS_COLUMNS = (
+    "monomer_name",
+    "canonical_smiles",
+    "xtb_descriptor",
+    "dft_Eox_eV",
+    "exp_Eox_V_vs_AgAgCl",
+    "dft_calc_status",
+    "dft_calc_error",
+)
+
+# Mock DFT uses a DISTINCT method label from the mock xTB descriptor so the two are not the same
+# cached value (different cache key + different MockEngine hash), keeping the fit non-degenerate.
+MOCK_XTB_METHOD = "mock-gfn2"
+MOCK_DFT_METHOD = "mock-b3lyp"
+
+
+@dataclass
+class DFTCalibrationResult:
+    """Outputs of the DFT-calibration workflow (both fits + artifact paths)."""
+
+    points: pd.DataFrame
+    xtb_to_dft: LinearCalibration | None
+    dft_to_exp: LinearCalibration | None
+    n_points: int
+    n_skipped: int
+    skipped: list[tuple[str, str]]
+    method_label: str
+    xtb_method: str
+    dft_method: str
+    points_path: Path
+    report_path: Path
+    json_path: Path
+    pinned_xtb_to_exp: dict[str, float] | None = field(default=None)
+
+
+def run_dft_calibration(
+    *,
+    xtb_engine: Engine | None = None,
+    dft_engine: Engine | None = None,
+    xtb_method: str = MOCK_XTB_METHOD,
+    dft_method: str = MOCK_DFT_METHOD,
+    cache_path: str | Path = DEFAULT_CACHE_PATH,
+    benchmark_path: str | Path = DEFAULT_BENCHMARK_PATH,
+    outdir: str | Path = DEFAULT_OUTDIR,
+    only: str | None = None,
+    limit: int | None = None,
+    method_label: str = "MockEngine (mock-b3lyp), gas phase, opt only",
+    tier1_config_path: str | Path = DEFAULT_TIER1_CONFIG,
+) -> DFTCalibrationResult:
+    """Run the xTB->DFT calibration and the DFT->experiment validation, mock-first.
+
+    Both engines default to ``MockEngine`` so the workflow is fully exercisable without xtb/g16.
+    Each monomer's DFT result is cached per species in SQLite; on a cache hit the engine is not
+    invoked, so neither the neutral nor the cation DFT job is recomputed.
+    """
+
+    xtb_engine = xtb_engine or MockEngine()
+    dft_engine = dft_engine or MockEngine()
+    cache = SQLiteCache(cache_path)
+    solvents = {solvent.name: solvent for solvent in load_solvents()}
+
+    monomers = _calibration_monomers(benchmark_path, only=only, limit=limit)
+
+    rows: list[dict[str, object]] = []
+    skipped: list[tuple[str, str]] = []
+    for record in monomers:
+        monomer = record["monomer"]
+        solvent = _lookup_solvent(solvents, str(record["solvent_name"]))
+        exp_eox = record["exp_Eox_V_vs_AgAgCl"]
+
+        xtb_value, xtb_error = _safe(
+            lambda: monomer_eox_vs_AgAgCl(monomer, solvent, xtb_engine, cache, method=xtb_method)
+        )
+        dft_value, dft_error = _safe(
+            lambda: _dft_eox_eV(monomer, dft_engine, cache, method=dft_method)
+        )
+
+        errors = []
+        if xtb_error:
+            errors.append(f"xtb_descriptor: {xtb_error}")
+        if dft_error:
+            errors.append(f"dft: {dft_error}")
+        ok = np.isfinite(xtb_value) and np.isfinite(dft_value)
+        status = "ok" if ok else "failed"
+        error = "; ".join(errors)
+        if not ok:
+            skipped.append((monomer.name, error or "non-finite value"))
+
+        rows.append(
+            {
+                "monomer_name": monomer.name,
+                "canonical_smiles": monomer.canonical_smiles,
+                "xtb_descriptor": xtb_value,
+                "dft_Eox_eV": dft_value,
+                "exp_Eox_V_vs_AgAgCl": exp_eox,
+                "dft_calc_status": status,
+                "dft_calc_error": error,
+            }
+        )
+
+    points = pd.DataFrame(rows, columns=list(POINTS_COLUMNS))
+    ok_points = points[points["dft_calc_status"] == "ok"].copy()
+
+    xtb_to_dft = _maybe_fit(ok_points["xtb_descriptor"], ok_points["dft_Eox_eV"])
+    dft_to_exp = _maybe_fit(ok_points["dft_Eox_eV"], ok_points["exp_Eox_V_vs_AgAgCl"])
+    pinned = _load_pinned_xtb_to_exp(tier1_config_path)
+
+    out = Path(outdir)
+    out.mkdir(parents=True, exist_ok=True)
+    points_path = out / "dft_calibration_points.csv"
+    points.to_csv(points_path, index=False)
+
+    json_path = out / "xtb_to_dft_calibration.json"
+    _write_json(
+        json_path,
+        xtb_to_dft=xtb_to_dft,
+        n_points=int(len(ok_points)),
+        n_skipped=len(skipped),
+        xtb_method=xtb_method,
+        dft_method=dft_method,
+        method_label=method_label,
+        benchmark_path=benchmark_path,
+    )
+
+    report_path = out / "report.md"
+    _write_report(
+        report_path,
+        points=points,
+        ok_points=ok_points,
+        xtb_to_dft=xtb_to_dft,
+        dft_to_exp=dft_to_exp,
+        pinned=pinned,
+        skipped=skipped,
+        method_label=method_label,
+        xtb_method=xtb_method,
+        dft_method=dft_method,
+        benchmark_path=benchmark_path,
+    )
+
+    return DFTCalibrationResult(
+        points=points,
+        xtb_to_dft=xtb_to_dft,
+        dft_to_exp=dft_to_exp,
+        n_points=int(len(ok_points)),
+        n_skipped=len(skipped),
+        skipped=skipped,
+        method_label=method_label,
+        xtb_method=xtb_method,
+        dft_method=dft_method,
+        points_path=points_path,
+        report_path=report_path,
+        json_path=json_path,
+        pinned_xtb_to_exp=pinned,
+    )
+
+
+def _calibration_monomers(
+    benchmark_path: str | Path,
+    *,
+    only: str | None,
+    limit: int | None,
+) -> list[dict[str, object]]:
+    """Load calibration-eligible benchmark rows, dedup by canonical SMILES, apply only/limit.
+
+    The first eligible row per canonical SMILES is kept; its solvent feeds the (identical)
+    xTB descriptor path, and its converted experimental Eox feeds the DFT->experiment fit.
+    """
+
+    frame = _load_benchmark(benchmark_path)
+    eligible = frame[frame["calibration_eligible"].map(_as_bool)]
+    seen: set[str] = set()
+    monomers: list[dict[str, object]] = []
+    for row in eligible.to_dict(orient="records"):
+        monomer = _benchmark_monomer(row)
+        if monomer.canonical_smiles in seen:
+            continue
+        seen.add(monomer.canonical_smiles)
+        if only is not None and monomer.name != only:
+            continue
+        monomers.append(
+            {
+                "monomer": monomer,
+                "solvent_name": row["solvent_name"],
+                "exp_Eox_V_vs_AgAgCl": float(row["exp_Eox_V_vs_AgAgCl"]),
+            }
+        )
+    if limit is not None:
+        monomers = monomers[:limit]
+    return monomers
+
+
+def _dft_eox_eV(monomer, dft_engine: Engine, cache: SQLiteCache, *, method: str) -> float:
+    """DFT adiabatic ionization energy (Eox) in eV, cached per species (gas-phase v1).
+
+    Routed through the SQLite cache keyed by (canonical_smiles, charge=0, method, gas,
+    adiabatic_ip). On a cache hit the engine is NOT called, so the underlying neutral AND
+    cation DFT jobs are both reused (never recomputed).
+    """
+
+    req = CalcRequest(
+        species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
+        method=method,
+        solvent_eps_r=None,
+        quantity="adiabatic_ip",
+    )
+    return cached_run(cache, dft_engine, req, solvent_name=None).value
+
+
+def _maybe_fit(x: pd.Series, y: pd.Series) -> LinearCalibration | None:
+    x_values = np.asarray(x, dtype=float)
+    y_values = np.asarray(y, dtype=float)
+    if len(x_values) < 2:
+        return None
+    return fit_linear_calibration(x_values, y_values)
+
+
+def _load_pinned_xtb_to_exp(tier1_config_path: str | Path) -> dict[str, float] | None:
+    """Read the pinned xTB->experiment calibration (slope/intercept) for the side-by-side."""
+
+    try:
+        config = load_tier1_config(tier1_config_path)
+        monomer_eox = config.get("calibration", {}).get("monomer_eox", {})
+        if "slope" not in monomer_eox or "intercept" not in monomer_eox:
+            return None
+        return {
+            "slope": float(monomer_eox["slope"]),
+            "intercept": float(monomer_eox["intercept"]),
+            "source": str(monomer_eox.get("source", "configs/tier1.yaml")),
+        }
+    except Exception:  # noqa: BLE001 - the side-by-side is best-effort; never break the workflow.
+        return None
+
+
+def _safe(calculate) -> tuple[float, str]:
+    try:
+        return float(calculate()), ""
+    except Exception as exc:  # noqa: BLE001 - one bad monomer must never abort the batch.
+        message = str(exc).splitlines()[0] if str(exc) else exc.__class__.__name__
+        return float("nan"), f"{exc.__class__.__name__}: {message}"[:240]
+
+
+def _lookup_solvent(solvents: dict[str, Solvent], name: str) -> Solvent:
+    try:
+        return solvents[name]
+    except KeyError as exc:
+        known = ", ".join(sorted(solvents))
+        raise ValueError(f"Unknown benchmark solvent {name!r}; known solvents: {known}") from exc
+
+
+def _write_json(
+    path: Path,
+    *,
+    xtb_to_dft: LinearCalibration | None,
+    n_points: int,
+    n_skipped: int,
+    xtb_method: str,
+    dft_method: str,
+    method_label: str,
+    benchmark_path: str | Path,
+) -> None:
+    fit = (
+        {
+            "slope_dft_eV_per_xtb_V": xtb_to_dft.slope,
+            "intercept_dft_eV": xtb_to_dft.intercept,
+            "r2": xtb_to_dft.r2,
+            "mae_eV": xtb_to_dft.mae,
+        }
+        if xtb_to_dft is not None
+        else None
+    )
+    record = {
+        "calibration": "xtb_to_dft",
+        "description": "y_DFT_Eox_eV = slope * x_xtb_descriptor_V_vs_AgAgCl + intercept",
+        "fit": fit,
+        "n_points": n_points,
+        "n_skipped": n_skipped,
+        "provenance": {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "git": git_info(),
+            "xtb_method": xtb_method,
+            "dft_method": dft_method,
+            "dft_method_label": method_label,
+            "benchmark": str(benchmark_path),
+            "note": (
+                "NEW artifact; does NOT replace the pinned xTB->experiment calibration in "
+                "configs/tier1.yaml. Default screening calibration is unchanged."
+            ),
+        },
+    }
+    path.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def _write_report(
+    path: Path,
+    *,
+    points: pd.DataFrame,
+    ok_points: pd.DataFrame,
+    xtb_to_dft: LinearCalibration | None,
+    dft_to_exp: LinearCalibration | None,
+    pinned: dict[str, float] | None,
+    skipped: list[tuple[str, str]],
+    method_label: str,
+    xtb_method: str,
+    dft_method: str,
+    benchmark_path: str | Path,
+) -> None:
+    lines: list[str] = []
+    lines.append("# DFT calibration report")
+    lines.append("")
+    lines.append(f"_Generated: {datetime.now(timezone.utc).isoformat()}_")
+    lines.append("")
+    lines.append(
+        "Two-stage directive §7: calibrate the cheap xTB descriptor against DFT, then validate "
+        "the DFT level against experimental CV. This is a NEW artifact and does NOT change "
+        "`configs/tier1.yaml` or `default_screening_profile`."
+    )
+    lines.append("")
+    lines.append("## Method / config")
+    lines.append("")
+    lines.append(f"- xTB descriptor: `monomer_eox_vs_AgAgCl` (adiabatic IP -> V vs Ag/AgCl), method `{xtb_method}`")
+    lines.append(f"- DFT Eox: `engine.run(adiabatic_ip)`, {method_label} (method `{dft_method}`)")
+    lines.append(f"- Calibration set: rows of `{Path(benchmark_path).name}` with `calibration_eligible == true`, dedup by canonical SMILES")
+    lines.append(f"- Calibration points used (status ok): {len(ok_points)} of {len(points)} candidate monomers")
+    lines.append("")
+    lines.append("## Fit 1 — xTB -> DFT calibration")
+    lines.append("")
+    lines.append("`dft_Eox_eV = slope * xtb_descriptor_V + intercept` (both broadly an energy/potential; slope ~ dimensionless eV/V).")
+    lines.append("")
+    if xtb_to_dft is not None:
+        lines.append(f"- slope = {xtb_to_dft.slope:.6f}")
+        lines.append(f"- intercept = {xtb_to_dft.intercept:.6f} eV")
+        lines.append(f"- R^2 = {xtb_to_dft.r2:.4f}")
+        lines.append(f"- MAE = {xtb_to_dft.mae:.4f} eV")
+    else:
+        lines.append("- INSUFFICIENT POINTS (< 2): fit not computed.")
+    lines.append("")
+    lines.append("## Fit 2 — DFT -> experiment validation")
+    lines.append("")
+    lines.append(
+        "`exp_Eox_V_vs_AgAgCl = slope * dft_Eox_eV + intercept`. NOTE: units differ (V vs eV), so "
+        "this is a correlation/linear fit, NOT an equality check; the slope carries units of V/eV "
+        "and a slope != 1 is expected."
+    )
+    lines.append("")
+    if dft_to_exp is not None:
+        lines.append(f"- slope = {dft_to_exp.slope:.6f} V/eV")
+        lines.append(f"- intercept = {dft_to_exp.intercept:.6f} V")
+        lines.append(f"- R^2 = {dft_to_exp.r2:.4f}")
+        lines.append(f"- MAE = {dft_to_exp.mae:.4f} V")
+    else:
+        lines.append("- INSUFFICIENT POINTS (< 2): fit not computed.")
+    lines.append("")
+    lines.append("## Side-by-side: pinned xTB->experiment vs new xTB->DFT")
+    lines.append("")
+    lines.append("Clearly labeled; NO files are overwritten. The pinned values come from `configs/tier1.yaml`.")
+    lines.append("")
+    lines.append("| calibration | slope | intercept | note |")
+    lines.append("| --- | --- | --- | --- |")
+    if pinned is not None:
+        lines.append(
+            f"| pinned xTB->experiment (V) | {pinned['slope']:.6f} | {pinned['intercept']:.6f} | "
+            f"PINNED screening default ({pinned.get('source', 'configs/tier1.yaml')}); unchanged |"
+        )
+    else:
+        lines.append("| pinned xTB->experiment (V) | (unavailable) | (unavailable) | not found in configs/tier1.yaml |")
+    if xtb_to_dft is not None:
+        lines.append(
+            f"| new xTB->DFT (eV) | {xtb_to_dft.slope:.6f} | {xtb_to_dft.intercept:.6f} | "
+            "NEW artifact; not pinned; for comparison only |"
+        )
+    else:
+        lines.append("| new xTB->DFT (eV) | (insufficient points) | (insufficient points) | NEW artifact |")
+    lines.append("")
+    lines.append(
+        "Both fits use the IDENTICAL xTB descriptor (`monomer_eox_vs_AgAgCl`), so the two "
+        "intercepts/slopes are directly comparable. The pinned fit targets experimental V vs "
+        "Ag/AgCl; the new fit targets DFT Eox in eV."
+    )
+    lines.append("")
+    lines.append("## Skipped monomers")
+    lines.append("")
+    if skipped:
+        for name, reason in skipped:
+            lines.append(f"- {name}: {reason}")
+    else:
+        lines.append("- (none)")
+    lines.append("")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")

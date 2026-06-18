@@ -8,7 +8,7 @@ from pathlib import Path
 from eps.analysis import run_analyze
 from eps.doctor import run_doctor
 from eps.engines import GaussianEngine, MockEngine, XTBEngine
-from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL
+from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL, load_tier2_config
 from eps.provenance import write_provenance
 from eps.validation.benchmark import (
     DEFAULT_CACHE_PATH as DEFAULT_VALIDATION_CACHE_PATH,
@@ -25,6 +25,17 @@ from eps.validation.sanity import (
     DEFAULT_SOLVENT,
     run_physical_sanity_checks,
 )
+from eps.workflow.dft_calibration import (
+    DEFAULT_CACHE_PATH as DEFAULT_DFTCAL_CACHE_PATH,
+)
+from eps.workflow.dft_calibration import (
+    DEFAULT_OUTDIR as DEFAULT_DFTCAL_OUTDIR,
+)
+from eps.workflow.dft_calibration import (
+    MOCK_DFT_METHOD,
+    MOCK_XTB_METHOD,
+    run_dft_calibration,
+)
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
 from eps.workflow.tier2 import write_tier2_dry_run_inputs
 
@@ -40,6 +51,34 @@ def _engine_from_name(name: str):
         # Tier-2 DFT scaffold (build-only); not wired into any production workflow run.
         return GaussianEngine(), GAUSSIAN_METHOD_LABEL
     raise ValueError(f"Unknown engine {name!r}")
+
+
+def _dft_calibration_engines(engine_name: str, config_path):
+    """Build the (xtb_engine, xtb_method, dft_engine, dft_method, method_label) tuple.
+
+    The xTB descriptor reuses the existing ``monomer_eox_vs_AgAgCl`` path; the DFT Eox comes
+    from a separate engine selected by the flag. ``mock`` keeps everything on MockEngine (no
+    binaries); ``gaussian`` uses real GFN2-xTB for the descriptor and real Gaussian 16 for DFT.
+    """
+
+    if engine_name == "mock":
+        return (
+            MockEngine(),
+            MOCK_XTB_METHOD,
+            MockEngine(),
+            MOCK_DFT_METHOD,
+            "MockEngine (mock-b3lyp), gas phase, opt only",
+        )
+    if engine_name == "gaussian":
+        config = load_tier2_config(config_path)
+        return (
+            XTBEngine(),
+            "gfn2-xtb",
+            GaussianEngine(config=config),
+            GAUSSIAN_METHOD_LABEL,
+            config.method_label(),
+        )
+    raise ValueError(f"Unknown calibrate-dft engine {engine_name!r}")
 
 
 def _stamp_provenance(output_path, *, engine: str, method: str, extra=None) -> None:
@@ -93,6 +132,46 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_PROFILE_COMPARISON_PATH,
         help="Calibration profile comparison CSV path.",
+    )
+
+    calibrate_dft = subparsers.add_parser(
+        "calibrate-dft",
+        help="Calibrate xTB->DFT and validate DFT->experiment (mock-first; never changes the pinned default)",
+    )
+    calibrate_dft.add_argument(
+        "--engine",
+        choices=("mock", "gaussian"),
+        default="mock",
+        help="DFT engine for adiabatic_ip: mock (default, no binaries) or gaussian (real g16).",
+    )
+    calibrate_dft.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        help="Tier-2 config (configs/tier2.yaml) for the gaussian engine; defaults to the shipped file.",
+    )
+    calibrate_dft.add_argument(
+        "--cache",
+        type=Path,
+        default=DEFAULT_DFTCAL_CACHE_PATH,
+        help="SQLite cache path for DFT results (per-species, reused on a hit).",
+    )
+    calibrate_dft.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_DFTCAL_OUTDIR,
+        help="Directory for dft_calibration_points.csv, report.md, xtb_to_dft_calibration.json.",
+    )
+    calibrate_dft.add_argument(
+        "--only",
+        default=None,
+        help="Run on a SINGLE monomer by name (cheap live g16 smoke test before the full batch).",
+    )
+    calibrate_dft.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Run on at most N monomers (after dedup by canonical SMILES).",
     )
 
     sanity = subparsers.add_parser(
@@ -281,6 +360,62 @@ def main(argv: list[str] | None = None) -> int:
             result.report_path, engine=args.engine, method=method,
             extra={"command": "validate", "profile": result.profile_name},
         )
+        return 0
+
+    if args.command == "calibrate-dft":
+        xtb_engine, xtb_method, dft_engine, dft_method, method_label = _dft_calibration_engines(
+            args.engine, args.config
+        )
+        result = run_dft_calibration(
+            xtb_engine=xtb_engine,
+            dft_engine=dft_engine,
+            xtb_method=xtb_method,
+            dft_method=dft_method,
+            cache_path=args.cache,
+            outdir=args.outdir,
+            only=args.only,
+            limit=args.limit,
+            method_label=method_label,
+        )
+        print(f"DFT-calibration engine: {args.engine} ({method_label})")
+        print(f"Calibration points (ok): {result.n_points}; skipped: {result.n_skipped}")
+        if result.xtb_to_dft is not None:
+            cal = result.xtb_to_dft
+            print(
+                "xTB->DFT fit: dft_Eox_eV = "
+                f"{cal.slope:.6f} * xtb_descriptor + {cal.intercept:.6f}; "
+                f"R^2 = {cal.r2:.4f}; MAE = {cal.mae:.4f} eV"
+            )
+        else:
+            print("xTB->DFT fit: INSUFFICIENT POINTS (< 2)")
+        if result.dft_to_exp is not None:
+            cal = result.dft_to_exp
+            print(
+                "DFT->experiment fit (units V vs eV; correlation, not equality): "
+                f"exp_V = {cal.slope:.6f} * dft_Eox_eV + {cal.intercept:.6f}; "
+                f"R^2 = {cal.r2:.4f}; MAE = {cal.mae:.4f} V"
+            )
+        else:
+            print("DFT->experiment fit: INSUFFICIENT POINTS (< 2)")
+        if result.pinned_xtb_to_exp is not None:
+            pinned = result.pinned_xtb_to_exp
+            print(
+                f"Side-by-side: pinned xTB->exp slope={pinned['slope']:.6f}, "
+                f"intercept={pinned['intercept']:.6f} (V; UNCHANGED) vs new xTB->DFT above (eV)."
+            )
+        if result.skipped:
+            print(f"Skipped monomers: {', '.join(name for name, _ in result.skipped)}")
+        print(f"Wrote points CSV: {result.points_path}")
+        print(f"Wrote report: {result.report_path}")
+        print(f"Wrote calibration JSON: {result.json_path}")
+        print("NOTE: NEW artifact only — configs/tier1.yaml and default_screening_profile are UNCHANGED.")
+        _stamp_provenance(
+            result.points_path, engine=args.engine, method=dft_method,
+            extra={"command": "calibrate-dft", "n_points": result.n_points,
+                   "n_skipped": result.n_skipped},
+        )
+        if args.engine == "mock":
+            print("NOTE: mock engine -> non-physical numbers (T9). Real numbers come from --engine gaussian on the cluster.")
         return 0
 
     if args.command == "sanity":
