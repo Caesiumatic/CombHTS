@@ -4,7 +4,6 @@ from datetime import date
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
 from eps.engines import MockEngine
 from eps.validation import run_physical_sanity_checks, write_validation_memo

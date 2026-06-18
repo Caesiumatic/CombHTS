@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-18
+- Added continuous integration (`.github/workflows/ci.yml`): on push and pull_request, sets up
+  Python 3.11 and 3.12, installs the package + `[dev]` extra, runs `ruff check` then `pytest -q`.
+  xtb/g16 are absent in CI so their live smokes skip (not fail).
+- Added a conservative `ruff` lint config (`[tool.ruff]`, select E/F/I, ignore E501,
+  line-length 110) and a `dev` optional-dependency group (`ruff`). Fixed all findings
+  (import sorting + two genuinely-unused imports); `ruff check` is clean.
 - Tier-1 all-triads output now carries the scoring columns (`composite_score`, `pareto_front`,
   `band_gap_deviation_eV`, and the `norm_*` components) via a one-to-one left-join from the
   ranked survivors onto `all_triads` by triad identity (`monomer_name, solvent_name, salt`).

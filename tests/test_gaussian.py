@@ -105,10 +105,9 @@ def test_run_gaussian_nonzero_exit_raises_before_log_parse(monkeypatch) -> None:
 def test_tier2_dry_run_writes_inputs_without_running_g16(tmp_path, monkeypatch) -> None:
     import pandas as pd
 
-    from eps.workflow.tier2 import write_tier2_dry_run_inputs
-
     # Guard: if anything tried to launch g16, this would raise.
     import eps.engines.gaussian as gaussian_mod
+    from eps.workflow.tier2 import write_tier2_dry_run_inputs
 
     def _boom(*args, **kwargs):
         raise AssertionError("tier2 dry-run must NOT execute any subprocess")

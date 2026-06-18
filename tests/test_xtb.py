@@ -10,7 +10,6 @@ from eps.engines import CalcRequest, SpeciesSpec, XTBEngine
 from eps.engines import xtb as xtb_module
 from eps.engines.xtb import parse_homo_lumo, parse_total_energy, parse_xtb_json, solvent_flag
 
-
 FIXTURES = Path(__file__).parent / "fixtures"
 
 

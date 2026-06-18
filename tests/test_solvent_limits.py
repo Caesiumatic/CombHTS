@@ -7,8 +7,7 @@ from pathlib import Path
 import pytest
 
 from eps.chemspace import load_electrolytes, load_solvents
-from eps.engines import CalcRequest, CalcResult, Engine, MockEngine, SpeciesSpec
-from eps.engines import XTBEngine
+from eps.engines import CalcRequest, CalcResult, Engine, MockEngine, SpeciesSpec, XTBEngine
 from eps.properties import (
     ip_eV_to_potential_vs_AgAgCl,
     solvent_anodic_limit,
