@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-17_
+_Last updated: 2026-06-18_
 
 ## How to read this
 
@@ -21,6 +21,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
 | T10 | xTB failure clusters: data problem or engine problem? | decided | self (rigor) | one xTB round |
 | T11 | Should the computed solvent anodic limit share the monomer calibration / live on the same scale? | decided | group-meeting | scope/policy |
+| T12 | Should the chain-length-corrected (oligomer/polymer) Eox ever inform ranking, not just be reported? | open | group-meeting | scope/policy |
 
 ## T1 — Screening calibration anchor: peak vs onset
 - **Status**: exploring
@@ -61,9 +62,10 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Cost**: scope/policy
 - **Question**: Is the >=30 target a CALIBRATION-purity requirement or a VALIDATION-coverage requirement, and are we calibrating the way the brief intends?
 - **Why it matters**: If >=30 is a validation requirement, we should not be straining benchmark purity to feed the calibration fit; the pressure is on the wrong layer.
-- **Thinking / options**: The brief's design is two-stage — calibrate xTB->DFT (self-generated y-values, no reference-electrode heterogeneity, unlimited points), then validate the whole pipeline against experimental CV (>=30 rows, MAE + qualitative rank-order). Because Tier-2 DFT is not built yet, we collapsed calibration to xTB->experimental, which wrongly pushed the >=30 reference-purity burden onto the calibration training set. Tension with STATUS: STATUS open debt #1 treats the ">=30 clean groups" target as MET / a milestone, whereas T4 questions whether ">=30" should sit on the calibration-purity layer at all.
-- **Current lean**: Record this as the framing to raise; treat current xTB->experimental fit as an explicit interim stand-in until the DFT tier exists.
-- **Resolves when**: The group agrees whether >=30 governs calibration purity, validation coverage, or both, and whether the interim xTB->experimental fit remains acceptable.
+- **Thinking / options**: The brief's design is two-stage — calibrate xTB->DFT (self-generated y-values, no reference-electrode heterogeneity, unlimited points), then validate the whole pipeline against experimental CV (>=30 rows, MAE + qualitative rank-order). Previously Tier-2 DFT was not built, so we collapsed calibration to xTB->experimental, which wrongly pushed the >=30 reference-purity burden onto the calibration training set. Tension with STATUS: STATUS open debt #1 treats the ">=30 clean groups" target as MET / a milestone, whereas T4 questions whether ">=30" should sit on the calibration-purity layer at all.
+- **Update (2026-06-18)**: The two-stage ENGINEERING now exists, mock-first: `eps calibrate-dft` builds the xTB->DFT calibration (using the IDENTICAL `monomer_eox_vs_AgAgCl` descriptor as the xTB->experiment fit, so they are directly comparable) and the DFT->experiment validation, writing `outputs/dft_calibration/`. This is a NEW artifact only — it does NOT replace the pinned xTB->experiment default in `configs/tier1.yaml` and does NOT change `default_screening_profile`. The live `--engine gaussian` numbers are still PENDING (a small ~32-monomer g16 batch on Lop; a separate PI decision). So the framing question is unblocked on the tooling side but still open on policy: once live xTB->DFT numbers exist, the group must decide whether they supersede the interim xTB->experimental anchor.
+- **Current lean**: Treat the current xTB->experimental fit as the explicit interim stand-in; run the live xTB->DFT batch, then revisit whether ">=30" governs calibration purity, validation coverage, or both. Do not auto-promote the xTB->DFT calibration without PI sign-off.
+- **Resolves when**: The group agrees whether >=30 governs calibration purity, validation coverage, or both; the live xTB->DFT batch is run; and the PI signs off on whether the xTB->DFT calibration replaces the interim xTB->experimental anchor.
 - **Links**: [STATUS open debts #1 and #12](STATUS.md#open-debts); [configs/tier1.yaml](configs/tier1.yaml).
 
 ## T5 — Which placeholder axis to make real first
@@ -147,8 +149,21 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Resolved**: 2026-06-17 — implemented; the group will be informed at the next meeting (decision is not blocking).
 - **Links**: [T5](#t5--which-placeholder-axis-to-make-real-first); [T9](#t9--the-mock-preview-trap-after-real-xtb-calibration-is-pinned); [configs/tier1.yaml](configs/tier1.yaml); spec §4.1.
 
+## T12 — Should the chain-length-corrected (oligomer/polymer) Eox ever inform ranking?
+- **Status**: open
+- **Forum**: group-meeting
+- **Cost**: scope/policy
+- **Question**: The monomer Eox overestimates the oxidation potential of the actual growing/polymerizing species, which drops with conjugation length. We now REPORT the oligomer Eox-vs-length trend and a 1/n infinite-chain extrapolation as an additive descriptor. Should this chain-length-corrected (polymer-limit) Eox ever feed the constraint-① window filter or the composite score, or remain reported-only?
+- **Why it matters**: If the polymer actually oxidizes ~0.3–0.6 V below its monomer, the window filter (which uses the monomer Eox) is systematically conservative — it may reject triads whose growing chain is in fact comfortably inside the solvent window. But the extrapolated value is the LEAST trustworthy number we produce: it is an extrapolation of a raw xTB trend, and the only calibration available (the pinned monomer fit) was NOT fit on oligomers, so its absolute calibrated value is flagged out-of-domain.
+- **Thinking / options**: (a) Reported-only (current): keep the durable signal = the RAW trend + extrapolation; never let an out-of-domain extrapolation move a hard filter or the score. (b) Use it as a SECONDARY/diagnostic re-rank only (e.g. flag triads the monomer filter rejects but the polymer-limit accepts), without changing the primary survivor set. (c) Promote it into the filter/score once an oligomer/polymer Eox benchmark exists to calibrate it. Option (c) needs data we do not have; option (a) is the honest default; option (b) is a cheap middle path.
+- **Current lean**: Reported-only for now (option a). It is purely additive — survivor counts and composite scores are unchanged. Revisit only with an oligomer-referenced calibration or an explicit group decision to use the raw trend diagnostically.
+- **Resolves when**: The group decides whether the chain-length correction stays reported-only, becomes a secondary diagnostic re-rank, or (with a proper oligomer benchmark) enters the filter/score.
+- **Links**: [STATUS open debt #14](STATUS.md#open-debts); [src/eps/properties/oligomer_series.py](src/eps/properties/oligomer_series.py); [configs/tier1.yaml](configs/tier1.yaml).
+
 ## Decision log
 
+- 2026-06-18 — [T12](#t12--should-the-chain-length-corrected-oligomerpolymer-eox-ever-inform-ranking) opened: an additive, reported-only oligomer Eox-vs-chain-length descriptor (RAW xTB adiabatic IE per n + classic 1/n infinite-chain extrapolation) is now joined into the Tier-1 harvest. It deliberately does NOT enter any hard filter or the composite score (verified: 113→113 survivors, composite_score Δ=0). The calibrated infinite value is flagged out-of-domain (the monomer-fit calibration was not fit on oligomers). Open question: whether/how the chain-length-corrected Eox should ever inform ranking.
+- 2026-06-18 — [T4](#t4--what-30-clean-groups-actually-validates) advanced (engineering, not a policy decision): the two-stage xTB->DFT calibration + DFT->experiment validation is now built mock-first (`eps calibrate-dft`), reusing the identical `monomer_eox_vs_AgAgCl` descriptor so the new xTB->DFT fit is directly comparable to the pinned xTB->experiment fit. NEW artifact only — `configs/tier1.yaml` and `default_screening_profile` are UNCHANGED; the live g16 numbers and any decision to promote the xTB->DFT calibration over the interim xTB->experimental anchor remain PENDING (live run + PI sign-off). The Tier-2 Gaussian engine is now config-driven via `configs/tier2.yaml` (v1 = gas-phase ΔSCF; `smd_solvent`+`use_freq` is the documented rigor toggle). No live Gaussian was run.
 - 2026-06-17 — [T1](#t1--screening-calibration-anchor-peak-vs-onset) advanced: `configs/tier1.yaml` was pinned to a real GFN2-xTB `agagcl_peak_strict` fit (slope=0.725837, intercept=-3.145372, LOO-CV MAE=0.197 V) as the screening anchor; PROVISIONAL / pending PI sign-off.
 - 2026-06-17 — [T5](#t5--which-placeholder-axis-to-make-real-first) advanced and corrected: solvent anodic/cathodic limits are now COMPUTED per spec §3.2 (adiabatic ΔSCF on the solvent molecule via the cached Engine), not a literature curation; the residual scale question was split out as the new [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale).
 - 2026-06-17 — [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale) opened: the computed solvent anodic limit is left RAW while monomer Eox is calibrated, so `window_margin_V` currently mixes scales; spec §4.1 vs the monomer-only calibration fit is unresolved.

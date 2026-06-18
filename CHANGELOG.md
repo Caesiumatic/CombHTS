@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-06-18 (later 4) — Step-2 DFT-calibration engineering (mock-first) + oligomer-Eox descriptor
+All additive; NO live Gaussian was run; the pinned xTB->experiment calibration
+(`configs/tier1.yaml`), the composite weights (`configs/scoring.yaml`), and `redox.py` are
+untouched; no pinned data file was edited.
+
+- **Tier-2 engine is now config-driven (WS1).** New `configs/tier2.yaml` (v1 defaults: B3LYP/
+  6-31G(d,p), `smd_solvent: null`, `use_freq: false`, `mem: 8GB`, `nprocshared: 8`,
+  `calibration_set`). `build_gaussian_input` prepends Link0 `%mem`/`%nprocshared` (g16 no longer
+  runs single-core) and adds `Freq` when `use_freq`. `GaussianEngine` reads `smd_solvent`/`use_freq`
+  from the config instead of hardcoding gas-phase; v1 keeps the same gas-phase ΔSCF behavior.
+  Setting `smd_solvent` + `use_freq: true` is the documented rigor toggle (solvated ΔG). The
+  return-code-before-parse safety and "g16 absent -> RuntimeError, never fabricate" are unchanged.
+- **`eps calibrate-dft` (WS2, directive §7), mock-first.** Calibrates the cheap xTB descriptor
+  against DFT, then validates DFT against experiment. The xTB descriptor REUSES the identical
+  existing path (`monomer_eox_vs_AgAgCl`), so the new xTB->DFT slope/intercept are directly
+  comparable to the pinned xTB->experiment fit. Calibration set = `data/benchmark.csv` rows with
+  `calibration_eligible == true`, deduped by canonical SMILES (32 rows -> 22 unique monomers).
+  DFT Eox is cached per species (gas-phase v1); a cache hit reuses both the neutral and the cation
+  jobs (never recomputed). Per-monomer failures -> `dft_calc_status`/`dft_calc_error`, skipped.
+  Writes `outputs/dft_calibration/{dft_calibration_points.csv, report.md,
+  xtb_to_dft_calibration.json}`; report.md carries both fits (xTB->DFT in eV; DFT->experiment as a
+  units-aware V/eV correlation, not equality) and a clearly-labeled side-by-side of the pinned vs
+  new slope/intercept (no files overwritten). `--engine mock|gaussian`, `--only`, `--limit`.
+  NEW artifact only — `default_screening_profile` and `configs/tier1.yaml` are unchanged.
+  `scripts/run_dft_calibration.sge`: the only g16 template (node-local `GAUSS_SCRDIR` + cleanup);
+  states it is the SMALL calibration batch, distinct from the full Tier-2 production screen.
+- **`eps doctor` Tier-2 readiness (WS3).** Adds `tier2:g16` (g16 on PATH via `shutil.which`;
+  WARN, never FAIL, cluster-only) and `tier2:config` (configs/tier2.yaml loads, with the effective
+  method string, e.g. "B3LYP/6-31G(d,p), gas phase, opt only (ΔE_SCF)"). Runs no g16.
+- **Oligomer Eox-vs-chain-length descriptor (WS4), reported-only.** Reuses the existing oligomer
+  assembly + side-chain truncation to compute the RAW xTB adiabatic IE (eV) of the n-mer for
+  `oligomer.eox_oligomer_lengths` (default [2,3,4,6]), per-monomer, cached, failure-tolerant. New
+  harvest columns `oligomer_Eox_raw_n{1,2,3,4,6}`, `oligomer_Eox_infinite_raw_eV` (classic 1/n
+  extrapolation, incl. n=1 monomer anchor), `oligomer_Eox_extrap_r2`,
+  `oligomer_Eox_infinite_calibrated_V_vs_AgAgCl` (flagged `oligomer_Eox_calibration_out_of_domain
+  = True`), `oligomer_Eox_sidechain_truncated`, `oligomer_Eox_calc_status`/`_error`. Verification
+  artifact `outputs/oligomer_eox_series.csv`. ADDITIVE: the mock screen gives 113 -> 113 survivors
+  (identical sets) and composite_score max abs diff 0.0; no column feeds a filter or the score.
+- Tests: +21 new (gaussian config/Link0/Freq, doctor Tier-2, calibrate-dft plumbing incl. cache
+  reuse + failure-skip + descriptor identity + live-g16 skip, oligomer-Eox math/reuse/failure/
+  additivity). Full suite green: 137 passed, 4 skipped; `ruff check` clean.
+
 ## 2026-06-18 (later 3) — fixes from the first real oligomer harvest
 - Issue 1 (bug): the `fluorene 9,9-dioctyl` n=6 oligomer (416 atoms) failed RDKit 3D embedding,
   so its `optical_gap_eV` was NaN and all ~110 fluorene triads dropped out of survivors.
