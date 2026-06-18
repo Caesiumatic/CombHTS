@@ -19,8 +19,10 @@ from eps.validation.sanity import (
 )
 from eps.validation.memo import DEFAULT_MEMO_DIR, write_validation_memo
 from eps.analysis import run_analyze
+from eps.workflow.tier2 import write_tier2_dry_run_inputs
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
-from eps.engines import MockEngine, XTBEngine
+from eps.engines import GaussianEngine, MockEngine, XTBEngine
+from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL
 
 DEFAULT_ANALYSIS_OUTDIR = DEFAULT_OUTPUT_PATH.parent / "analysis"
 
@@ -30,6 +32,9 @@ def _engine_from_name(name: str):
         return MockEngine(), "mock-gfn2"
     if name == "xtb":
         return XTBEngine(), "gfn2-xtb"
+    if name == "gaussian":
+        # Tier-2 DFT scaffold (build-only); not wired into any production workflow run.
+        return GaussianEngine(), GAUSSIAN_METHOD_LABEL
     raise ValueError(f"Unknown engine {name!r}")
 
 
@@ -131,6 +136,29 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_ANALYSIS_OUTDIR,
         help="Directory for §8 outputs (summary.csv, PNGs, shortlist.csv).",
+    )
+
+    tier2 = subparsers.add_parser(
+        "tier2",
+        help="EXPERIMENTAL: write Tier-2 Gaussian .gjf inputs for survivors (dry-run only; never runs g16)",
+    )
+    tier2.add_argument("--engine", choices=("gaussian",), default="gaussian", help="Tier-2 engine")
+    tier2.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Required: only writes .gjf inputs for inspection; never submits or runs Gaussian.",
+    )
+    tier2.add_argument(
+        "--survivors",
+        type=Path,
+        default=DEFAULT_OUTPUT_PATH.parent / "tier1_ranked_xtb.csv",
+        help="Tier-1 survivors CSV (must have monomer_canonical_smiles).",
+    )
+    tier2.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_OUTPUT_PATH.parent / "tier2_inputs",
+        help="Directory for the generated .gjf inputs.",
     )
 
     args = parser.parse_args(argv)
@@ -264,6 +292,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Wrote figure: {figure}")
         for note in result.notes:
             print(f"NOTE: {note}")
+        return 0
+
+    if args.command == "tier2":
+        if not args.dry_run:
+            print("ERROR: only --dry-run is supported (this command never runs g16). Pass --dry-run.")
+            return 2
+        if not Path(args.survivors).exists():
+            print(f"ERROR: survivors CSV not found: {args.survivors}")
+            print("  eps run-tier1 --engine xtb   # produces the Tier-1 ranked survivors CSV")
+            return 1
+        result = write_tier2_dry_run_inputs(args.survivors, args.outdir)
+        print("EXPERIMENTAL Tier-2 DRY RUN — wrote Gaussian inputs only; g16 was NOT executed.")
+        print(f"Survivors read: {result.n_survivors}; unique monomers: {result.n_unique_monomers}")
+        print(f"Wrote {len(result.input_paths)} .gjf inputs (neutral + cation per monomer) to {result.outdir}")
+        print(f"Rough estimate: ~{result.estimated_cpu_hours:.0f} CPU-hours (very approximate; for planning only)")
         return 0
 
     parser.error(f"Unknown command: {args.command}")

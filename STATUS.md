@@ -54,7 +54,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 9. DONE: `XTBEngine._run_xtb` now checks the subprocess return code and raises before parsing `xtbout.json`, so a garbage JSON cannot mask a real xTB failure (regression test added).
 10. DONE (templates): version-controlled SGE templates live in `scripts/` (`run_tier1`, `run_validate`, `run_memo`, `run_analyze`) with a `#$ -S /bin/bash` first directive and the known-good module/conda/OMP preamble; see `scripts/README.md`. Submit via `qsub`, not interactively.
 11. Upgrade placeholders: real oligomer assembly -> band gap; real dimer calculation.
-12. Not yet built: Tier-2 DFT adapter, analysis/plots, expanded libraries toward ~100x30x25, HPC orchestration.
+12. PARTIAL: analysis/plots now exist (`eps analyze`, directive §8) and the Tier-2 DFT adapter is scaffolded build-only (`GaussianEngine`, B3LYP/6-31G(d,p), fixture-tested, never run; optional `eps tier2 --dry-run` writes .gjf inputs). Still not built: actually running Tier-2 at scale (PI/T8 decision), expanded libraries toward ~100x30x25, HPC orchestration.
 13. Reconcile the calibration-anchor mismatch between `configs/tier1.yaml` (`agagcl_peak_strict`) and `configs/calibration_profiles.yaml` default screening profile (`agagcl_peak_relaxed`).
 
 ## Immediate next action
