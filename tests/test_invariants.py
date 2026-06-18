@@ -173,10 +173,13 @@ def test_memo_always_marks_two_section7_gaps_not_computable(tmp_path: Path) -> N
     assert text.count("not computable yet") >= 2
 
 
-def test_analyze_honesty_labels_are_placeholder_marked() -> None:
-    assert "PLACEHOLDER" in PLACEHOLDER_LABEL
-    assert "DIAGNOSTIC ONLY" in DIAGNOSTIC_NOTE
-    assert "PLACEHOLDER" in DIAGNOSTIC_NOTE
+def test_analyze_honesty_labels_are_screening_grade_not_validated() -> None:
+    # The two axes are now REAL physics but uncalibrated/proton-referenced; the labels must say
+    # screening-grade and NOT claim validation, while still flagging the diagnostic status.
+    assert "SCREENING-GRADE" in PLACEHOLDER_LABEL
+    assert "SCREENING-GRADE" in DIAGNOSTIC_NOTE
+    assert "NOT a validated experimental recommendation" in DIAGNOSTIC_NOTE
+    assert "uncalibrated" in PLACEHOLDER_LABEL.lower()
 
     frame = pd.DataFrame(
         {
@@ -188,4 +191,4 @@ def test_analyze_honesty_labels_are_placeholder_marked() -> None:
         }
     )
     shortlist = build_shortlist(frame)
-    assert (shortlist["diagnostic_note"].str.contains("DIAGNOSTIC ONLY")).all()
+    assert (shortlist["diagnostic_note"].str.contains("SCREENING-GRADE")).all()

@@ -21,9 +21,11 @@ SHORTLIST_REQUIRED_COLUMNS = ("composite_score", "pareto_front")
 RETENTION_DIMENSIONS = ("monomer_name", "solvent_name", "salt_class")
 
 DIAGNOSTIC_NOTE = (
-    "DIAGNOSTIC ONLY -- composite_score and pareto_front depend on PLACEHOLDER axes "
-    "(optical_gap, dimerization_dG / band_gap_deviation_eV). This is NOT an experimental "
-    "recommendation. See STATUS scientific caution and THINK T7."
+    "SCREENING-GRADE -- all five composite axes are now real physics, but optical_gap is the "
+    "sTDA-xTB/HOMO-LUMO oligomer gap UNCALIBRATED vs TD-DFT and dimerization_dG is the xTB "
+    "coupling free energy whose ABSOLUTE value is set up to a proton constant. The composite is "
+    "a usable screening signal, NOT a validated experimental recommendation. See STATUS "
+    "scientific caution and THINK T5/T6/T7."
 )
 
 

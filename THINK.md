@@ -14,8 +14,8 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | open | PI sign-off | scope/policy |
 | T3 | Potential-type mismatch sets the accuracy ceiling | open | self (rigor) | lit-curation (no compute) |
 | T4 | What ">=30 clean groups" actually validates | open | group-meeting | scope/policy |
-| T5 | Which placeholder axis to make real first | open | self (rigor) | scope/policy |
-| T6 | Band gap: fake oligomer assembly vs an ML model | open | group-meeting | compute-heavy |
+| T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
+| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring | group-meeting | compute-heavy |
 | T7 | What is the real deliverable? | open | group-meeting | scope/policy |
 | T8 | Chemical-space coverage vs weight tuning | open | group-meeting / PI sign-off | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
@@ -67,26 +67,26 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debts #1 and #12](STATUS.md#open-debts); [configs/tier1.yaml](configs/tier1.yaml).
 
 ## T5 — Which placeholder axis to make real first
-- **Status**: open
+- **Status**: decided/done (all five axes now real; remaining work is calibration, not realism)
 - **Forum**: self (rigor)
 - **Cost**: scope/policy
-- **Question**: Four of the five ranking axes are placeholders — which to upgrade first?
-- **Why it matters**: STATUS already warns ranked output is not a recommendation while these are fake; the composite is contaminated by them.
-- **Thinking / options**: Solvent anodic limits feed the top weight (0.30) and were the lowest-effort fix — but, per spec §3.2, they are a COMPUTED quantity, not a literature curation: the anodic limit is the adiabatic ΔSCF oxidation of the solvent molecule itself, so the fix is one xTB round over the ~30 solvent molecules (reusing the existing per-species/cache machinery, no PI sign-off). That made them the best near-term ROI for lighting up the other half of constraint ①, and they are now computed (see CHANGELOG 2026-06-17). `anion_Eox` needs its own benchmark + one xTB round. `optical_gap` and `dimerization_dG` are the hard, structure-aware upgrades (see T6).
-- **Current lean**: Solvent anodic limits DONE (computed, raw/uncalibrated; the remaining scale question is split out as T11); anion benchmark next.
-- **Resolves when**: The next placeholder upgrade is selected and either opened as concrete work or explicitly parked behind another priority.
-- **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/solvents.csv](data/solvents.csv); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
+- **Question**: Four of the five ranking axes were placeholders — which to upgrade, in what order?
+- **Why it matters**: STATUS warned ranked output is not a recommendation while these were fake; the composite was contaminated by them.
+- **Thinking / options**: Solvent anodic limits (top weight 0.30) were the lowest-effort fix — a COMPUTED adiabatic ΔSCF over the solvent molecules, done first (CHANGELOG 2026-06-17). The remaining two structure-aware axes were then made real together via the directive's oligomer route (see T6): `optical_gap` = sTDA-xTB (or HOMO-LUMO proxy) gap of the assembled n=6 oligomer, and `dimerization_dG` = the xTB radical-radical coupling ΔG of the α,α' dimer. `anion_Eox` is on the shared oxidation calibration (T11).
+- **Current lean**: All five composite axes are now real physics (screening-grade). The open work is no longer "make axes real" but "calibrate / validate them": optical gap vs TD-DFT (Step-2), dimerization's absolute proton constant, and the approximate coupling regiochemistries (aniline, D-A, the 2,3-dioxy monomers.csv data issue).
+- **Resolves when**: Treated as the realism milestone being complete; calibration/validation tracked separately (T6 for band gap, T11 for oxidation scale, the monomers.csv dioxy data-curation item).
+- **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/polymerization.csv](data/polymerization.csv); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
 
-## T6 — Band gap: fake oligomer assembly vs an ML model
-- **Status**: open
+## T6 — Band gap: oligomer + sTDA-xTB (directive route) vs an ML model
+- **Status**: exploring (directive route implemented; ML alternative parked, not needed to proceed)
 - **Forum**: group-meeting
 - **Cost**: compute-heavy
-- **Question**: Reach the polymer band gap via real oligomer assembly -> TD/sTDA, or via a trained ML/GNN predictor?
-- **Why it matters**: `optical_gap` is currently a monomer MMFF HOMO-LUMO gap — not an optical gap, not an oligomer. It directly drives the `band_gap_deviation` scoring term.
-- **Thinking / options**: Oligomer assembly (`stk` + geometry + excited-state) is heavy and approximate; the mentors' direction (polymer structure/property DB + generative/ML) suggests a learned predictor may be the more durable route for the AI-foundation goal.
-- **Current lean**: None yet; flag as a strategic fork for the meeting.
-- **Resolves when**: The group chooses an oligomer/TD-sTDA route, an ML/GNN route, or parks band-gap realism behind a nearer-term descriptor-table milestone.
-- **Links**: [STATUS open debt #11](STATUS.md#open-debts).
+- **Question**: Reach the polymer band gap via real oligomer assembly -> sTDA-xTB, or via a trained ML/GNN predictor?
+- **Why it matters**: `optical_gap` drives the `band_gap_deviation` scoring term; it was a monomer MMFF HOMO-LUMO placeholder.
+- **Thinking / options**: We took the DIRECTIVE's route for now: assemble the n=6 oligomer (RDKit α-coupling — `stk` substitution, documented) and take the sTDA-xTB lowest singlet excitation, with the oligomer GFN2-xTB HOMO-LUMO gap as a flagged proxy until `stda` is confirmed on the cluster. This is implemented and screening-grade (uncalibrated vs TD-DFT). The mentors' ML/GNN direction may be the more durable long-term route for the AI-foundation goal, but it is NOT needed to proceed and remains the open fork only if we later choose to deviate. The directive also wants the sTDA gap calibrated vs a TD-DFT reference — deferred to Step-2 (a calibration hook mirrors the solvent-limit "compute now, calibrate later" pattern).
+- **Current lean**: Proceed on the directive's oligomer + sTDA-xTB route; revisit ML only if the screening-grade gap proves insufficient. Calibrate vs TD-DFT in Step-2.
+- **Resolves when**: The group accepts the oligomer/sTDA route (with TD-DFT calibration as Step-2) or explicitly chooses to pivot to an ML/GNN predictor.
+- **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py).
 
 ## T7 — What is the real deliverable?
 - **Status**: open

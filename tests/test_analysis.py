@@ -100,7 +100,8 @@ def test_shortlist_carries_diagnostic_note(tmp_path: Path) -> None:
     result = run_analyze(harvest, tmp_path / "analysis")
     text = result.shortlist_path.read_text(encoding="utf-8")
 
-    assert "DIAGNOSTIC ONLY" in text
+    assert "SCREENING-GRADE" in text
+    assert "NOT a validated experimental recommendation" in text
     parsed = pd.read_csv(result.shortlist_path, comment="#")
     assert "diagnostic_note" in parsed.columns
     assert (parsed["pareto_front"]).all()
