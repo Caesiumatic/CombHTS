@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from eps.analysis import run_analyze
+from eps.doctor import run_doctor
 from eps.engines import GaussianEngine, MockEngine, XTBEngine
 from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL
 from eps.provenance import write_provenance
@@ -174,7 +175,20 @@ def main(argv: list[str] | None = None) -> int:
         help="Directory for the generated .gjf inputs.",
     )
 
+    subparsers.add_parser(
+        "doctor",
+        help="No-compute environment readiness check (Python, binaries, imports, configs, data)",
+    )
+
     args = parser.parse_args(argv)
+    if args.command == "doctor":
+        report = run_doctor()
+        for check in report.checks:
+            print(f"  [{check.status}] {check.name}: {check.detail}")
+        failures = sum(1 for c in report.checks if c.status == "FAIL")
+        print(f"Summary: {len(report.checks)} checks, {failures} FAIL, {report.n_warn} WARN")
+        return 0 if not report.has_failure else 1
+
     if args.command == "run-tier1":
         engine, method = _engine_from_name(args.engine)
         result = run_tier1(

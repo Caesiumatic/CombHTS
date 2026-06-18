@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-18
+- Added `eps doctor`: a no-compute environment readiness self-check (`src/eps/doctor.py`)
+  reporting PASS/WARN/FAIL for Python version, `xtb`/`g16` on PATH (WARN if absent —
+  cluster-only), importability of rdkit/pandas/numpy (FAIL if missing) and matplotlib/sklearn
+  (WARN), and the existence + parseability of the pinned configs and expected `data/*.csv`.
+  No network, no subprocess beyond `shutil.which`. Tests in `tests/test_doctor.py`.
 - Added scientific-invariant regression tests (`tests/test_invariants.py`): the pinned
   redox→V conversion reproduces its constants, is monotonic, and round-trips; the single
   `tier1.yaml` oxidation calibration (slope 0.725837 / intercept -3.145372) is applied with the
