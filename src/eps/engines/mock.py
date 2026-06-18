@@ -51,16 +51,14 @@ class MockEngine(Engine):
         else:
             raise ValueError(f"Unsupported quantity {quantity!r}")
 
-        return CalcResult(
-            value=value,
-            unit=unit,
-            method=req.method,
-            raw={
-                "engine": "MockEngine",
-                "hash_basis": self._hash_basis(req),
-                "solvent_polarity_factor": _polarity_factor(req.solvent_eps_r),
-            },
-        )
+        raw = {
+            "engine": "MockEngine",
+            "hash_basis": self._hash_basis(req),
+            "solvent_polarity_factor": _polarity_factor(req.solvent_eps_r),
+        }
+        if quantity == "optical_gap":
+            raw["optical_gap_method"] = "mock-deterministic"
+        return CalcResult(value=value, unit=unit, method=req.method, raw=raw)
 
     @staticmethod
     def _scale(unit_value: float, low: float, high: float) -> float:

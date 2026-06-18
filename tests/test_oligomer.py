@@ -82,6 +82,32 @@ def test_every_library_monomer_has_a_spec_that_assembles() -> None:
             assert not any(a.GetAtomicNum() == 0 for a in mol.GetAtoms())  # no dummies
 
 
+def test_polymer_optical_gap_is_computed_on_the_oligomer_not_the_monomer(tmp_path: Path) -> None:
+    from eps.engines import CalcRequest, MockEngine, SpeciesSpec
+    from eps.properties.calculators import polymer_optical_gap, polymer_optical_gap_method
+    from eps.storage import SQLiteCache
+
+    specs = load_polymerization_specs()
+    monomer = next(m for m in load_monomers() if m.name == "thiophene")
+    spec = specs["thiophene"]
+    cache = SQLiteCache(tmp_path / "c.sqlite")
+    engine = MockEngine()
+
+    gap = polymer_optical_gap(monomer, engine, cache, spec=spec, n=DEFAULT_OLIGOMER_N)
+
+    # The value matches the engine's optical_gap of the assembled hexamer SMILES, not the monomer.
+    hexamer = oligomer_smiles(monomer.canonical_smiles, spec, DEFAULT_OLIGOMER_N)
+    expected = MockEngine().run(
+        CalcRequest(SpeciesSpec(hexamer, 0, 1), "mock-gfn2", None, "optical_gap")
+    ).value
+    monomer_value = MockEngine().run(
+        CalcRequest(SpeciesSpec(monomer.canonical_smiles, 0, 1), "mock-gfn2", None, "optical_gap")
+    ).value
+    assert gap == pytest.approx(expected)
+    assert gap != pytest.approx(monomer_value)
+    assert polymer_optical_gap_method(monomer, engine, cache, spec=spec) == "mock-deterministic"
+
+
 def test_building_block_artifact_is_written_with_review_columns(tmp_path: Path) -> None:
     specs = load_polymerization_specs()
     monomers = load_monomers()

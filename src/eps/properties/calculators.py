@@ -6,6 +6,11 @@ from eps.chemspace.models import Electrolyte, Monomer, Solvent
 from eps.engines.base import CalcRequest, Engine, SpeciesSpec
 from eps.properties.redox import ip_eV_to_potential_vs_AgAgCl
 from eps.storage.cache import SQLiteCache, cached_run
+from eps.structures.oligomer import (
+    DEFAULT_OLIGOMER_N,
+    PolymerizationSpec,
+    oligomer_smiles,
+)
 
 DEFAULT_METHOD = "mock-gfn2"
 
@@ -130,21 +135,51 @@ def monomer_solvation(
     return cached_run(cache, engine, req, solvent.name).value
 
 
+def _optical_gap_request(monomer: Monomer, spec: PolymerizationSpec, method: str, n: int) -> CalcRequest:
+    oligo_smiles = oligomer_smiles(monomer.canonical_smiles, spec, n)
+    return CalcRequest(
+        species=SpeciesSpec(oligo_smiles, charge=0, multiplicity=1),
+        method=method,
+        solvent_eps_r=None,
+        quantity="optical_gap",
+    )
+
+
 def polymer_optical_gap(
     monomer: Monomer,
     engine: Engine,
     cache: SQLiteCache,
     method: str = DEFAULT_METHOD,
+    *,
+    spec: PolymerizationSpec,
+    n: int = DEFAULT_OLIGOMER_N,
 ) -> float:
-    """Return polymer optical gap proxy in eV, using monomer as the current placeholder."""
+    """Optical (band) gap in eV from the assembled n-mer oligomer (directive §3.1/§4.1).
 
-    req = CalcRequest(
-        species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
-        method=method,
-        solvent_eps_r=None,
-        quantity="optical_gap",
-    )
+    The engine returns the sTDA-xTB lowest singlet excitation when ``stda`` is available, or
+    the oligomer GFN2-xTB HOMO–LUMO gap as a clearly-labeled screening proxy otherwise. This
+    is a per-MONOMER property (one oligomer calc per monomer), cached by the oligomer SMILES.
+    Raw/uncalibrated vs TD-DFT (Step-2 calibration hook), screening-grade.
+    """
+
+    req = _optical_gap_request(monomer, spec, method, n)
     return cached_run(cache, engine, req, solvent_name=None).value
+
+
+def polymer_optical_gap_method(
+    monomer: Monomer,
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = DEFAULT_METHOD,
+    *,
+    spec: PolymerizationSpec,
+    n: int = DEFAULT_OLIGOMER_N,
+) -> str:
+    """Return which method produced the cached optical gap (stda-xtb / HOMO–LUMO proxy / mock)."""
+
+    req = _optical_gap_request(monomer, spec, method, n)
+    result = cached_run(cache, engine, req, solvent_name=None)
+    return str(result.raw.get("optical_gap_method", "unknown"))
 
 
 def dimerization_dG(

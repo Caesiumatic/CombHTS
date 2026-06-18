@@ -39,8 +39,16 @@ class XTBEngine(Engine):
     xTB receives multiplicity through ``--uhf multiplicity-1``.
     """
 
-    def __init__(self, binary: str = "xtb") -> None:
+    def __init__(
+        self,
+        binary: str = "xtb",
+        *,
+        stda_binary: str = "stda",
+        stda_energy_window_eV: float = 10.0,
+    ) -> None:
         self.binary = binary
+        self.stda_binary = stda_binary
+        self.stda_energy_window_eV = stda_energy_window_eV
 
     def run(self, req: CalcRequest) -> CalcResult:
         """Run one xTB calculation request and return a scalar result."""
@@ -60,14 +68,15 @@ class XTBEngine(Engine):
             value, raw = self._solvation_free_energy(req)
             return CalcResult(value=value, unit="kcal/mol", method=req.method, raw=raw)
         if req.quantity == "optical_gap":
-            output = self._run_xtb(req, charge=req.species.charge, multiplicity=req.species.multiplicity)
+            value, gap_method, output = self._optical_gap(req)
             return CalcResult(
-                value=_gap_from_output(output),
+                value=value,
                 unit="eV",
                 method=req.method,
                 raw={
                     "engine": "XTBEngine",
                     "quantity": req.quantity,
+                    "optical_gap_method": gap_method,
                     "stdout": output.stdout,
                     "parsed_json": output.parsed_json,
                 },
@@ -212,12 +221,83 @@ class XTBEngine(Engine):
         return XTBRunOutput(stdout=completed.stdout, parsed_json=parsed_json)
 
 
+    def _optical_gap(self, req: CalcRequest) -> tuple[float, str, "XTBRunOutput"]:
+        """Lowest singlet excitation via sTDA-xTB if ``stda`` is available, else the
+        oligomer GFN2-xTB HOMO–LUMO gap as a clearly-labeled screening proxy (directive §4.1).
+        """
+
+        output = self._run_xtb(
+            req,
+            charge=req.species.charge,
+            multiplicity=req.species.multiplicity,
+            solvent_args=[],
+            optimize=True,
+        )
+        if shutil.which(self.stda_binary) is not None:
+            try:
+                excitation_eV = self._stda_lowest_excitation(req)
+                return excitation_eV, "stda-xtb", output
+            except Exception:  # noqa: BLE001 - any sTDA failure degrades to the HOMO–LUMO proxy.
+                pass
+        return _gap_from_output(output), "homo_lumo_hexamer_fallback", output
+
+    def _stda_lowest_excitation(self, req: CalcRequest) -> float:
+        """Run xTB (dump wavefunction) + ``stda -xtb`` and return the lowest singlet eV."""
+
+        xyz = smiles_to_xyz(req.species.canonical_smiles, charge=req.species.charge)
+        with tempfile.TemporaryDirectory(prefix="eps-stda-") as tmpdir:
+            xyz_path = Path(tmpdir) / "input.xyz"
+            xyz_path.write_text(xyz, encoding="utf-8")
+            # xtb writes the sTDA wavefunction (wfn.xtb) when asked to.
+            xtb_cmd = [
+                self.binary, str(xyz_path), "--gfn", "2",
+                "--chrg", str(req.species.charge),
+                "--uhf", str(max(req.species.multiplicity - 1, 0)),
+                *solvent_flag(req.xtb_gbsa_name),
+            ]
+            xtb_done = subprocess.run(xtb_cmd, cwd=tmpdir, check=False, capture_output=True, text=True)
+            if xtb_done.returncode != 0:
+                raise RuntimeError(f"xtb (for sTDA) failed: exit {xtb_done.returncode}")
+            stda_done = subprocess.run(
+                [self.stda_binary, "-xtb", "-e", str(self.stda_energy_window_eV)],
+                cwd=tmpdir, check=False, capture_output=True, text=True,
+            )
+            if stda_done.returncode != 0:
+                raise RuntimeError(f"stda failed: exit {stda_done.returncode}")
+            return parse_stda_lowest_excitation(stda_done.stdout)
+
+
 def solvent_flag(xtb_gbsa_name: str | None) -> list[str]:
     """Return xTB ALPB solvent arguments from a versioned solvent keyword."""
 
     if xtb_gbsa_name:
         return ["--alpb", xtb_gbsa_name]
     return []
+
+
+def parse_stda_lowest_excitation(stdout: str) -> float:
+    """Parse the lowest singlet excitation energy (eV) from ``stda -xtb`` output.
+
+    sTDA prints a state table whose rows start with a state index followed by the
+    excitation energy in eV. The first state is the lowest singlet excitation = the
+    sTDA-xTB optical gap (directive §4.1).
+    """
+
+    in_table = False
+    for line in stdout.splitlines():
+        header = line.lower()
+        if "state" in header and "eV".lower() in header and ("nm" in header or "ev" in header):
+            in_table = True
+            continue
+        if in_table:
+            parts = line.split()
+            if len(parts) >= 2:
+                try:
+                    int(parts[0])
+                    return float(parts[1])
+                except (ValueError, IndexError):
+                    continue
+    raise ValueError("Could not parse a sTDA excitation energy from stda output")
 
 
 def parse_xtb_json(json_text: str) -> dict[str, float | None]:
