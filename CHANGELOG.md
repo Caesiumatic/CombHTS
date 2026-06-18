@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-06-18 (later 5) — literature-grounded refinements (Eox benchmark; band-gap route)
+Small refinement pass grounded in two literature reviews added under `docs/research/`
+(`eox_benchmark_and_reference_conversion.md`, `bandgap_route_oligomer_stda_vs_ml.md`). All
+additive; no live Gaussian; pinned tier1.yaml calibration / scoring weights / redox.py untouched.
+
+- **R1 — peak-only DFT->experiment validation** (`eps calibrate-dft`): the DFT ΔSCF Eox is a
+  thermodynamic PEAK observable, so Fit 2 (DFT->experiment) now fits ONLY `monomer_oxidation_peak`
+  rows; Fit 1 (xTB->DFT) is unchanged (uses all eligible monomers). New `label_type` column in the
+  points CSV; report + CLI state peak-fed vs onset-excluded counts (18 peak / 4 onset on v3).
+- **R2 — reference-floor flags** in the Fit 2 report section: a fixed ~0.1 V (up to 0.2 V)
+  reference-floor note (Fc/Fc+ = +0.45 V vs Ag/AgCl, Pavlishchuk & Addison 2000; "do not over-tune
+  below ~0.1 V"), plus a computed core-monomer flag (thiophene/EDOT/carbazole/pyrrole/DTP): if the
+  core DFT->exp MAE > 0.15 V, print "re-examine the reference-conversion constant BEFORE re-tuning
+  the DFT method." New unit-testable helpers `dft_to_exp_residuals` + `core_monomer_reference_flag`.
+- **R3 — honest extrapolation** (`oligomer_series.py`): added a 2nd-order polynomial 1/n fit
+  (`oligomer_Eox_infinite_raw_poly2_eV`, `oligomer_Eox_poly2_r2`; <3 pts -> NaN) alongside the
+  linear one, and a constant `oligomer_Eox_extrap_caveat` ("non-converged: naive 1/n from short
+  oligomers; needs >=20-mer or PBC", Zade & Bendikov). Docstring + columns state neither extrapolated
+  value is a converged polymer Eox; the durable signal is the per-n trend + the n=6 raw Eox. Still
+  reported-only/additive (113 -> 113 survivors).
+- **R4 — docs**: THINK.md records literature-backed PROPOSED resolutions (pending PI confirmation)
+  for T1 (store both; calibrate DFT vs peak, screen window vs onset), T2 (Ag/AgCl master scale,
+  Fc/Fc+ at +0.45 V, accept ~0.1 V floor), and T6 (Route A oligomer+sTDA-xTB now / Route B GNN
+  later; range-separated functional + per-class validation for the TD-DFT calibration).
+- Full suite green: 142 passed, 4 skipped; `ruff check` clean.
+
 ## 2026-06-18 (later 4) — Step-2 DFT-calibration engineering (mock-first) + oligomer-Eox descriptor
 All additive; NO live Gaussian was run; the pinned xTB->experiment calibration
 (`configs/tier1.yaml`), the composite weights (`configs/scoring.yaml`), and `redox.py` are
