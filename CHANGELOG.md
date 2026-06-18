@@ -1,6 +1,23 @@
 # Changelog
 
 ## 2026-06-18
+- Scaffolded the Tier-2 DFT engine (Gaussian 16), BUILD-ONLY — no g16 is ever run.
+  `src/eps/engines/gaussian.py` adds `GaussianEngine(Engine)` (`gas_energy`, `adiabatic_ip`,
+  `adiabatic_ea`) mirroring `XTBEngine`'s structure and the same charge/multiplicity convention
+  (oxidation → charge+1, multiplicity+1; ΔG = G(cation) − G(neutral), preferring the thermally
+  corrected Gibbs free energy when present). It checks the subprocess return code BEFORE parsing
+  (Task-1a lesson) and raises a clear RuntimeError when `g16` is absent — it never fabricates a
+  value. `build_gaussian_input(...)` emits a valid `.gjf` (route `#p B3LYP/6-31G(d,p) Opt
+  SCF=Tight`, optional `SCRF=(SMD,Solvent=...)`, charge/multiplicity, Cartesian coords from
+  `smiles_to_xyz`); `parse_gaussian_log(...)` extracts the final `SCF Done` energy and the
+  optional `Sum of electronic and thermal Free Energies`, Hartree→eV via `HARTREE_TO_EV`.
+- Registered `"gaussian"` in the CLI engine factory (method label `b3lyp-6-31g(d,p)-smd`); it is
+  NOT wired into any production workflow run. Added `tests/fixtures/gaussian_scf.log` and
+  `tests/test_gaussian.py` (input/route/SMD, log parsing, no-fake-when-absent, return-code-first
+  ordering, live smoke skips without g16).
+- Added experimental `eps tier2 --dry-run` (`src/eps/workflow/tier2.py`): writes neutral+cation
+  `.gjf` inputs per UNIQUE survivor monomer for human inspection and prints a rough CPU-hour
+  estimate; it never submits or runs g16 (a test asserts no subprocess is launched).
 - Added `eps analyze` (directive §8): a read-only post-processing command (`src/eps/analysis/`)
   that NEVER recomputes or rescores, only reads an existing Tier-1 harvest CSV. Produces
   `summary.csv` (total vs surviving triads, overall retention, retention by monomer/solvent/
