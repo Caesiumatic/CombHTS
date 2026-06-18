@@ -14,6 +14,7 @@ from eps.workflow.dft_calibration import (
     MOCK_DFT_METHOD,
     MOCK_XTB_METHOD,
     POINTS_COLUMNS,
+    core_monomer_reference_flag,
     run_dft_calibration,
 )
 
@@ -130,6 +131,34 @@ def test_fit2_uses_peak_rows_only(tmp_path: Path) -> None:
     report = result.report_path.read_text(encoding="utf-8")
     assert "PEAK rows only" in report
     assert "onset) monomer(s) were EXCLUDED" in report
+
+
+def test_core_monomer_reference_flag_fires_above_threshold_silent_below() -> None:
+    # Core-monomer residuals well above 0.15 V -> the flag FIRES.
+    fired_hi, msg_hi = core_monomer_reference_flag({"thiophene": 0.30, "EDOT": -0.25})
+    assert fired_hi is True
+    assert "FLAG: core-monomer DFT->exp MAE" in msg_hi
+    assert "re-examine the reference-conversion constant" in msg_hi
+
+    # Core-monomer residuals within the reference floor -> SILENT (no flag).
+    fired_lo, msg_lo = core_monomer_reference_flag({"thiophene": 0.05, "EDOT": -0.08})
+    assert fired_lo is False
+    assert "FLAG:" not in msg_lo
+
+    # No core monomers present -> says so, does not fire.
+    fired_none, msg_none = core_monomer_reference_flag({"some-exotic-monomer": 0.9})
+    assert fired_none is False
+    assert "No core monomers" in msg_none
+
+
+def test_reference_floor_note_in_report(tmp_path: Path) -> None:
+    result = _run(tmp_path)
+    report = result.report_path.read_text(encoding="utf-8")
+    assert "Reference floor + core-monomer check" in report
+    assert "Pavlishchuk & Addison 2000" in report
+    assert "Do NOT report MAE below ~0.05 V" in report
+    # A core-monomer check line is present (thiophene/EDOT/pyrrole are in the benchmark).
+    assert "core-monomer DFT->exp MAE" in report or "No core monomers" in report
 
 
 def test_dft_results_cached_not_recomputed_on_second_call(tmp_path: Path) -> None:

@@ -68,6 +68,22 @@ PEAK_LABEL_TYPE = "monomer_oxidation_peak"
 MOCK_XTB_METHOD = "mock-gfn2"
 MOCK_DFT_METHOD = "mock-b3lyp"
 
+# High-confidence MeCN/Ag-AgCl core anchors (Eox-benchmark review §"Recommendations"). If the
+# DFT->experiment error on THESE is large, suspect the reference-conversion constant, not the DFT.
+CORE_MONOMER_NAMES = (
+    "thiophene",
+    "EDOT",
+    "carbazole",
+    "pyrrole",
+    "dithieno[3,2-b:2',3'-d]pyrrole",
+)
+CORE_MAE_THRESHOLD_V = 0.15
+REFERENCE_FLOOR_NOTE = (
+    "Experimental reference carries a ~0.1 V (up to 0.2 V) systematic floor from "
+    "liquid-junction / reference-conversion uncertainty (Fc/Fc+ = +0.45 V vs Ag/AgCl in MeCN, "
+    "Pavlishchuk & Addison 2000). Do NOT report MAE below ~0.05 V precision or over-tune below ~0.1 V."
+)
+
 
 @dataclass
 class DFTCalibrationResult:
@@ -88,6 +104,8 @@ class DFTCalibrationResult:
     pinned_xtb_to_exp: dict[str, float] | None = field(default=None)
     n_dft_to_exp_peak_points: int = 0
     n_nonpeak_excluded: int = 0
+    reference_flag_fired: bool = False
+    reference_flag_message: str = ""
 
 
 def run_dft_calibration(
@@ -103,6 +121,7 @@ def run_dft_calibration(
     limit: int | None = None,
     method_label: str = "MockEngine (mock-b3lyp), gas phase, opt only",
     tier1_config_path: str | Path = DEFAULT_TIER1_CONFIG,
+    core_monomers: tuple[str, ...] = CORE_MONOMER_NAMES,
 ) -> DFTCalibrationResult:
     """Run the xTB->DFT calibration and the DFT->experiment validation, mock-first.
 
@@ -169,6 +188,13 @@ def run_dft_calibration(
     dft_to_exp = _maybe_fit(peak_points["dft_Eox_eV"], peak_points["exp_Eox_V_vs_AgAgCl"])
     pinned = _load_pinned_xtb_to_exp(tier1_config_path)
 
+    # Reference-floor decision flag: a large DFT->exp error on the trusted core anchors points at
+    # the reference-conversion constant, not the DFT method.
+    reference_residuals = dft_to_exp_residuals(peak_points, dft_to_exp)
+    reference_flag_fired, reference_flag_message = core_monomer_reference_flag(
+        reference_residuals, core_monomers
+    )
+
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
     points_path = out / "dft_calibration_points.csv"
@@ -201,6 +227,7 @@ def run_dft_calibration(
         xtb_method=xtb_method,
         dft_method=dft_method,
         benchmark_path=benchmark_path,
+        reference_flag_message=reference_flag_message,
     )
 
     return DFTCalibrationResult(
@@ -219,6 +246,8 @@ def run_dft_calibration(
         pinned_xtb_to_exp=pinned,
         n_dft_to_exp_peak_points=int(len(peak_points)),
         n_nonpeak_excluded=n_nonpeak_excluded,
+        reference_flag_fired=reference_flag_fired,
+        reference_flag_message=reference_flag_message,
     )
 
 
@@ -281,6 +310,55 @@ def _maybe_fit(x: pd.Series, y: pd.Series) -> LinearCalibration | None:
     if len(x_values) < 2:
         return None
     return fit_linear_calibration(x_values, y_values)
+
+
+def dft_to_exp_residuals(
+    peak_points: pd.DataFrame,
+    calibration: LinearCalibration | None,
+) -> dict[str, float]:
+    """Per-monomer DFT->experiment calibrated residuals (V) over the peak rows used in Fit 2.
+
+    residual = calibration.apply(dft_Eox_eV) - exp_Eox_V_vs_AgAgCl. Empty when there is no fit.
+    """
+
+    if calibration is None or peak_points.empty:
+        return {}
+    residuals: dict[str, float] = {}
+    for _, row in peak_points.iterrows():
+        predicted = float(calibration.apply(float(row["dft_Eox_eV"])))
+        residuals[str(row["monomer_name"])] = predicted - float(row["exp_Eox_V_vs_AgAgCl"])
+    return residuals
+
+
+def core_monomer_reference_flag(
+    residuals_by_monomer: dict[str, float],
+    core_names: tuple[str, ...] = CORE_MONOMER_NAMES,
+) -> tuple[bool, str]:
+    """Decision flag on the core-monomer DFT->experiment MAE.
+
+    Over whichever core monomers are PRESENT, if the MAE exceeds ``CORE_MAE_THRESHOLD_V`` the flag
+    FIRES (returns True) — a large error on the trusted anchors points at the reference-conversion
+    constant, not the DFT method. Returns (fired, human-readable message). If no core monomers are
+    present, returns (False, <says so>).
+    """
+
+    present = {name: residuals_by_monomer[name] for name in core_names if name in residuals_by_monomer}
+    if not present:
+        return False, (
+            f"No core monomers ({', '.join(core_names)}) present in the peak Fit-2 set; "
+            "core-monomer reference check not run."
+        )
+    mae = float(np.mean([abs(value) for value in present.values()]))
+    if mae > CORE_MAE_THRESHOLD_V:
+        return True, (
+            f"FLAG: core-monomer DFT->exp MAE = {mae:.3f} V > {CORE_MAE_THRESHOLD_V:.2f} V — "
+            "re-examine the reference-conversion constant BEFORE re-tuning the DFT method. "
+            f"Core monomers present: {', '.join(present)}."
+        )
+    return False, (
+        f"core-monomer DFT->exp MAE = {mae:.3f} V <= {CORE_MAE_THRESHOLD_V:.2f} V "
+        f"(within the reference floor; OK). Core monomers present: {', '.join(present)}."
+    )
 
 
 def _load_pinned_xtb_to_exp(tier1_config_path: str | Path) -> dict[str, float] | None:
@@ -374,7 +452,7 @@ def _write_report(
     xtb_method: str,
     dft_method: str,
     benchmark_path: str | Path,
-    core_monomers: tuple[str, ...] = (),
+    reference_flag_message: str = "",
 ) -> None:
     lines: list[str] = []
     lines.append("# DFT calibration report")
@@ -428,6 +506,13 @@ def _write_report(
     else:
         lines.append(f"- INSUFFICIENT PEAK POINTS (< 2; {len(peak_points)} peak monomer(s)): fit not computed.")
     lines.append("")
+    lines.append("### Reference floor + core-monomer check")
+    lines.append("")
+    lines.append(REFERENCE_FLOOR_NOTE)
+    lines.append("")
+    if reference_flag_message:
+        lines.append(reference_flag_message)
+        lines.append("")
     lines.append("## Side-by-side: pinned xTB->experiment vs new xTB->DFT")
     lines.append("")
     lines.append("Clearly labeled; NO files are overwritten. The pinned values come from `configs/tier1.yaml`.")
