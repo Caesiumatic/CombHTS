@@ -111,6 +111,19 @@ def test_memo_written_with_required_sections_and_no_fabricated_gaps(tmp_path: Pa
     assert "Spearman" in text
 
 
+def test_mock_memo_uses_reserved_preview_filename(tmp_path: Path) -> None:
+    memo_path = write_validation_memo(
+        engine=MockEngine(),
+        cache_path=tmp_path / "memo_name.sqlite",
+        report_path=tmp_path / "memo_name_report.csv",
+        harvest_path=tmp_path / "missing_harvest.csv",
+        memo_dir=tmp_path / "docs",
+        memo_date=date(2026, 6, 17),
+    )
+
+    assert memo_path.name == "validation_memo_MOCK_PREVIEW.md"
+
+
 def test_memo_includes_sanity_results_when_harvest_present(tmp_path: Path) -> None:
     harvest = tmp_path / "tier1_all_xtb.csv"
     _write_harvest(harvest, _PASSING_EOX)
