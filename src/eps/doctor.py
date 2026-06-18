@@ -97,7 +97,54 @@ def run_doctor(project_root: str | Path = PROJECT_ROOT) -> DoctorReport:
         else:
             checks.append(DoctorCheck(f"data:{relative}", FAIL, "missing"))
 
+    checks.extend(_tier2_checks(root))
+
     return DoctorReport(checks=checks)
+
+
+def _tier2_checks(root: Path) -> list[DoctorCheck]:
+    """Report Tier-2 (Gaussian) readiness: g16 on PATH, tier2.yaml loads, effective method.
+
+    Runs no g16 calculation — only ``shutil.which`` and a YAML load. Lets the user verify the
+    Lop environment with one command before the live calibration/Tier-2 batch.
+    """
+
+    checks: list[DoctorCheck] = []
+
+    g16 = shutil.which("g16")
+    if g16:
+        checks.append(DoctorCheck("tier2:g16", PASS, f"{g16} (Tier-2 live DFT ready)"))
+    else:
+        checks.append(
+            DoctorCheck(
+                "tier2:g16",
+                WARN,
+                "g16 not on PATH; Tier-2 is dry-run/mock only (cluster-only binary, fine locally)",
+            )
+        )
+
+    path = root / "configs" / "tier2.yaml"
+    if not path.exists():
+        checks.append(
+            DoctorCheck(
+                "tier2:config",
+                WARN,
+                "configs/tier2.yaml absent; the engine would fall back to built-in v1 defaults",
+            )
+        )
+        return checks
+    try:
+        from eps.engines.gaussian import load_tier2_config
+
+        config = load_tier2_config(path)
+        checks.append(
+            DoctorCheck("tier2:config", PASS, f"configs/tier2.yaml -> {config.method_label()}")
+        )
+    except Exception as exc:  # noqa: BLE001 - an unloadable Tier-2 config is a hard failure.
+        checks.append(
+            DoctorCheck("tier2:config", FAIL, f"present but unloadable: {type(exc).__name__}")
+        )
+    return checks
 
 
 def _import_check(module: str, *, required: bool) -> DoctorCheck:

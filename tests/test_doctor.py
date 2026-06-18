@@ -23,6 +23,23 @@ def test_doctor_runs_and_reports_valid_statuses() -> None:
     assert by_name["binary:xtb"].status in {PASS, WARN}
     assert by_name["binary:g16"].status in {PASS, WARN}
 
+    # Tier-2 readiness: g16 availability (cluster-only -> never FAIL) and the effective method.
+    assert by_name["tier2:g16"].status in {PASS, WARN}
+    tier2_config = by_name["tier2:config"]
+    assert tier2_config.status == PASS  # shipped configs/tier2.yaml loads in a complete checkout
+    assert "B3LYP/6-31G(d,p)" in tier2_config.detail
+    assert "gas phase" in tier2_config.detail
+    assert "opt only" in tier2_config.detail
+
+
+def test_doctor_tier2_config_warns_when_absent(tmp_path: Path) -> None:
+    from eps.doctor import run_doctor as _run
+
+    report = _run(tmp_path)  # empty dir: no configs/tier2.yaml
+    by_name = {check.name: check for check in report.checks}
+    assert by_name["tier2:config"].status == WARN
+    assert by_name["tier2:g16"].status in {PASS, WARN}
+
 
 def test_doctor_flags_missing_configs_and_data_without_raising(tmp_path: Path) -> None:
     report = run_doctor(tmp_path)  # empty dir: no configs, no data
