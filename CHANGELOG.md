@@ -12,6 +12,17 @@
     random-coordinate retries across several seeds with a larger iteration budget; a clear
     ValueError on total failure (never a silent NaN). The full dioctylfluorene hexamer now
     embeds even without truncation.
+- Issue 2 (science): `dimerization_dG` used the wrong dimer charge state. The directive's
+  `2 M+. -> [M-M]2+ + 2 H+` is charge-imbalanced (+2 vs +4); the correct oxidative coupling is
+  `2 M+. -> M-M(neutral) + 2 H+` (the rearomatized dimer is neutral). The dimer is now evaluated
+  NEUTRAL (charge 0, singlet) on the same α,α′-coupled structure, removing a spurious second
+  oxidation that made every monomer look ~+650 kcal/mol endothermic and distorted the ordering.
+  The reaction is charge- and electron-balanced, so the bare proton's electronic energy is
+  rigorously 0 (re-documented `PROTON_GIBBS_EV`): ΔG = E(M-M neutral) - 2·E(M+.) is the
+  physically interpretable, self-contained screening-grade coupling energy (dG<0 favorable).
+  Still a SCORE input only, not a hard filter; composite formula/weights unchanged.
+- NOTE: the prior harvest's fluorene `optical_gap` (was NaN) and ALL `dimerization_dG` values
+  are superseded and will be recomputed by the next cluster run. No cluster run performed here.
 
 ## 2026-06-18 (later 2) — corrected the alkylenedioxy monomer SMILES (2,3 -> 3,4)
 - Fixed a logged pinned-data error: `data/monomers.csv` stored EDOT/ProDOT/EDOP/EDOS as the

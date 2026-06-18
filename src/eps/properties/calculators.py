@@ -18,14 +18,16 @@ DEFAULT_METHOD = "mock-gfn2"
 
 EV_TO_KCAL_MOL = 23.060547830619
 PROTON_GIBBS_EV = 0.0
-"""Reference free energy of the released proton, in eV.
+"""Electronic-energy reference of the released proton, in eV.
 
-The α,α′ coupling 2 M⁺• → [M–M]²⁺ + 2 H⁺ loses exactly two protons for EVERY monomer, so
-this constant cancels in the cross-monomer comparison and in the min–max normalization that
-feeds the composite (same "constant cancels" logic as THINK T11). It is fixed at the free-
-proton reference (0 eV) here: the ABSOLUTE ΔG is therefore screening-grade up to this proton
-convention, while the RELATIVE ordering across monomers — which is what the w4 score uses — is
-robust. Overridable per call for testing the invariance."""
+The oxidative coupling 2 M⁺• → M–M(neutral) + 2 H⁺ is charge- AND electron-balanced (both
+sides carry 2·Z_M − 2 electrons), and a bare proton has no electrons, so its electronic energy
+is rigorously 0 on the same GFN2-xTB scale as the other species. The proton term is therefore
+0 by construction (not an arbitrary cancel-constant): the resulting ΔG = E(M–M) − 2·E(M⁺•) is
+the physically interpretable, self-contained screening-grade coupling energy (dG < 0 ⇒
+favorable coupling). The screening-grade caveats are the missing thermal/ZPE corrections and
+proton solvation, and that these are GFN2-xTB electronic energies (the DFT-grade version is
+Step-2). Overridable per call for testing the cross-monomer invariance."""
 
 
 def monomer_eox_vs_AgAgCl(
@@ -238,23 +240,27 @@ def dimerization_dG(
 ) -> float:
     """Radical–radical coupling free energy in kcal/mol (directive §3.1/§4.2).
 
-    Reaction: 2 M⁺• → [M–M]²⁺ + 2 H⁺. The xTB-level
-    ΔG = G([M–M]²⁺) + 2·G(H⁺) − 2·G(M⁺•), with each G taken as the GFN2-xTB energy of that
-    species (reusing the redox energy path) and G(H⁺) the fixed proton convention
-    (``proton_gibbs_eV``). The dimer is the α,α′ neutral n=2 oligomer evaluated in the +2
-    charge state (closed-shell singlet); the monomer radical cation is +1, doublet.
+    Reaction (charge- and electron-balanced): 2 M⁺• → M–M(neutral) + 2 H⁺. The xTB-level
+    ΔG = G(M–M neutral) + 2·G(H⁺) − 2·G(M⁺•), with each G taken as the GFN2-xTB energy of that
+    species (reusing the redox energy path). The dimer is the SAME α,α′-coupled n=2 oligomer,
+    now evaluated NEUTRAL (closed-shell singlet) — two radical cations couple and the
+    rearomatized dimer is neutral, having lost 2 H⁺. The monomer radical cation is +1, doublet.
+    Using the +2 dication (the earlier code) double-counted oxidation and made every monomer
+    look strongly endothermic (~+650 kcal/mol); the neutral dimer fixes that.
 
-    Per-MONOMER property (cached). The proton constant cancels across monomers, so the
-    ABSOLUTE value is screening-grade but the RELATIVE ordering the score uses is sound. This
-    is NOT a hard Tier-1 filter — it feeds the w4 composite term only.
+    The proton's electronic energy is rigorously 0 (a bare proton has no electrons; see
+    ``PROTON_GIBBS_EV``), so ΔG is the physically interpretable, self-contained coupling energy
+    (dG < 0 ⇒ favorable). Per-MONOMER property (cached). Screening-grade (no thermal/ZPE/solvation
+    corrections; GFN2-xTB electronic energies — DFT-grade is Step-2). NOT a hard Tier-1 filter —
+    it feeds the w4 composite term only.
     """
 
     dimer_smiles = oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)
-    g_dimer_dication = _gas_energy_eV(
-        engine, cache, dimer_smiles, charge=2, multiplicity=1, method=method
+    g_dimer_neutral = _gas_energy_eV(
+        engine, cache, dimer_smiles, charge=0, multiplicity=1, method=method
     )
     g_monomer_cation = _gas_energy_eV(
         engine, cache, monomer.canonical_smiles, charge=1, multiplicity=2, method=method
     )
-    delta_eV = g_dimer_dication + 2.0 * proton_gibbs_eV - 2.0 * g_monomer_cation
+    delta_eV = g_dimer_neutral + 2.0 * proton_gibbs_eV - 2.0 * g_monomer_cation
     return delta_eV * EV_TO_KCAL_MOL
