@@ -5,8 +5,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from eps.analysis import run_analyze
 from eps.engines import CalcRequest, CalcResult, Engine, MockEngine
 from eps.workflow.tier1 import (
+    SCORING_CARRY_COLUMNS,
     _apply_linear_calibration,
     annotate_tier1_filters,
     run_tier1,
@@ -137,6 +139,61 @@ def test_tier1_records_monomer_eox_failure_without_aborting(tmp_path: Path) -> N
     audit = pd.read_csv(all_path)
     assert len(audit) == len(result.all_triads)
     assert ranked_path.exists()
+
+
+def test_all_triads_carries_scoring_columns_matching_ranked(tmp_path: Path) -> None:
+    result = run_tier1(
+        engine=MockEngine(),
+        cache_path=tmp_path / "tier1.sqlite",
+        output_path=tmp_path / "tier1_ranked.csv",
+        all_output_path=tmp_path / "tier1_all.csv",
+    )
+    all_df = result.all_triads
+
+    for column in SCORING_CARRY_COLUMNS:
+        assert column in all_df.columns
+
+    key = ["monomer_name", "solvent_name", "salt"]
+    merged = all_df.merge(
+        result.ranked[key + ["composite_score", "band_gap_deviation_eV"]],
+        on=key,
+        suffixes=("_all", "_rk"),
+    )
+    survivors = merged[merged["composite_score_all"].notna()]
+    assert len(survivors) == len(result.ranked)
+    assert survivors["composite_score_all"].to_numpy() == pytest.approx(
+        survivors["composite_score_rk"].to_numpy()
+    )
+    assert survivors["band_gap_deviation_eV_all"].to_numpy() == pytest.approx(
+        survivors["band_gap_deviation_eV_rk"].to_numpy()
+    )
+
+    non_survivors = all_df[~all_df["passes_all_tier1_filters"].astype(bool)]
+    assert non_survivors["composite_score"].isna().all()
+    assert (~non_survivors["pareto_front"]).all()
+    # Total row count is unchanged (the join is one-to-one over triad identity).
+    assert len(all_df) == result.total_triads
+    # The Pareto flag in the all CSV matches the ranked CSV exactly.
+    assert int(all_df["pareto_front"].sum()) == int(result.ranked["pareto_front"].sum())
+
+
+def test_eps_analyze_on_all_csv_emits_pareto_and_shortlist(tmp_path: Path) -> None:
+    pytest.importorskip("matplotlib")
+    all_path = tmp_path / "tier1_all.csv"
+    run_tier1(
+        engine=MockEngine(),
+        cache_path=tmp_path / "tier1.sqlite",
+        output_path=tmp_path / "tier1_ranked.csv",
+        all_output_path=all_path,
+    )
+
+    analysis = run_analyze(all_path, tmp_path / "analysis")
+    figure_names = {p.name for p in analysis.figure_paths}
+
+    assert "pareto_window_vs_solubility.png" in figure_names
+    assert analysis.shortlist_path is not None
+    assert analysis.shortlist_path.exists()
+    assert not any("SKIPPED" in note for note in analysis.notes)
 
 
 class FailingMonomerEoxEngine(Engine):
