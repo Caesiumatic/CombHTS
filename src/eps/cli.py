@@ -18,8 +18,11 @@ from eps.validation.sanity import (
     run_physical_sanity_checks,
 )
 from eps.validation.memo import DEFAULT_MEMO_DIR, write_validation_memo
+from eps.analysis import run_analyze
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
 from eps.engines import MockEngine, XTBEngine
+
+DEFAULT_ANALYSIS_OUTDIR = DEFAULT_OUTPUT_PATH.parent / "analysis"
 
 
 def _engine_from_name(name: str):
@@ -111,6 +114,23 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_MEMO_DIR,
         help="Directory to write validation_memo_<YYYYMMDD>.md into.",
+    )
+
+    analyze = subparsers.add_parser(
+        "analyze",
+        help="Read-only directive-§8 post-processing of an existing Tier-1 harvest CSV",
+    )
+    analyze.add_argument(
+        "--harvest",
+        type=Path,
+        default=DEFAULT_HARVEST_PATH,
+        help="Tier-1 all-triads harvest CSV path (read-only; never recomputed).",
+    )
+    analyze.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_ANALYSIS_OUTDIR,
+        help="Directory for §8 outputs (summary.csv, PNGs, shortlist.csv).",
     )
 
     args = parser.parse_args(argv)
@@ -224,6 +244,26 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Wrote validation memo: {memo_path}")
         if args.engine == "mock":
             print("NOTE: mock engine -> non-physical numbers (T9). Regenerate on the cluster with --engine xtb.")
+        return 0
+
+    if args.command == "analyze":
+        if not Path(args.harvest).exists():
+            print(f"ERROR: harvest CSV not found: {args.harvest}")
+            print("Produce it first (real numbers come from the cluster xTB run):")
+            print("  eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv")
+            return 1
+        result = run_analyze(args.harvest, args.outdir)
+        print(f"Harvest: {args.harvest}")
+        print(f"Total triads: {result.total_triads}; surviving: {result.surviving_triads}; "
+              f"retention: {result.retention_fraction:.3f}")
+        print(result.summary.to_string(index=False))
+        print(f"Wrote summary: {result.summary_path}")
+        if result.shortlist_path is not None:
+            print(f"Wrote DIAGNOSTIC-ONLY shortlist: {result.shortlist_path}")
+        for figure in result.figure_paths:
+            print(f"Wrote figure: {figure}")
+        for note in result.notes:
+            print(f"NOTE: {note}")
         return 0
 
     parser.error(f"Unknown command: {args.command}")

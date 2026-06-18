@@ -1,6 +1,21 @@
 # Changelog
 
 ## 2026-06-18
+- Added `eps analyze` (directive §8): a read-only post-processing command (`src/eps/analysis/`)
+  that NEVER recomputes or rescores, only reads an existing Tier-1 harvest CSV. Produces
+  `summary.csv` (total vs surviving triads, overall retention, retention by monomer/solvent/
+  salt_class, per-property failure counts from `*_calc_status`), real-axis distribution PNGs
+  (`window_margin_V`, `solubility_score`, `anion_stability_margin_V`), a Pareto PNG
+  (`window_margin_V` vs `solubility_score`, marked by the existing `pareto_front`, point size
+  ~ `-band_gap_deviation_eV`), a chemical-space map (per-triad Morgan fp r2/1024 → PCA(~50)
+  concatenated with min-max-normalized descriptors → t-SNE, or PCA(2) for n<10) colored by
+  `monomer_class` and by `passes_all_tier1_filters`, and a `shortlist.csv` (top-30 Pareto by
+  composite). Honesty: every output touching a placeholder axis is labeled
+  "PLACEHOLDER-CONTAMINATED / DIAGNOSTIC ONLY"; the shortlist carries the diagnostic note.
+- `eps analyze` degrades gracefully: missing matplotlib skips figures, missing scikit-learn
+  skips only the chemical-space map, and a harvest without `composite_score`/`pareto_front`
+  skips the Pareto/shortlist — each with a note, never a crash. Added `matplotlib` and
+  `scikit-learn` to `pyproject.toml`. Tests in `tests/test_analysis.py`.
 - Hardened `XTBEngine._run_xtb`: the subprocess return code is now checked and raises the
   xTB-exit `RuntimeError` BEFORE `xtbout.json` is parsed, so a present-but-garbage JSON can no
   longer mask a real xTB failure with a JSON `ValueError`. Success path is byte-identical;
