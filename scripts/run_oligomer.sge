@@ -1,0 +1,37 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_oligomer
+#$ -j y
+#$ -pe smp 8
+#$ -l h_rt=48:00:00
+#$ -l h_vmem=8G
+# TEMPLATE - do not submit blindly. Runs the Tier-1 harvest with real GFN2-xTB, which now
+# assembles n=6 oligomers (optical gap) and dimer dications (dimerization dG) per monomer.
+# Hexamers are markedly larger than monomers, so this is sized with more cores / wall time /
+# memory than run_tier1.sge. The leading "#$ -S /bin/bash" is REQUIRED.
+
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+module load xtb/6.4.1
+# Optional: load Grimme's sTDA for true optical gaps. If the module/binary is absent, the
+# optical gap automatically falls back to the oligomer HOMO-LUMO proxy (flagged in the output
+# column optical_gap_method = homo_lumo_hexamer_fallback).
+module load stda 2>/dev/null || echo "NOTE: stda module not found - optical gap will use the HOMO-LUMO hexamer fallback"
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+export OMP_NUM_THREADS="${NSLOTS:-8}"
+export OMP_STACKSIZE=4G
+ulimit -s unlimited || true
+
+cd "$HOME/CombHTS"
+
+eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv
+
+# Inspect the human-reviewable coupling chemistry artifact before trusting the new axes:
+#   column -s, -t outputs/oligomer_buildingblocks.csv | less -S

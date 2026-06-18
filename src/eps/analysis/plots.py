@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-PLACEHOLDER_LABEL = "PLACEHOLDER-CONTAMINATED -- diagnostic only"
+PLACEHOLDER_LABEL = "SCREENING-GRADE -- uncalibrated band gap + proton-referenced dimerization; diagnostic"
 
 # Real descriptor axes (safe to plot without a placeholder warning).
 DISTRIBUTION_COLUMNS = ("window_margin_V", "solubility_score", "anion_stability_margin_V")

@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-06-18 (later) — made the two placeholder scoring axes real (band gap + dimerization)
+- Both previously-placeholder Tier-1 axes are now real, screening-grade physics computed the
+  directive's way; all five composite axes are real (the composite is no longer
+  "placeholder-contaminated", but it is screening-grade and NOT validated).
+- Deliverable A — reusable n-mer oligomer assembly (`src/eps/structures/oligomer.py`): RDKit
+  α-coupling via ditopic [1*]/[2*] building blocks (documented substitution for `stk`, which is
+  unavailable in the env). Coupling regiochemistry is data-driven in `data/polymerization.csv`
+  (auto-α for the clean 5-membered heteroaromatics + CPDT; explicit for carbazole 3,6 /
+  fluorene 2,7 / aniline / dioxy / D-A). `eps run-tier1` writes a human-reviewable
+  `outputs/oligomer_buildingblocks.csv`. APPROXIMATE coupling flagged (aniline N-para, the D-A
+  simplification) and a monomers.csv DATA-CURATION item recorded: stored EDOT/ProDOT/EDOP/EDOS
+  canonical SMILES encode the 2,3-dioxy isomer (one α blocked), out of scope to fix here.
+- Deliverable B — optical (band) gap: `optical_gap_eV` is now the optical gap of the assembled
+  n=6 oligomer — the sTDA-xTB lowest singlet excitation when `stda` is on PATH, else the
+  oligomer GFN2-xTB HOMO-LUMO gap as a flagged proxy (`optical_gap_method` column). Per-monomer,
+  cached by oligomer SMILES. RAW/uncalibrated vs TD-DFT (Step-2 hook). `parse_stda_lowest_excitation`
+  + fixture added; `configs/tier1.yaml` gains an `oligomer:` section (n=6; pinned calibration
+  untouched).
+- Deliverable C — dimerization: `dimerization_dG` is now the radical-radical coupling ΔG
+  (2 M+. -> [M-M]2+ + 2 H+) = G([M-M]2+) + 2 G(H+) - 2 G(M+.) via the cached engine; the proton
+  free energy is one documented constant that cancels across monomers (absolute is
+  screening-grade, relative ordering sound). Not a hard filter; feeds the w4 term only.
+- `eps analyze` honesty labels updated from "placeholder-contaminated" to "screening-grade"
+  (real but uncalibrated/proton-referenced; not validated); invariant/analysis tests updated.
+  Added `scripts/run_oligomer.sge` (hexamer-sized resources; loads `stda` if available).
+  STATUS + THINK (T5 done, T6 exploring) updated. ruff + pytest green.
+
 ## 2026-06-18
 - Added `eps doctor`: a no-compute environment readiness self-check (`src/eps/doctor.py`)
   reporting PASS/WARN/FAIL for Python version, `xtb`/`g16` on PATH (WARN if absent —
