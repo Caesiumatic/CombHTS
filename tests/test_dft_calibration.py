@@ -94,6 +94,44 @@ def test_both_linear_fits_and_artifacts_written(tmp_path: Path) -> None:
     assert "does NOT replace" in record["provenance"]["note"]
 
 
+def test_fit2_uses_peak_rows_only(tmp_path: Path) -> None:
+    from eps.calibration import fit_linear_calibration
+
+    result = _run(tmp_path)
+    points = result.points
+
+    # label_type is carried into the points frame.
+    assert "label_type" in points.columns
+    assert set(points["label_type"].unique()) <= {
+        "monomer_oxidation_peak",
+        "monomer_oxidation_onset",
+    }
+
+    # The peak/onset split accounts for every ok point.
+    assert result.n_dft_to_exp_peak_points + result.n_nonpeak_excluded == result.n_points
+    assert result.n_dft_to_exp_peak_points >= 2
+    assert result.n_nonpeak_excluded >= 1  # the strict v3 benchmark has onset rows to exclude
+
+    # Fit 2 equals a manual fit over PEAK rows only (proves onset rows are excluded).
+    ok = points[points["dft_calc_status"] == "ok"]
+    peak = ok[ok["label_type"] == "monomer_oxidation_peak"]
+    expected = fit_linear_calibration(
+        peak["dft_Eox_eV"].to_numpy(float), peak["exp_Eox_V_vs_AgAgCl"].to_numpy(float)
+    )
+    assert result.dft_to_exp.slope == pytest.approx(expected.slope)
+    assert result.dft_to_exp.intercept == pytest.approx(expected.intercept)
+
+    # Fit 1 (xTB->DFT) still uses ALL ok points (peak + onset), NOT just peak.
+    all_xtb_dft = fit_linear_calibration(
+        ok["xtb_descriptor"].to_numpy(float), ok["dft_Eox_eV"].to_numpy(float)
+    )
+    assert result.xtb_to_dft.slope == pytest.approx(all_xtb_dft.slope)
+
+    report = result.report_path.read_text(encoding="utf-8")
+    assert "PEAK rows only" in report
+    assert "onset) monomer(s) were EXCLUDED" in report
+
+
 def test_dft_results_cached_not_recomputed_on_second_call(tmp_path: Path) -> None:
     cache_path = tmp_path / "cache.sqlite"
     outdir = tmp_path / "out"
