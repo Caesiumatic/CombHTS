@@ -5,6 +5,26 @@ screening-grade physics, computed the directive's way. All five composite axes a
 the composite ranking is no longer "placeholder-contaminated" — but it is **screening-grade,
 not validated**. Strictly xTB / Tier-1; no Tier-2 DFT was built or run.
 
+## Post-harvest fixes (2026-06-18) — two issues found in the first real oligomer harvest
+
+The first cluster harvest confirmed the dioxy SMILES fix and surfaced two issues, both now fixed
+(no cluster re-run done here — the affected values are superseded pending the next run):
+
+1. **Fluorene hexamer embedding (bug).** The 416-atom `fluorene 9,9-dioctyl` n=6 oligomer failed
+   RDKit 3D embedding, so its `optical_gap` was NaN and all ~110 fluorene triads dropped from
+   survivors (1007 → 895). Fix: for the **optical-gap oligomer only**, truncate inert saturated
+   side chains to methyl (`optical_gap_sidechain_truncated` column) — the gap is a backbone
+   property; the monomer Eox / solvation / dimerization paths keep full side chains. Embedding
+   was also hardened (deterministic ETKDGv3 then random-coordinate retries across several seeds;
+   clear error on total failure, never a silent NaN), so the full hexamer now embeds.
+2. **Dimerization charge state (science).** The directive's `2 M+. -> [M-M]2+ + 2 H+` is
+   charge-imbalanced; the correct oxidative coupling is `2 M+. -> M-M(neutral) + 2 H+`. The dimer
+   is now evaluated **neutral** (was a +2 dication, which double-counted oxidation → ~+650
+   kcal/mol for every monomer). The reaction is charge/electron-balanced, so the bare proton's
+   electronic energy is rigorously 0; ΔG = E(M–M neutral) − 2·E(M+.) is physically interpretable
+   (dG<0 favorable). **All prior `dimerization_dG` values and the prior fluorene `optical_gap`
+   are superseded** — re-run the harvest (`qsub scripts/run_oligomer.sge`) to repopulate.
+
 ## Commits (separate, focused, on `main`)
 
 | Deliverable | Commit |
@@ -51,7 +71,9 @@ redox function were **not** touched — only the two INPUT axes became real.
 
 - Optical gap is **uncalibrated** vs TD-DFT; if `stda` is unavailable it is the **HOMO–LUMO
   hexamer proxy** (flagged per-row in `optical_gap_method`).
-- Dimerization **absolute** value is set up to the proton constant; relative ordering is sound.
+- Dimerization uses the **neutral** α,α′-coupled dimer (`2 M+. -> M-M(neutral) + 2 H+`); the
+  proton's electronic energy is rigorously 0, so the absolute ΔG = E(M–M neutral) − 2·E(M+.) is
+  physically interpretable (dG<0 favorable), screening-grade (no thermal/ZPE/solvation; GFN2-xTB).
 - Approximate coupling regiochemistry (flagged in `data/polymerization.csv` and the
   `*_coupling_approximate` columns): **aniline** (N→para, not a clean C–C α) and the
   **benzothiadiazole–thiophene D–A** (linkage simplification).

@@ -213,7 +213,7 @@ def compute_monomer_table(
                 "optical_gap_calc_status": optical_gap.status,
                 "optical_gap_calc_error": optical_gap.error,
                 "dimerization_dG_kcal_mol": dimerization.value,
-                "dimerization_reaction": "2 M+. -> [M-M]2+ + 2 H+ (xTB dG, screening-grade)",
+                "dimerization_reaction": "2 M+. -> M-M(neutral) + 2 H+ (xTB dG, screening-grade)",
                 "dimerization_dimer_smiles": (
                     _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)) if spec else ""
                 ),

@@ -24,7 +24,8 @@ def test_dimerization_reproduces_the_reaction_formula(tmp_path: Path) -> None:
     engine = MockEngine()
 
     dimer_smiles = oligomer_smiles(monomer.canonical_smiles, spec, DIMER_N)
-    g_dimer = _mock_gas_energy(dimer_smiles, 2)
+    # The dimer is evaluated NEUTRAL (charge 0): 2 M+. -> M-M(neutral) + 2 H+.
+    g_dimer = _mock_gas_energy(dimer_smiles, 0)
     g_cation = _mock_gas_energy(monomer.canonical_smiles, 1)
     expected = (g_dimer + 2 * 0.0 - 2 * g_cation) * EV_TO_KCAL_MOL
 
@@ -56,8 +57,8 @@ def test_dimerization_relative_ordering_invariant_to_proton_constant(tmp_path: P
     assert shift == pytest.approx(2 * 5.0 * EV_TO_KCAL_MOL)
 
 
-def test_dimerization_uses_dimer_dication_and_monomer_cation_charges(tmp_path: Path) -> None:
-    # Sanity that the helper requests the right charge states (via the cache values).
+def test_dimerization_uses_neutral_dimer_and_monomer_cation_charges(tmp_path: Path) -> None:
+    # The reaction is charge-balanced: NEUTRAL dimer (charge 0) + 2 H+ from 2 monomer cations.
     spec = load_polymerization_specs()["pyrrole"]
     from eps.chemspace import load_monomers
 
@@ -66,7 +67,7 @@ def test_dimerization_uses_dimer_dication_and_monomer_cation_charges(tmp_path: P
     engine = MockEngine()
     dimer_smiles = oligomer_smiles(monomer.canonical_smiles, spec, DIMER_N)
 
-    g_dimer = _gas_energy_eV(engine, cache, dimer_smiles, charge=2, multiplicity=1, method="mock-gfn2")
+    g_dimer = _gas_energy_eV(engine, cache, dimer_smiles, charge=0, multiplicity=1, method="mock-gfn2")
     g_cation = _gas_energy_eV(engine, cache, monomer.canonical_smiles, charge=1, multiplicity=2, method="mock-gfn2")
-    assert g_dimer == pytest.approx(_mock_gas_energy(dimer_smiles, 2))
+    assert g_dimer == pytest.approx(_mock_gas_energy(dimer_smiles, 0))
     assert g_cation == pytest.approx(_mock_gas_energy(monomer.canonical_smiles, 1))
