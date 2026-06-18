@@ -401,6 +401,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             print("DFT->experiment fit: INSUFFICIENT PEAK POINTS (< 2)")
+        if result.reference_flag_message:
+            print(result.reference_flag_message)
         if result.pinned_xtb_to_exp is not None:
             pinned = result.pinned_xtb_to_exp
             print(
