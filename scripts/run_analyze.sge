@@ -1,0 +1,28 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_analyze
+#$ -j y
+#$ -pe smp 4
+#$ -l h_rt=02:00:00
+# TEMPLATE — do not submit blindly. Read-only directive-§8 post-processing of an existing
+# Tier-1 harvest; no xTB is run here, so the xtb module is intentionally NOT loaded.
+# The leading "#$ -S /bin/bash" is REQUIRED: without it the scheduler may misparse this
+# script under csh.
+
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+export OMP_NUM_THREADS="${NSLOTS:-4}"
+export OMP_STACKSIZE=4G
+ulimit -s unlimited || true
+
+cd "$HOME/CombHTS"
+
+eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/
