@@ -7,11 +7,21 @@ from eps.validation.benchmark import (
     run_benchmark_validation,
     run_calibration_profile,
 )
+from eps.validation.sanity import (
+    SanityCheck,
+    SanityResult,
+    run_physical_sanity_checks,
+)
+from eps.validation.memo import write_validation_memo
 
 __all__ = [
     "BenchmarkValidationResult",
+    "SanityCheck",
+    "SanityResult",
     "load_calibration_profiles",
     "run_all_calibration_profiles",
     "run_benchmark_validation",
     "run_calibration_profile",
+    "run_physical_sanity_checks",
+    "write_validation_memo",
 ]

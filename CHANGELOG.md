@@ -1,6 +1,29 @@
 # Changelog
 
 ## 2026-06-17
+- Extended the experimental-validation step (directive §7). `eps validate` now additionally
+  reports, per calibration profile: Spearman rank correlation ρ (computed with pandas
+  rank + numpy corrcoef, no scipy dependency), residual standard deviation after
+  calibration, the 5 worst-predicted benchmark monomers (name, calibrated/experimental Eox,
+  signed error), and MAE grouped by coarse chemical family assigned from SMILES via RDKit
+  substructure (thiophene/pyrrole/furan/selenophene/aniline/carbazole/fluorene/other; a
+  `chemical_family` column is added to the report CSV and ρ/residual-std columns to the
+  profile-comparison CSV). All additive; existing outputs unchanged.
+- Added `eps sanity`: directional monomer-Eox checks on `outputs/tier1_all_xtb.csv`
+  (EDOT<thiophene, 3-hexylthiophene<thiophene, EDOP<pyrrole, EDOS<selenophene,
+  bithiophene<thiophene), compared WITHIN a single solvent (acetonitrile) because the
+  calibrated monomer Eox is solvent-dependent; PASS/FAIL/SKIP per check. Monomer-Eox only,
+  no oligomer assembly.
+- Added `eps memo`: writes `docs/validation_memo_<YYYYMMDD>.md` with the per-profile accuracy
+  table (n, MAE-after, LOO-CV MAE, residual std, ρ, R², PASS/FAIL vs the 0.30 V provisional
+  gate), the worst-5 and per-family MAE, the sanity-check results, a "What we CANNOT validate
+  yet" section (solvent ESW MAE → no solvent benchmark; yes/no feasibility >85% → no binary
+  labels), and the T3/T4 caveat. The two unmeasurable §7 metrics are marked not-computable,
+  never fabricated. With the mock engine the memo carries a NON-PHYSICAL banner (T9) and the
+  exact cluster command to regenerate with real numbers.
+- Added tests for the new metrics, the sanity checks, and the memo; full suite green
+  (63 passed, 2 xtb skips). Pinned `configs/tier1.yaml` calibration and the redox conversion
+  are untouched.
 - First fully-clean real-xTB Tier-1 harvest completed on the SCS Lop cluster (GFN2-xTB, with
   the EDOS/Se geometry fix, cache rebuilt from scratch): 1650 triads (15 monomers × 11
   solvents × 10 salts), ZERO calculation failures across all seven per-property stages

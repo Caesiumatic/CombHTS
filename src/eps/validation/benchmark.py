@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -66,6 +66,10 @@ class BenchmarkValidationResult:
     n_calibration_points: int
     within_group_spread_V: float
     report_path: Path
+    spearman_rho: float = float("nan")
+    residual_std_after_V: float = float("nan")
+    worst_predicted: pd.DataFrame = field(default_factory=pd.DataFrame)
+    family_mae: dict[str, dict[str, float]] = field(default_factory=dict)
     profile_name: str | None = None
 
 
@@ -157,13 +161,19 @@ def run_benchmark_validation(
     corrected = calibration.apply(report["pred_Eox_V_vs_AgAgCl"].to_numpy(dtype=float))
     report["calibrated_Eox_V_vs_AgAgCl"] = corrected
     report["residual_after_V"] = report["calibrated_Eox_V_vs_AgAgCl"] - report["exp_Eox_V_vs_AgAgCl"]
+    report["chemical_family"] = report["canonical_smiles"].map(_assign_family)
 
     point_pred = points["pred_Eox_V_vs_AgAgCl"].to_numpy(dtype=float)
     point_exp = points["exp_Eox_V_vs_AgAgCl"].to_numpy(dtype=float)
+    point_calibrated = calibration.apply(point_pred)
     mae_before = _mae(point_pred - point_exp)
-    mae_after = _mae(calibration.apply(point_pred) - point_exp)
+    mae_after = _mae(point_calibrated - point_exp)
     loo_mae_after = _loo_mae(point_pred, point_exp)
     within_group_spread = _within_group_spread(calibration_rows)
+    spearman_rho = _spearman_rho(point_calibrated, point_exp)
+    residual_std_after = float(np.std(point_calibrated - point_exp))
+    worst_predicted = _worst_predicted(report)
+    family_mae = _family_mae(report)
 
     config = _load_validation_config(validation_config_path)
     tier1_target = float(config["tier1_xtb_mae_target_V"])
@@ -190,6 +200,10 @@ def run_benchmark_validation(
         n_calibration_points=len(points),
         within_group_spread_V=within_group_spread,
         report_path=output,
+        spearman_rho=spearman_rho,
+        residual_std_after_V=residual_std_after,
+        worst_predicted=worst_predicted,
+        family_mae=family_mae,
         profile_name=profile_name,
     )
 
@@ -332,6 +346,8 @@ def run_all_calibration_profiles(
                 mae_after_V=result.mae_after_V,
                 loo_mae_after_V=result.loo_mae_after_V,
                 within_group_spread_V=result.within_group_spread_V,
+                spearman_rho=result.spearman_rho,
+                residual_std_after_V=result.residual_std_after_V,
                 status="fit",
             )
         )
@@ -762,6 +778,91 @@ def _within_group_spread(calibration_rows: pd.DataFrame) -> float:
     return float(np.mean(spreads))
 
 
+def _spearman_rho(x: np.ndarray, y: np.ndarray) -> float:
+    """Spearman rank correlation without scipy (pandas rank + numpy corrcoef)."""
+
+    x_values = np.asarray(x, dtype=float)
+    y_values = np.asarray(y, dtype=float)
+    if len(x_values) < 3:
+        return float("nan")
+    rank_x = pd.Series(x_values).rank().to_numpy()
+    rank_y = pd.Series(y_values).rank().to_numpy()
+    if np.std(rank_x) == 0.0 or np.std(rank_y) == 0.0:
+        return float("nan")
+    return float(np.corrcoef(rank_x, rank_y)[0, 1])
+
+
+def _calibration_point_rows(report: pd.DataFrame) -> pd.DataFrame:
+    """Return one row per collapsed calibration group (first occurrence)."""
+
+    in_set = report[report["in_calibration_set"]]
+    if in_set.empty:
+        return in_set
+    return in_set.drop_duplicates(subset="group_id", keep="first")
+
+
+def _worst_predicted(report: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
+    """Return the worst-predicted calibration monomers by absolute calibrated residual."""
+
+    rows = _calibration_point_rows(report)
+    columns = [
+        "monomer_name",
+        "chemical_family",
+        "calibrated_Eox_V_vs_AgAgCl",
+        "exp_Eox_V_vs_AgAgCl",
+        "residual_after_V",
+    ]
+    if rows.empty:
+        return pd.DataFrame(columns=columns)
+    ranked = rows.assign(abs_residual_after_V=rows["residual_after_V"].abs())
+    ranked = ranked.sort_values("abs_residual_after_V", ascending=False).head(top_n)
+    return ranked.loc[:, columns].reset_index(drop=True)
+
+
+def _family_mae(report: pd.DataFrame) -> dict[str, dict[str, float]]:
+    """MAE-after grouped by coarse chemical family over calibration points."""
+
+    rows = _calibration_point_rows(report)
+    if rows.empty:
+        return {}
+    family_stats: dict[str, dict[str, float]] = {}
+    for family, group in rows.groupby("chemical_family"):
+        mae = float(group["residual_after_V"].abs().mean())
+        family_stats[str(family)] = {"mae_V": mae, "n": int(len(group))}
+    return family_stats
+
+
+# Coarse chemical families assigned from SMILES via RDKit substructure match.
+# Ordered by priority: the first matching pattern wins, so fused/specific cores
+# (carbazole, fluorene) are tested before the simple heteroaromatic rings they
+# may also contain. This is a best-effort bucketing for diagnostics only; rows
+# matching nothing fall through to "other".
+_FAMILY_SMARTS: tuple[tuple[str, str], ...] = (
+    ("carbazole", "c1ccc2c(c1)[#7]c1ccccc21"),
+    ("fluorene", "C1c2ccccc2-c2ccccc21"),
+    ("aniline", "[NX3;H2]c1ccccc1"),
+    ("selenophene", "c1cc[se]c1"),
+    ("thiophene", "c1ccsc1"),
+    ("pyrrole", "c1cc[nH]c1"),
+    ("furan", "c1ccoc1"),
+)
+_FAMILY_PATTERNS = tuple(
+    (name, Chem.MolFromSmarts(smarts)) for name, smarts in _FAMILY_SMARTS
+)
+
+
+def _assign_family(smiles: str) -> str:
+    """Assign a coarse chemical family from canonical SMILES; 'other' if none match."""
+
+    mol = Chem.MolFromSmiles(str(smiles), sanitize=True)
+    if mol is None:
+        return "other"
+    for name, pattern in _FAMILY_PATTERNS:
+        if pattern is not None and mol.HasSubstructMatch(pattern):
+            return name
+    return "other"
+
+
 def _profile_report_path(report_path: str | Path, profile_name: str) -> Path:
     path = Path(report_path)
     return path.with_name(f"{path.stem}_{profile_name}{path.suffix}")
@@ -779,6 +880,8 @@ def _profile_comparison_row(
     mae_after_V: float | None = None,
     loo_mae_after_V: float | None = None,
     within_group_spread_V: float | None = None,
+    spearman_rho: float | None = None,
+    residual_std_after_V: float | None = None,
 ) -> dict[str, object]:
     return {
         "profile_name": profile_name,
@@ -793,6 +896,8 @@ def _profile_comparison_row(
         "mae_after_V": mae_after_V,
         "loo_mae_after_V": loo_mae_after_V,
         "within_group_spread_V": within_group_spread_V,
+        "spearman_rho": spearman_rho,
+        "residual_std_after_V": residual_std_after_V,
         "status": status,
     }
 
