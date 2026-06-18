@@ -20,6 +20,7 @@ Tier-1 xTB smoke auditability and per-property failure capture are verified on L
 - SeSeSe (DCM) hit a GFN2-xTB SCF non-convergence and was dropped from the `agagcl_peak_relaxed` fit; it is tier B and does not affect the chosen tier-A strict anchor.
 - OSeO and FSeF share the same canonical SMILES but remain distinct calibration groups because their solvents differ.
 - xTB Tier-1 smoke completed on Lop through Grid Engine/qsub using real xTB: 1650 attempted triads, 1273 ranked survivors, and 152 calculation-failure audit rows captured instead of aborting.
+- The 152 real-xTB failures are now explained (THINK T10, essentially resolved pending a cluster re-run): 110 were EDOS-only `monomer_eox`/`dimerization` failures from RDKit force-field geometry corruption (MMFF/UFF cannot type Se, so UFF collapsed the geometry into a ~0.26 Å atom clash and xTB aborted geometry optimization) — fixed in `src/eps/structures/geometry.py` by skipping FF pre-optimization when no classical FF can type every atom and handing the clean ETKDG geometry (~1.0 Å min distance) to xTB. The remaining anion failures are gone: the harvest with `--iterations 500 --etemp 400` shows 0 `anion_eox` failures, so no ddCOSMO move is needed. The cached EDOS single-point values from the clashed geometry are garbage and must be recomputed on the re-run.
 
 ## Scientific caution
 - This is an engineering/pipeline milestone, not a final scientific ranking.
