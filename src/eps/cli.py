@@ -12,6 +12,12 @@ from eps.validation.benchmark import (
     run_all_calibration_profiles,
     run_calibration_profile,
 )
+from eps.validation.sanity import (
+    DEFAULT_HARVEST_PATH,
+    DEFAULT_SOLVENT,
+    run_physical_sanity_checks,
+)
+from eps.validation.memo import DEFAULT_MEMO_DIR, write_validation_memo
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
 from eps.engines import MockEngine, XTBEngine
 
@@ -65,6 +71,46 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_PROFILE_COMPARISON_PATH,
         help="Calibration profile comparison CSV path.",
+    )
+
+    sanity = subparsers.add_parser(
+        "sanity",
+        help="Physical sanity checks on calibrated monomer Eox in the Tier-1 harvest",
+    )
+    sanity.add_argument(
+        "--harvest",
+        type=Path,
+        default=DEFAULT_HARVEST_PATH,
+        help="Tier-1 all-triads harvest CSV path.",
+    )
+    sanity.add_argument(
+        "--solvent",
+        default=DEFAULT_SOLVENT,
+        help="Solvent within which to compare monomer Eox (default: acetonitrile).",
+    )
+
+    memo = subparsers.add_parser(
+        "memo",
+        help="Write the one-page experimental-validation memo (directive §7)",
+    )
+    memo.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
+    memo.add_argument(
+        "--cache",
+        type=Path,
+        default=DEFAULT_VALIDATION_CACHE_PATH,
+        help="SQLite validation cache path",
+    )
+    memo.add_argument(
+        "--harvest",
+        type=Path,
+        default=DEFAULT_HARVEST_PATH,
+        help="Tier-1 all-triads harvest CSV path for sanity checks.",
+    )
+    memo.add_argument(
+        "--memo-dir",
+        type=Path,
+        default=DEFAULT_MEMO_DIR,
+        help="Directory to write validation_memo_<YYYYMMDD>.md into.",
     )
 
     args = parser.parse_args(argv)
@@ -129,17 +175,55 @@ def main(argv: list[str] | None = None) -> int:
             "Within-(monomer,solvent) experimental spread (noise floor): "
             f"{result.within_group_spread_V:.3f} V"
         )
+        print(f"Residual std after calibration: {result.residual_std_after_V:.3f} V")
+        print(f"Spearman rank correlation (rho): {result.spearman_rho:.3f} (n={result.n_calibration_points})")
         print(
             "Tier-1 gate "
             f"({result.tier1_xtb_target_V:.3f} V, PROVISIONAL) on LOO-CV: {status}"
         )
         print(f"MAE after by medium: {_mae_after_by_medium(result.rows)}")
+        print(f"MAE after by chemical family: {_format_family_mae(result.family_mae)}")
+        print("Worst-predicted calibration monomers (calibrated vs experimental):")
+        print(_format_worst_predicted(result.worst_predicted))
         print(
             "Calibration: "
             f"y = {result.calibration.slope:.3f} * x + {result.calibration.intercept:.3f}; "
             f"R^2 = {result.calibration.r2:.3f}"
         )
         print(f"Wrote validation report: {result.report_path}")
+        return 0
+
+    if args.command == "sanity":
+        if not Path(args.harvest).exists():
+            print(f"ERROR: harvest CSV not found: {args.harvest}")
+            print(
+                "Run the Tier-1 harvest first (real numbers come from the cluster xTB run):"
+            )
+            print("  eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv")
+            return 1
+        result = run_physical_sanity_checks(args.harvest, solvent_name=args.solvent)
+        print(f"Physical sanity checks (solvent: {result.solvent_name})")
+        print(f"Harvest: {result.harvest_path}")
+        for check in result.checks:
+            print(f"  [{check.status}] {check.lower_monomer} < {check.reference_monomer} "
+                  f"({check.description}): {check.detail}")
+        print(
+            f"Summary: {result.n_pass} PASS, {result.n_fail} FAIL, {result.n_skip} SKIP"
+        )
+        return 0 if result.n_fail == 0 else 1
+
+    if args.command == "memo":
+        engine, method = _engine_from_name(args.engine)
+        memo_path = write_validation_memo(
+            engine=engine,
+            method=method,
+            cache_path=args.cache,
+            harvest_path=args.harvest,
+            memo_dir=args.memo_dir,
+        )
+        print(f"Wrote validation memo: {memo_path}")
+        if args.engine == "mock":
+            print("NOTE: mock engine -> non-physical numbers (T9). Regenerate on the cluster with --engine xtb.")
         return 0
 
     parser.error(f"Unknown command: {args.command}")
@@ -160,6 +244,30 @@ def _format_counts(counts: dict[str, int]) -> str:
     if not counts:
         return "unavailable"
     return "; ".join(f"{key}={value}" for key, value in counts.items())
+
+
+def _format_family_mae(family_mae: dict[str, dict[str, float]]) -> str:
+    if not family_mae:
+        return "unavailable"
+    parts = [
+        f"{family}={stats['mae_V']:.3f} V (n={stats['n']})"
+        for family, stats in sorted(family_mae.items())
+    ]
+    return "; ".join(parts)
+
+
+def _format_worst_predicted(worst) -> str:
+    if worst is None or worst.empty:
+        return "  (none)"
+    lines = []
+    for _, row in worst.iterrows():
+        lines.append(
+            f"  {row['monomer_name']} [{row['chemical_family']}]: "
+            f"pred={row['calibrated_Eox_V_vs_AgAgCl']:.3f} V, "
+            f"exp={row['exp_Eox_V_vs_AgAgCl']:.3f} V, "
+            f"signed error={row['residual_after_V']:+.3f} V"
+        )
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
