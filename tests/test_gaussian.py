@@ -10,12 +10,18 @@ from eps.engines import CalcRequest, GaussianEngine, SpeciesSpec
 from eps.engines import gaussian as gaussian_module
 from eps.engines.gaussian import (
     GAUSSIAN_METHOD_LABEL,
+    Tier2Config,
     build_gaussian_input,
+    load_tier2_config,
     parse_gaussian_log,
 )
 from eps.engines.xtb import HARTREE_TO_EV
 
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _route_line(gjf: str) -> str:
+    return next(line for line in gjf.splitlines() if line.startswith("#p"))
 
 
 def test_build_gaussian_input_route_charge_multiplicity_and_smd() -> None:
@@ -24,24 +30,98 @@ def test_build_gaussian_input_route_charge_multiplicity_and_smd() -> None:
     cation = build_gaussian_input(species, charge=1, multiplicity=2)
     lines = cation.splitlines()
 
-    assert lines[0] == "#p B3LYP/6-31G(d,p) Opt SCF=Tight"
+    # Link0 %mem / %nprocshared are prepended at the very top (so g16 does not run single-core).
+    assert lines[0] == "%mem=8GB"
+    assert lines[1] == "%nprocshared=8"
+    assert lines[2] == "#p B3LYP/6-31G(d,p) Opt SCF=Tight"
     assert "SCRF" not in cation
-    # Route, blank, title, blank, then the charge/multiplicity line.
-    assert lines[4] == "1 2"
+    assert "Freq" not in cation
+    # Link0(2), route, blank, title, blank, then the charge/multiplicity line.
+    assert lines[6] == "1 2"
     # Cartesian coordinates follow (element + 3 floats).
-    atom_tokens = lines[5].split()
+    atom_tokens = lines[7].split()
     assert len(atom_tokens) == 4
     assert cation.endswith("\n")
 
     solvated = build_gaussian_input(species, charge=0, multiplicity=1, solvent_smd="Acetonitrile")
-    assert "SCRF=(SMD,Solvent=Acetonitrile)" in solvated.splitlines()[0]
+    assert "SCRF=(SMD,Solvent=Acetonitrile)" in _route_line(solvated)
 
 
 def test_build_gaussian_input_can_disable_optimization() -> None:
     species = SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1)
     sp = build_gaussian_input(species, charge=0, multiplicity=1, optimize=False)
-    assert "Opt" not in sp.splitlines()[0]
-    assert "SCF=Tight" in sp.splitlines()[0]
+    route = _route_line(sp)
+    assert "Opt" not in route
+    assert "SCF=Tight" in route
+
+
+def test_build_gaussian_input_freq_and_link0_overrides() -> None:
+    species = SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1)
+    gjf = build_gaussian_input(
+        species, charge=0, multiplicity=1, use_freq=True, mem="16GB", nprocshared=16
+    )
+    lines = gjf.splitlines()
+    assert lines[0] == "%mem=16GB"
+    assert lines[1] == "%nprocshared=16"
+    # Freq appears after Opt in the route line (thermal correction rigor toggle).
+    assert _route_line(gjf) == "#p B3LYP/6-31G(d,p) Opt Freq SCF=Tight"
+
+
+def test_build_gaussian_input_omits_link0_when_not_requested() -> None:
+    species = SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1)
+    gjf = build_gaussian_input(species, charge=0, multiplicity=1, mem=None, nprocshared=None)
+    assert not gjf.startswith("%mem")
+    assert gjf.splitlines()[0].startswith("#p")
+
+
+def test_load_tier2_config_defaults_to_gas_phase_v1() -> None:
+    # The shipped configs/tier2.yaml is v1: gas-phase ΔSCF, opt only, Link0 mem/nproc set.
+    config = load_tier2_config()
+    assert config.method == "B3LYP"
+    assert config.basis == "6-31G(d,p)"
+    assert config.smd_solvent is None
+    assert config.use_freq is False
+    assert config.mem
+    assert config.nprocshared >= 1
+    assert "gas phase" in config.method_label()
+    assert "opt only" in config.method_label()
+
+
+def test_load_tier2_config_missing_file_falls_back(tmp_path: Path) -> None:
+    config = load_tier2_config(tmp_path / "does_not_exist.yaml")
+    assert config.smd_solvent is None
+    assert config.use_freq is False
+    assert config.method == "B3LYP"
+
+
+def test_gaussian_engine_is_config_driven_for_smd_and_freq(monkeypatch) -> None:
+    """The engine must put the config's SMD solvent + Freq into the generated .gjf,
+    not hardcode gas-phase. Verified without launching g16 by capturing the input file."""
+
+    captured: list[str] = []
+
+    def fake_run(command, cwd, check, capture_output, text):
+        captured.append((Path(cwd) / "input.gjf").read_text(encoding="utf-8"))
+        (Path(cwd) / "input.log").write_text(
+            " SCF Done:  E(RB3LYP) =  -100.5     A.U. after 8 cycles\n", encoding="utf-8"
+        )
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(gaussian_module.shutil, "which", lambda _binary: "/usr/bin/g16")
+    monkeypatch.setattr(gaussian_module.subprocess, "run", fake_run)
+
+    engine = GaussianEngine(config=Tier2Config(smd_solvent="acetonitrile", use_freq=True))
+    req = CalcRequest(
+        species=SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1),
+        method=GAUSSIAN_METHOD_LABEL,
+        solvent_eps_r=None,
+        quantity="gas_energy",
+    )
+    engine.run(req)
+
+    assert captured, "g16 input was never written"
+    assert "SCRF=(SMD,Solvent=acetonitrile)" in captured[0]
+    assert "Freq" in captured[0]
 
 
 def test_parse_gaussian_log_extracts_final_scf_and_gibbs() -> None:
@@ -128,7 +208,7 @@ def test_tier2_dry_run_writes_inputs_without_running_g16(tmp_path, monkeypatch) 
     assert result.n_survivors == 3
     assert result.n_unique_monomers == 2  # deduplicated by canonical SMILES
     assert len(result.input_paths) == 4  # neutral + cation per unique monomer
-    assert all(path.exists() and path.read_text().startswith("#p B3LYP") for path in result.input_paths)
+    assert all(path.exists() and "#p B3LYP" in path.read_text() for path in result.input_paths)
     assert result.estimated_cpu_hours > 0
     # One cation input should carry charge/multiplicity "1 2".
     cation = next(p for p in result.input_paths if p.name.endswith("_cation.gjf"))
