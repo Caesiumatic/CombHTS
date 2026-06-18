@@ -6,9 +6,17 @@ module reports the raw xTB adiabatic ionization energy of the assembled n-mer fo
 set of lengths, plus a classic 1/n extrapolation to the infinite-chain ("polymer") limit.
 
 This is a DESCRIPTOR ONLY: nothing here enters any hard Tier-1 filter or the composite score, so
-survivor counts and composite scores are unchanged. The durable signal is the RAW trend + the
-1/n extrapolation; the calibrated infinite value is flagged out-of-domain because the pinned
-monomer calibration was NOT fit on oligomers.
+survivor counts and composite scores are unchanged.
+
+HONESTY ON EXTRAPOLATION (Zade & Bendikov, Org. Lett. 2006 / Acc. Chem. Res. 2011; band-gap
+review §A.2): a naive LINEAR 1/n extrapolation from SHORT oligomers (n<=6) is unreliable — the
+property saturates and deviates below the 1/n line, and reliable convergence needs >=20-mers or
+periodic boundary conditions. We therefore report BOTH a linear 1/n fit and a 2nd-order
+polynomial 1/n fit, but NEITHER extrapolated value may be presented as a converged polymer Eox.
+The DURABLE screening signal is the per-n RAW Eox trend and the longest available (n=6) raw Eox;
+the extrapolations are flagged non-converged (``oligomer_Eox_extrap_caveat``) and the calibrated
+infinite value is additionally flagged out-of-domain (the pinned monomer calibration was NOT fit
+on oligomers).
 """
 
 from __future__ import annotations
@@ -25,14 +33,20 @@ from eps.structures.oligomer import PolymerizationSpec
 
 DEFAULT_EOX_OLIGOMER_LENGTHS = (2, 3, 4, 6)
 MONOMER_ANCHOR_N = 1
+EXTRAP_CAVEAT = (
+    "non-converged: naive 1/n from short oligomers; true convergence needs >=20-mer or PBC"
+)
 
 
 def extrapolate_infinite_chain(eox_by_n: dict[int, float]) -> tuple[float, float]:
-    """Classic 1/n extrapolation of raw Eox to the infinite-chain limit.
+    """Classic LINEAR 1/n extrapolation of raw Eox to the infinite-chain limit.
 
     Fits ``Eox(n) = slope * (1/n) + intercept`` over the finite points; the infinite-chain value
     is the intercept (the 1/n -> 0 limit) and the returned r2 is the fit quality. Returns
     ``(nan, nan)`` when fewer than two finite points are available.
+
+    NOTE: from short oligomers (n<=6) this linear estimate is NOT a converged polymer value (see
+    module docstring); pair it with the poly2 estimate and treat both as non-converged.
     """
 
     points = [(n, value) for n, value in eox_by_n.items() if value is not None and np.isfinite(value)]
@@ -42,6 +56,30 @@ def extrapolate_infinite_chain(eox_by_n: dict[int, float]) -> tuple[float, float
     y = np.array([value for _, value in points], dtype=float)
     fit = fit_linear_calibration(x, y)
     return float(fit.intercept), float(fit.r2)
+
+
+def extrapolate_infinite_chain_poly2(eox_by_n: dict[int, float]) -> tuple[float, float]:
+    """2nd-order polynomial 1/n extrapolation: ``Eox(1/n) = a*(1/n)^2 + b*(1/n) + c``.
+
+    The infinite-chain estimate is ``c`` (the 1/n -> 0 limit). Zade, Zamoshchik & Bendikov
+    (Acc. Chem. Res. 2011) recommend the quadratic-in-1/n fit over the naive linear one because
+    the property saturates below the 1/n line for long chains. Needs >= 3 finite points (we have
+    n in {1,2,3,4,6} = 5); returns ``(nan, nan)`` otherwise. Still non-converged from short
+    oligomers — reported alongside the linear estimate, not as a converged polymer Eox.
+    """
+
+    points = [(n, value) for n, value in eox_by_n.items() if value is not None and np.isfinite(value)]
+    if len(points) < 3:
+        return float("nan"), float("nan")
+    x = np.array([1.0 / n for n, _ in points], dtype=float)
+    y = np.array([value for _, value in points], dtype=float)
+    coeffs = np.polyfit(x, y, 2)
+    infinite = float(np.polyval(coeffs, 0.0))  # value at 1/n = 0 == the constant term c
+    predicted = np.polyval(coeffs, x)
+    ss_res = float(np.sum((y - predicted) ** 2))
+    ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+    r2 = 1.0 if (ss_tot == 0.0 and ss_res == 0.0) else 1.0 - ss_res / ss_tot
+    return infinite, float(r2)
 
 
 def compute_oligomer_eox_series(
@@ -121,6 +159,7 @@ def _finalize(
     requested: list[int],
 ) -> dict[str, object]:
     infinite_raw, r2 = extrapolate_infinite_chain(eox_by_n)
+    infinite_raw_poly2, poly2_r2 = extrapolate_infinite_chain_poly2(eox_by_n)
 
     if np.isfinite(infinite_raw):
         # Project the raw infinite-chain IP (eV) to the V-vs-Ag/AgCl descriptor (the domain the
@@ -144,9 +183,14 @@ def _finalize(
             "oligomer_Eox_fit_n_points": n_points,
             "oligomer_Eox_infinite_raw_eV": infinite_raw,
             "oligomer_Eox_extrap_r2": r2,
+            # 2nd-order polynomial 1/n fit (>=3 pts); Zade/Bendikov-recommended over the linear one.
+            "oligomer_Eox_infinite_raw_poly2_eV": infinite_raw_poly2,
+            "oligomer_Eox_poly2_r2": poly2_r2,
             "oligomer_Eox_infinite_calibrated_V_vs_AgAgCl": calibrated_V,
             # The monomer-fit calibration was NOT fit on oligomers: always out-of-domain.
             "oligomer_Eox_calibration_out_of_domain": True,
+            # Neither extrapolation is a converged polymer Eox from short oligomers.
+            "oligomer_Eox_extrap_caveat": EXTRAP_CAVEAT,
             "oligomer_Eox_sidechain_truncated": truncated,
             "oligomer_Eox_calc_status": status,
             "oligomer_Eox_calc_error": "; ".join(errors)[:240],

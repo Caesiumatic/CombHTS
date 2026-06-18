@@ -11,8 +11,10 @@ from eps.engines import CalcRequest, MockEngine, SpeciesSpec
 from eps.engines.base import CalcResult
 from eps.properties.calculators import optical_gap_oligomer
 from eps.properties.oligomer_series import (
+    EXTRAP_CAVEAT,
     compute_oligomer_eox_series,
     extrapolate_infinite_chain,
+    extrapolate_infinite_chain_poly2,
 )
 from eps.properties.redox import ip_eV_to_potential_vs_AgAgCl
 from eps.storage import SQLiteCache, cached_run
@@ -44,6 +46,20 @@ def test_extrapolate_infinite_chain_needs_two_points() -> None:
     assert all(np.isnan(v) for v in extrapolate_infinite_chain({}))
 
 
+def test_poly2_extrapolation_recovers_constant_term_exactly() -> None:
+    # Construct points EXACTLY quadratic in 1/n: Eox(n) = a*(1/n)^2 + b*(1/n) + c.
+    a, b, c = 1.5, -0.7, 5.2
+    eox_by_n = {n: a * (1.0 / n) ** 2 + b * (1.0 / n) + c for n in (1, 2, 3, 4, 6)}
+    infinite, r2 = extrapolate_infinite_chain_poly2(eox_by_n)
+    assert infinite == pytest.approx(c)  # the 1/n -> 0 limit is the constant term
+    assert r2 == pytest.approx(1.0)
+
+
+def test_poly2_extrapolation_needs_three_points() -> None:
+    assert all(np.isnan(v) for v in extrapolate_infinite_chain_poly2({1: 7.0, 2: 6.0}))
+    assert all(np.isnan(v) for v in extrapolate_infinite_chain_poly2({}))
+
+
 # --- 2. Per-n computation + assembly/truncation reuse --------------------------------------
 
 def test_series_computes_each_n_and_reuses_optical_gap_oligomer(tmp_path: Path) -> None:
@@ -61,6 +77,10 @@ def test_series_computes_each_n_and_reuses_optical_gap_oligomer(tmp_path: Path) 
         assert np.isfinite(cols[f"oligomer_Eox_raw_n{n}"])
     assert cols["oligomer_Eox_fit_n_points"] == 5
     assert np.isfinite(cols["oligomer_Eox_infinite_raw_eV"])
+    # Both the linear and the poly2 1/n extrapolations are reported (5 finite points >= 3).
+    assert np.isfinite(cols["oligomer_Eox_infinite_raw_poly2_eV"])
+    assert np.isfinite(cols["oligomer_Eox_poly2_r2"])
+    assert cols["oligomer_Eox_extrap_caveat"] == EXTRAP_CAVEAT
     assert cols["oligomer_Eox_calibration_out_of_domain"] is True
 
     # The n=1 raw value must equal the adiabatic_ip on the SAME (truncated) oligomer SMILES the
@@ -149,6 +169,9 @@ def test_total_failure_is_failed_not_crashed(tmp_path: Path) -> None:
     )
     assert cols["oligomer_Eox_calc_status"] == "failed"
     assert np.isnan(cols["oligomer_Eox_infinite_raw_eV"])
+    # < 3 finite points -> poly2 columns are NaN (graceful), but the caveat is still recorded.
+    assert np.isnan(cols["oligomer_Eox_infinite_raw_poly2_eV"])
+    assert cols["oligomer_Eox_extrap_caveat"] == EXTRAP_CAVEAT
 
 
 def test_missing_spec_is_failed_not_crashed(tmp_path: Path) -> None:
