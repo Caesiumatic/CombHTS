@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-18
+- Added native provenance sidecars: every primary CLI output (`run-tier1`, `validate`, `memo`,
+  `analyze`) now also writes `<output>.provenance.json` (`src/eps/provenance.py`) capturing a UTC
+  timestamp, git commit short+long + dirty flag, `eps` version, engine/method, SHA-256 of the
+  pinned config files, and the library CSV row counts. Pure stdlib + pandas; best-effort
+  (a provenance failure warns, never crashes the command) and degrades to `"unknown"`/`"missing"`
+  outside a git repo or when files are absent. Replaces the by-hand MANIFEST. Tests in
+  `tests/test_provenance.py`.
 - Added continuous integration (`.github/workflows/ci.yml`): on push and pull_request, sets up
   Python 3.11 and 3.12, installs the package + `[dev]` extra, runs `ruff check` then `pytest -q`.
   xtb/g16 are absent in CI so their live smokes skip (not fail).

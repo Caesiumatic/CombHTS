@@ -8,6 +8,7 @@ from pathlib import Path
 from eps.analysis import run_analyze
 from eps.engines import GaussianEngine, MockEngine, XTBEngine
 from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL
+from eps.provenance import write_provenance
 from eps.validation.benchmark import (
     DEFAULT_CACHE_PATH as DEFAULT_VALIDATION_CACHE_PATH,
 )
@@ -38,6 +39,16 @@ def _engine_from_name(name: str):
         # Tier-2 DFT scaffold (build-only); not wired into any production workflow run.
         return GaussianEngine(), GAUSSIAN_METHOD_LABEL
     raise ValueError(f"Unknown engine {name!r}")
+
+
+def _stamp_provenance(output_path, *, engine: str, method: str, extra=None) -> None:
+    """Best-effort provenance sidecar: warn on failure, never crash the command."""
+
+    try:
+        sidecar = write_provenance(output_path, engine=engine, method=method, extra=extra)
+        print(f"Wrote provenance: {sidecar}")
+    except Exception as exc:  # noqa: BLE001 - provenance must never break the primary command.
+        print(f"WARNING: could not write provenance sidecar for {output_path}: {exc}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -179,6 +190,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Wrote ranked CSV: {result.output_path}")
         print(f"Wrote all-triads audit CSV: {result.all_output_path}")
         print(f"SQLite cache: {result.cache_path}")
+        _stamp_provenance(
+            result.output_path,
+            engine=args.engine,
+            method=method,
+            extra={"command": "run-tier1", "all_output": str(result.all_output_path),
+                   "total_triads": result.total_triads, "surviving_triads": result.surviving_triads},
+        )
         if result.surviving_triads == 0:
             print(f"WARNING: Tier-1 produced zero survivors. See all-triads audit CSV: {result.all_output_path}")
         return 0
@@ -195,6 +213,10 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(comparison.to_string(index=False))
             print(f"Wrote calibration profile comparison: {args.profile_comparison}")
+            _stamp_provenance(
+                args.profile_comparison, engine=args.engine, method=method,
+                extra={"command": "validate", "mode": "all-profiles"},
+            )
             return 0
 
         result = run_calibration_profile(
@@ -241,6 +263,10 @@ def main(argv: list[str] | None = None) -> int:
             f"R^2 = {result.calibration.r2:.3f}"
         )
         print(f"Wrote validation report: {result.report_path}")
+        _stamp_provenance(
+            result.report_path, engine=args.engine, method=method,
+            extra={"command": "validate", "profile": result.profile_name},
+        )
         return 0
 
     if args.command == "sanity":
@@ -272,6 +298,7 @@ def main(argv: list[str] | None = None) -> int:
             memo_dir=args.memo_dir,
         )
         print(f"Wrote validation memo: {memo_path}")
+        _stamp_provenance(memo_path, engine=args.engine, method=method, extra={"command": "memo"})
         if args.engine == "mock":
             print("NOTE: mock engine -> non-physical numbers (T9). Regenerate on the cluster with --engine xtb.")
         return 0
@@ -294,6 +321,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Wrote figure: {figure}")
         for note in result.notes:
             print(f"NOTE: {note}")
+        _stamp_provenance(
+            result.summary_path, engine="none", method="read-only-analysis",
+            extra={"command": "analyze", "harvest": str(args.harvest)},
+        )
         return 0
 
     if args.command == "tier2":
