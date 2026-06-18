@@ -1,6 +1,14 @@
 # Changelog
 
 ## 2026-06-18
+- Tier-1 all-triads output now carries the scoring columns (`composite_score`, `pareto_front`,
+  `band_gap_deviation_eV`, and the `norm_*` components) via a one-to-one left-join from the
+  ranked survivors onto `all_triads` by triad identity (`monomer_name, solvent_name, salt`).
+  Survivor rows carry IDENTICAL values to the ranked CSV; non-survivors are NaN (and
+  `pareto_front` False). Nothing is recomputed — `add_composite_score`, the weights, and the
+  Pareto front are unchanged. Net effect: `eps analyze --harvest <all.csv>` now produces every
+  §8 output (Pareto plot + shortlist included) from the single all-triads file (closes batch-1
+  TODO #1).
 - Scaffolded the Tier-2 DFT engine (Gaussian 16), BUILD-ONLY — no g16 is ever run.
   `src/eps/engines/gaussian.py` adds `GaussianEngine(Engine)` (`gas_energy`, `adiabatic_ip`,
   `adiabatic_ea`) mirroring `XTBEngine`'s structure and the same charge/multiplicity convention

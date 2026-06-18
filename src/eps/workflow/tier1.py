@@ -108,6 +108,7 @@ def run_tier1(
     all_triads = annotate_tier1_filters(triads, tier1_config)
     filtered = apply_tier1_filters(all_triads, tier1_config)
     ranked = add_composite_score(filtered, load_scoring_config(scoring_config_path))
+    all_triads = attach_scoring_columns(all_triads, ranked)
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -387,6 +388,44 @@ def build_triad_table(
     )
     triads["solubility_score"] = -triads["solvation_dG_kcal_mol"]
     return triads
+
+
+TRIAD_IDENTITY_COLUMNS = ("monomer_name", "solvent_name", "salt")
+SCORING_CARRY_COLUMNS = (
+    "composite_score",
+    "pareto_front",
+    "band_gap_deviation_eV",
+    "norm_window_margin",
+    "norm_anion_stability",
+    "norm_solubility",
+    "norm_dimerization",
+    "norm_band_gap",
+)
+
+
+def attach_scoring_columns(all_triads: pd.DataFrame, ranked: pd.DataFrame) -> pd.DataFrame:
+    """Left-join the survivors' scoring columns onto the full all-triads table by triad identity.
+
+    Survivor rows carry IDENTICAL scoring values to the ranked CSV; non-survivors get NaN
+    (and ``pareto_front`` False). This does NOT recompute the Pareto front or any score — it
+    only copies the values ``add_composite_score`` already produced for the survivors, so
+    ``eps analyze`` can produce every §8 output from the single all-triads file.
+    """
+
+    key = [column for column in TRIAD_IDENTITY_COLUMNS if column in all_triads.columns]
+    carry = [column for column in SCORING_CARRY_COLUMNS if column in ranked.columns]
+    if not key or not carry:
+        return all_triads
+
+    merged = all_triads.merge(
+        ranked.loc[:, key + carry],
+        on=key,
+        how="left",
+        validate="one_to_one",
+    )
+    if "pareto_front" in merged.columns:
+        merged["pareto_front"] = merged["pareto_front"].fillna(False).astype(bool)
+    return merged
 
 
 def annotate_tier1_filters(triads: pd.DataFrame, config: dict) -> pd.DataFrame:
