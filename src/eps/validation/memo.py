@@ -98,7 +98,10 @@ def write_validation_memo(
         harvest_path=Path(harvest_path),
     )
 
-    memo_path = Path(memo_dir) / f"validation_memo_{memo_date:%Y%m%d}.md"
+    if is_mock:
+        memo_path = Path(memo_dir) / "validation_memo_MOCK_PREVIEW.md"
+    else:
+        memo_path = Path(memo_dir) / f"validation_memo_{memo_date:%Y%m%d}.md"
     memo_path.parent.mkdir(parents=True, exist_ok=True)
     memo_path.write_text(memo_text, encoding="utf-8")
     return memo_path
