@@ -35,8 +35,15 @@ def smiles_to_xyz(canonical_smiles: str, charge: int = 0) -> str:
 
     if AllChem.MMFFHasAllMoleculeParams(mol):
         AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
-    else:
+    elif AllChem.UFFHasAllMoleculeParams(mol):
         AllChem.UFFOptimizeMolecule(mol, maxIters=500)
+    else:
+        # No classical force field can type every atom (e.g. Se in EDOS: both MMFF and
+        # UFF report "Unrecognized atom type: Se2+2"). Running UFF anyway collapses the
+        # ETKDG geometry into an atom-clashing structure (~0.26 A min distance), making
+        # xTB abort geometry optimization ("|grad| > 500, something is totally wrong!").
+        # Hand the clean ETKDG embedding to xTB instead; its GFN2 optimizer handles Se.
+        pass
 
     conformer = mol.GetConformer()
     lines = [str(mol.GetNumAtoms()), f"generated from {canonical_smiles}; charge={charge}"]

@@ -1,6 +1,24 @@
 # Changelog
 
 ## 2026-06-17
+- Fixed EDOS (3,4-ethylenedioxyselenophene) geometry corruption that failed real xTB across
+  all 110 of its triads. Root cause was RDKit force-field pre-optimization, not xTB/SCF:
+  `src/eps/structures/geometry.py` ran UFF whenever MMFF lacked params, but Se is typed by
+  neither MMFF nor UFF ("Unrecognized atom type: Se2+2"); UFF then collapsed the clean ETKDG
+  embedding to a ~0.26 Å atom clash, so xTB aborted geometry optimization
+  ("|grad| > 500, something is totally wrong!", exit 128) and the single-point `optical_gap`
+  ran on the clashed geometry (cached value also garbage).
+- Geometry now skips force-field pre-optimization when no classical FF can type every atom
+  (added an `UFFHasAllMoleculeParams` branch with an explicit no-FF fallthrough), handing the
+  clean ETKDG geometry (~1.0 Å min interatomic distance) to xTB, whose GFN2 optimizer handles
+  Se. The ETKDG seed (61453), embed logic, and MMFF branch are unchanged.
+- Added a pure-RDKit `tests/test_geometry.py` case asserting EDOS produces 15 atoms with a
+  minimum pairwise interatomic distance > 0.7 Å (the buggy UFF path produced ~0.26 Å).
+- Advanced THINK T10 (open → exploring): both real-xTB failure clusters are now explained as
+  input/settings issues, not a method problem — EDOS geometry corruption (fixed here) and
+  PF6/high-dielectric anion failures already cured by `--iterations 500 --etemp 400`
+  (0 anion failures in the harvest); no move to ddCOSMO needed. STATUS updated; full "decided"
+  pending a cluster re-run confirming 0 EDOS failures.
 - Decided THINK T11: apply the SINGLE oxidation calibration in `configs/tier1.yaml`
   (slope=0.725837, intercept=-3.145372) to ALL computed oxidation potentials — monomer Eox,
   solvent ANODIC limit, and anion Eox — so every oxidation potential lives on one calibrated
