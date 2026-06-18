@@ -32,6 +32,10 @@ from eps.properties import (
     solvent_cathodic_limit,
     solvent_cathodic_limit_csv,
 )
+from eps.properties.oligomer_series import (
+    DEFAULT_EOX_OLIGOMER_LENGTHS,
+    compute_oligomer_eox_series,
+)
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
 from eps.structures.oligomer import (
@@ -86,10 +90,13 @@ def run_tier1(
     oligomer_config = tier1_config.get("oligomer", {})
     oligomer_n = int(oligomer_config.get("n", DEFAULT_OLIGOMER_N))
     dimer_n = int(oligomer_config.get("dimer_n", DIMER_N))
+    eox_oligomer_lengths = _eox_oligomer_lengths(oligomer_config)
     polymerization_specs = load_polymerization_specs()
     monomer_table = compute_monomer_table(
         monomers, engine, cache, method=method,
         oligomer_n=oligomer_n, dimer_n=dimer_n, specs=polymerization_specs,
+        eox_oligomer_lengths=eox_oligomer_lengths,
+        calibration_config=tier1_config.get("calibration", {}),
     )
     monomer_solvent_table = compute_monomer_solvent_table(
         monomers,
@@ -143,6 +150,14 @@ def run_tier1(
     except Exception:  # noqa: BLE001 - the artifact must never break the screen.
         pass
 
+    # Verification artifact: human-reviewable per-monomer oligomer Eox-vs-length series.
+    try:
+        write_oligomer_eox_series_artifact(
+            monomer_table, eox_oligomer_lengths, output.parent / "oligomer_eox_series.csv"
+        )
+    except Exception:  # noqa: BLE001 - the reported-only descriptor must never break the screen.
+        pass
+
     total = len(all_triads)
     survived = len(ranked)
     retention = survived / total if total else 0.0
@@ -166,18 +181,29 @@ def compute_monomer_table(
     oligomer_n: int = DEFAULT_OLIGOMER_N,
     dimer_n: int = DIMER_N,
     specs: dict[str, PolymerizationSpec] | None = None,
+    eox_oligomer_lengths: tuple[int, ...] = DEFAULT_EOX_OLIGOMER_LENGTHS,
+    calibration_config: dict | None = None,
 ) -> pd.DataFrame:
     """Compute monomer-only properties once per monomer.
 
     The optical gap is now the sTDA-xTB (or HOMO–LUMO proxy) gap of the assembled n-mer
     oligomer, and dimerization is the real radical–radical coupling ΔG (directive §3.1/§4.2)
     — neither is a single-monomer placeholder any longer.
+
+    Additionally reports the oligomer Eox-vs-length trend + 1/n infinite-chain extrapolation as
+    a REPORTED descriptor (reused oligomer assembly + side-chain truncation). These columns are
+    purely additive: none enters a hard filter or the composite score.
     """
 
     specs = specs if specs is not None else load_polymerization_specs()
+    eox_calibration = _oxidation_calibration(calibration_config or {})
     rows = []
     for monomer in monomers:
         spec = specs.get(monomer.name)
+        oligomer_eox_columns = compute_oligomer_eox_series(
+            monomer, spec, engine, cache,
+            method=method, lengths=eox_oligomer_lengths, calibration=eox_calibration,
+        )
         if spec is None:
             optical_gap = _CalcOutcome(float("nan"), "failed", "no polymerization spec for monomer")
             dimerization = _CalcOutcome(float("nan"), "failed", "no polymerization spec for monomer")
@@ -198,30 +224,31 @@ def compute_monomer_table(
             dimerization = _safe_calculate(
                 lambda: dimerization_dG(monomer, engine, cache, method=method, spec=spec, dimer_n=dimer_n)
             )
-        rows.append(
-            {
-                "monomer_name": monomer.name,
-                "monomer_class": monomer.monomer_class,
-                "monomer_smiles": monomer.smiles,
-                "monomer_canonical_smiles": monomer.canonical_smiles,
-                "optical_gap_eV": optical_gap.value,
-                "optical_gap_method": gap_method,
-                "optical_gap_oligomer_n": oligomer_n,
-                "optical_gap_oligomer_smiles": oligo_smiles,
-                "optical_gap_sidechain_truncated": gap_truncated,
-                "optical_gap_coupling_approximate": bool(spec.approximate) if spec else "",
-                "optical_gap_calc_status": optical_gap.status,
-                "optical_gap_calc_error": optical_gap.error,
-                "dimerization_dG_kcal_mol": dimerization.value,
-                "dimerization_reaction": "2 M+. -> M-M(neutral) + 2 H+ (xTB dG, screening-grade)",
-                "dimerization_dimer_smiles": (
-                    _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)) if spec else ""
-                ),
-                "dimerization_coupling_approximate": bool(spec.approximate) if spec else "",
-                "dimerization_calc_status": dimerization.status,
-                "dimerization_calc_error": dimerization.error,
-            }
-        )
+        row = {
+            "monomer_name": monomer.name,
+            "monomer_class": monomer.monomer_class,
+            "monomer_smiles": monomer.smiles,
+            "monomer_canonical_smiles": monomer.canonical_smiles,
+            "optical_gap_eV": optical_gap.value,
+            "optical_gap_method": gap_method,
+            "optical_gap_oligomer_n": oligomer_n,
+            "optical_gap_oligomer_smiles": oligo_smiles,
+            "optical_gap_sidechain_truncated": gap_truncated,
+            "optical_gap_coupling_approximate": bool(spec.approximate) if spec else "",
+            "optical_gap_calc_status": optical_gap.status,
+            "optical_gap_calc_error": optical_gap.error,
+            "dimerization_dG_kcal_mol": dimerization.value,
+            "dimerization_reaction": "2 M+. -> M-M(neutral) + 2 H+ (xTB dG, screening-grade)",
+            "dimerization_dimer_smiles": (
+                _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)) if spec else ""
+            ),
+            "dimerization_coupling_approximate": bool(spec.approximate) if spec else "",
+            "dimerization_calc_status": dimerization.status,
+            "dimerization_calc_error": dimerization.error,
+        }
+        # Additive, reported-only oligomer Eox-vs-length descriptor (NOT a filter / score input).
+        row.update(oligomer_eox_columns)
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
@@ -527,6 +554,57 @@ def load_tier1_config(path: str | Path = DEFAULT_TIER1_CONFIG) -> dict:
 
     with Path(path).open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
+
+
+def _eox_oligomer_lengths(oligomer_config: dict) -> tuple[int, ...]:
+    """Read the oligomer-Eox series lengths from config (default [2, 3, 4, 6]).
+
+    Reported-only descriptor; an absent/invalid key falls back to the default rather than
+    breaking the screen. n=1 (the monomer anchor) is always added inside the calculator.
+    """
+
+    raw = oligomer_config.get("eox_oligomer_lengths", list(DEFAULT_EOX_OLIGOMER_LENGTHS))
+    try:
+        lengths = tuple(int(n) for n in raw if int(n) >= 1)
+    except (TypeError, ValueError):
+        return DEFAULT_EOX_OLIGOMER_LENGTHS
+    return lengths or DEFAULT_EOX_OLIGOMER_LENGTHS
+
+
+def write_oligomer_eox_series_artifact(
+    monomer_table: pd.DataFrame,
+    lengths: tuple[int, ...],
+    output_path: str | Path,
+) -> Path:
+    """Write a human-reviewable per-monomer oligomer Eox series CSV (verification artifact).
+
+    Analogous to ``outputs/oligomer_buildingblocks.csv``: the per-n raw Eox values, the 1/n
+    extrapolated infinite-chain value, the fit r2, and the status — for human inspection.
+    """
+
+    n_columns = [f"oligomer_Eox_raw_n{n}" for n in sorted({1, *lengths})]
+    columns = (
+        ["monomer_name", "monomer_canonical_smiles"]
+        + [c for c in n_columns if c in monomer_table.columns]
+        + [
+            c
+            for c in (
+                "oligomer_Eox_infinite_raw_eV",
+                "oligomer_Eox_extrap_r2",
+                "oligomer_Eox_infinite_calibrated_V_vs_AgAgCl",
+                "oligomer_Eox_calibration_out_of_domain",
+                "oligomer_Eox_sidechain_truncated",
+                "oligomer_Eox_calc_status",
+                "oligomer_Eox_calc_error",
+            )
+            if c in monomer_table.columns
+        ]
+    )
+    present = [c for c in columns if c in monomer_table.columns]
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    monomer_table.loc[:, present].to_csv(out, index=False)
+    return out
 
 
 def infer_all_output_path(output_path: str | Path) -> Path:

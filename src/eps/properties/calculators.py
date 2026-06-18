@@ -210,6 +210,44 @@ def polymer_optical_gap_method(
     return str(result.raw.get("optical_gap_method", "unknown"))
 
 
+def oligomer_eox_raw_eV(
+    monomer: Monomer,
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = DEFAULT_METHOD,
+    *,
+    spec: PolymerizationSpec,
+    n: int,
+) -> float:
+    """RAW xTB adiabatic ionization energy (eV) of the assembled n-mer, gas phase.
+
+    Reuses the SAME side-chain-truncated oligomer as the optical gap (``optical_gap_oligomer``;
+    long inert alkyl chains are trimmed to methyl for embedding safety) and the SAME adiabatic
+    redox convention as the rest of the code (neutral singlet -> radical cation, ``adiabatic_ip``).
+    The value is RAW (not projected to V vs Ag/AgCl, not calibrated). Per-monomer, gas-phase,
+    cached by the oligomer SMILES so the 1/n series is phase-consistent across n.
+
+    n=1 is the length-1 oligomer (the monomer itself, truncated identically), used as the
+    classic monomer anchor of the 1/n extrapolation.
+    """
+
+    oligo_smiles, _ = optical_gap_oligomer(monomer, spec, n)
+    req = CalcRequest(
+        species=SpeciesSpec(oligo_smiles, charge=0, multiplicity=1),
+        method=method,
+        solvent_eps_r=None,
+        quantity="adiabatic_ip",
+    )
+    return cached_run(cache, engine, req, solvent_name=None).value
+
+
+def oligomer_eox_sidechain_truncated(monomer: Monomer, spec: PolymerizationSpec, n: int) -> bool:
+    """Whether the n-mer's inert side chains were trimmed to methyl (mirrors the optical gap)."""
+
+    _, truncated = optical_gap_oligomer(monomer, spec, n)
+    return bool(truncated)
+
+
 def _gas_energy_eV(
     engine: Engine,
     cache: SQLiteCache,
