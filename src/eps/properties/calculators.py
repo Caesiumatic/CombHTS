@@ -8,11 +8,23 @@ from eps.properties.redox import ip_eV_to_potential_vs_AgAgCl
 from eps.storage.cache import SQLiteCache, cached_run
 from eps.structures.oligomer import (
     DEFAULT_OLIGOMER_N,
+    DIMER_N,
     PolymerizationSpec,
     oligomer_smiles,
 )
 
 DEFAULT_METHOD = "mock-gfn2"
+
+EV_TO_KCAL_MOL = 23.060547830619
+PROTON_GIBBS_EV = 0.0
+"""Reference free energy of the released proton, in eV.
+
+The α,α′ coupling 2 M⁺• → [M–M]²⁺ + 2 H⁺ loses exactly two protons for EVERY monomer, so
+this constant cancels in the cross-monomer comparison and in the min–max normalization that
+feeds the composite (same "constant cancels" logic as THINK T11). It is fixed at the free-
+proton reference (0 eV) here: the ABSOLUTE ΔG is therefore screening-grade up to this proton
+convention, while the RELATIVE ordering across monomers — which is what the w4 score uses — is
+robust. Overridable per call for testing the invariance."""
 
 
 def monomer_eox_vs_AgAgCl(
@@ -182,26 +194,53 @@ def polymer_optical_gap_method(
     return str(result.raw.get("optical_gap_method", "unknown"))
 
 
+def _gas_energy_eV(
+    engine: Engine,
+    cache: SQLiteCache,
+    smiles: str,
+    *,
+    charge: int,
+    multiplicity: int,
+    method: str,
+) -> float:
+    req = CalcRequest(
+        species=SpeciesSpec(smiles, charge=charge, multiplicity=multiplicity),
+        method=method,
+        solvent_eps_r=None,
+        quantity="gas_energy",
+    )
+    return cached_run(cache, engine, req, solvent_name=None).value
+
+
 def dimerization_dG(
     monomer: Monomer,
     engine: Engine,
     cache: SQLiteCache,
     method: str = DEFAULT_METHOD,
+    *,
+    spec: PolymerizationSpec,
+    dimer_n: int = DIMER_N,
+    proton_gibbs_eV: float = PROTON_GIBBS_EV,
 ) -> float:
-    """Return mock dimerization free energy in kcal/mol.
+    """Radical–radical coupling free energy in kcal/mol (directive §3.1/§4.2).
 
-    The first skeleton uses monomer gas energy as a deterministic placeholder
-    signal, then rescales it to a chemically plausible -12 to +12 kcal/mol range.
-    Later structure-aware dimer calculations can replace this without changing
-    workflow callers.
+    Reaction: 2 M⁺• → [M–M]²⁺ + 2 H⁺. The xTB-level
+    ΔG = G([M–M]²⁺) + 2·G(H⁺) − 2·G(M⁺•), with each G taken as the GFN2-xTB energy of that
+    species (reusing the redox energy path) and G(H⁺) the fixed proton convention
+    (``proton_gibbs_eV``). The dimer is the α,α′ neutral n=2 oligomer evaluated in the +2
+    charge state (closed-shell singlet); the monomer radical cation is +1, doublet.
+
+    Per-MONOMER property (cached). The proton constant cancels across monomers, so the
+    ABSOLUTE value is screening-grade but the RELATIVE ordering the score uses is sound. This
+    is NOT a hard Tier-1 filter — it feeds the w4 composite term only.
     """
 
-    req = CalcRequest(
-        species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
-        method=method,
-        solvent_eps_r=None,
-        quantity="gas_energy",
+    dimer_smiles = oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)
+    g_dimer_dication = _gas_energy_eV(
+        engine, cache, dimer_smiles, charge=2, multiplicity=1, method=method
     )
-    gas_energy_eV = cached_run(cache, engine, req, solvent_name=None).value
-    fraction = (gas_energy_eV + 650.0) / 600.0
-    return -12.0 + fraction * 24.0
+    g_monomer_cation = _gas_energy_eV(
+        engine, cache, monomer.canonical_smiles, charge=1, multiplicity=2, method=method
+    )
+    delta_eV = g_dimer_dication + 2.0 * proton_gibbs_eV - 2.0 * g_monomer_cation
+    return delta_eV * EV_TO_KCAL_MOL

@@ -35,6 +35,7 @@ from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
 from eps.structures.oligomer import (
     DEFAULT_OLIGOMER_N,
+    DIMER_N,
     PolymerizationSpec,
     load_polymerization_specs,
     oligomer_smiles,
@@ -83,9 +84,11 @@ def run_tier1(
 
     oligomer_config = tier1_config.get("oligomer", {})
     oligomer_n = int(oligomer_config.get("n", DEFAULT_OLIGOMER_N))
+    dimer_n = int(oligomer_config.get("dimer_n", DIMER_N))
     polymerization_specs = load_polymerization_specs()
     monomer_table = compute_monomer_table(
-        monomers, engine, cache, method=method, oligomer_n=oligomer_n, specs=polymerization_specs
+        monomers, engine, cache, method=method,
+        oligomer_n=oligomer_n, dimer_n=dimer_n, specs=polymerization_specs,
     )
     monomer_solvent_table = compute_monomer_solvent_table(
         monomers,
@@ -160,12 +163,14 @@ def compute_monomer_table(
     cache: SQLiteCache,
     method: str = "mock-gfn2",
     oligomer_n: int = DEFAULT_OLIGOMER_N,
+    dimer_n: int = DIMER_N,
     specs: dict[str, PolymerizationSpec] | None = None,
 ) -> pd.DataFrame:
     """Compute monomer-only properties once per monomer.
 
     The optical gap is now the sTDA-xTB (or HOMO–LUMO proxy) gap of the assembled n-mer
-    oligomer (directive §3.1/§4.1) rather than a single-monomer placeholder.
+    oligomer, and dimerization is the real radical–radical coupling ΔG (directive §3.1/§4.2)
+    — neither is a single-monomer placeholder any longer.
     """
 
     specs = specs if specs is not None else load_polymerization_specs()
@@ -174,6 +179,7 @@ def compute_monomer_table(
         spec = specs.get(monomer.name)
         if spec is None:
             optical_gap = _CalcOutcome(float("nan"), "failed", "no polymerization spec for monomer")
+            dimerization = _CalcOutcome(float("nan"), "failed", "no polymerization spec for monomer")
             gap_method = "none"
             oligo_smiles = ""
         else:
@@ -184,7 +190,9 @@ def compute_monomer_table(
                 lambda: polymer_optical_gap_method(monomer, engine, cache, method=method, spec=spec, n=oligomer_n)
             )
             oligo_smiles = _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, oligomer_n))
-        dimerization = _safe_calculate(lambda: dimerization_dG(monomer, engine, cache, method=method))
+            dimerization = _safe_calculate(
+                lambda: dimerization_dG(monomer, engine, cache, method=method, spec=spec, dimer_n=dimer_n)
+            )
         rows.append(
             {
                 "monomer_name": monomer.name,
@@ -199,6 +207,11 @@ def compute_monomer_table(
                 "optical_gap_calc_status": optical_gap.status,
                 "optical_gap_calc_error": optical_gap.error,
                 "dimerization_dG_kcal_mol": dimerization.value,
+                "dimerization_reaction": "2 M+. -> [M-M]2+ + 2 H+ (xTB dG, screening-grade)",
+                "dimerization_dimer_smiles": (
+                    _safe_str(lambda: oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)) if spec else ""
+                ),
+                "dimerization_coupling_approximate": bool(spec.approximate) if spec else "",
                 "dimerization_calc_status": dimerization.status,
                 "dimerization_calc_error": dimerization.error,
             }
