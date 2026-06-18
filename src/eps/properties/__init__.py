@@ -19,6 +19,7 @@ from eps.properties.oligomer_series import (
     DEFAULT_EOX_OLIGOMER_LENGTHS,
     compute_oligomer_eox_series,
     extrapolate_infinite_chain,
+    extrapolate_infinite_chain_poly2,
 )
 from eps.properties.redox import (
     ABS_SHE_V,
@@ -34,6 +35,7 @@ __all__ = [
     "anion_oxidation_potential",
     "compute_oligomer_eox_series",
     "extrapolate_infinite_chain",
+    "extrapolate_infinite_chain_poly2",
     "dimerization_dG",
     "ip_eV_to_potential_vs_AgAgCl",
     "monomer_eox_vs_AgAgCl",

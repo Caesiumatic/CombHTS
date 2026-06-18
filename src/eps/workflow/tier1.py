@@ -591,8 +591,11 @@ def write_oligomer_eox_series_artifact(
             for c in (
                 "oligomer_Eox_infinite_raw_eV",
                 "oligomer_Eox_extrap_r2",
+                "oligomer_Eox_infinite_raw_poly2_eV",
+                "oligomer_Eox_poly2_r2",
                 "oligomer_Eox_infinite_calibrated_V_vs_AgAgCl",
                 "oligomer_Eox_calibration_out_of_domain",
+                "oligomer_Eox_extrap_caveat",
                 "oligomer_Eox_sidechain_truncated",
                 "oligomer_Eox_calc_status",
                 "oligomer_Eox_calc_error",
