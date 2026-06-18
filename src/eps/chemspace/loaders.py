@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Iterable, TypeVar
-import warnings
 
 import pandas as pd
 from pydantic import BaseModel

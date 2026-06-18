@@ -15,16 +15,15 @@ from datetime import date
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from eps.engines.base import Engine
 from eps.engines.mock import MockEngine
 from eps.validation.benchmark import (
-    BenchmarkValidationResult,
     DEFAULT_BENCHMARK_PATH,
     DEFAULT_CACHE_PATH,
     DEFAULT_REPORT_PATH,
     DEFAULT_VALIDATION_CONFIG,
+    BenchmarkValidationResult,
     _load_validation_config,
     load_calibration_profiles,
     run_calibration_profile,

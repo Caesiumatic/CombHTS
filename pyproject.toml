@@ -18,6 +18,9 @@ dependencies = [
     "scikit-learn",
 ]
 
+[project.optional-dependencies]
+dev = ["ruff"]
+
 [project.scripts]
 eps = "eps.cli:main"
 
@@ -27,3 +30,20 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Conservative set: pyflakes (F), pycodestyle errors (E), import sorting (I).
+select = ["E", "F", "I"]
+# E501 (line too long) is noisy in a scientific codebase with long docstrings/URLs; the
+# formatter-style line-length above is advisory, not enforced as a hard error.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests deliberately import-for-side-effect and use module fixtures; keep F401 off there
+# only where needed. Private-helper imports in benchmark are intentional.
+"tests/*" = []
