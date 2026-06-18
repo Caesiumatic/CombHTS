@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-18_
+_Last updated: 2026-06-18 (refinement pass)_
 
 ## How to read this
 
@@ -10,12 +10,12 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 | ID | Title | Status | Forum | Cost |
 | --- | --- | --- | --- | --- |
-| T1 | Screening calibration anchor: peak vs onset | exploring | group-meeting then PI sign-off | scope/policy |
-| T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | open | PI sign-off | scope/policy |
+| T1 | Screening calibration anchor: peak vs onset | exploring (resolution proposed) | group-meeting then PI sign-off | scope/policy |
+| T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | open (resolution proposed) | PI sign-off | scope/policy |
 | T3 | Potential-type mismatch sets the accuracy ceiling | open | self (rigor) | lit-curation (no compute) |
 | T4 | What ">=30 clean groups" actually validates | open | group-meeting | scope/policy |
 | T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
-| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring | group-meeting | compute-heavy |
+| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (staging proposed) | group-meeting | compute-heavy |
 | T7 | What is the real deliverable? | open | group-meeting | scope/policy |
 | T8 | Chemical-space coverage vs weight tuning | open | group-meeting / PI sign-off | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
@@ -24,26 +24,28 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T12 | Should the chain-length-corrected (oligomer/polymer) Eox ever inform ranking, not just be reported? | open | group-meeting | scope/policy |
 
 ## T1 — Screening calibration anchor: peak vs onset
-- **Status**: exploring
+- **Status**: exploring (literature-backed resolution PROPOSED 2026-06-18, pending PI confirmation)
 - **Forum**: group-meeting then PI sign-off
 - **Cost**: scope/policy
 - **Question**: Which calibration profile should convert every xTB Eox in the screen — `agagcl_peak_strict` (Epa) or `agagcl_onset_relaxed` (Eonset)?
 - **Why it matters**: This single line defines the Eox the whole 50k-triad screen believes; it feeds the constraint-① window filter and the highest composite weight (0.30). Peak vs onset shifts BOTH slope and intercept, so it reshapes the ranking, not just offsets it.
 - **Thinking / options**: Onset is physically closer to where electropolymerization initiates (more faithful to "Eox inside solvent window"). The conditioning / sample-size argument says more points => better-conditioned linear fit; it favors `agagcl_peak_relaxed` (n=19, tiers A+B) over `agagcl_onset_relaxed` (n=13, tiers A+B), and explicitly does NOT support `agagcl_peak_strict` (n=9, tier A only). The purity argument favors `agagcl_peak_strict` because it uses tier-A native-Ag/AgCl rows only, at the cost of the smallest n. xTB adiabatic IP is conceptually an E1/2, sitting between onset and peak, so neither matches perfectly. The repo is also internally inconsistent on this exact question: `configs/tier1.yaml` implements the screen's monomer-Eox calibration from profile `agagcl_peak_strict` (slope=0.725837, intercept=-3.145372), but `configs/calibration_profiles.yaml` sets `default_screening_profile: agagcl_peak_relaxed`. Consequence: a default `eps validate` reports a peak_relaxed fit, while the actual 50k-triad screen's constraint-(1) window filter uses the peak_strict calibration baked into `tier1.yaml`.
 - **Current lean**: `agagcl_peak_strict`, pending sign-off. This lean is chosen on PURITY grounds, not on sample size; the sample-size argument would instead point to `agagcl_peak_relaxed`.
-- **Resolves when**: The group discusses peak vs onset, the PI signs off on the screening calibration anchor, and `configs/tier1.yaml` plus `configs/calibration_profiles.yaml` are reconciled onto one agreed anchor.
-- **Links**: [STATUS open debts #3 and #13](STATUS.md#open-debts); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml).
+- **Proposed resolution (2026-06-18, literature-backed; PROPOSED, pending PI confirmation)**: STORE BOTH peak and onset; use them for DIFFERENT jobs rather than choosing one. Monomer electro-oxidation is chemically irreversible (the radical cation couples immediately), so there is essentially no reversible E1/2 — the Epa−Eonset gap is ~0.2–0.4 V ([eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md) §3.1). Calibrate the DFT ΔSCF Eox against PEAK (Epa is closer to a thermodynamic vertical/adiabatic ionization observable) — already implemented in `eps calibrate-dft` Fit 2 (peak-only). Use ONSET as the anchor for the constraint-① "fits-in-window" screening filter, because the radical cation forms and film growth begins at onset, well before the peak. This decouples the single peak-vs-onset choice into two physically-matched uses; it does NOT by itself change the pinned `tier1.yaml` anchor.
+- **Resolves when**: The group discusses peak vs onset, the PI signs off on the screening calibration anchor (and on the proposed peak-for-DFT / onset-for-window split), and `configs/tier1.yaml` plus `configs/calibration_profiles.yaml` are reconciled onto one agreed anchor.
+- **Links**: [STATUS open debts #3 and #13](STATUS.md#open-debts); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml); [docs/research/eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md).
 
 ## T2 — Master reference scale: Ag/AgCl vs Fc/Fc+
-- **Status**: open
+- **Status**: open (literature-backed resolution PROPOSED 2026-06-18, pending PI confirmation)
 - **Forum**: PI sign-off
 - **Cost**: scope/policy
 - **Question**: Keep aqueous Ag/AgCl as the benchmark master scale, or fund a separate Fc/Fc+ track for nonaqueous data?
 - **Why it matters**: Most clean nonaqueous monomer CVs are reported vs Fc/Fc+; staying Ag/AgCl-only blocks data growth, while force-converting nonaqueous SCE/Ag/Ag+ rows injects liquid-junction error comparable to the model error we are trying to measure.
 - **Thinking / options**: In y = a·x + b, the intercept b absorbs the scale's reference offset, so two scales need two fits — pooling Ag/AgCl and Fc/Fc+ into one line is algebraically wrong, not just untidy. The xTB prediction x is scale-agnostic, so a Fc/Fc+ track costs almost nothing: native-Fc rows enter as-is, the intercept eats the offset, and the pinned 4.28/-0.197 projection is used only once at screening output.
 - **Current lean**: Dual-scale — keep Ag/AgCl output, track Fc/Fc+ for nonaqueous curation; `fc_*` profiles already stubbed and auto-skip until clean native-Fc rows exist.
-- **Resolves when**: The PI signs off on either Ag/AgCl-only curation or a separate Fc/Fc+ benchmark/calibration track.
-- **Links**: [STATUS open debt #4](STATUS.md#open-debts); [docs/benchmark_methods_memo.md](docs/benchmark_methods_memo.md#recommendation-on-master-scale).
+- **Proposed resolution (2026-06-18, literature-backed; PROPOSED, pending PI confirmation)**: STANDARDIZE on Ag/AgCl as the master scale and CONVERT native Fc/Fc+ rows at **+0.45 V** (the authoritative MeCN constant, Pavlishchuk & Addison 2000; ≈ +0.45 V vs aq. Ag/AgCl), ACCEPTING a ~0.1 V (up to 0.2 V) systematic floor from the liquid junction. This does NOT discard most data, because the clean nonaqueous monomer literature is already split roughly evenly between direct-Ag/AgCl reports and Fc/Fc+-referenced values that convert cleanly; only no-calibrant pseudo-reference rows are unplaceable and stay excluded ([eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md) §"Ag/AgCl vs Fc/Fc+", Part 2). Crucially, that ~0.1 V floor is COMPARABLE to the MAE<0.15 V target — so it bounds how tightly the calibration can honestly be tuned (now enforced by the Refinement-2 reference-floor note + core-monomer flag). Do NOT force-convert no-calibrant pseudo-references.
+- **Resolves when**: The PI signs off on either Ag/AgCl-only curation or a separate Fc/Fc+ benchmark/calibration track (the proposal is the former, with the +0.45 V conversion + accepted floor).
+- **Links**: [STATUS open debt #4](STATUS.md#open-debts); [docs/benchmark_methods_memo.md](docs/benchmark_methods_memo.md#recommendation-on-master-scale); [docs/research/eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md).
 
 ## T3 — Potential-type mismatch sets the accuracy ceiling
 - **Status**: open
@@ -80,15 +82,16 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/polymerization.csv](data/polymerization.csv); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
 
 ## T6 — Band gap: oligomer + sTDA-xTB (directive route) vs an ML model
-- **Status**: exploring (directive route implemented; ML alternative parked, not needed to proceed)
+- **Status**: exploring (directive route implemented; ML alternative parked; literature-backed staging PROPOSED 2026-06-18, pending PI confirmation)
 - **Forum**: group-meeting
 - **Cost**: compute-heavy
 - **Question**: Reach the polymer band gap via real oligomer assembly -> sTDA-xTB, or via a trained ML/GNN predictor?
 - **Why it matters**: `optical_gap` drives the `band_gap_deviation` scoring term; it was a monomer MMFF HOMO-LUMO placeholder.
 - **Thinking / options**: We took the DIRECTIVE's route for now: assemble the n=6 oligomer (RDKit α-coupling — `stk` substitution, documented) and take the sTDA-xTB lowest singlet excitation, with the oligomer GFN2-xTB HOMO-LUMO gap as a flagged proxy until `stda` is confirmed on the cluster. This is implemented and screening-grade (uncalibrated vs TD-DFT). The mentors' ML/GNN direction may be the more durable long-term route for the AI-foundation goal, but it is NOT needed to proceed and remains the open fork only if we later choose to deviate. The directive also wants the sTDA gap calibrated vs a TD-DFT reference — deferred to Step-2 (a calibration hook mirrors the solvent-limit "compute now, calibrate later" pattern).
 - **Current lean**: Proceed on the directive's oligomer + sTDA-xTB route; revisit ML only if the screening-grade gap proves insufficient. Calibrate vs TD-DFT in Step-2.
-- **Resolves when**: The group accepts the oligomer/sTDA route (with TD-DFT calibration as Step-2) or explicitly chooses to pivot to an ML/GNN predictor.
-- **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py).
+- **Proposed resolution (2026-06-18, literature-backed; PROPOSED, pending PI confirmation)**: Route A (oligomer + sTDA-xTB, calibrated to TD-DFT) NOW as the primary band-gap axis — it is physics-based, predicts the OPTICAL gap we want, applies to any drawable monomer, and has direct precedent (the Zwijnenburg group screened thousands of conjugated co-polymers, cutting optical-gap error to 0.08–0.15 eV via linear xTB→DFT calibration). Route B (a GNN surrogate) LATER, once ~5–20k in-domain calibrated gaps are accumulated (Route A is the cheapest way to manufacture that labeled set); public ML models are not viable now (they predict the DFT FUNDAMENTAL gap on commodity-skewed data, out-of-domain for EDOT/CPDT/D–A) ([bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md) §C). When the optical-gap TD-DFT calibration is eventually run, use a RANGE-SEPARATED functional (CAM-B3LYP / ωB97X-D) — global hybrids spuriously over-stabilize D–A charge-transfer states — and validate PER CLASS, because sTDA-xTB is documented-weak for sulfur heterocycles (thiophene/EDOT/CPDT) and for D–A CT states ([bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md) §A.3). This also reinforces Refinement 3: from short oligomers the extrapolated gap/Eox is non-converged, so absolute values stay screening-grade until the TD-DFT calibration (and longer chains/PBC where absolute matters).
+- **Resolves when**: The group accepts the oligomer/sTDA route (with range-separated TD-DFT calibration as Step-2, validated per class) or explicitly chooses to pivot to an ML/GNN predictor.
+- **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
 
 ## T7 — What is the real deliverable?
 - **Status**: open
@@ -162,6 +165,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 ## Decision log
 
+- 2026-06-18 (refinement) — literature-backed PROPOSED resolutions recorded (pending PI confirmation) for [T1](#t1--screening-calibration-anchor-peak-vs-onset), [T2](#t2--master-reference-scale-agagcl-vs-fcfc), [T6](#t6--band-gap-oligomer--stda-xtb-directive-route-vs-an-ml-model), grounded in two literature reviews added to `docs/research/`. T1: store both; calibrate DFT against PEAK (now implemented in `eps calibrate-dft` Fit 2), use ONSET for the in-window screening filter. T2: standardize on Ag/AgCl, convert Fc/Fc+ at +0.45 V (MeCN), accept the ~0.1 V systematic floor (now surfaced by the Refinement-2 reference-floor note + core-monomer flag). T6: Route A (oligomer + sTDA-xTB calibrated to TD-DFT) now, Route B (GNN) later as a surrogate once ~5–20k in-domain calibrated gaps exist; use a range-separated functional (CAM-B3LYP/ωB97X-D) for the TD-DFT calibration and validate per class (sTDA-xTB is documented-weak for S heterocycles + D–A CT). None of these change pinned config; all await PI confirmation.
 - 2026-06-18 — [T12](#t12--should-the-chain-length-corrected-oligomerpolymer-eox-ever-inform-ranking) opened: an additive, reported-only oligomer Eox-vs-chain-length descriptor (RAW xTB adiabatic IE per n + classic 1/n infinite-chain extrapolation) is now joined into the Tier-1 harvest. It deliberately does NOT enter any hard filter or the composite score (verified: 113→113 survivors, composite_score Δ=0). The calibrated infinite value is flagged out-of-domain (the monomer-fit calibration was not fit on oligomers). Open question: whether/how the chain-length-corrected Eox should ever inform ranking.
 - 2026-06-18 — [T4](#t4--what-30-clean-groups-actually-validates) advanced (engineering, not a policy decision): the two-stage xTB->DFT calibration + DFT->experiment validation is now built mock-first (`eps calibrate-dft`), reusing the identical `monomer_eox_vs_AgAgCl` descriptor so the new xTB->DFT fit is directly comparable to the pinned xTB->experiment fit. NEW artifact only — `configs/tier1.yaml` and `default_screening_profile` are UNCHANGED; the live g16 numbers and any decision to promote the xTB->DFT calibration over the interim xTB->experimental anchor remain PENDING (live run + PI sign-off). The Tier-2 Gaussian engine is now config-driven via `configs/tier2.yaml` (v1 = gas-phase ΔSCF; `smd_solvent`+`use_freq` is the documented rigor toggle). No live Gaussian was run.
 - 2026-06-17 — [T1](#t1--screening-calibration-anchor-peak-vs-onset) advanced: `configs/tier1.yaml` was pinned to a real GFN2-xTB `agagcl_peak_strict` fit (slope=0.725837, intercept=-3.145372, LOO-CV MAE=0.197 V) as the screening anchor; PROVISIONAL / pending PI sign-off.
