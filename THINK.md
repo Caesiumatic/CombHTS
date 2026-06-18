@@ -19,7 +19,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T7 | What is the real deliverable? | open | group-meeting | scope/policy |
 | T8 | Chemical-space coverage vs weight tuning | open | group-meeting / PI sign-off | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
-| T10 | xTB failure clusters: data problem or engine problem? | exploring | self (rigor) | one xTB round |
+| T10 | xTB failure clusters: data problem or engine problem? | decided | self (rigor) | one xTB round |
 | T11 | Should the computed solvent anodic limit share the monomer calibration / live on the same scale? | decided | group-meeting | scope/policy |
 
 ## T1 — Screening calibration anchor: peak vs onset
@@ -122,7 +122,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [configs/tier1.yaml](configs/tier1.yaml); [CHANGELOG 2026-06-17](CHANGELOG.md#2026-06-17).
 
 ## T10 — xTB failure clusters: data problem or engine problem?
-- **Status**: exploring (both clusters explained; "decided" pending the cluster re-run confirming 0 EDOS failures)
+- **Status**: decided — both clusters were input/settings issues, not a method problem; confirmed by a fully-clean real-xTB harvest (0 failures across all seven stages).
 - **Forum**: self (rigor)
 - **Cost**: one xTB round
 - **Question**: Are the 152 Tier-1 smoke failures a chemistry/data issue or an engine/method issue?
@@ -132,7 +132,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
   - EDOS `monomer_eox` + `dimerization` failures were RDKit force-field geometry corruption, NOT xTB/SCF. `geometry.py` ran UFF whenever MMFF lacked params, but for Se BOTH MMFF and UFF fail to type the atom ("Unrecognized atom type: Se2+2"); UFF then collapsed the clean ETKDG embedding to a ~0.26 Å atom clash, so xTB aborted geometry optimization ("|grad| > 500, something is totally wrong!", exit 128). The single-point `optical_gap` only "succeeded" because it ran `--no-opt` on the clashed geometry, so its cached value was also garbage. Fixed by skipping FF pre-optimization when no classical FF can type every atom and handing the clean ETKDG geometry (~1.0 Å min distance) to xTB, whose GFN2 optimizer handles Se.
   - PF6 / high-dielectric `anion_eox` failures were already resolved by the SCF-robustness flags (`--iterations 500 --etemp 400`): the real-xTB harvest shows 0 anion_eox failures.
 - **Conclusion**: No move to ddCOSMO is needed for these clusters; both are addressed without changing the method.
-- **Resolves when**: A cluster re-run on real xTB confirms 0 EDOS geometry failures (and the recomputed EDOS values replace the cached garbage).
+- **Resolved (2026-06-17)**: The first fully-clean real-xTB Tier-1 harvest on the SCS Lop cluster (cache rebuilt from scratch after the EDOS/Se geometry fix) ran 1650 triads with ZERO calculation failures across all seven per-property stages (`monomer_Eox`, `solvation`, `optical_gap`, `dimerization`, `solvent_anodic_limit`, `solvent_cathodic_limit`, `anion_Eox`) and 1007 surviving triads. EDOS now computes (calibrated Eox ~1.47 V), confirming 0 EDOS geometry failures; and 0 anion failures confirms the SCF-robustness flags already fixed the PF6/high-ε cluster. Both clusters are closed without a method change.
 - **Links**: [STATUS open debts #7, #8, and #9](STATUS.md#open-debts); [CHANGELOG 2026-06-16](CHANGELOG.md#2026-06-16); [src/eps/structures/geometry.py](src/eps/structures/geometry.py).
 
 ## T11 — Should the computed solvent anodic limit share the monomer calibration / live on the same scale?
@@ -154,3 +154,4 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - 2026-06-17 — [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale) opened: the computed solvent anodic limit is left RAW while monomer Eox is calibrated, so `window_margin_V` currently mixes scales; spec §4.1 vs the monomer-only calibration fit is unresolved.
 - 2026-06-17 — [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale) DECIDED: apply the single `configs/tier1.yaml` oxidation calibration to all computed oxidation potentials (monomer Eox, solvent anodic limit, anion Eox); intercept cancels in every margin, so filters are governed by raw IP differences (spec §4.1). Solvent cathodic/reduction limit stays raw. Also makes the previously inert anion-stability filter LIVE. Absolute calibrated solvent/anion values are screening-grade extrapolations pending a future benchmark; group to be informed, not blocking.
 - 2026-06-17 — [T10](#t10--xtb-failure-clusters-data-problem-or-engine-problem) advanced (open → exploring): both smoke/harvest failure clusters explained as INPUT/settings issues, not a method problem. EDOS `monomer_eox`/`dimerization` failures were RDKit FF geometry corruption (MMFF/UFF cannot type Se → UFF collapsed the ETKDG geometry to a ~0.26 Å clash → xTB geometry-opt abort); fixed in `geometry.py` by skipping FF pre-optimization when no FF has params and handing the clean ETKDG geometry to xTB. PF6/high-ε `anion_eox` failures were already cured by `--iterations 500 --etemp 400` (0 anion failures in the real-xTB harvest). No ddCOSMO move needed; full "decided" pending a cluster re-run confirming 0 EDOS failures.
+- 2026-06-17 — [T10](#t10--xtb-failure-clusters-data-problem-or-engine-problem) DECIDED: the first fully-clean real-xTB Tier-1 harvest on Lop (cache rebuilt from scratch) ran 1650 triads with 0 calculation failures across all seven per-property stages and 1007 survivors. EDOS computes (calibrated Eox ~1.47 V) → 0 EDOS geometry failures confirmed; 0 anion failures confirmed. Both clusters closed without a method change; no ddCOSMO needed.

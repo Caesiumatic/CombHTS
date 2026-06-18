@@ -1,6 +1,21 @@
 # Changelog
 
 ## 2026-06-17
+- First fully-clean real-xTB Tier-1 harvest completed on the SCS Lop cluster (GFN2-xTB, with
+  the EDOS/Se geometry fix, cache rebuilt from scratch): 1650 triads (15 monomers × 11
+  solvents × 10 salts), ZERO calculation failures across all seven per-property stages
+  (monomer_Eox, solvation, optical_gap, dimerization, solvent_anodic_limit,
+  solvent_cathodic_limit, anion_Eox), and 1007 surviving triads. EDOS now computes (calibrated
+  Eox ~1.47 V). This is the first complete, reproducible real-physics per-species descriptor
+  harvest.
+- Marked THINK T10 (xTB failure clusters) DECIDED: both clusters were input/settings issues,
+  not a method problem — EDOS geometry corruption (fixed in geometry.py) and PF6/high-dielectric
+  anion non-convergence (already cured by --iterations 500 --etemp 400). Confirmed by the clean
+  harvest (0 EDOS failures, 0 anion failures); no move to ddCOSMO is needed.
+- Caveats preserved: the clean harvest is a real-physics milestone, not a final ranking — the
+  composite remains diagnostic because optical_gap and dimerization_dG are still placeholders
+  (T6) and the anion Eox is a monomer-fit calibration extrapolation (T11). Updated STATUS open
+  debt #8 (ddCOSMO no longer needed on convergence grounds; ALPB-proxy PI sign-off still open).
 - Fixed EDOS (3,4-ethylenedioxyselenophene) geometry corruption that failed real xTB across
   all 110 of its triads. Root cause was RDKit force-field pre-optimization, not xTB/SCF:
   `src/eps/structures/geometry.py` ran UFF whenever MMFF lacked params, but Se is typed by
