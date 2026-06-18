@@ -55,10 +55,13 @@ redox function were **not** touched — only the two INPUT axes became real.
 - Approximate coupling regiochemistry (flagged in `data/polymerization.csv` and the
   `*_coupling_approximate` columns): **aniline** (N→para, not a clean C–C α) and the
   **benzothiadiazole–thiophene D–A** (linkage simplification).
-- **Data-curation item (out of scope here):** the stored `data/monomers.csv` canonical SMILES
-  for **EDOT/ProDOT/EDOP/EDOS** encode the **2,3-dioxy** isomer (one α blocked) rather than the
-  expected 3,4-dioxy; those monomers are coupled at the free α + an adjacent ring carbon and
-  flagged `approximate=True`. Fixing `monomers.csv` is a separate, pinned-data decision.
+- **Data-curation item — RESOLVED (2026-06-18):** the stored `data/monomers.csv` SMILES for
+  **EDOT/ProDOT/EDOP/EDOS** previously encoded the **2,3-dioxy** isomer (one α blocked); they
+  have been corrected to the directive §2.1 **3,4-dioxy** isomer (both α free). Their
+  `data/polymerization.csv` rows are now `alpha` (clean auto-derived 2,5 coupling) with
+  `approximate=False`, and a regression test asserts both α-carbons stay free. The calibration
+  is unaffected (none of these four appear in `data/benchmark.csv`); their previously harvested
+  `Eox`/`optical_gap`/`dimerization_dG` are stale and will be recomputed by the next cluster run.
 
 ## Acceptance criteria
 

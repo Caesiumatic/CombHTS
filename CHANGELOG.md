@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-06-18 (later 2) — corrected the alkylenedioxy monomer SMILES (2,3 -> 3,4)
+- Fixed a logged pinned-data error: `data/monomers.csv` stored EDOT/ProDOT/EDOP/EDOS as the
+  2,3-dioxy isomer (one α-carbon blocked); corrected to the directive §2.1 3,4-dioxy isomer
+  (both α free for clean 2,5 coupling): EDOT `C1COc2cscc2O1`, ProDOT `C1CCOc2cscc2O1`,
+  EDOP `C1COc2c[nH]cc2O1`, EDOS `C1COc2c[se]cc2O1`.
+- `data/polymerization.csv`: those four switched from `explicit`/`approximate=True` to `alpha`
+  (auto-derived 2,5-α coupling), building block cleared and the 2,3-dioxy caveat removed.
+  Verified via `eps run-tier1 --engine mock`: each auto-detects exactly two free α-carbons and
+  assembles a clean 2,5-α-linked oligomer (no blocked α, no assembly errors).
+- Added a regression test asserting EDOT/ProDOT/EDOP/EDOS each have exactly two ring-heteroatom-
+  adjacent α-carbons, both bearing an H, and that their spec is `alpha`/non-approximate.
+- The pinned oxidation calibration is unaffected (none of the four appear in
+  `data/benchmark.csv`); the only downstream effect is these four monomers' own screening
+  descriptors (Eox/optical_gap/dimerization_dG), now stale pending the next cluster harvest.
+  Marked the data-curation item RESOLVED in `docs/step1_real_bandgap_dimerization_report.md`;
+  STATUS updated. No cluster run performed.
+
 ## 2026-06-18 (later) — made the two placeholder scoring axes real (band gap + dimerization)
 - Both previously-placeholder Tier-1 axes are now real, screening-grade physics computed the
   directive's way; all five composite axes are real (the composite is no longer
