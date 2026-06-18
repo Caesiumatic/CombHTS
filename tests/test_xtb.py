@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import shutil
+import types
 from pathlib import Path
 
 import pytest
 
 from eps.engines import CalcRequest, SpeciesSpec, XTBEngine
+from eps.engines import xtb as xtb_module
 from eps.engines.xtb import parse_homo_lumo, parse_total_energy, parse_xtb_json, solvent_flag
 
 
@@ -55,3 +57,30 @@ def test_xtb_engine_live_gas_energy_smoke() -> None:
 
     assert result.unit == "eV"
     assert result.value < 0
+
+
+def test_run_xtb_nonzero_exit_raises_before_json_parse(monkeypatch, tmp_path) -> None:
+    """A nonzero xTB exit must raise the xTB RuntimeError, not a JSON parse error,
+    even when a present-but-garbage xtbout.json is on disk."""
+
+    def fake_run(command, cwd, check, capture_output, text):
+        # xTB "ran" but failed; it still left a corrupt xtbout.json behind.
+        (Path(cwd) / "xtbout.json").write_text("{ this is not valid json", encoding="utf-8")
+        return types.SimpleNamespace(
+            returncode=1,
+            stdout="normal termination not reached",
+            stderr="#ERROR! SCF not converged",
+        )
+
+    monkeypatch.setattr(xtb_module.subprocess, "run", fake_run)
+
+    engine = XTBEngine()
+    req = CalcRequest(
+        species=SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1),
+        method="gfn2-xtb",
+        solvent_eps_r=None,
+        quantity="gas_energy",
+    )
+
+    with pytest.raises(RuntimeError, match="xTB failed with exit code 1"):
+        engine._run_xtb(req, charge=0, multiplicity=1, solvent_args=[], optimize=True)

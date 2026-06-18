@@ -197,15 +197,18 @@ class XTBEngine(Engine):
                 capture_output=True,
                 text=True,
             )
+            # Check the subprocess exit code FIRST: a nonzero exit means xTB failed, and a
+            # present-but-garbage xtbout.json must not mask that with a JSON parse error.
+            # Parse the JSON only on success.
+            if completed.returncode != 0:
+                raise RuntimeError(
+                    "xTB failed with exit code "
+                    f"{completed.returncode}.\nSTDOUT:\n{completed.stdout}\nSTDERR:\n{completed.stderr}"
+                )
             json_path = Path(tmpdir) / "xtbout.json"
             parsed_json = None
             if json_path.exists():
                 parsed_json = parse_xtb_json(json_path.read_text(encoding="utf-8"))
-        if completed.returncode != 0:
-            raise RuntimeError(
-                "xTB failed with exit code "
-                f"{completed.returncode}.\nSTDOUT:\n{completed.stdout}\nSTDERR:\n{completed.stderr}"
-            )
         return XTBRunOutput(stdout=completed.stdout, parsed_json=parsed_json)
 
 
