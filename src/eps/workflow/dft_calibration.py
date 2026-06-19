@@ -106,6 +106,7 @@ class DFTCalibrationResult:
     n_nonpeak_excluded: int = 0
     reference_flag_fired: bool = False
     reference_flag_message: str = ""
+    composed_xtb_to_agagcl: dict[str, float | int] | None = field(default=None)
 
 
 def run_dft_calibration(
@@ -188,6 +189,15 @@ def run_dft_calibration(
     dft_to_exp = _maybe_fit(peak_points["dft_Eox_eV"], peak_points["exp_Eox_V_vs_AgAgCl"])
     pinned = _load_pinned_xtb_to_exp(tier1_config_path)
 
+    # Screen-ready composed calibration (directive §7): collapse Fit 1 (xTB->DFT) and Fit 2
+    # (DFT->exp peak) into one xTB-descriptor -> V vs Ag/AgCl map, a drop-in for tier1.yaml.
+    composed = compose_xtb_to_agagcl(
+        xtb_to_dft,
+        dft_to_exp,
+        n_points_xtb_to_dft=int(len(ok_points)),
+        n_points_dft_to_exp_peak=int(len(peak_points)),
+    )
+
     # Reference-floor decision flag: a large DFT->exp error on the trusted core anchors points at
     # the reference-conversion constant, not the DFT method.
     reference_residuals = dft_to_exp_residuals(peak_points, dft_to_exp)
@@ -204,6 +214,7 @@ def run_dft_calibration(
     _write_json(
         json_path,
         xtb_to_dft=xtb_to_dft,
+        composed=composed,
         n_points=int(len(ok_points)),
         n_skipped=len(skipped),
         xtb_method=xtb_method,
@@ -221,6 +232,7 @@ def run_dft_calibration(
         n_nonpeak_excluded=n_nonpeak_excluded,
         xtb_to_dft=xtb_to_dft,
         dft_to_exp=dft_to_exp,
+        composed=composed,
         pinned=pinned,
         skipped=skipped,
         method_label=method_label,
@@ -248,6 +260,7 @@ def run_dft_calibration(
         n_nonpeak_excluded=n_nonpeak_excluded,
         reference_flag_fired=reference_flag_fired,
         reference_flag_message=reference_flag_message,
+        composed_xtb_to_agagcl=composed,
     )
 
 
@@ -310,6 +323,38 @@ def _maybe_fit(x: pd.Series, y: pd.Series) -> LinearCalibration | None:
     if len(x_values) < 2:
         return None
     return fit_linear_calibration(x_values, y_values)
+
+
+def compose_xtb_to_agagcl(
+    xtb_to_dft: LinearCalibration | None,
+    dft_to_exp: LinearCalibration | None,
+    *,
+    n_points_xtb_to_dft: int,
+    n_points_dft_to_exp_peak: int,
+) -> dict[str, float | int] | None:
+    """Compose Fit 1 (xTB->DFT) and Fit 2 (DFT->exp) into ONE xTB-descriptor -> V vs Ag/AgCl map.
+
+    The directive's §7 two-stage calibration is two linear maps:
+        dft_Eox_eV       = fit1.slope * xtb_descriptor_V + fit1.intercept   (Fit 1, xTB->DFT)
+        exp_Eox_V_AgAgCl = fit2.slope * dft_Eox_eV       + fit2.intercept   (Fit 2, DFT->exp peak)
+    Substituting Fit 1 into Fit 2 collapses them to a single linear map with the SAME input (the
+    xTB descriptor, V vs Ag/AgCl) and output (experimental V vs Ag/AgCl) as the pinned
+    ``configs/tier1.yaml`` ``monomer_eox`` calibration, so it is a drop-in replacement:
+        composed_slope     = fit2.slope * fit1.slope
+        composed_intercept = fit2.slope * fit1.intercept + fit2.intercept
+    ``mae_V`` is ``fit2.mae`` — the experimental MAE on the peak set (the only experiment-anchored
+    error in the two-stage chain). Returns ``None`` if either fit is missing.
+    """
+
+    if xtb_to_dft is None or dft_to_exp is None:
+        return None
+    return {
+        "slope": dft_to_exp.slope * xtb_to_dft.slope,
+        "intercept": dft_to_exp.slope * xtb_to_dft.intercept + dft_to_exp.intercept,
+        "mae_V": dft_to_exp.mae,
+        "n_points_xtb_to_dft": int(n_points_xtb_to_dft),
+        "n_points_dft_to_exp_peak": int(n_points_dft_to_exp_peak),
+    }
 
 
 def dft_to_exp_residuals(
@@ -398,6 +443,7 @@ def _write_json(
     path: Path,
     *,
     xtb_to_dft: LinearCalibration | None,
+    composed: dict[str, float | int] | None,
     n_points: int,
     n_skipped: int,
     xtb_method: str,
@@ -419,6 +465,10 @@ def _write_json(
         "calibration": "xtb_to_dft",
         "description": "y_DFT_Eox_eV = slope * x_xtb_descriptor_V_vs_AgAgCl + intercept",
         "fit": fit,
+        # Screen-ready DFT-anchored map (directive §7): same input/output as the pinned
+        # tier1.yaml monomer_eox calibration, so it is a drop-in replacement (review + live
+        # gaussian batch required before adopting). null when either stage fit is missing.
+        "composed_xtb_to_AgAgCl_V": composed,
         "n_points": n_points,
         "n_skipped": n_skipped,
         "provenance": {
@@ -446,6 +496,7 @@ def _write_report(
     n_nonpeak_excluded: int,
     xtb_to_dft: LinearCalibration | None,
     dft_to_exp: LinearCalibration | None,
+    composed: dict[str, float | int] | None,
     pinned: dict[str, float] | None,
     skipped: list[tuple[str, str]],
     method_label: str,
@@ -538,6 +589,49 @@ def _write_report(
         "Both fits use the IDENTICAL xTB descriptor (`monomer_eox_vs_AgAgCl`), so the two "
         "intercepts/slopes are directly comparable. The pinned fit targets experimental V vs "
         "Ag/AgCl; the new fit targets DFT Eox in eV."
+    )
+    lines.append("")
+    lines.append("## Screen-ready calibration (DFT-anchored, directive §7)")
+    lines.append("")
+    lines.append(
+        "Composing Fit 1 (xTB->DFT) and Fit 2 (DFT->exp peak) collapses the two-stage §7 design "
+        "into ONE linear map from the xTB descriptor straight to V vs Ag/AgCl:"
+    )
+    lines.append("")
+    lines.append("- `composed_slope     = fit2.slope * fit1.slope`")
+    lines.append("- `composed_intercept = fit2.slope * fit1.intercept + fit2.intercept`")
+    lines.append("")
+    lines.append(
+        "This composed map has the SAME input (xTB descriptor) and output (V vs Ag/AgCl) as the "
+        "pinned `tier1.yaml` `monomer_eox` calibration, so it is a drop-in replacement."
+    )
+    lines.append("")
+    lines.append("| calibration | slope | intercept | MAE (V) | note |")
+    lines.append("| --- | --- | --- | --- | --- |")
+    if pinned is not None:
+        lines.append(
+            f"| pinned xTB->experiment (V) | {pinned['slope']:.6f} | {pinned['intercept']:.6f} | "
+            "n/a | PINNED screening default; unchanged |"
+        )
+    else:
+        lines.append("| pinned xTB->experiment (V) | (unavailable) | (unavailable) | n/a | not found |")
+    if composed is not None:
+        lines.append(
+            f"| composed xTB->V (DFT-anchored) | {composed['slope']:.6f} | "
+            f"{composed['intercept']:.6f} | {composed['mae_V']:.4f} | "
+            f"NEW; xTB->DFT n={composed['n_points_xtb_to_dft']}, "
+            f"DFT->exp peak n={composed['n_points_dft_to_exp_peak']} |"
+        )
+    else:
+        lines.append(
+            "| composed xTB->V (DFT-anchored) | (insufficient points) | (insufficient points) | "
+            "n/a | NEW; needs both stage fits |"
+        )
+    lines.append("")
+    lines.append(
+        "To switch the screen to the directive's xTB->DFT calibration, replace the tier1.yaml "
+        "monomer_eox slope/intercept with these composed values (with provenance). Requires a real "
+        "`--engine gaussian` batch + review first; computed here under whatever engine ran."
     )
     lines.append("")
     lines.append("## Skipped monomers")
