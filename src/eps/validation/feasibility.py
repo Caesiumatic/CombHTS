@@ -26,6 +26,7 @@ from rdkit import Chem
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_LABELS_PATH = PROJECT_ROOT / "data" / "polymerizability_labels.csv"
+DEFAULT_ELECTROLYTES_PATH = PROJECT_ROOT / "data" / "electrolytes.csv"
 
 LABEL_COLUMNS = (
     "monomer_name",
@@ -75,14 +76,23 @@ SOLVENT_ALIASES: dict[str, str | None] = {
     "pure BFEE": None,
 }
 
-# Map the label CSV's electrolyte text (after dropping a trailing "(anion)") to a library salt
-# (data/electrolytes.csv). Anything not a concrete library salt -> None (generic/unspecified/absent).
-SALT_ALIASES: dict[str, str] = {
+# Feasibility is governed by the dopant ANION, not the cation/salt NAME. Map a label electrolyte's
+# salt-name token (the part before any "(anion)") to a library salt carrying the SAME anion, so the
+# anion SMILES is always READ FROM data/electrolytes.csv (never hardcoded) and thus traces to repo
+# data. Cation differences are deliberately collapsed: Et4NBF4 -> TBABF4 (both BF4-),
+# Bu4NClO4 -> TBAClO4 (both ClO4-). Tokens NOT listed here ("TBA salt", "electrolyte", "neutral",
+# "acid", "aqueous", "-", blank) are GENERIC/unspecified -> no anion -> monomer+solvent matching.
+LABEL_SALT_TO_LIBRARY_SALT: dict[str, str] = {
     "TBAPF6": "TBAPF6",
+    "TEAPF6": "TEAPF6",
+    "Et4NBF4": "TBABF4",
     "TBABF4": "TBABF4",
+    "LiBF4": "LiBF4",
+    "LiClO4": "LiClO4",
     "TBAClO4": "TBAClO4",
     "Bu4NClO4": "TBAClO4",
-    "LiClO4": "LiClO4",
+    "NaClO4": "NaClO4",
+    "Na p-toluenesulfonate": "pTSA",
     "H2SO4": "H2SO4",
     "2 M H2SO4": "H2SO4",
 }
@@ -154,23 +164,48 @@ def _out_of_scope_reason(row: pd.Series) -> str | None:
     return None
 
 
-def _normalize_triad(row: pd.Series) -> tuple[str, str, str] | None:
-    """Map a label row to a harvest triad key (canonical_smiles, solvent_name, salt), or None."""
-
-    canonical = _canonical(row["monomer_smiles"])
-    if canonical is None:
-        return None
-    solvent = SOLVENT_ALIASES.get(str(row["solvent"]).strip())
-    if solvent is None:
-        return None
-    salt_text = str(row["electrolyte"]).split("(")[0].strip()
-    salt = SALT_ALIASES.get(salt_text)
-    if salt is None:
-        return None
-    return canonical, solvent, salt
+def _as_bool(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"true", "1", "yes"}
 
 
-def _harvest_survivor_index(harvest: pd.DataFrame) -> dict[tuple[str, str, str], bool]:
+def _load_salt_anions(path: str | Path = DEFAULT_ELECTROLYTES_PATH) -> dict[str, str]:
+    """Map library salt name -> RDKit-canonical dopant-anion SMILES, from data/electrolytes.csv."""
+
+    frame = pd.read_csv(path, keep_default_na=False)
+    anions: dict[str, str] = {}
+    for _, row in frame.iterrows():
+        anion = _canonical(str(row["anion_smiles"]))
+        if anion is not None:
+            anions[str(row["salt"])] = anion
+    return anions
+
+
+def _label_anion(electrolyte: object, salt_anions: dict[str, str]) -> str | None:
+    """Canonical dopant-anion SMILES for a SPECIFIED label electrolyte, else None (generic).
+
+    The anion always comes from data/electrolytes.csv (via LABEL_SALT_TO_LIBRARY_SALT), so a label
+    like "Et4NBF4 (BF4-)" resolves to TBABF4's BF4- and matches any harvest BF4- salt regardless of
+    cation. Generic/unspecified electrolytes ("TBA salt", "electrolyte", blank) return None.
+    """
+
+    token = str(electrolyte).split("(")[0].strip()
+    library_salt = LABEL_SALT_TO_LIBRARY_SALT.get(token)
+    if library_salt is None:
+        return None
+    return salt_anions.get(library_salt)
+
+
+def _build_harvest_indices(
+    harvest: pd.DataFrame, salt_anions: dict[str, str]
+) -> tuple[dict[tuple[str, str, str], list[bool]], dict[tuple[str, str], list[bool]]]:
+    """Index the harvest by (monomer, solvent, ANION) and by (monomer, solvent).
+
+    The anion index supports SPECIFIED-electrolyte labels (matched on the dopant anion, collapsing
+    cation/salt-name differences); the monomer+solvent index supports UNSPECIFIED ones.
+    """
+
     required = {
         HARVEST_SMILES_COLUMN,
         HARVEST_SOLVENT_COLUMN,
@@ -182,14 +217,19 @@ def _harvest_survivor_index(harvest: pd.DataFrame) -> dict[tuple[str, str, str],
         raise ValueError(
             "harvest CSV is missing triad/survivor columns: " + ", ".join(sorted(missing))
         )
-    index: dict[tuple[str, str, str], bool] = {}
+    anion_index: dict[tuple[str, str, str], list[bool]] = {}
+    monomer_solvent_index: dict[tuple[str, str], list[bool]] = {}
     for _, row in harvest.iterrows():
         canonical = _canonical(str(row[HARVEST_SMILES_COLUMN]))
         if canonical is None:
             continue
-        key = (canonical, str(row[HARVEST_SOLVENT_COLUMN]), str(row[HARVEST_SALT_COLUMN]))
-        index[key] = bool(row[HARVEST_SURVIVOR_COLUMN])
-    return index
+        solvent = str(row[HARVEST_SOLVENT_COLUMN])
+        survivor = _as_bool(row[HARVEST_SURVIVOR_COLUMN])
+        monomer_solvent_index.setdefault((canonical, solvent), []).append(survivor)
+        anion = salt_anions.get(str(row[HARVEST_SALT_COLUMN]))
+        if anion is not None:
+            anion_index.setdefault((canonical, solvent, anion), []).append(survivor)
+    return anion_index, monomer_solvent_index
 
 
 def compute_feasibility_metric(
@@ -201,10 +241,14 @@ def compute_feasibility_metric(
 ) -> FeasibilityResult:
     """Score the screen's survivor predictions against the binary feasibility labels (DIAGNOSTIC).
 
-    Predicted-YES := triad is a Tier-1 survivor (``passes_all_tier1_filters``). Only labels whose
-    (canonical monomer SMILES, solvent, electrolyte) match a harvest triad AND are in the screen's
-    baseline regime are scored; out-of-scope media are counted and reported, never silently dropped.
-    Returns balanced accuracy + the 2x2 confusion matrix — never a single raw-accuracy pass/fail.
+    Predicted-YES := triad is a Tier-1 survivor (``passes_all_tier1_filters``). Matching is by the
+    dopant ANION, not the salt name: (a) SPECIFIED-electrolyte labels match on (monomer canonical
+    SMILES, solvent, anion); (b) UNSPECIFIED/generic-electrolyte labels match on (monomer, solvent)
+    with predicted-YES iff ANY surviving triad exists for that pair, predicted-NO if the pair is in
+    the harvest but nothing survives, and out-of-scope if the pair is absent from the harvest.
+    Out-of-scope media (BFEE / aqueous-acid / Ag-pseudo-reference) are counted and reported, never
+    silently dropped. Returns balanced accuracy + the 2x2 confusion matrix — never a single
+    raw-accuracy pass/fail.
     """
 
     labels = load_polymerizability_labels(labels_path) if labels is None else labels
@@ -234,28 +278,46 @@ def compute_feasibility_metric(
             return base
         harvest = pd.read_csv(harvest_path, keep_default_na=False, low_memory=False)
 
-    survivor_index = _harvest_survivor_index(harvest)
+    salt_anions = _load_salt_anions()
+    anion_index, monomer_solvent_index = _build_harvest_indices(harvest, salt_anions)
 
+    # Phase 1: partition by MEDIUM scope (BFEE / aqueous-acid / Ag-pseudo-reference).
     out_of_scope_breakdown: dict[str, int] = {}
-    in_scope_rows: list[pd.Series] = []
+    scoreable_rows: list[pd.Series] = []
     for _, row in labels.iterrows():
         reason = _out_of_scope_reason(row)
         if reason is not None:
             out_of_scope_breakdown[reason] = out_of_scope_breakdown.get(reason, 0) + 1
         else:
-            in_scope_rows.append(row)
+            scoreable_rows.append(row)
 
-    base.n_out_of_scope = sum(out_of_scope_breakdown.values())
-    base.out_of_scope_breakdown = out_of_scope_breakdown
-    base.n_in_scope = len(in_scope_rows)
-
+    # Phase 2: match each medium-in-scope label by anion (specified) or monomer+solvent (generic).
+    not_in_library_reason = "monomer+solvent not in screen library (unspecified electrolyte)"
     matched_detail: list[dict[str, object]] = []
     tp = fn = tn = fp = 0
-    for row in in_scope_rows:
-        key = _normalize_triad(row)
-        if key is None or key not in survivor_index:
-            continue
-        predicted_yes = survivor_index[key]
+    for row in scoreable_rows:
+        canonical = _canonical(row["monomer_smiles"])
+        solvent = SOLVENT_ALIASES.get(str(row["solvent"]).strip())
+        if canonical is None or solvent is None:
+            continue  # unmatched: blank SMILES or non-library / mixed solvent (cannot locate)
+        anion = _label_anion(row["electrolyte"], salt_anions)
+        if anion is not None:
+            # (a) SPECIFIED electrolyte: match on the dopant anion.
+            survivors = anion_index.get((canonical, solvent, anion))
+            if survivors is None:
+                continue  # this anion is not screened for that monomer+solvent -> unmatched
+            predicted_yes = any(survivors)
+            match_basis = "specified-anion"
+        else:
+            # (b) UNSPECIFIED/generic electrolyte: match on monomer+solvent.
+            survivors = monomer_solvent_index.get((canonical, solvent))
+            if survivors is None:
+                out_of_scope_breakdown[not_in_library_reason] = (
+                    out_of_scope_breakdown.get(not_in_library_reason, 0) + 1
+                )
+                continue
+            predicted_yes = any(survivors)
+            match_basis = "monomer+solvent"
         outcome_yes = str(row["outcome"]) == "YES"
         if outcome_yes and predicted_yes:
             tp += 1
@@ -268,11 +330,16 @@ def compute_feasibility_metric(
         matched_detail.append(
             {
                 "monomer_name": row["monomer_name"],
-                "triad": key,
+                "triad": (canonical, solvent, anion if anion is not None else "ANY"),
+                "match_basis": match_basis,
                 "outcome": "YES" if outcome_yes else "NO",
                 "predicted": "YES" if predicted_yes else "NO",
             }
         )
+
+    base.n_out_of_scope = sum(out_of_scope_breakdown.values())
+    base.out_of_scope_breakdown = out_of_scope_breakdown
+    base.n_in_scope = n_labels - base.n_out_of_scope
 
     n_matched = len(matched_detail)
     base.n_matched = n_matched
