@@ -14,3 +14,24 @@ carbazole,carbazole,c1ccc2c(c1)[nH]c3ccccc23,parent carbazole
 "fluorene 9,9-dioctyl",fluorene,CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,"9,9-dioctylfluorene seed"
 CPDT,fused donor,C1c2ccsc2-c2sccc21,cyclopentadithiophene seed scaffold
 benzothiadiazole-thiophene D-A,donor-acceptor,c1cc(sc1)c2ccc3nsnc3c2,thiophene-benzothiadiazole donor-acceptor unit
+3-methylthiophene,alkylthiophene,Cc1ccsc1,"3-methylthiophene; 2,5-alpha coupling (both alpha C-H free)"
+3-fluorothiophene,halothiophene,Fc1ccsc1,"3-fluorothiophene; 2,5-alpha coupling (both alpha C-H free)"
+"3,4-difluorothiophene",halothiophene,Fc1cscc1F,"3,4-difluorothiophene; 2,5-alpha coupling (both beta-F, both alpha C-H free)"
+3-methoxythiophene,alkoxythiophene,COc1ccsc1,"3-methoxythiophene; 2,5-alpha coupling (both alpha C-H free)"
+terthiophene,oligothiophene,c1ccc(-c2ccc(-c3cccs3)s2)s1,"2,2':5',2''-terthiophene; 5,5''-outer-alpha coupling"
+N-methylpyrrole,N-substituted pyrrole,Cn1cccc1,"N-methylpyrrole; 2,5-alpha coupling (both alpha C-H free)"
+N-octylpyrrole,N-substituted pyrrole,CCCCCCCCn1cccc1,"N-octylpyrrole; 2,5-alpha coupling (both alpha C-H free)"
+"3,4-dimethylpyrrole",alkylpyrrole,Cc1c[nH]cc1C,"3,4-dimethylpyrrole; 2,5-alpha coupling (both alpha C-H free)"
+3-methylfuran,alkylfuran,Cc1ccoc1,"3-methylfuran; 2,5-alpha coupling (both alpha C-H free)"
+3-hexylfuran,alkylfuran,CCCCCCc1ccoc1,"3-hexylfuran; 2,5-alpha coupling (both alpha C-H free)"
+"3,4-dimethylfuran",alkylfuran,Cc1cocc1C,"concrete representative for directive 2.1 '3,4-disubstituted furan' (FLAGGED rep); 2,5-alpha coupling"
+bifuran,oligofuran,c1ccc(-c2ccco2)o1,"2,2'-bifuran; 5,5'-outer-alpha coupling"
+terfuran,oligofuran,c1ccc(-c2ccc(-c3ccco3)o2)o1,"2,2':5',2''-terfuran; 5,5''-outer-alpha coupling"
+3-hexylselenophene,alkylselenophene,CCCCCCc1cc[se]c1,"concrete representative for directive 2.1 '3-alkylselenophene' (FLAGGED rep); 2,5-alpha coupling"
+o-methoxyaniline,aniline,COc1ccccc1N,o-methoxyaniline (o-anisidine); N-to-para coupling (polyaniline-type) - APPROXIMATE
+o-toluidine,aniline,Cc1ccccc1N,o-toluidine (2-methylaniline); N-to-para coupling (polyaniline-type) - APPROXIMATE
+diphenylamine,arylamine,c1ccc(Nc2ccccc2)cc1,"diphenylamine; 4,4'-para C-C coupling (poly(diphenylamine)) - APPROXIMATE"
+N-vinylcarbazole,carbazole,C=Cn1c2ccccc2c2ccccc21,"N-vinylcarbazole; 3,6-carbazole electrocoupling (pendant vinyl is also polymerizable to PVK)"
+"9,9-dimethylfluorene",fluorene,CC1(C)c2ccccc2-c2ccccc21,"9,9-dimethylfluorene; 2,7-coupling (standard for polyfluorene)"
+"thieno[3,4-b]pyrazine",donor-acceptor,c1cnc2cscc2n1,"thieno[3,4-b]pyrazine acceptor; thiophene 2,5-alpha coupling - D-A linkage APPROXIMATE"
+"dithieno[3,2-b:2',3'-d]pyrrole",fused donor,C1=CC2=C(S1)C3=C(N2)C=CS3,"4H-dithieno[3,2-b:2',3'-d]pyrrole (DTP); 2,6-outer-thiophene-alpha coupling - fused-ring APPROXIMATE"

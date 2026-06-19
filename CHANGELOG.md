@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-06-18 (later 6) — scale chemical-space library toward directive §2
+Purely additive growth of the chemical-space library toward the directive's §2 named lists. The
+15/11/10 validated seed rows are byte-identical; scoring weights, the composite formula, the pinned
+`configs/tier1.yaml` calibration, and `redox.py` are untouched. Mock-first; no live binaries.
+
+- **Monomers `data/monomers.csv` 15 → 36 (+21).** Every new SMILES is RDKit-parsed + molecular-
+  formula-verified and every new monomer carries a verified coupling site with a matching
+  `data/polymerization.csv` row that assembles into n=2 and n=6 oligomers. Auto-derived α coupling
+  (`detect_alpha_carbons`, exactly 2 sites) for the 5-membered heteroaromatics: 3-methyl/3-fluoro/
+  3,4-difluoro/3-methoxythiophene, terthiophene, N-methyl/N-octyl/3,4-dimethylpyrrole, 3-methyl/
+  3-hexyl/3,4-dimethylfuran, bifuran, terfuran, 3-hexylselenophene. Explicit building blocks for
+  o-anisidine, o-toluidine, diphenylamine (4,4'), N-vinylcarbazole (3,6), 9,9-dimethylfluorene
+  (2,7), thieno[3,4-b]pyrazine, and dithieno[3,2-b:2',3'-d]pyrrole (2,6). D-A and fused-ring (and
+  the aniline-family / diphenylamine) couplings are flagged `approximate=True`.
+- **Solvents `data/solvents.csv` 11 → 13 (+2):** nitrobenzene, benzonitrile (directive §2.2). Their
+  ESW is a literature-PROVISIONAL fallback only — the computed adiabatic anodic limit is primary —
+  and is flagged as such in the row notes pending cross-check vs directive table 2.2. Each uses a
+  documented ALPB proxy keyword (nitromethane / acetonitrile).
+- **Salts `data/electrolytes.csv` 10 → 15 (+5):** TEAPF6, LiBF4, KCl, CSA (camphorsulfonate), HClO4,
+  each with verified cation + anion SMILES and a salt class.
+- **`data/needs_review.md` (new):** species named in §2 whose SMILES or coupling site could not be
+  assigned with confidence are parked here with a one-line reason rather than guessed into the live
+  CSVs — DPP, isoindigo, thiadiazoloquinoxaline, indacenodithiophene, o-aminophenol,
+  3,6-dimethylcarbazole, the acenaphtho-pyrrole hybrid (monomers); the ionic liquids, choline-Cl/urea
+  DES, and BFEE (not simple molecular solvents); NaPSS and NaDBSA (polymeric/surfactant anions).
+- **Tests:** `test_chemspace.py` counts updated to 36/13/15 with subset assertions that the validated
+  seed rows stay present + byte-identical, plus new directive-§2.2 solvent and §2.3 salt presence
+  tests; `test_smoke.py` derives the triad count from the loaders (now 7,020) with a `>= 15*11*10`
+  floor guard. The existing building-block-artifact test now covers all 36 monomers' assembly
+  (zero ASSEMBLY_ERROR). Full suite green (144 passed, 4 skipped); `ruff` clean.
+
 ## 2026-06-18 (later 5) — literature-grounded refinements (Eox benchmark; band-gap route)
 Small refinement pass grounded in two literature reviews added under `docs/research/`
 (`eox_benchmark_and_reference_conversion.md`, `bandgap_route_oligomer_stda_vs_ml.md`). All
