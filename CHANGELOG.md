@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-19 (later 3) — directive §4.2 Tier-2 refined filter (−0.5 V) + composite re-rank
+`src/eps/workflow/tier2.py` gains `run_tier2_refined_screen` + `eps tier2-screen`: take the Tier-1
+ranked survivors and apply the TIGHTER constraint ① — the monomer adiabatic IP must sit ≥ 0.5 V
+below the solvent anodic limit (vs the Tier-1 0.3 V gate) — while KEEPING the Tier-1 anion-stability
+and solubility constraints, then re-rank the refined survivors with the SAME §5 composite (reusing
+`scoring.yaml`; weights/formula unchanged, min-max recomputed over the refined set). Mock-first and
+testable now: when no Tier-2 DFT results CSV is supplied it falls back to the calibrated Tier-1 Eox
+and flags `tier2_dft_pending=true`; when a DFT CSV with a per-monomer Eox column
+(`tier2_monomer_Eox_V_vs_AgAgCl` / `dft_monomer_Eox_V_vs_AgAgCl`, V vs Ag/AgCl) is supplied it uses
+those values. Output `outputs/tier2_refined.csv` with `refined_window_margin_V`,
+`monomer_Eox_used_V_vs_AgAgCl`, `tier2_dft_pending`, the refined-filter flags, and the recomputed
+composite. CLI `eps tier2-screen --survivors … [--dft-results …] [--margin 0.5]` (+ provenance
+sidecar). Tests `tests/test_tier2_refined.py`. Suite green; ruff clean. Pinned tier1.yaml
+calibration / scoring.yaml weights / composite formula / redox.py all untouched.
+
 ## 2026-06-19 (later 2) — directive §4.1 MMFF94 conformer search (config-toggleable; CHANGES geometries)
 `src/eps/structures/geometry.py` gains the directive's §4.1 conformer search: when enabled, embed
 `n_conformers` ETKDGv3 conformers, MMFF94-optimize each, and hand the lowest-energy one to xTB.
