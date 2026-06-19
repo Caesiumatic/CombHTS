@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-06-19 (later 18) — ingest research partD (eox anchor / ref scale / accuracy / clean data)
+Synced `docs/research/eox_anchor_refscale_accuracy_partD.md` and ingested its findings.
+- **THINK decisions (g16-independent, physical/literature grounds)**: T1 anchor TYPE decided —
+  calibrate against PEAK (Epa), screen on ONSET, keep peak/onset as separate label columns and never
+  co-fit (only strict-vs-relaxed remains, gated on live DFT LOO-CV); T2 Ag/AgCl master scale with
+  conversion constants pinned from Pavlishchuk & Addison 2000 (DOI 10.1016/S0020-1693(99)00407-7):
+  SCE→Ag/AgCl +0.045 V, Fc/Fc⁺→Ag/AgCl +0.445 V (MeCN), SHE→Ag/AgCl −0.197 V, ~0.05–0.15 V junction
+  floor, two scales need two intercepts; T3 honest MAE band 0.20–0.35 V with a hard 0.15 V floor,
+  reported separately for peak/onset subsets.
+- **Config comments only (no numeric pin change)**: `configs/calibration_profiles.yaml` header now
+  encodes the peak=calibration / onset=screening split; `configs/tier1.yaml` `monomer_eox.notes`
+  gained a one-line anchor-TYPE pointer. slope 0.725837 / intercept -3.145372 / source /
+  default_screening_profile byte-identical.
+- **Benchmark ingestion** of the Part-D table (28 rows): 5 skipped as duplicates of existing
+  benchmark rows; **2 rows added to `data/benchmark.csv` (Bucket A)** — aniline 0.96 V peak (MeCN,
+  native Ag/AgCl, tier B) and 3-methylselenophene 1.17 V onset (DCM, native Ag/AgCl, tier B);
+  **4 conversion-staged to `data/benchmark_candidates.csv` (Bucket B)** with the T2 SCE +0.045 V
+  conversion (aniline E1/2, diphenylamine peak, 3-ethylcarbazole peak, N-vinylcarbazole onset),
+  `curation_status=conversion_staged`, promotion pending PI sign-off; **17 excluded (Bucket C)** with
+  precise reasons (Ag/Ag⁺-pseudo/patent, review-only/no-locator, missing-SMILES/oligomer, aqueous or
+  mixed media, polymer-film redox, sweep-range, low-confidence secondary compilation).
+- **Profiles BEFORE → AFTER** (mock `eps validate --all-profiles`): `agagcl_peak_strict` 9 → 9
+  (UNCHANGED), `agagcl_peak_relaxed` 20 → 21, `agagcl_onset_relaxed` 14 → 15, `fc_*` 0/skipped. Both
+  Bucket-A rows are Tier B, so the strict (pinned-anchor source) profile did not move and the pinned
+  `configs/tier1.yaml` calibration was deliberately NOT refit. Count tests updated (benchmark 34→36,
+  candidates 19→40, peak_relaxed 20→21, onset_relaxed 14→15); existing rows byte-identical; suite green.
+
 ## 2026-06-19 (later 17) — extend feasibility labels with 7 baseline-medium negatives
 `data/polymerizability_labels.csv` grows from 27 to 34 rows (running tally **18 YES / 16 NO**) with 7
 clean NO labels in the baseline MeCN/TBA-on-Pt regime, transcribed (exact 14 columns,

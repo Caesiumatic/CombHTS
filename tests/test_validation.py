@@ -76,10 +76,10 @@ def test_default_real_benchmark_selection_excludes_aqueous_and_tier_c(tmp_path: 
     selected = result.rows["in_calibration_set"]
     assert not result.rows.loc[result.rows["medium"] == "aqueous", "in_calibration_set"].any()
     assert not result.rows.loc[result.rows["reliability_tier"] == "C", "in_calibration_set"].any()
-    assert int(selected.sum()) == 34
-    assert result.raw_benchmark_rows == 34
-    assert result.calibration_eligible_rows == 34
-    assert result.n_calibration_points == 34
+    assert int(selected.sum()) == 36
+    assert result.raw_benchmark_rows == 36
+    assert result.calibration_eligible_rows == 36
+    assert result.n_calibration_points == 36
     assert "calibration_exclusion_reason" in result.rows.columns
 
 
@@ -87,8 +87,8 @@ def test_strict_benchmark_v1_data_shape_and_identity_conversion() -> None:
     benchmark = pd.read_csv(Path("data/benchmark.csv"), keep_default_na=False)
     candidates = pd.read_csv(Path("data/benchmark_candidates.csv"), keep_default_na=False)
 
-    assert len(benchmark) == 34
-    assert len(candidates) == 19
+    assert len(benchmark) == 36
+    assert len(candidates) == 40
     assert benchmark["calibration_eligible"].map(lambda value: str(value).lower() == "true").all()
     assert (benchmark["reference_frame"] == "agagcl").all()
     assert pd.to_numeric(benchmark["exp_Eox_V_vs_AgAgCl"], errors="coerce").notna().all()
@@ -119,8 +119,8 @@ def test_strict_benchmark_v1_collapses_by_smiles_solvent_and_label(tmp_path: Pat
     )
     grouped = result.rows.groupby(["canonical_smiles", "solvent_name", "label_type"], dropna=False).size()
 
-    assert len(grouped) == 34
-    assert result.n_calibration_points == 34
+    assert len(grouped) == 36
+    assert result.n_calibration_points == 36
     thiophene_acn = result.rows[
         (result.rows["monomer_smiles"] == "c1ccsc1")
         & (result.rows["solvent_name"] == "acetonitrile")
@@ -173,8 +173,8 @@ def test_peak_and_onset_profiles_use_disjoint_groups_and_different_fits(tmp_path
     assert peak_groups
     assert onset_groups
     assert peak_groups.isdisjoint(onset_groups)
-    assert peak.n_calibration_points == 20
-    assert onset.n_calibration_points == 14
+    assert peak.n_calibration_points == 21
+    assert onset.n_calibration_points == 15
     assert (
         peak.calibration.slope,
         peak.calibration.intercept,
@@ -311,7 +311,7 @@ def test_benchmark_candidates_are_not_used_for_default_calibration(tmp_path: Pat
         report_path=tmp_path / "default_no_candidates_report.csv",
     )
 
-    assert result.raw_benchmark_rows == 34
+    assert result.raw_benchmark_rows == 36
     assert "curation_status" not in result.rows.columns
 
 
