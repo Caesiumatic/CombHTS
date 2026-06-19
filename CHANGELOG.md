@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-19 (later 5) — directive §7 solvent-ESW MAE made computable (benchmark schema + validate wiring)
+New `data/solvent_benchmark.csv` (header-only: solvent, smiles, exp_anodic_V_vs_AgAgCl,
+exp_cathodic_V_vs_AgAgCl, reference, electrolyte, electrode, source, tier) + new
+`src/eps/validation/solvent_benchmark.py` (`load_solvent_benchmark`, `compute_solvent_esw_mae`).
+The §7 solvent-ESW MAE = mean |computed anodic limit − measured anodic| (and the cathodic analog)
+over the solvents present in BOTH the benchmark and the library, comparing the RAW computed
+adiabatic ΔSCF limits (`solvent_anodic_limit_computed_V` / `_cathodic_…`) to measurement. With ZERO
+rows (the seeded state) it short-circuits with NO engine calls and stays "not computable yet" (never
+fabricated); it becomes a real number the moment rows are curated in. Wired into `eps validate`
+(prints the §7 line next to the monomer-Eox MAE) and the validation memo §4 (renders the real MAE
+when computable, else the not-computable text — so the existing two-gaps invariant stays green with
+the header-only file). Tests `tests/test_solvent_benchmark.py`. Suite green; ruff clean. No pinned
+config / scoring / redox / library-CSV change.
+
 ## 2026-06-19 (later 4) — directive §4.3 Tier-3 scaffold (OPTIONAL, not validated)
 New `src/eps/workflow/tier3.py` + `configs/tier3.yaml` + `eps tier3`. Method (a) — a RANGE-SEPARATED
 hybrid DFT (CAM-B3LYP / 6-311+G(d,p) / SMD(acetonitrile) / opt+freq) — is a REAL config option on
