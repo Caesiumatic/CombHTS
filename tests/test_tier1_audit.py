@@ -179,6 +179,10 @@ def test_all_triads_carries_scoring_columns_matching_ranked(tmp_path: Path) -> N
 
 def test_eps_analyze_on_all_csv_emits_pareto_and_shortlist(tmp_path: Path) -> None:
     pytest.importorskip("matplotlib")
+    # The chemical-space map needs scikit-learn; without it run_analyze emits a "SKIPPED" note, so
+    # this test would hard-fail at the no-"SKIPPED" assertion below. Skip cleanly when sklearn is
+    # absent (the assertion is NOT weakened when it IS present).
+    pytest.importorskip("sklearn")
     all_path = tmp_path / "tier1_all.csv"
     run_tier1(
         engine=MockEngine(),
