@@ -482,10 +482,19 @@ def parse_frontier_orbital_eV(stdout: str, which: str) -> float:
 def parse_atomic_spin_populations(stdout: str) -> list[float]:
     """Parse per-atom Mulliken spin populations from xTB stdout (best-effort).
 
-    Open-shell xTB prints a "Mulliken/CM5 charges" style block that, for unrestricted runs,
-    includes a spin-population column. This scans for a spin-population section and collects
-    the trailing numeric column per atom row. Returns ``[]`` when no such block is present
-    (e.g. a closed-shell single point), so the caller can degrade gracefully.
+    Scans for a spin-population section (a header containing "spin" plus "population"/"density")
+    and collects the trailing numeric column per atom row. Returns ``[]`` when no such block is
+    present, so the caller can degrade gracefully.
+
+    VERIFIED LIMITATION (xtb 6.4.1, captured real open-shell radical-cation single point — see
+    ``tests/fixtures/xtb_radical_cation_stdout.txt``): at the production verbosity used by
+    ``XTBEngine._run_xtb`` (no ``--verbose``/raised print level), xtb 6.4.1 emits **no per-atom
+    spin-population block** — the only "spin" token is the scalar setup line ``spin : 0.5``, and
+    ``xtbout.json`` carries only ``partial charges`` (no atomic spin density). This parser therefore
+    returns ``[]`` for the real production output, so ``_spin_density`` yields NaN and the screen's
+    ``_safe_calculate`` marks the descriptor failed (screening-grade, acceptable). The regex is kept
+    correct for the case where a higher-verbosity run does print such a block; see STATUS open debt
+    for the always-NaN ``spin_density`` finding.
     """
 
     lines = stdout.splitlines()
