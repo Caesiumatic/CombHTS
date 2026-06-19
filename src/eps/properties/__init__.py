@@ -21,6 +21,11 @@ from eps.properties.oligomer_series import (
     extrapolate_infinite_chain,
     extrapolate_infinite_chain_poly2,
 )
+from eps.properties.optical_convergence import (
+    DEFAULT_CONVERGENCE_LENGTHS,
+    DEFAULT_CONVERGENCE_THRESHOLD_EV,
+    compute_optical_gap_convergence,
+)
 from eps.properties.redox import (
     ABS_SHE_V,
     AGAGCL_SHIFT_V,
@@ -38,8 +43,11 @@ from eps.properties.secondary_descriptors import (
 __all__ = [
     "ABS_SHE_V",
     "AGAGCL_SHIFT_V",
+    "DEFAULT_CONVERGENCE_LENGTHS",
+    "DEFAULT_CONVERGENCE_THRESHOLD_EV",
     "DEFAULT_EOX_OLIGOMER_LENGTHS",
     "anion_oxidation_potential",
+    "compute_optical_gap_convergence",
     "anion_vdw_volume_descriptors",
     "cation_reduction_descriptors",
     "ionpair_descriptors",

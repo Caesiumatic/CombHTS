@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-19 (later) — directive §4.2 oligomer band-gap convergence check (additive, reported-only)
+New `src/eps/properties/optical_convergence.py`: the optical gap (sTDA-xTB / HOMO–LUMO proxy) at
+oligomer length n=1..6 per monomer, plus the last-step convergence delta and a converged flag —
+verifying the directive §4.2 expectation (convergence at n≈4–6 D–A / n≈6 homopolymer). PURELY
+ADDITIVE / reported-only (survivors 664→664, composite max-abs-diff = 0.0 enabled vs disabled).
+Reuses the existing oligomer assembly + side-chain truncation + optical-gap calc; the n=6 gap shares
+the main `optical_gap_eV` cache key (not recomputed). New columns `optical_gap_n{1..6}_eV`,
+`optical_gap_convergence_delta_eV` = |gap(n_max) − gap(n_max−1)|, `optical_gap_converged` (delta ≤
+threshold), `optical_gap_convergence_threshold_eV`, plus status/error. Per-monomer, cached,
+failure-tolerant (missing spec / one bad length → NaN, never aborts). Config knob
+`bandgap_convergence` (enabled/lengths/threshold_eV; default on, 1..6, 0.1 eV) in `tier1.yaml`
+(calibration block untouched). Tests `tests/test_optical_convergence.py`. Suite green (157 passed,
+4 skipped); ruff clean. Pinned tier1.yaml calibration / scoring.yaml / redox.py untouched.
+
 ## 2026-06-19 — directive §3 secondary descriptors (additive, reported-only)
 New `src/eps/properties/secondary_descriptors.py`: per-species, cached, failure-tolerant,
 screening-grade descriptors joined into the Tier-1 harvest. PURELY ADDITIVE — none enters a hard

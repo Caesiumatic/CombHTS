@@ -36,6 +36,11 @@ from eps.properties.oligomer_series import (
     DEFAULT_EOX_OLIGOMER_LENGTHS,
     compute_oligomer_eox_series,
 )
+from eps.properties.optical_convergence import (
+    DEFAULT_CONVERGENCE_LENGTHS,
+    DEFAULT_CONVERGENCE_THRESHOLD_EV,
+    compute_optical_gap_convergence,
+)
 from eps.properties.secondary_descriptors import (
     anion_vdw_volume_descriptors,
     cation_reduction_descriptors,
@@ -99,6 +104,7 @@ def run_tier1(
     dimer_n = int(oligomer_config.get("dimer_n", DIMER_N))
     eox_oligomer_lengths = _eox_oligomer_lengths(oligomer_config)
     secondary_on = bool(tier1_config.get("secondary_descriptors", {}).get("enabled", False))
+    bandgap_convergence = tier1_config.get("bandgap_convergence", {})
     polymerization_specs = load_polymerization_specs()
     monomer_table = compute_monomer_table(
         monomers, engine, cache, method=method,
@@ -106,6 +112,7 @@ def run_tier1(
         eox_oligomer_lengths=eox_oligomer_lengths,
         calibration_config=tier1_config.get("calibration", {}),
         secondary_descriptors=secondary_on,
+        bandgap_convergence=bandgap_convergence,
     )
     monomer_solvent_table = compute_monomer_solvent_table(
         monomers,
@@ -214,6 +221,7 @@ def compute_monomer_table(
     eox_oligomer_lengths: tuple[int, ...] = DEFAULT_EOX_OLIGOMER_LENGTHS,
     calibration_config: dict | None = None,
     secondary_descriptors: bool = False,
+    bandgap_convergence: dict | None = None,
 ) -> pd.DataFrame:
     """Compute monomer-only properties once per monomer.
 
@@ -283,8 +291,31 @@ def compute_monomer_table(
         # vertical IP / reorganization). NOT a filter / score input.
         if secondary_descriptors:
             row.update(monomer_secondary_descriptors(monomer, engine, cache, method=method))
+        # Additive, reported-only §4.2 oligomer band-gap convergence (optical gap at n=1..6).
+        # NOT a filter / score input.
+        if bandgap_convergence and bool(bandgap_convergence.get("enabled", False)):
+            row.update(
+                compute_optical_gap_convergence(
+                    monomer, spec, engine, cache, method=method,
+                    lengths=_convergence_lengths(bandgap_convergence),
+                    threshold_eV=float(
+                        bandgap_convergence.get("threshold_eV", DEFAULT_CONVERGENCE_THRESHOLD_EV)
+                    ),
+                )
+            )
         rows.append(row)
     return pd.DataFrame(rows)
+
+
+def _convergence_lengths(config: dict) -> tuple[int, ...]:
+    """Read the §4.2 band-gap convergence lengths from config (default 1..6)."""
+
+    raw = config.get("lengths", list(DEFAULT_CONVERGENCE_LENGTHS))
+    try:
+        lengths = tuple(int(n) for n in raw if int(n) >= 1)
+    except (TypeError, ValueError):
+        return DEFAULT_CONVERGENCE_LENGTHS
+    return lengths or DEFAULT_CONVERGENCE_LENGTHS
 
 
 def compute_monomer_solvent_table(
