@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-06-19 (later 8) — add 2 Tier-B monomer Eox benchmark rows (DTP + 3-methylthiophene)
+Two rows appended to `data/benchmark.csv` (purely additive; existing 32 rows byte-identical; full
+29-column ontology filled) from `docs/research/new_monomer_eox_benchmark_extraction.md`:
+- **DTP** (dithieno[3,2-b:2',3'-d]pyrrole), ~0.52 V vs Ag/AgCl native (first CV anodic peak, neutral
+  monomer, MeCN, 0.1 M TEAP, ITO, repetitive CV). Source: Berlin/Pagani/Zotti/Schiavon 1992 via
+  Rasmussen & Evenson, Prog. Polym. Sci. 38 (2013) 1773; cross-ref Eur. Polym. J. 2023 DTP review
+  (PII S0014305723008832). `label_type=monomer_oxidation_peak`, `reference_frame=agagcl`,
+  `reliability_tier=B` (ITO; value "about 0.52 V"). RDKit-canonical DTP SMILES.
+- **3-methylthiophene**, native 1.55 V vs SCE → +0.044 → **1.594 V vs Ag/AgCl** (onset of monomer
+  oxidation, neutral monomer, MeCN, TBA salt conc. not stated, electrode/scan rate not fully stated).
+  Source: Waltman, Diaz & Bargon, J. Phys. Chem. 88 (1984) 4343. `label_type=monomer_oxidation_onset`,
+  `conversion_method="SCE->Ag/AgCl +0.044 V"`, `reliability_tier=B`.
+
+No DOI fabricated: both rows leave `source_doi` blank (no verified DOI string in the research doc) and
+carry `source_doi_or_ref` + `source_locator` instead.
+
+GUARDRAIL (verified): both rows are Tier B, so the STRICT native-Ag/AgCl peak profile
+`agagcl_peak_strict` stays **n=9 with an identical fit** — the pinned `configs/tier1.yaml` calibration
+(slope 0.725837 / intercept -3.145372) is byte-identical and untouched. Profile point counts (mock
+`eps validate --all-profiles`): peak_relaxed 19→20, onset_relaxed 13→14, peak_strict 9→9. Would-be-refit
+shifts (MOCK engine only; this commit enriches the benchmark for a future human-reviewed re-fit and
+does NOT re-pin anything): peak_relaxed slope 0.200852→0.287828 / intercept 0.982449→0.800761;
+onset_relaxed slope 0.286219→0.262695 / intercept 0.652591→0.730721.
+
+Terthiophene (Camarada 2011, +0.880 V vs Ag/AgCl) was already present (MeCN + DCM rows,
+`monomer_oxidation_onset`) and left untouched. Count-assertion tests updated 32→34 / 19→20 / 13→14, and
+the "all conversions identity" check generalized to the native+conversion==exp consistency invariant
+(now covers the +0.044 V SCE row). pytest green; ruff clean.
+
 ## 2026-06-19 (later 7) — seed data/solvent_benchmark.csv (unblocks directive §7 solvent-ESW MAE)
 Added 6 measured Ag/AgCl ESW rows curated from `docs/research/esw_electropolymerization_solvent_anchors.md`
 (Ue/Gong GC dataset) and `docs/research/solvent_windows_and_solvation_reference.md` (Pt values):
