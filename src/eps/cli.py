@@ -25,6 +25,7 @@ from eps.validation.sanity import (
     DEFAULT_SOLVENT,
     run_physical_sanity_checks,
 )
+from eps.validation.solvent_benchmark import compute_solvent_esw_mae
 from eps.workflow.dft_calibration import (
     DEFAULT_CACHE_PATH as DEFAULT_DFTCAL_CACHE_PATH,
 )
@@ -411,6 +412,15 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(f"MAE after by medium: {_mae_after_by_medium(result.rows)}")
         print(f"MAE after by chemical family: {_format_family_mae(result.family_mae)}")
+        solvent_esw = compute_solvent_esw_mae(engine=engine, cache_path=args.cache, method=method)
+        if solvent_esw.computable:
+            print(
+                f"Solvent ESW MAE (§7, n={solvent_esw.n_matched}): anodic="
+                f"{solvent_esw.anodic_mae_V:.3f} V, cathodic={solvent_esw.cathodic_mae_V:.3f} V "
+                "(raw computed vs measured; screening-grade)"
+            )
+        else:
+            print("Solvent ESW MAE (§7): not computable yet (data/solvent_benchmark.csv has no rows)")
         print("Worst-predicted calibration monomers (calibrated vs experimental):")
         print(_format_worst_predicted(result.worst_predicted))
         print(

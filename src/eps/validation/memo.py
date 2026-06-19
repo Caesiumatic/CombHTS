@@ -33,6 +33,10 @@ from eps.validation.sanity import (
     SanityResult,
     run_physical_sanity_checks,
 )
+from eps.validation.solvent_benchmark import (
+    SolventEswMaeResult,
+    compute_solvent_esw_mae,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_MEMO_DIR = PROJECT_ROOT / "docs"
@@ -82,6 +86,9 @@ def write_validation_memo(
     detail = results.get(detail_profile) if detail_profile else None
 
     sanity = _maybe_run_sanity(harvest_path)
+    # §7 solvent-ESW MAE: a real number once data/solvent_benchmark.csv has rows; header-only -> not
+    # computable (short-circuits with no engine calls).
+    solvent_esw = compute_solvent_esw_mae(engine=engine, cache_path=cache_path, method=method)
 
     is_mock = "mock" in method.lower() or isinstance(engine, MockEngine)
     memo_text = _render_memo(
@@ -95,6 +102,7 @@ def write_validation_memo(
         detail=detail,
         sanity=sanity,
         harvest_path=Path(harvest_path),
+        solvent_esw=solvent_esw,
     )
 
     if is_mock:
@@ -135,6 +143,7 @@ def _render_memo(
     detail: BenchmarkValidationResult | None,
     sanity: SanityResult | None,
     harvest_path: Path,
+    solvent_esw: SolventEswMaeResult | None = None,
 ) -> str:
     lines: list[str] = []
     lines.append(f"# Experimental validation memo — {memo_date:%Y-%m-%d}")
@@ -231,12 +240,21 @@ def _render_memo(
 
     lines.append("## 4. What we CANNOT validate yet")
     lines.append("")
-    lines.append(
-        "- **Solvent ESW MAE (< 0.30 V)** — not computable yet: there is no solvent "
-        "electrochemical-window experimental benchmark in the repo. The computed solvent "
-        "anodic/cathodic limits cannot be scored against measured values until such a "
-        "benchmark is curated. No number is reported here."
-    )
+    if solvent_esw is not None and solvent_esw.computable:
+        lines.append(
+            f"- **Solvent ESW MAE (< 0.30 V)** — NOW COMPUTABLE over "
+            f"{solvent_esw.n_matched} matched solvent(s) in `data/solvent_benchmark.csv`: "
+            f"anodic MAE = {_fmt(solvent_esw.anodic_mae_V)} V, cathodic MAE = "
+            f"{_fmt(solvent_esw.cathodic_mae_V)} V (raw computed adiabatic ΔSCF limits vs measured; "
+            "uncalibrated, screening-grade)."
+        )
+    else:
+        lines.append(
+            "- **Solvent ESW MAE (< 0.30 V)** — not computable yet: there are no solvent "
+            "electrochemical-window benchmark rows in `data/solvent_benchmark.csv` (header-only). "
+            "The computed solvent anodic/cathodic limits cannot be scored against measured values "
+            "until rows are curated. No number is reported here."
+        )
     lines.append(
         "- **Qualitative feasibility yes/no accuracy (> 85%)** — not computable yet: "
         "`data/benchmark.csv` holds continuous Eox values, not binary \"does it polymerize "
