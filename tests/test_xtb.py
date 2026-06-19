@@ -9,6 +9,8 @@ import pytest
 from eps.engines import CalcRequest, SpeciesSpec, XTBEngine
 from eps.engines import xtb as xtb_module
 from eps.engines.xtb import (
+    parse_atomic_spin_populations,
+    parse_frontier_orbital_eV,
     parse_homo_lumo,
     parse_stda_lowest_excitation,
     parse_total_energy,
@@ -40,12 +42,67 @@ def test_parse_homo_lumo_from_xtb_fixture() -> None:
 
 
 def test_parse_xtb_json_fixture() -> None:
+    # Real xtb 6.4.1 `--json` dump captured on the Lop cluster (thiophene radical cation,
+    # --gfn 2 --chrg 1 --uhf 1 single point) — STATUS debt #7 real-dump upgrade.
     text = (FIXTURES / "xtbout.json").read_text(encoding="utf-8")
 
     parsed = parse_xtb_json(text)
 
-    assert parsed["total_energy_Eh"] == pytest.approx(-36.789012345678)
-    assert parsed["homo_lumo_gap_eV"] == pytest.approx(2.4567)
+    assert parsed["total_energy_Eh"] == pytest.approx(-13.30795443)
+    assert parsed["homo_lumo_gap_eV"] == pytest.approx(4.10812582)
+
+
+# --- WS1 secondary-descriptor parsers, validated against REAL captured xtb 6.4.1 output ---
+# Fixture: thiophene radical cation (c1ccsc1, charge +1, doublet), single point with the exact
+# production WS1 invocation `xtb input.xyz --gfn 2 --chrg 1 --uhf 1 --iterations 500 --etemp 400.0
+# --json`, captured on the Lop cluster (compute-1-4.local). Replaces the never-validated synthetic
+# expectations these parsers shipped with.
+
+def test_parse_frontier_orbital_eV_homo_from_real_stdout() -> None:
+    text = (FIXTURES / "xtb_radical_cation_stdout.txt").read_text(encoding="utf-8")
+    # Real tagged line: "13   1.4538   -0.6280103   -17.0890 (HOMO)" — eV is the last numeric field.
+    assert parse_frontier_orbital_eV(text, "homo") == pytest.approx(-17.0890)
+
+
+def test_parse_frontier_orbital_eV_lumo_from_real_stdout() -> None:
+    text = (FIXTURES / "xtb_radical_cation_stdout.txt").read_text(encoding="utf-8")
+    # Real tagged line: "14   -0.4770395   -12.9809 (LUMO)".
+    assert parse_frontier_orbital_eV(text, "lumo") == pytest.approx(-12.9809)
+
+
+def test_parse_frontier_orbital_eV_raises_when_tag_absent() -> None:
+    with pytest.raises(ValueError, match="HOMO orbital energy"):
+        parse_frontier_orbital_eV("no orbital block here\n", "homo")
+
+
+def test_parse_atomic_spin_populations_empty_on_real_open_shell_stdout() -> None:
+    """Regression documenting a VERIFIED xtb 6.4.1 limitation: at the production verbosity,
+    an open-shell single point prints NO per-atom spin-population block (only the scalar setup
+    line ``spin : 0.5``). The parser must degrade to ``[]`` (=> _spin_density NaN, descriptor
+    marked failed), NOT raise or return garbage. See STATUS open debt on always-NaN spin_density.
+    """
+
+    text = (FIXTURES / "xtb_radical_cation_stdout.txt").read_text(encoding="utf-8")
+    assert parse_atomic_spin_populations(text) == []
+
+
+def test_parse_atomic_spin_populations_reads_block_when_present() -> None:
+    """When a higher-verbosity run DOES print a spin-population block, the parser collects the
+    trailing numeric column per atom row. Guards the regex/heuristic against silent regressions
+    (this synthetic block is clearly labeled; real 6.4.1 production output omits it — see above).
+    """
+
+    block = (
+        "Mulliken spin populations\n"
+        "  #   Z   atom      spin\n"
+        "  1   6   C       0.512\n"
+        "  2  16   S       0.301\n"
+        "  3   1   H       0.187\n"
+        "\n"
+    )
+    spins = parse_atomic_spin_populations(block)
+    assert spins == [pytest.approx(0.512), pytest.approx(0.301), pytest.approx(0.187)]
+    assert sum(spins) == pytest.approx(1.0, abs=1e-9)
 
 
 def test_parse_stda_lowest_excitation_returns_first_state() -> None:

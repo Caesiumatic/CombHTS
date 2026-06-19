@@ -27,8 +27,13 @@ scheduler can fall back to the user's login shell (csh on this cluster) and misp
 
 ## Usage
 
+> **Lop gotcha:** in an interactive login shell, `qsub`/`qstat` need the scheduler env first —
+> `source /opt/gridengine/default/common/settings.sh` (the qmaster is on port **536**, not the SGE
+> default, so a bare `qstat` otherwise fails with `commlib ... connection refused`).
+
 ```bash
 # From the repo checkout on the cluster ($HOME/CombHTS):
+source /opt/gridengine/default/common/settings.sh  # required once per login shell (port 536)
 qsub scripts/run_tier1.sge        # real GFN2-xTB Tier-1 harvest
 qsub scripts/run_validate.sge     # benchmark validation across calibration profiles
 qsub scripts/run_memo.sge         # dated real-data validation memo
