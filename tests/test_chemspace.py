@@ -6,11 +6,30 @@ from rdkit import Chem
 
 from eps.chemspace import load_electrolytes, load_monomers, load_solvents
 
+# The validated seed library (directive §2 scale-up appends to it; these rows must stay present
+# and byte-identical — see data/needs_review.md for what was deferred). Counts are pinned so an
+# accidental drop is caught; bump them deliberately when the library grows.
+SEED_MONOMER_NAMES = {
+    "thiophene", "EDOT", "ProDOT", "3-hexylthiophene", "bithiophene", "pyrrole", "EDOP",
+    "furan", "selenophene", "EDOS", "aniline", "carbazole", "fluorene 9,9-dioctyl", "CPDT",
+    "benzothiadiazole-thiophene D-A",
+}
+SEED_SALT_NAMES = {
+    "TBAPF6", "TBABF4", "TBAClO4", "TBAOTf", "TBATFSI", "LiClO4", "LiTFSI", "NaClO4",
+    "H2SO4", "pTSA",
+}
+LIBRARY_MONOMER_COUNT = 36
+LIBRARY_SOLVENT_COUNT = 13
+LIBRARY_SALT_COUNT = 15
+
 
 def test_seed_monomers_parse_and_canonicalize() -> None:
     monomers = load_monomers()
 
-    assert len(monomers) == 15
+    assert len(monomers) == LIBRARY_MONOMER_COUNT
+    names = {monomer.name for monomer in monomers}
+    # The 15 validated seed monomers are all still present (rows unchanged).
+    assert SEED_MONOMER_NAMES.issubset(names)
     for monomer in monomers:
         mol = Chem.MolFromSmiles(monomer.smiles, sanitize=True)
         assert mol is not None
@@ -22,7 +41,7 @@ def test_seed_monomers_parse_and_canonicalize() -> None:
 def test_seed_solvents_parse_and_have_valid_windows() -> None:
     solvents = load_solvents()
 
-    assert len(solvents) == 11
+    assert len(solvents) == LIBRARY_SOLVENT_COUNT
     for solvent in solvents:
         mol = Chem.MolFromSmiles(solvent.smiles, sanitize=True)
         assert mol is not None
@@ -57,12 +76,28 @@ def test_seed_solvent_esw_values_are_pinned() -> None:
 
     solvents = {solvent.name: solvent for solvent in load_solvents()}
 
-    assert set(solvents) == set(expected)
+    # The 11 validated seed solvents stay present with byte-identical ESW values (subset, because
+    # the directive §2.2 scale-up appends nitrobenzene/benzonitrile).
+    assert set(expected).issubset(set(solvents))
     for name, (anodic, cathodic) in expected.items():
         solvent = solvents[name]
         assert solvent.esw_anodic_V == anodic
         assert solvent.esw_cathodic_V == cathodic
         assert "stopgap = cathodic + spec ESW width from CombHTS table 2.2" in solvent.notes
+
+
+def test_directive_2_2_solvent_additions_present_and_parse() -> None:
+    solvents = {solvent.name: solvent for solvent in load_solvents()}
+
+    for name in ("nitrobenzene", "benzonitrile"):
+        assert name in solvents
+        solvent = solvents[name]
+        assert Chem.MolFromSmiles(solvent.smiles) is not None
+        assert solvent.esw_anodic_V > solvent.esw_cathodic_V
+        # The added windows are explicitly flagged as a provisional FALLBACK (computed anodic
+        # limit is primary), never sold as measured/directive-table values.
+        assert "provisional" in solvent.notes.lower()
+        assert solvent.xtb_gbsa_name is not None  # uses a documented ALPB proxy keyword
 
 
 def test_solvent_xtb_gbsa_names_are_loaded() -> None:
@@ -108,7 +143,9 @@ def test_solvent_loader_warns_on_implausible_anodic_limit(tmp_path: Path, recwar
 def test_seed_electrolytes_parse_and_canonicalize() -> None:
     electrolytes = load_electrolytes()
 
-    assert len(electrolytes) == 10
+    assert len(electrolytes) == LIBRARY_SALT_COUNT
+    # The 10 validated seed salts are all still present (rows unchanged).
+    assert SEED_SALT_NAMES.issubset({electrolyte.salt for electrolyte in electrolytes})
     for electrolyte in electrolytes:
         cation = Chem.MolFromSmiles(electrolyte.cation_smiles, sanitize=True)
         anion = Chem.MolFromSmiles(electrolyte.anion_smiles, sanitize=True)
@@ -122,3 +159,17 @@ def test_seed_electrolytes_parse_and_canonicalize() -> None:
             Chem.MolFromSmiles(electrolyte.canonical_anion_smiles),
             canonical=True,
         ) == electrolyte.canonical_anion_smiles
+
+
+def test_directive_2_3_salt_additions_present_and_parse() -> None:
+    electrolytes = {electrolyte.salt: electrolyte for electrolyte in load_electrolytes()}
+
+    for salt in ("TEAPF6", "LiBF4", "KCl", "CSA", "HClO4"):
+        assert salt in electrolytes
+        electrolyte = electrolytes[salt]
+        assert Chem.MolFromSmiles(electrolyte.cation_smiles) is not None
+        assert Chem.MolFromSmiles(electrolyte.anion_smiles) is not None
+
+    # Polymeric / surfactant salts the per-ion model cannot handle stayed OUT of the live CSV.
+    assert "NaPSS" not in electrolytes
+    assert "NaDBSA" not in electrolytes
