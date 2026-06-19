@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-06-19 (later 12) — sync research3 binary electropolymerization-feasibility labels
+Synced the vetted binary-feasibility label doc to `docs/research/electropolymerization_feasibility_binary_labels.md` (18 clean YES / 9 clean NO + ambiguous appendix). Verbatim copy; no code/data/config change.
+
 ## 2026-06-19 (later 11) — fix config-blind DFT calibration cache key (THINK T13)
 Correctness fix: the `eps calibrate-dft --engine gaussian` DFT cache key keyed on a STATIC method
 string (`b3lyp-6-31g(d,p)-smd`) with `solvent_name=None`, so the SMD solvent, Freq/thermal toggle,
