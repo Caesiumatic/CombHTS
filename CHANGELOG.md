@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-06-19 (later 11) — fix config-blind DFT calibration cache key (THINK T13)
+Correctness fix: the `eps calibrate-dft --engine gaussian` DFT cache key keyed on a STATIC method
+string (`b3lyp-6-31g(d,p)-smd`) with `solvent_name=None`, so the SMD solvent, Freq/thermal toggle,
+and basis/functional were absent from the key — editing `configs/tier2.yaml` (gas → SMD(acetonitrile),
+`use_freq` false → true) silently reused a stale gas-phase DFT value as the new "solvated" value
+(thiophene's solvated point was a reused 8.51 eV).
+- New `Tier2Config.cache_method_label()` (`functional/basis/phase/freq`) encodes the effective config:
+  `b3lyp/6-31g(d,p)/gas/freq:off` vs `b3lyp/6-31g(d,p)/smd:acetonitrile/freq:on`.
+- `_dft_calibration_engines` (gaussian path) now returns `config.cache_method_label()` as `dft_method`
+  instead of the static `GAUSSIAN_METHOD_LABEL`; that label is the `CalcRequest.method` for the
+  neutral+cation jobs and is recorded in the report/JSON, so the artifacts say what was actually run.
+- Regression test `test_dft_cache_key_encodes_tier2_config_so_smd_freq_forces_recompute`: runs the
+  calibration cache twice (gas config, then SMD+freq config) against a counting stub engine on a shared
+  cache and asserts the two configs produce DIFFERENT cache keys and the second config RECOMPUTES.
+  FAILS on the pre-fix code (both labels identical), PASSES after.
+Calibration math, `configs/tier1.yaml`, and the "g16 absent → RuntimeError / check return code before
+parse, never fabricate" behaviors are unchanged. pytest green; ruff clean.
+
 ## 2026-06-19 (later 10) — add AgClO4 silver reference-electrode salt (directive §2.3)
 Append one row to `data/electrolytes.csv` (purely additive; existing 15 salt rows byte-identical):
 `AgClO4,[Ag+],[O-]Cl(=O)(=O)=O,silver,Ag/AgClO4; reference-electrode use; perchlorate dopant`. RDKit

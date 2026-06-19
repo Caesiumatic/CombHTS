@@ -193,6 +193,64 @@ def test_dft_results_cached_not_recomputed_on_second_call(tmp_path: Path) -> Non
     pd.testing.assert_frame_equal(first.points, second.points)
 
 
+def test_dft_cache_key_encodes_tier2_config_so_smd_freq_forces_recompute(tmp_path: Path) -> None:
+    """THINK T13 regression: editing configs/tier2.yaml must change the DFT cache key.
+
+    The config-derived ``dft_method`` label is what flows into the per-species cache key. With the
+    old config-blind wiring both a gas-phase config and an SMD(acetonitrile)+freq config produced
+    the SAME static label, so the SMD+freq run silently reused the stale gas-phase cached value
+    (no recompute). This asserts the two configs yield DIFFERENT labels AND that the second config
+    recomputes against a shared cache. FAILS on the pre-fix code (identical static label).
+    """
+
+    from eps.cli import _dft_calibration_engines
+
+    gas_cfg = tmp_path / "tier2_gas.yaml"
+    gas_cfg.write_text(
+        "method: B3LYP\nbasis: 6-31G(d,p)\nsmd_solvent: null\nuse_freq: false\n", encoding="utf-8"
+    )
+    smd_cfg = tmp_path / "tier2_smd.yaml"
+    smd_cfg.write_text(
+        "method: B3LYP\nbasis: 6-31G(d,p)\nsmd_solvent: acetonitrile\nuse_freq: true\n",
+        encoding="utf-8",
+    )
+
+    # Production wiring (CLI -> run_dft_calibration): index 3 is the dft_method cache label.
+    dft_method_gas = _dft_calibration_engines("gaussian", gas_cfg)[3]
+    dft_method_smd = _dft_calibration_engines("gaussian", smd_cfg)[3]
+
+    # The config now changes the cache method label (it was a single static constant before).
+    assert dft_method_gas != dft_method_smd
+    assert dft_method_gas == "b3lyp/6-31g(d,p)/gas/freq:off"
+    assert dft_method_smd == "b3lyp/6-31g(d,p)/smd:acetonitrile/freq:on"
+
+    cache_path = tmp_path / "shared.sqlite"
+
+    gas_engine = CountingEngine(MockEngine())
+    run_dft_calibration(
+        xtb_engine=MockEngine(),
+        dft_engine=gas_engine,
+        dft_method=dft_method_gas,
+        cache_path=cache_path,
+        outdir=tmp_path / "out_gas",
+        only="thiophene",
+    )
+    assert gas_engine.calls == 1  # one adiabatic_ip for thiophene under the gas config
+
+    # SAME cache, SMD+freq config: a DIFFERENT key -> the DFT engine MUST be re-invoked
+    # (recompute), never served the stale gas-phase value.
+    smd_engine = CountingEngine(MockEngine())
+    run_dft_calibration(
+        xtb_engine=MockEngine(),
+        dft_engine=smd_engine,
+        dft_method=dft_method_smd,
+        cache_path=cache_path,
+        outdir=tmp_path / "out_smd",
+        only="thiophene",
+    )
+    assert smd_engine.calls == 1  # recomputed under the new config; did NOT reuse the gas cache
+
+
 def test_per_monomer_failure_is_skipped_not_crashed(tmp_path: Path) -> None:
     # thiophene is the first eligible row; make its DFT fail.
     failing = FailingDFTEngine(fail_smiles="c1ccsc1")

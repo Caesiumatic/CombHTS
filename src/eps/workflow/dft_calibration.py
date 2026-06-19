@@ -301,11 +301,15 @@ def _calibration_monomers(
 
 
 def _dft_eox_eV(monomer, dft_engine: Engine, cache: SQLiteCache, *, method: str) -> float:
-    """DFT adiabatic ionization energy (Eox) in eV, cached per species (gas-phase v1).
+    """DFT adiabatic ionization energy (Eox) in eV, cached per species.
 
-    Routed through the SQLite cache keyed by (canonical_smiles, charge=0, method, gas,
-    adiabatic_ip). On a cache hit the engine is NOT called, so the underlying neutral AND
-    cation DFT jobs are both reused (never recomputed).
+    Routed through the SQLite cache keyed by (canonical_smiles, charge=0, method, solvent,
+    adiabatic_ip). For the ``--engine gaussian`` path ``method`` is the config-encoded
+    ``Tier2Config.cache_method_label()`` (functional/basis/SMD-solvent/Freq), so changing
+    ``configs/tier2.yaml`` changes the key and forces a recompute (THINK T13) — the SMD solvent
+    and Freq toggle are carried in ``method`` rather than the ``solvent_name`` slot. On a cache
+    hit the engine is NOT called, so the underlying neutral AND cation DFT jobs are both reused
+    (never recomputed).
     """
 
     req = CalcRequest(
