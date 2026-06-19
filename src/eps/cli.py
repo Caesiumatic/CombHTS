@@ -25,6 +25,7 @@ from eps.validation.sanity import (
     DEFAULT_SOLVENT,
     run_physical_sanity_checks,
 )
+from eps.validation.feasibility import compute_feasibility_metric, format_feasibility_report
 from eps.validation.solvent_benchmark import compute_solvent_esw_mae
 from eps.workflow.dft_calibration import (
     DEFAULT_CACHE_PATH as DEFAULT_DFTCAL_CACHE_PATH,
@@ -148,6 +149,16 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_PROFILE_COMPARISON_PATH,
         help="Calibration profile comparison CSV path.",
+    )
+    validate.add_argument(
+        "--harvest",
+        type=Path,
+        default=None,
+        help=(
+            "Optional Tier-1 all-triads harvest CSV. When supplied, reports the §7 qualitative "
+            "yes/no feasibility DIAGNOSTIC (balanced accuracy + confusion matrix on the matched "
+            "in-scope subset; never a single accuracy figure)."
+        ),
     )
 
     calibrate_dft = subparsers.add_parser(
@@ -425,6 +436,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             print("Solvent ESW MAE (§7): not computable yet (data/solvent_benchmark.csv has no rows)")
+        feasibility = compute_feasibility_metric(harvest_path=args.harvest)
+        print(format_feasibility_report(feasibility))
         print("Worst-predicted calibration monomers (calibrated vs experimental):")
         print(_format_worst_predicted(result.worst_predicted))
         print(
