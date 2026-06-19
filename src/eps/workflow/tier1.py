@@ -50,6 +50,11 @@ from eps.properties.secondary_descriptors import (
 )
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
+from eps.structures.geometry import (
+    ConformerSearchConfig,
+    conformer_method_suffix,
+    conformer_search_active,
+)
 from eps.structures.oligomer import (
     DEFAULT_OLIGOMER_N,
     DIMER_N,
@@ -105,48 +110,55 @@ def run_tier1(
     eox_oligomer_lengths = _eox_oligomer_lengths(oligomer_config)
     secondary_on = bool(tier1_config.get("secondary_descriptors", {}).get("enabled", False))
     bandgap_convergence = tier1_config.get("bandgap_convergence", {})
+    # Directive §4.1 conformer search (config-toggleable; CHANGES geometries, not additive). The
+    # setting is folded into the cache-key method so a single-conformer cache is never reused, and
+    # scoped onto geometry generation via the context manager below (the real xTB path reads it
+    # through smiles_to_xyz; MockEngine ignores geometry, so only the method-suffix matters there).
+    conformer_cfg = _conformer_search_config(tier1_config)
+    method = method + conformer_method_suffix(conformer_cfg)
     polymerization_specs = load_polymerization_specs()
-    monomer_table = compute_monomer_table(
-        monomers, engine, cache, method=method,
-        oligomer_n=oligomer_n, dimer_n=dimer_n, specs=polymerization_specs,
-        eox_oligomer_lengths=eox_oligomer_lengths,
-        calibration_config=tier1_config.get("calibration", {}),
-        secondary_descriptors=secondary_on,
-        bandgap_convergence=bandgap_convergence,
-    )
-    monomer_solvent_table = compute_monomer_solvent_table(
-        monomers,
-        solvents,
-        engine,
-        cache,
-        method=method,
-        calibration_config=tier1_config.get("calibration", {}),
-    )
-    solvent_table = compute_solvent_table(
-        solvents,
-        engine,
-        cache,
-        method=method,
-        calibration_config=tier1_config.get("calibration", {}),
-        secondary_descriptors=secondary_on,
-    )
-    anion_table = compute_anion_solvent_table(
-        electrolytes,
-        solvents,
-        engine,
-        cache,
-        method=method,
-        calibration_config=tier1_config.get("calibration", {}),
-        secondary_descriptors=secondary_on,
-    )
-    cation_table = (
-        compute_cation_solvent_table(electrolytes, solvents, engine, cache, method=method)
-        if secondary_on else None
-    )
-    pair_table = (
-        compute_electrolyte_pair_table(electrolytes, engine, cache, method=method)
-        if secondary_on else None
-    )
+    with conformer_search_active(conformer_cfg):
+        monomer_table = compute_monomer_table(
+            monomers, engine, cache, method=method,
+            oligomer_n=oligomer_n, dimer_n=dimer_n, specs=polymerization_specs,
+            eox_oligomer_lengths=eox_oligomer_lengths,
+            calibration_config=tier1_config.get("calibration", {}),
+            secondary_descriptors=secondary_on,
+            bandgap_convergence=bandgap_convergence,
+        )
+        monomer_solvent_table = compute_monomer_solvent_table(
+            monomers,
+            solvents,
+            engine,
+            cache,
+            method=method,
+            calibration_config=tier1_config.get("calibration", {}),
+        )
+        solvent_table = compute_solvent_table(
+            solvents,
+            engine,
+            cache,
+            method=method,
+            calibration_config=tier1_config.get("calibration", {}),
+            secondary_descriptors=secondary_on,
+        )
+        anion_table = compute_anion_solvent_table(
+            electrolytes,
+            solvents,
+            engine,
+            cache,
+            method=method,
+            calibration_config=tier1_config.get("calibration", {}),
+            secondary_descriptors=secondary_on,
+        )
+        cation_table = (
+            compute_cation_solvent_table(electrolytes, solvents, engine, cache, method=method)
+            if secondary_on else None
+        )
+        pair_table = (
+            compute_electrolyte_pair_table(electrolytes, engine, cache, method=method)
+            if secondary_on else None
+        )
 
     triads = build_triad_table(
         monomer_table=monomer_table,
@@ -699,6 +711,17 @@ def load_tier1_config(path: str | Path = DEFAULT_TIER1_CONFIG) -> dict:
 
     with Path(path).open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
+
+
+def _conformer_search_config(tier1_config: dict) -> ConformerSearchConfig:
+    """Build the §4.1 conformer-search config from tier1.yaml (default single conformer)."""
+
+    section = tier1_config.get("conformer_search", {}) or {}
+    return ConformerSearchConfig(
+        enabled=bool(section.get("enabled", False)),
+        n_conformers=int(section.get("n_conformers", 1)),
+        method=str(section.get("method", "mmff94")),
+    )
 
 
 def _eox_oligomer_lengths(oligomer_config: dict) -> tuple[int, ...]:

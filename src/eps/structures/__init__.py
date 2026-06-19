@@ -1,6 +1,11 @@
 """Structure generation utilities."""
 
-from eps.structures.geometry import smiles_to_xyz
+from eps.structures.geometry import (
+    ConformerSearchConfig,
+    conformer_method_suffix,
+    conformer_search_active,
+    smiles_to_xyz,
+)
 from eps.structures.oligomer import (
     DEFAULT_OLIGOMER_N,
     DIMER_N,
@@ -15,9 +20,12 @@ from eps.structures.oligomer import (
 )
 
 __all__ = [
+    "ConformerSearchConfig",
     "DEFAULT_OLIGOMER_N",
     "DIMER_N",
     "PolymerizationSpec",
+    "conformer_method_suffix",
+    "conformer_search_active",
     "alpha_building_block_smiles",
     "assemble_oligomer",
     "detect_alpha_carbons",
