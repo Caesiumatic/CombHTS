@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-06-19 (later 16) — test_tier1_audit: skip the analyze test when sklearn is absent
+`tests/test_tier1_audit.py::test_eps_analyze_on_all_csv_emits_pareto_and_shortlist` asserts no
+"SKIPPED" analysis note, which hard-fails when scikit-learn (the chemical-space-map dep) is missing.
+Added `pytest.importorskip("sklearn")` next to the existing `importorskip("matplotlib")` so the test
+SKIPS instead of failing when the optional dep is absent; the assertion is NOT weakened when sklearn
+IS present (verified: passes with sklearn, skips cleanly without it). Test-only change.
+
 ## 2026-06-19 (later 15) — §7 feasibility: anion-based label↔harvest matching
 Feasibility is governed by the dopant ANION, not the salt name, so `src/eps/validation/feasibility.py`
 now matches by anion. (a) SPECIFIED-electrolyte labels extract the anion (label salt → library salt
