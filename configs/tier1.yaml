@@ -11,6 +11,13 @@ oligomer:
   # enter any hard filter or the composite score). n=1 (the monomer anchor) is added implicitly
   # for the classic 1/n infinite-chain extrapolation.
   eox_oligomer_lengths: [2, 3, 4, 6]
+bandgap_convergence:
+  # Directive §4.2 oligomer band-gap convergence check: the optical gap (sTDA / HOMO-LUMO proxy)
+  # at each oligomer length n, plus the last-step delta |gap(n_max) - gap(n_max-1)| against a
+  # threshold (verify convergence at n~4-6 D-A / n~6 homopolymer). Purely ADDITIVE / REPORTED-ONLY.
+  enabled: true
+  lengths: [1, 2, 3, 4, 5, 6]
+  threshold_eV: 0.1
 secondary_descriptors:
   # Directive §3 secondary descriptors (monomer frontier orbitals / radical-cation spin /
   # reorganization; solvent oxidation/reduction reorganization; electrolyte cation reduction,
