@@ -1,0 +1,20 @@
+# Tier-3 high-rigor DFT (Gaussian 16) configuration — directive §4.3 (OPTIONAL, NOT validated).
+#
+# Method (a) — a RANGE-SEPARATED hybrid functional — is the real, ready-to-run Tier-3 method on the
+# existing Gaussian engine: range-separated functionals (CAM-B3LYP, wB97X-D) correct the asymptotic
+# exchange that global hybrids get wrong, which matters for the D-A charge-transfer states and
+# extended conjugation in this library (see docs/research). It reuses the SAME config schema as
+# configs/tier2.yaml, so GaussianEngine(config=load_tier3_config()) runs it unchanged — only the
+# functional/basis/solvation are heavier. Running it at scale is a PI decision; nothing here pins one.
+#
+# Methods (b) explicit-solvation shell, (c) GFN2-xTB BOMD radical stability, and (d) Au(111)/ITO slab
+# adsorption are DOCUMENTED HOOKS in src/eps/workflow/tier3.py that return a flagged
+# 'tier3_optional_not_run' result until someone wires them; none runs in the test suite.
+
+method: "CAM-B3LYP"        # Range-separated hybrid (swap to "wB97XD" for the dispersion-corrected option).
+basis: "6-311+G(d,p)"      # Larger, diffuse-augmented basis for anions / CT states.
+smd_solvent: "acetonitrile"  # SMD continuum solvent (Tier-3 runs solvated by default).
+use_freq: true             # Opt+Freq -> thermally corrected solvated delta-G.
+mem: "16GB"                # Gaussian Link0 %mem per job (Tier-3 jobs are heavier than Tier-2).
+nprocshared: 16            # Gaussian Link0 %nprocshared per job.
+calibration_set: "benchmark_calibration_eligible"

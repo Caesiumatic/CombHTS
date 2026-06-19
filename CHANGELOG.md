@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-06-19 (later 4) — directive §4.3 Tier-3 scaffold (OPTIONAL, not validated)
+New `src/eps/workflow/tier3.py` + `configs/tier3.yaml` + `eps tier3`. Method (a) — a RANGE-SEPARATED
+hybrid DFT (CAM-B3LYP / 6-311+G(d,p) / SMD(acetonitrile) / opt+freq) — is a REAL config option on
+the existing Gaussian engine (tier3.yaml reuses the Tier-2 schema, so `GaussianEngine(config=
+load_tier3_config())` runs it unchanged); `write_tier3_dft_inputs` writes the range-separated `.gjf`
+inputs for inspection and never launches g16 in tests. Methods (b) explicit-solvation shell (2–4
+explicit solvents, cluster-continuum), (c) GFN2-xTB BOMD (5–10 ps) radical stability, and (d)
+Au(111)/ITO slab adsorption are DOCUMENTED HOOKS (`run_tier3_optional_hook`) that return a flagged
+`tier3_optional_not_run` result until wired — none runs in the suite. CLI `eps tier3
+--method {range-separated-dft|explicit-solvation|aimd|slab}` (range-separated-dft writes inputs;
+the others print the not-run flag). The whole tier is OPTIONAL and NOT validated. Tests
+`tests/test_tier3.py`. Suite green; ruff clean. No pinned config / scoring / redox change.
+
 ## 2026-06-19 (later 3) — directive §4.2 Tier-2 refined filter (−0.5 V) + composite re-rank
 `src/eps/workflow/tier2.py` gains `run_tier2_refined_screen` + `eps tier2-screen`: take the Tier-1
 ranked survivors and apply the TIGHTER constraint ① — the monomer adiabatic IP must sit ≥ 0.5 V

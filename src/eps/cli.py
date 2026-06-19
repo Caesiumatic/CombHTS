@@ -42,6 +42,13 @@ from eps.workflow.tier2 import (
     run_tier2_refined_screen,
     write_tier2_dry_run_inputs,
 )
+from eps.workflow.tier3 import (
+    AIMD_RADICAL_STABILITY,
+    EXPLICIT_SOLVATION,
+    SLAB_ADSORPTION,
+    run_tier3_optional_hook,
+    write_tier3_dft_inputs,
+)
 
 DEFAULT_ANALYSIS_OUTDIR = DEFAULT_OUTPUT_PATH.parent / "analysis"
 
@@ -285,6 +292,29 @@ def main(argv: list[str] | None = None) -> int:
         type=float,
         default=DEFAULT_REFINED_WINDOW_MARGIN_V,
         help="Refined window margin in V (monomer AIP must be this far below the solvent anodic limit).",
+    )
+
+    tier3 = subparsers.add_parser(
+        "tier3",
+        help="OPTIONAL/not-validated §4.3: range-separated DFT inputs (real) + documented hooks (not run)",
+    )
+    tier3.add_argument(
+        "--method",
+        choices=("range-separated-dft", "explicit-solvation", "aimd", "slab"),
+        default="range-separated-dft",
+        help="range-separated-dft is real (writes .gjf, never runs g16); the others are documented hooks.",
+    )
+    tier3.add_argument(
+        "--survivors",
+        type=Path,
+        default=DEFAULT_OUTPUT_PATH.parent / "tier2_refined.csv",
+        help="Refined-survivors CSV (must have monomer_canonical_smiles) for range-separated-dft inputs.",
+    )
+    tier3.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_OUTPUT_PATH.parent / "tier3_inputs",
+        help="Directory for the generated range-separated-DFT .gjf inputs.",
     )
 
     subparsers.add_parser(
@@ -553,6 +583,27 @@ def main(argv: list[str] | None = None) -> int:
             extra={"command": "tier2-screen", "refined_window_margin_V": result.refined_window_margin_V,
                    "n_tier2_survivors": result.n_tier2_survivors, "tier2_dft_pending": result.tier2_dft_pending},
         )
+        return 0
+
+    if args.command == "tier3":
+        print("Tier-3 is OPTIONAL and NOT validated (directive §4.3).")
+        if args.method == "range-separated-dft":
+            if not Path(args.survivors).exists():
+                print(f"ERROR: survivors CSV not found: {args.survivors}")
+                print("  eps tier2-screen   # produces the refined survivors CSV")
+                return 1
+            result = write_tier3_dft_inputs(args.survivors, args.outdir)
+            print(f"Method (a) range-separated DFT — REAL config on the Gaussian engine: {result.method_label}")
+            print(f"Wrote {len(result.input_paths)} .gjf inputs ({result.n_unique_monomers} unique monomers) to {result.outdir}")
+            print("g16 was NOT executed (build-only; a live batch is a PI decision).")
+            return 0
+        method = {
+            "explicit-solvation": EXPLICIT_SOLVATION,
+            "aimd": AIMD_RADICAL_STABILITY,
+            "slab": SLAB_ADSORPTION,
+        }[args.method]
+        hook = run_tier3_optional_hook(method)
+        print(f"Method {args.method}: [{hook.status}] {hook.note}")
         return 0
 
     parser.error(f"Unknown command: {args.command}")
