@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-19 (later 13) — curate data/polymerizability_labels.csv (binary feasibility labels)
+New `data/polymerizability_labels.csv` transcribing the research3 consolidated label table: the 27
+CLEAN (Tier-A) rows = 18 YES + 9 NO (the doc's stated clean set; its 4 Tier-B "corroborating" rows
+8/17/19/21 and the ambiguous appendix are NOT clean labels and were excluded). Columns:
+monomer_name, monomer_smiles, solvent, electrolyte, electrode, outcome, negative_type
+(chemical|medium_specific|NA), experimental_basis, reference_electrode, source_doi, source_locator,
+reliability_tier, medium_class, flags. negative_type stratification per the doc: chemical = furan(MeCN),
+3-tert-butylcarbazole, triphenylamine, ProDOP-br-C3, 2,3-benzofuran(BFEE); medium_specific =
+aniline(neutral-Pt), aniline(MeCN-steel), thiophene(water), terthiophene(DMF). All SMILES RDKit-parse;
+EDOT/EDOS/EDOP were rendered in the doc as the 2,3-dioxy isomer and standardized to the library's
+3,4 canonical (flagged `curation:`); FDA and ProDOP-br-C3 have no SMILES in the source (left blank +
+flagged). Doc flags (BFEE Lewis-acid, Ag pseudo-reference, "verify" DOIs) carried verbatim. No DOI
+fabricated (rows with "DOI not located" keep source_doi blank). Purely additive; no code/config change.
+
 ## 2026-06-19 (later 12) — sync research3 binary electropolymerization-feasibility labels
 Synced the vetted binary-feasibility label doc to `docs/research/electropolymerization_feasibility_binary_labels.md` (18 clean YES / 9 clean NO + ambiguous appendix). Verbatim copy; no code/data/config change.
 
