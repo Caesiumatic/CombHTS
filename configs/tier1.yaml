@@ -2,6 +2,17 @@ filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
   max_solvation_dG_kcal_mol: -3.0
+conformer_search:
+  # Directive §4.1 MMFF94 conformer search for geometry generation. enabled=true embeds
+  # n_conformers ETKDGv3 conformers, MMFF94-optimizes each, hands the lowest-energy one to xTB.
+  # NOT additive: enabling CHANGES geometries, the survivor set, and the scores, so it requires a
+  # FRESH Tier-1 harvest + re-validation (the conformer setting is folded into the engine cache
+  # key so stale single-conformer geometries are never reused). The single-conformer path
+  # (enabled=false) remains available. Se and other non-MMFF-typable atoms fall back to the
+  # hardened single ETKDG embed (T10 Se-skip), never force-typed.
+  enabled: true
+  n_conformers: 100
+  method: mmff94
 oligomer:
   # Oligomer length for the optical-gap calculation (sTDA-xTB / HOMO-LUMO proxy on the n-mer).
   # n in [4,6] acceptable per directive §4.1; default hexamer. Dimerization uses dimer_n=2.

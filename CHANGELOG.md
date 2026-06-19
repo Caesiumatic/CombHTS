@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-06-19 (later 2) — directive §4.1 MMFF94 conformer search (config-toggleable; CHANGES geometries)
+`src/eps/structures/geometry.py` gains the directive's §4.1 conformer search: when enabled, embed
+`n_conformers` ETKDGv3 conformers, MMFF94-optimize each, and hand the lowest-energy one to xTB.
+**NOT additive** — enabling CHANGES geometries, the survivor set, and the scores, so it requires a
+FRESH Tier-1 harvest + re-validation (no byte-identical claim). The single-conformer path
+(`enabled=false`) remains available, and the **T10 Se-skip is preserved exactly**: non-MMFF-typable
+atoms (Se, …) fall back to the hardened single ETKDG embed rather than being force-typed and
+collapsed.
+
+- The conformer setting is folded into the engine **cache-key `method`** (`conformer_method_suffix`,
+  e.g. `+conf-mmff94-n100`) so a config change never silently reuses stale single-conformer
+  geometries — the same fix pattern as the config-blind DFT cache (THINK T13). Verified: a
+  single-conformer harvest followed by a conformer-search harvest on the SAME cache recomputes
+  (does not reuse).
+- `smiles_to_xyz(..., conformer_search=...)` takes an explicit override; otherwise it reads the
+  module-active config, which `run_tier1` scopes with `conformer_search_active(cfg)` for the
+  duration of the engine calls (MockEngine ignores geometry, so only the method-suffix shifts the
+  mock harvest; the real xTB path uses the searched geometry). No engine (`xtb.py`) change needed.
+- Config `conformer_search` in `tier1.yaml` (`enabled`/`n_conformers`/`method`; default enabled,
+  100, mmff94 per the directive). Tests `tests/test_conformer_search.py` (geometry validity,
+  Se-skip preservation, suffix, cache-key recompute, survivors > 0). Suite green; ruff clean.
+  Pinned tier1.yaml calibration / scoring.yaml / redox.py untouched.
+
 ## 2026-06-19 (later) — directive §4.2 oligomer band-gap convergence check (additive, reported-only)
 New `src/eps/properties/optical_convergence.py`: the optical gap (sTDA-xTB / HOMO–LUMO proxy) at
 oligomer length n=1..6 per monomer, plus the last-step convergence delta and a converged flag —
