@@ -1,6 +1,18 @@
 # Calibration profiles. Each profile is an INDEPENDENT linear fit (xTB -> experimental Eox).
 # Rows from different reference_frame OR different label_type must NEVER enter the same fit.
 # A profile with < 2 collapsed points is skipped (reported, not fitted, not an error).
+#
+# T1 PEAK/ONSET SPLIT (decided 2026-06-19; THINK T1 + docs/research/eox_anchor_refscale_accuracy_partD.md):
+#   - PEAK profiles (agagcl_peak_strict / agagcl_peak_relaxed, label_type=monomer_oxidation_peak)
+#     are the CALIBRATION track. Epa is the closer proxy to a one-electron thermodynamic ionization
+#     observable (HOMO/IP-vs-Epa correlations are tight), so the computed adiabatic-IP Eox is
+#     calibrated against PEAK rows.
+#   - The ONSET profile (agagcl_onset_relaxed, label_type=monomer_oxidation_onset) is the
+#     SCREENING-FILTER track. The radical cation forms and film growth begins at onset, so onset
+#     anchors the constraint-(1) in-window feasibility filter.
+#   NEVER co-fit peak + onset rows in one regression: the ~0.15-0.35 V monomer-dependent
+#   Epa-Eonset gap would inject ~0.2 V of artificial scatter. The anchor TYPE is fixed; only the
+#   strict-vs-relaxed (peak) choice remains, pending the live DFT LOO-CV tiebreaker.
 
 default_screening_profile: agagcl_peak_relaxed
 
