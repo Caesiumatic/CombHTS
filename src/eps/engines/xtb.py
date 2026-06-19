@@ -100,7 +100,117 @@ class XTBEngine(Engine):
                     "parsed_json": output.parsed_json,
                 },
             )
+        if req.quantity in ("homo", "lumo"):
+            value, output = self._frontier_orbital(req, req.quantity)
+            return CalcResult(
+                value=value,
+                unit="eV",
+                method=req.method,
+                raw={
+                    "engine": "XTBEngine",
+                    "quantity": req.quantity,
+                    "stdout": output.stdout,
+                    "parsed_json": output.parsed_json,
+                },
+            )
+        if req.quantity in ("vertical_ip", "vertical_ea"):
+            value, raw = self._vertical_redox(req)
+            return CalcResult(value=value, unit="eV", method=req.method, raw=raw)
+        if req.quantity == "spin_density":
+            value, raw = self._spin_density(req)
+            return CalcResult(value=value, unit="fraction", method=req.method, raw=raw)
         raise NotImplementedError(f"XTBEngine does not implement quantity {req.quantity!r}")
+
+    def _frontier_orbital(self, req: CalcRequest, which: str) -> tuple[float, "XTBRunOutput"]:
+        """Parse the HOMO or LUMO eigenvalue (eV) from an xTB single-point orbital block.
+
+        Screening approximation: GFN2-xTB frontier orbital energies, no separate optimization
+        of the neutral (geometry is the ETKDG embedding; xTB does a single point).
+        """
+
+        output = self._run_xtb(
+            req,
+            charge=req.species.charge,
+            multiplicity=req.species.multiplicity,
+            solvent_args=solvent_flag(req.xtb_gbsa_name),
+            optimize=False,
+        )
+        return parse_frontier_orbital_eV(output.stdout, which), output
+
+    def _vertical_redox(self, req: CalcRequest) -> tuple[float, dict]:
+        """Vertical IP/EA via single-point (optimize=False) ion and neutral energies.
+
+        Screening approximation: the neutral and ion energies use INDEPENDENTLY embedded
+        geometries (no shared/frozen geometry, no relaxation), so this is a coarse screening
+        estimate of the vertical quantity rather than a strict frozen-geometry vertical value.
+        """
+
+        neutral = req.species
+        if req.quantity == "vertical_ip":
+            ion_charge = neutral.charge + 1
+        else:
+            ion_charge = neutral.charge - 1
+        ion_multiplicity = neutral.multiplicity + 1
+        solvent_args = solvent_flag(req.xtb_gbsa_name)
+
+        neutral_output = self._run_xtb(
+            req,
+            charge=neutral.charge,
+            multiplicity=neutral.multiplicity,
+            solvent_args=solvent_args,
+            optimize=False,
+        )
+        ion_output = self._run_xtb(
+            req,
+            charge=ion_charge,
+            multiplicity=ion_multiplicity,
+            solvent_args=solvent_args,
+            optimize=False,
+        )
+        neutral_energy = _energy_from_output(neutral_output)
+        ion_energy = _energy_from_output(ion_output)
+        if req.quantity == "vertical_ip":
+            delta_eV = (ion_energy - neutral_energy) * HARTREE_TO_EV
+        else:
+            delta_eV = (neutral_energy - ion_energy) * HARTREE_TO_EV
+        return delta_eV, {
+            "engine": "XTBEngine",
+            "quantity": req.quantity,
+            "approximation": "single_point_independent_geometries_screening",
+            "neutral_charge": neutral.charge,
+            "ion_charge": ion_charge,
+            "ion_multiplicity": ion_multiplicity,
+            "solvent_args": solvent_args,
+            "neutral_stdout": neutral_output.stdout,
+            "ion_stdout": ion_output.stdout,
+            "neutral_json": neutral_output.parsed_json,
+            "ion_json": ion_output.parsed_json,
+        }
+
+    def _spin_density(self, req: CalcRequest) -> tuple[float, dict]:
+        """Best-effort Mulliken atomic spin populations from a single-point xTB run.
+
+        ``value`` is the maximum atomic spin population; ``raw['atomic_spin_density']`` is the
+        per-atom list. If the spin block cannot be parsed the list is empty and value is NaN
+        (the screen's _safe_calculate marks the descriptor failed — acceptable, screening-grade).
+        """
+
+        output = self._run_xtb(
+            req,
+            charge=req.species.charge,
+            multiplicity=req.species.multiplicity,
+            solvent_args=solvent_flag(req.xtb_gbsa_name),
+            optimize=False,
+        )
+        spins = parse_atomic_spin_populations(output.stdout)
+        value = max(spins) if spins else float("nan")
+        return value, {
+            "engine": "XTBEngine",
+            "quantity": req.quantity,
+            "atomic_spin_density": spins,
+            "stdout": output.stdout,
+            "parsed_json": output.parsed_json,
+        }
 
     def _adiabatic_redox(self, req: CalcRequest, charge_delta: int) -> tuple[float, dict]:
         initial = req.species
@@ -346,6 +456,63 @@ def parse_homo_lumo(stdout: str) -> float:
         if matches:
             return float(matches[-1])
     raise ValueError("Could not parse xTB HOMO-LUMO gap from stdout")
+
+
+def parse_frontier_orbital_eV(stdout: str, which: str) -> float:
+    """Parse the HOMO or LUMO orbital energy (eV) from the xTB orbital eigenvalue block.
+
+    xTB prints an "Orbital Energies and Occupations" table whose occupied/virtual boundary
+    rows are tagged ``(HOMO)`` and ``(LUMO)``. Each row is::
+
+        #    Occupation    Energy/Eh     Energy/eV
+       21        2.0000    -0.4...      -12.3...  (HOMO)
+
+    The eV column is the last numeric field on the tagged line.
+    """
+
+    tag = "(HOMO)" if which == "homo" else "(LUMO)"
+    for line in stdout.splitlines():
+        if tag in line:
+            numbers = re.findall(r"-?\d+\.\d+", line)
+            if numbers:
+                return float(numbers[-1])
+    raise ValueError(f"Could not parse {which.upper()} orbital energy from xTB stdout")
+
+
+def parse_atomic_spin_populations(stdout: str) -> list[float]:
+    """Parse per-atom Mulliken spin populations from xTB stdout (best-effort).
+
+    Open-shell xTB prints a "Mulliken/CM5 charges" style block that, for unrestricted runs,
+    includes a spin-population column. This scans for a spin-population section and collects
+    the trailing numeric column per atom row. Returns ``[]`` when no such block is present
+    (e.g. a closed-shell single point), so the caller can degrade gracefully.
+    """
+
+    lines = stdout.splitlines()
+    spins: list[float] = []
+    in_block = False
+    for line in lines:
+        lowered = line.lower()
+        if "spin" in lowered and ("population" in lowered or "density" in lowered):
+            in_block = True
+            spins = []
+            continue
+        if in_block:
+            parts = line.split()
+            if not parts:
+                if spins:
+                    break
+                continue
+            try:
+                int(parts[0])
+            except ValueError:
+                if spins:
+                    break
+                continue
+            numbers = re.findall(r"-?\d+\.\d+", line)
+            if numbers:
+                spins.append(float(numbers[-1]))
+    return spins
 
 
 def _energy_from_output(output: XTBRunOutput) -> float:

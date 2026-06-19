@@ -36,6 +36,13 @@ from eps.properties.oligomer_series import (
     DEFAULT_EOX_OLIGOMER_LENGTHS,
     compute_oligomer_eox_series,
 )
+from eps.properties.secondary_descriptors import (
+    anion_vdw_volume_descriptors,
+    cation_reduction_descriptors,
+    ionpair_descriptors,
+    monomer_secondary_descriptors,
+    solvent_secondary_descriptors,
+)
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
 from eps.structures.oligomer import (
@@ -91,12 +98,14 @@ def run_tier1(
     oligomer_n = int(oligomer_config.get("n", DEFAULT_OLIGOMER_N))
     dimer_n = int(oligomer_config.get("dimer_n", DIMER_N))
     eox_oligomer_lengths = _eox_oligomer_lengths(oligomer_config)
+    secondary_on = bool(tier1_config.get("secondary_descriptors", {}).get("enabled", False))
     polymerization_specs = load_polymerization_specs()
     monomer_table = compute_monomer_table(
         monomers, engine, cache, method=method,
         oligomer_n=oligomer_n, dimer_n=dimer_n, specs=polymerization_specs,
         eox_oligomer_lengths=eox_oligomer_lengths,
         calibration_config=tier1_config.get("calibration", {}),
+        secondary_descriptors=secondary_on,
     )
     monomer_solvent_table = compute_monomer_solvent_table(
         monomers,
@@ -112,6 +121,7 @@ def run_tier1(
         cache,
         method=method,
         calibration_config=tier1_config.get("calibration", {}),
+        secondary_descriptors=secondary_on,
     )
     anion_table = compute_anion_solvent_table(
         electrolytes,
@@ -120,6 +130,15 @@ def run_tier1(
         cache,
         method=method,
         calibration_config=tier1_config.get("calibration", {}),
+        secondary_descriptors=secondary_on,
+    )
+    cation_table = (
+        compute_cation_solvent_table(electrolytes, solvents, engine, cache, method=method)
+        if secondary_on else None
+    )
+    pair_table = (
+        compute_electrolyte_pair_table(electrolytes, engine, cache, method=method)
+        if secondary_on else None
     )
 
     triads = build_triad_table(
@@ -128,6 +147,8 @@ def run_tier1(
         solvent_table=solvent_table,
         anion_table=anion_table,
         electrolytes=electrolytes,
+        cation_table=cation_table,
+        pair_table=pair_table,
     )
     all_triads = annotate_tier1_filters(triads, tier1_config)
     filtered = apply_tier1_filters(all_triads, tier1_config)
@@ -158,6 +179,15 @@ def run_tier1(
     except Exception:  # noqa: BLE001 - the reported-only descriptor must never break the screen.
         pass
 
+    # Verification artifact: human-reviewable per-monomer §3 secondary descriptors.
+    if secondary_on:
+        try:
+            write_secondary_descriptors_artifact(
+                monomer_table, output.parent / "secondary_descriptors.csv"
+            )
+        except Exception:  # noqa: BLE001 - the reported-only descriptor must never break the screen.
+            pass
+
     total = len(all_triads)
     survived = len(ranked)
     retention = survived / total if total else 0.0
@@ -183,6 +213,7 @@ def compute_monomer_table(
     specs: dict[str, PolymerizationSpec] | None = None,
     eox_oligomer_lengths: tuple[int, ...] = DEFAULT_EOX_OLIGOMER_LENGTHS,
     calibration_config: dict | None = None,
+    secondary_descriptors: bool = False,
 ) -> pd.DataFrame:
     """Compute monomer-only properties once per monomer.
 
@@ -248,6 +279,10 @@ def compute_monomer_table(
         }
         # Additive, reported-only oligomer Eox-vs-length descriptor (NOT a filter / score input).
         row.update(oligomer_eox_columns)
+        # Additive, reported-only §3.1 secondary descriptors (frontier orbitals, cation spin,
+        # vertical IP / reorganization). NOT a filter / score input.
+        if secondary_descriptors:
+            row.update(monomer_secondary_descriptors(monomer, engine, cache, method=method))
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -318,6 +353,7 @@ def compute_solvent_table(
     cache: SQLiteCache,
     method: str = "mock-gfn2",
     calibration_config: dict | None = None,
+    secondary_descriptors: bool = False,
 ) -> pd.DataFrame:
     """Compute solvent anodic/cathodic limits per spec §3.2 once per solvent.
 
@@ -373,6 +409,9 @@ def compute_solvent_table(
                 "solvent_cathodic_limit_calc_error": cathodic.error,
             }
         )
+        # Additive, reported-only §3.2 secondary descriptors (oxidation/reduction reorganization).
+        if secondary_descriptors:
+            rows[-1].update(solvent_secondary_descriptors(solvent, engine, cache, method=method))
     return pd.DataFrame(rows)
 
 
@@ -383,6 +422,7 @@ def compute_anion_solvent_table(
     cache: SQLiteCache,
     method: str = "mock-gfn2",
     calibration_config: dict | None = None,
+    secondary_descriptors: bool = False,
 ) -> pd.DataFrame:
     """Compute anion-in-solvent oxidation potentials once per unique anion x solvent.
 
@@ -396,6 +436,8 @@ def compute_anion_solvent_table(
     unique_by_anion = {electrolyte.canonical_anion_smiles: electrolyte for electrolyte in electrolytes}
     rows = []
     for electrolyte in unique_by_anion.values():
+        # §3.3 anion vdW volume is solvent-independent: compute once per anion, repeat across rows.
+        volume_columns = anion_vdw_volume_descriptors(electrolyte) if secondary_descriptors else {}
         for solvent in solvents:
             anion_eox = _safe_calculate(
                 lambda: anion_oxidation_potential(
@@ -425,8 +467,55 @@ def compute_anion_solvent_table(
                     "anion_Eox_V": filter_anion,
                     "anion_Eox_calc_status": anion_eox.status,
                     "anion_Eox_calc_error": anion_eox.error,
+                    **volume_columns,
                 }
             )
+    return pd.DataFrame(rows)
+
+
+def compute_cation_solvent_table(
+    electrolytes: list[Electrolyte],
+    solvents: list[Solvent],
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = "mock-gfn2",
+) -> pd.DataFrame:
+    """Per-(unique cation x solvent) §3.3 cation reduction potential (RAW V vs Ag/AgCl).
+
+    Mirrors the anion table's granularity. RAW (a reduction potential — deliberately NOT on the
+    oxidation calibration per T11). Reported-only, screening-grade.
+    """
+
+    unique_by_cation = {e.canonical_cation_smiles: e for e in electrolytes}
+    rows = []
+    for electrolyte in unique_by_cation.values():
+        for solvent in solvents:
+            rows.append(
+                {
+                    "cation_canonical_smiles": electrolyte.canonical_cation_smiles,
+                    "solvent_name": solvent.name,
+                    **cation_reduction_descriptors(electrolyte, solvent, engine, cache, method=method),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def compute_electrolyte_pair_table(
+    electrolytes: list[Electrolyte],
+    engine: Engine,
+    cache: SQLiteCache,
+    method: str = "mock-gfn2",
+) -> pd.DataFrame:
+    """Per-salt §3.3 ion-pair dissociation ΔG (ALPB-proxy, APPROXIMATE). Reported-only."""
+
+    rows = []
+    for electrolyte in electrolytes:
+        rows.append(
+            {
+                "salt": electrolyte.salt,
+                **ionpair_descriptors(electrolyte, engine, cache, method=method),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -437,8 +526,15 @@ def build_triad_table(
     solvent_table: pd.DataFrame,
     anion_table: pd.DataFrame,
     electrolytes: list[Electrolyte],
+    cation_table: pd.DataFrame | None = None,
+    pair_table: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Build all monomer x solvent x electrolyte triads by joining precomputed tables."""
+    """Build all monomer x solvent x electrolyte triads by joining precomputed tables.
+
+    ``cation_table`` (per cation x solvent) and ``pair_table`` (per salt) carry the additive,
+    reported-only §3.3 secondary descriptors; both are optional and, when None, the join is
+    byte-for-byte the original triad build (so the secondary descriptors are strictly additive).
+    """
 
     electrolyte_table = pd.DataFrame(
         [
@@ -448,16 +544,28 @@ def build_triad_table(
                 "cation_smiles": electrolyte.cation_smiles,
                 "anion_smiles": electrolyte.anion_smiles,
                 "anion_canonical_smiles": electrolyte.canonical_anion_smiles,
+                "cation_canonical_smiles": electrolyte.canonical_cation_smiles,
             }
             for electrolyte in electrolytes
         ]
     )
+    if pair_table is not None:
+        electrolyte_table = electrolyte_table.merge(
+            pair_table, on="salt", how="left", validate="many_to_one"
+        )
     electrolyte_props = electrolyte_table.merge(
         anion_table,
         on="anion_canonical_smiles",
         how="left",
         validate="many_to_many",
     )
+    if cation_table is not None:
+        electrolyte_props = electrolyte_props.merge(
+            cation_table,
+            on=["cation_canonical_smiles", "solvent_name"],
+            how="left",
+            validate="many_to_one",
+        )
     triads = (
         monomer_solvent_table.merge(
             monomer_table,
@@ -477,6 +585,12 @@ def build_triad_table(
         triads["anion_Eox_filter_V_vs_AgAgCl"] - triads["monomer_Eox_filter_V_vs_AgAgCl"]
     )
     triads["solubility_score"] = -triads["solvation_dG_kcal_mol"]
+    # Reported-only §3.3 flag: the cation reduces at a less-negative potential than the solvent
+    # cathodic edge (i.e. the cation may be reduced inside the solvent window). NOT a filter.
+    if {"cation_reduction_raw_V_vs_AgAgCl", "solvent_cathodic_limit_V"}.issubset(triads.columns):
+        triads["cation_reduction_below_solvent_cathodic"] = (
+            triads["cation_reduction_raw_V_vs_AgAgCl"] > triads["solvent_cathodic_limit_V"]
+        )
     return triads
 
 
@@ -603,6 +717,35 @@ def write_oligomer_eox_series_artifact(
             if c in monomer_table.columns
         ]
     )
+    present = [c for c in columns if c in monomer_table.columns]
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    monomer_table.loc[:, present].to_csv(out, index=False)
+    return out
+
+
+def write_secondary_descriptors_artifact(
+    monomer_table: pd.DataFrame,
+    output_path: str | Path,
+) -> Path:
+    """Write the human-reviewable per-monomer §3.1 secondary descriptors (verification artifact)."""
+
+    columns = [
+        "monomer_name",
+        "monomer_canonical_smiles",
+        "monomer_HOMO_eV",
+        "monomer_LUMO_eV",
+        "monomer_HL_gap_eV",
+        "monomer_vertical_IP_eV",
+        "monomer_adiabatic_IP_eV",
+        "monomer_lambda_ox_eV",
+        "monomer_cation_max_spin",
+        "monomer_cation_max_spin_atom_idx",
+        "monomer_cation_max_spin_is_alpha",
+        "monomer_cation_alpha_spin_sum",
+        "secondary_monomer_calc_status",
+        "secondary_monomer_calc_error",
+    ]
     present = [c for c in columns if c in monomer_table.columns]
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
