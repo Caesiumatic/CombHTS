@@ -83,5 +83,5 @@ def test_conformer_setting_is_in_the_cache_key(tmp_path: Path) -> None:
 def test_conformer_search_run_still_produces_survivors(tmp_path: Path) -> None:
     result = run_tier1(engine=MockEngine(), cache_path=tmp_path / "c.sqlite",
                        output_path=tmp_path / "r.csv", tier1_config_path=_cfg_path(tmp_path, True))
-    assert result.total_triads == 36 * 13 * 15
+    assert result.total_triads == 36 * 13 * 16
     assert result.surviving_triads > 0

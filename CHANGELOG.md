@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-06-19 (later 10) — add AgClO4 silver reference-electrode salt (directive §2.3)
+Append one row to `data/electrolytes.csv` (purely additive; existing 15 salt rows byte-identical):
+`AgClO4,[Ag+],[O-]Cl(=O)(=O)=O,silver,Ag/AgClO4; reference-electrode use; perchlorate dopant`. RDKit
+parses both ions; the perchlorate anion SMILES matches the existing TBAClO4/LiClO4/NaClO4 style. New
+`salt_class=silver`. TBAOTf and TBATFSI already present — NOT re-added. Library now 16 salts (was 15);
+the loader-derived triad count rises to 36×13×16 = 7,488 (test_smoke derives it with a floor guard;
+LIBRARY_SALT_COUNT 15→16). pytest green; ruff clean. Pinned `configs/tier1.yaml` untouched.
+
 ## 2026-06-19 (later 9) — refresh benzonitrile/nitrobenzene fallback ESW in data/solvents.csv
 Update ONLY the benzonitrile and nitrobenzene fallback windows in `data/solvents.csv` from
 `docs/research/solvent_windows_and_solvation_reference.md` (every other row byte-identical):
