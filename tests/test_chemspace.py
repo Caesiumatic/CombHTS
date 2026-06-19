@@ -20,7 +20,7 @@ SEED_SALT_NAMES = {
 }
 LIBRARY_MONOMER_COUNT = 36
 LIBRARY_SOLVENT_COUNT = 13
-LIBRARY_SALT_COUNT = 15
+LIBRARY_SALT_COUNT = 16
 
 
 def test_seed_monomers_parse_and_canonicalize() -> None:
