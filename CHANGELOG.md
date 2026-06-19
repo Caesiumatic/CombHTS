@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-19 (later 14) — wire §7 qualitative yes/no feasibility metric (DIAGNOSTIC, honest)
+New `src/eps/validation/feasibility.py` + `eps validate --harvest <tier1 all-triads CSV>`: scores the
+screen's binary prediction (survivor = predicted-YES; filtered-out = predicted-NO) against
+`data/polymerizability_labels.csv`. Reports, on the MATCHED IN-SCOPE subset only: coverage (labels
+matched to a screen triad), the 2x2 confusion matrix, and BALANCED accuracy (mean of per-class recall)
+— NEVER a single raw-accuracy figure and never a >85% PASS. Out-of-scope media are excluded and counted
+explicitly (BFEE Lewis-acid, aqueous-acid/protonation-not-modeled, Ag-pseudo-reference). No harvest ->
+"no harvest to score against"; zero matches -> "0 matched — metric not computable on current library"
+(never fabricated). STATUS string is the doc-prescribed PRELIMINARY caveat (only 9 negatives; trivial
+always-YES baseline ~67%). Purely additive: does not touch the calibration, survivor logic, or the
+composite. Tests `tests/test_feasibility.py` (no-single-raw-accuracy, negative-count caveat,
+no-harvest, zero-match, balanced≠raw, out-of-scope, single-class-blocks-balanced). On the mock 36×13×16
+harvest: coverage = 3/27 matched, out-of-scope = 7. pytest green.
+
 ## 2026-06-19 (later 13) — curate data/polymerizability_labels.csv (binary feasibility labels)
 New `data/polymerizability_labels.csv` transcribing the research3 consolidated label table: the 27
 CLEAN (Tier-A) rows = 18 YES + 9 NO (the doc's stated clean set; its 4 Tier-B "corroborating" rows
