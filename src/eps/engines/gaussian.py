@@ -70,6 +70,20 @@ class Tier2Config:
         rigor = "opt+freq (ΔG)" if self.use_freq else "opt only (ΔE_SCF)"
         return f"{self.method}/{self.basis}, {phase}, {rigor}"
 
+    def cache_method_label(self) -> str:
+        """Compact, cache-safe method label that ENCODES the effective DFT configuration.
+
+        Unlike :meth:`method_label` (human display), this string is threaded into the SQLite
+        cache key (``CalcRequest.method``) so that changing the functional, basis, SMD solvent,
+        or the Freq/thermal toggle in ``configs/tier2.yaml`` forces a recompute instead of
+        silently reusing a stale value (THINK T13 — config-blind DFT cache key). Examples:
+        ``b3lyp/6-31g(d,p)/gas/freq:off`` vs ``b3lyp/6-31g(d,p)/smd:acetonitrile/freq:on``.
+        """
+
+        phase = f"smd:{self.smd_solvent.lower()}" if self.smd_solvent else "gas"
+        freq = "freq:on" if self.use_freq else "freq:off"
+        return f"{self.method.lower()}/{self.basis.lower()}/{phase}/{freq}"
+
 
 def load_tier2_config(path: str | Path = DEFAULT_TIER2_CONFIG) -> Tier2Config:
     """Load Tier-2 DFT config from YAML, falling back to v1 defaults.

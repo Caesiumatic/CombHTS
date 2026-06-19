@@ -87,7 +87,11 @@ def _dft_calibration_engines(engine_name: str, config_path):
             XTBEngine(),
             "gfn2-xtb",
             GaussianEngine(config=config),
-            GAUSSIAN_METHOD_LABEL,
+            # Config-encoded cache method label (THINK T13): the functional, basis, SMD solvent,
+            # and Freq toggle are baked into the cache key, so editing configs/tier2.yaml
+            # (gas -> SMD / opt -> freq) forces a recompute instead of reusing a stale value.
+            # (Was the STATIC GAUSSIAN_METHOD_LABEL, which made the DFT cache config-blind.)
+            config.cache_method_label(),
             config.method_label(),
         )
     raise ValueError(f"Unknown calibrate-dft engine {engine_name!r}")
