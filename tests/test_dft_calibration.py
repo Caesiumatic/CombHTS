@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from eps.calibration import LinearCalibration
 from eps.engines import CalcRequest, GaussianEngine, MockEngine
 from eps.engines.base import CalcResult, Engine
 from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL
@@ -14,6 +15,7 @@ from eps.workflow.dft_calibration import (
     MOCK_DFT_METHOD,
     MOCK_XTB_METHOD,
     POINTS_COLUMNS,
+    compose_xtb_to_agagcl,
     core_monomer_reference_flag,
     run_dft_calibration,
 )
@@ -243,6 +245,69 @@ def test_xtb_descriptor_matches_existing_calibration_path(tmp_path: Path) -> Non
         method=MOCK_XTB_METHOD,
     )
     assert result.points.iloc[0]["xtb_descriptor"] == pytest.approx(expected)
+
+
+def test_compose_xtb_to_agagcl_arithmetic() -> None:
+    # Known fit1 (xTB->DFT) and fit2 (DFT->exp peak); the composed map must be their substitution.
+    fit1 = LinearCalibration(slope=2.0, intercept=0.5, r2=1.0, mae=0.1)   # dft = 2.0*x + 0.5
+    fit2 = LinearCalibration(slope=3.0, intercept=-1.0, r2=1.0, mae=0.2)  # exp = 3.0*dft - 1.0
+
+    composed = compose_xtb_to_agagcl(
+        fit1, fit2, n_points_xtb_to_dft=10, n_points_dft_to_exp_peak=7
+    )
+    assert composed is not None
+    # composed_slope = fit2.slope * fit1.slope = 3.0 * 2.0
+    assert composed["slope"] == pytest.approx(6.0)
+    # composed_intercept = fit2.slope * fit1.intercept + fit2.intercept = 3.0*0.5 + (-1.0)
+    assert composed["intercept"] == pytest.approx(0.5)
+    # mae_V is the experimental (Fit 2) MAE on the peak set.
+    assert composed["mae_V"] == pytest.approx(0.2)
+    assert composed["n_points_xtb_to_dft"] == 10
+    assert composed["n_points_dft_to_exp_peak"] == 7
+
+    # A spot point composes correctly end-to-end: exp(x) = fit2.apply(fit1.apply(x)).
+    x = 1.234
+    assert composed["slope"] * x + composed["intercept"] == pytest.approx(
+        fit2.apply(fit1.apply(x))
+    )
+
+    # Missing either stage fit -> None (never a fabricated calibration).
+    assert compose_xtb_to_agagcl(None, fit2, n_points_xtb_to_dft=0, n_points_dft_to_exp_peak=0) is None
+    assert compose_xtb_to_agagcl(fit1, None, n_points_xtb_to_dft=0, n_points_dft_to_exp_peak=0) is None
+
+
+def test_composed_calibration_emitted_to_json_and_report(tmp_path: Path) -> None:
+    result = _run(tmp_path)
+
+    # The result carries the composed map = fit2 o fit1.
+    composed = result.composed_xtb_to_agagcl
+    assert composed is not None
+    assert composed["slope"] == pytest.approx(result.dft_to_exp.slope * result.xtb_to_dft.slope)
+    assert composed["intercept"] == pytest.approx(
+        result.dft_to_exp.slope * result.xtb_to_dft.intercept + result.dft_to_exp.intercept
+    )
+    assert composed["mae_V"] == pytest.approx(result.dft_to_exp.mae)
+    assert composed["n_points_xtb_to_dft"] == result.n_points
+    assert composed["n_points_dft_to_exp_peak"] == result.n_dft_to_exp_peak_points
+
+    # JSON carries the exact directive key + fields, and does NOT touch the pinned default.
+    record = json.loads(result.json_path.read_text(encoding="utf-8"))
+    emitted = record["composed_xtb_to_AgAgCl_V"]
+    assert emitted["slope"] == pytest.approx(composed["slope"])
+    assert emitted["intercept"] == pytest.approx(composed["intercept"])
+    assert emitted["mae_V"] == pytest.approx(composed["mae_V"])
+    assert set(emitted) == {
+        "slope", "intercept", "mae_V", "n_points_xtb_to_dft", "n_points_dft_to_exp_peak"
+    }
+
+    # Report has the clearly-labeled section + the pinned side-by-side + the switch note.
+    report = result.report_path.read_text(encoding="utf-8")
+    assert "Screen-ready calibration (DFT-anchored, directive §7)" in report
+    assert "0.725837" in report and "-3.145372" in report  # pinned, shown unchanged
+    assert "replace the tier1.yaml monomer_eox slope/intercept with these composed values" in report
+
+    # tier1.yaml is NEVER written by this workflow.
+    assert not (tmp_path / "out" / "tier1.yaml").exists()
 
 
 @pytest.mark.skipif(shutil.which("g16") is None, reason="g16 not installed")

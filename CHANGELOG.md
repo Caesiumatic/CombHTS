@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-18 (later 7) — calibrate-dft: emit the DFT-anchored composed xTB->V calibration
+`eps calibrate-dft` now emits the screen-ready COMPOSED calibration that collapses the directive §7
+two-stage design (Fit 1 xTB->DFT, Fit 2 DFT->exp peak) into one linear map from the xTB descriptor
+straight to V vs Ag/AgCl — a drop-in for the pinned `configs/tier1.yaml` `monomer_eox` slope/intercept.
+`configs/tier1.yaml` is NOT modified; this is an emitted artifact pending a real `--engine gaussian`
+batch + review.
+
+- New pure helper `compose_xtb_to_agagcl(fit1, fit2)`: `composed_slope = fit2.slope*fit1.slope`,
+  `composed_intercept = fit2.slope*fit1.intercept + fit2.intercept`; `mae_V = fit2.mae` (the
+  experimental MAE on the peak set). Returns `None` if either stage fit is missing (never fabricates).
+- `xtb_to_dft_calibration.json` gains `"composed_xtb_to_AgAgCl_V": {slope, intercept, mae_V,
+  n_points_xtb_to_dft, n_points_dft_to_exp_peak}`.
+- `report.md` gains a "Screen-ready calibration (DFT-anchored, directive §7)" section: composed
+  slope/intercept, a side-by-side with the pinned tier1.yaml values (0.725837 / -3.145372), and the
+  switch note ("replace the tier1.yaml monomer_eox slope/intercept with these composed values ...
+  Requires a real --engine gaussian batch + review first").
+- Tests: pure-arithmetic composition test (known fit1, fit2 -> expected composed; None-on-missing)
+  + an end-to-end emission test (JSON key/fields, report section, pinned side-by-side, tier1.yaml
+  never written). Full suite green (146 passed, 4 skipped); `ruff` clean.
+
 ## 2026-06-18 (later 6) — scale chemical-space library toward directive §2
 Purely additive growth of the chemical-space library toward the directive's §2 named lists. The
 15/11/10 validated seed rows are byte-identical; scoring weights, the composite formula, the pinned
