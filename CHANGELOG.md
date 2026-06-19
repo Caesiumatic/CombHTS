@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-19 (later 17) — extend feasibility labels with 7 baseline-medium negatives
+`data/polymerizability_labels.csv` grows from 27 to 34 rows (running tally **18 YES / 16 NO**) with 7
+clean NO labels in the baseline MeCN/TBA-on-Pt regime, transcribed (exact 14 columns,
+negative_type=chemical) from the new `docs/research/electropolymerization_feasibility_negatives_expansion.md`
+(synced verbatim): 3,6-diethylcarbazole, 3,6-di-tert-butylcarbazole, 3-phenylcarbazole,
+3,6-diphenylcarbazole (tier A, Önal 2021 10.1016/j.jelechem.2021.115356, matched-condition vs the
+3-ethylcarbazole YES); tris(4-methoxyphenyl)amine, tris(4-bromophenyl)amine (tier B, para-blocked
+persistent radical cations); 2,5-dimethylthiophene (tier B, α-blocked). Every SMILES RDKit-canonicalized
++ molecular-formula-checked against the named compound (CAS carried in flags). Potential-window flags on
+3-phenyl/3,6-diphenylcarbazole and mechanism-based tier-B flags carried per row; no DOI fabricated
+(rows 36–38 keep source_doi blank, with the PMC/PII locator in source_locator). `FEASIBILITY_STATUS_NOTE`
+and the STATUS §7 line updated to 18 YES / 16 NO (trivial always-YES baseline now ~53%, vs ~67%). The 7
+new monomers are absent from the 36×13×16 library, so they are reported out-of-scope (coverage stays
+12/34); growing coverage needs them added to the chemical-space library. Tests updated; suite green.
+
 ## 2026-06-19 (later 16) — test_tier1_audit: skip the analyze test when sklearn is absent
 `tests/test_tier1_audit.py::test_eps_analyze_on_all_csv_emits_pareto_and_shortlist` asserts no
 "SKIPPED" analysis note, which hard-fails when scikit-learn (the chemical-space-map dep) is missing.

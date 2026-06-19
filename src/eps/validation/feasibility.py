@@ -47,10 +47,11 @@ LABEL_COLUMNS = (
 
 # The §7 qualitative-feasibility STATUS line (verbatim caveat; PRELIMINARY, never a >85% claim).
 FEASIBILITY_STATUS_NOTE = (
-    "§7 qualitative yes/no feasibility: PRELIMINARY. Labeled set = 18 YES / 9 NO (research3). "
-    "The >85% target is NOT claimed: only 9 negatives (< the ~20-25 needed in the baseline "
-    "MeCN/TBAPF6-on-Pt regime), and a trivial always-YES baseline already scores ~67%. Reporting "
-    "balanced accuracy + confusion matrix on the matched in-scope subset only."
+    "§7 qualitative yes/no feasibility: PRELIMINARY. Labeled set = 18 YES / 16 NO (research3 + "
+    "negatives expansion). The >85% target is NOT claimed: only 16 negatives (still < the ~20-25 "
+    "needed in the baseline MeCN/TBAPF6-on-Pt regime), though a trivial always-YES baseline now "
+    "scores only ~53% (18/34, vs ~67% before). Reporting balanced accuracy + confusion matrix on "
+    "the matched in-scope subset only."
 )
 
 # Harvest triad-identity / survivor columns (see eps.workflow.tier1).

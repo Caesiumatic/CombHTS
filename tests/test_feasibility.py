@@ -76,9 +76,9 @@ def test_status_note_carries_negative_count_caveat_verbatim() -> None:
     assert result.status_note == FEASIBILITY_STATUS_NOTE
     note = result.status_note
     assert "PRELIMINARY" in note
-    assert "18 YES / 9 NO" in note
-    assert "only 9 negatives" in note
-    assert "always-YES baseline already scores ~67%" in note
+    assert "18 YES / 16 NO" in note
+    assert "only 16 negatives" in note
+    assert "~53%" in note
     assert "balanced accuracy + confusion matrix" in note
     # The >85% target is explicitly NOT claimed.
     assert "NOT claimed" in note
@@ -176,9 +176,9 @@ def test_out_of_scope_media_excluded_and_reported() -> None:
 def test_repo_labels_file_loads_with_expected_schema_and_balance() -> None:
     frame = load_polymerizability_labels()
     assert list(frame.columns) == list(LABEL_COLUMNS)
-    assert len(frame) == 27
+    assert len(frame) == 34
     assert int((frame["outcome"] == "YES").sum()) == 18
-    assert int((frame["outcome"] == "NO").sum()) == 9
+    assert int((frame["outcome"] == "NO").sum()) == 16
 
 
 def test_specified_electrolyte_matches_by_anion_not_salt_name() -> None:
