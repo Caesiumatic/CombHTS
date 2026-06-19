@@ -94,9 +94,10 @@ def test_directive_2_2_solvent_additions_present_and_parse() -> None:
         solvent = solvents[name]
         assert Chem.MolFromSmiles(solvent.smiles) is not None
         assert solvent.esw_anodic_V > solvent.esw_cathodic_V
-        # The added windows are explicitly flagged as a provisional FALLBACK (computed anodic
-        # limit is primary), never sold as measured/directive-table values.
-        assert "provisional" in solvent.notes.lower()
+        # The added windows are explicitly flagged as a FALLBACK (computed anodic limit is
+        # primary), never sold as the authoritative/measured value used by the screen.
+        notes = solvent.notes.lower()
+        assert "fallback" in notes and "primary" in notes
         assert solvent.xtb_gbsa_name is not None  # uses a documented ALPB proxy keyword
 
 

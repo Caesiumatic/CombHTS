@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-19 (later 9) — refresh benzonitrile/nitrobenzene fallback ESW in data/solvents.csv
+Update ONLY the benzonitrile and nitrobenzene fallback windows in `data/solvents.csv` from
+`docs/research/solvent_windows_and_solvation_reference.md` (every other row byte-identical):
+- **benzonitrile**: anodic 2.4→**+1.844**, cathodic −2.6→**−1.906** V vs Ag/AgCl (from +1.8/−1.95 V vs
+  SCE; SCE+0.044; IUPAC Pure Appl. Chem. 1987, doi:10.1351/pac198759050703; Pt; 0.1 M TBAP). Notes the
+  SMD built-in name BenzoNitrile (ε=25.592).
+- **nitrobenzene**: anodic 1.9→**+1.844**, cathodic −1.1→**−1.006** V vs Ag/AgCl (APPROXIMATE; anodic
+  from +1.8 V SCE midpoint of the +1.6..+2.0 range, cathodic from −1.05 V SCE; SCE+0.044). Notes the SMD
+  built-in name NitroBenzene (ε=34.809).
+The computed adiabatic anodic limit stays PRIMARY; these CSV numbers are only the fallback when the
+calc fails. No other solvent touched; SMILES/εr/reference/xtb_gbsa_name unchanged. The seed-11
+pinned-ESW test is a subset (excludes these two); the directive-§2.2 presence test now asserts the
+durable "fallback/primary" flag instead of the dropped "provisional" wording. pytest green; ruff clean.
+Pinned `configs/tier1.yaml` untouched.
+
 ## 2026-06-19 (later 8) — add 2 Tier-B monomer Eox benchmark rows (DTP + 3-methylthiophene)
 Two rows appended to `data/benchmark.csv` (purely additive; existing 32 rows byte-identical; full
 29-column ontology filled) from `docs/research/new_monomer_eox_benchmark_extraction.md`:
