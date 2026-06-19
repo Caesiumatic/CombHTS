@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-06-19 (later 6) — organize 6 research docs into docs/research/ (dedup + rename)
+Eight downloaded research files audited against the repo; 2 dropped (one byte-for-byte duplicate of
+`deep-research-report 20260616.md`; one already present as
+`docs/literature/deep_research_benchmark_finalization_20260616.md`). Six unique files copied to
+`docs/research/` with descriptive names:
+- `esw_electropolymerization_solvent_anchors.md` — ESW primary anchors for 11 solvents, Ue/Gong GC
+  dataset (0.65 M Et₄NBF₄, GC, 25 °C, 1 mA/cm² cutoff). Primary input for `data/solvent_benchmark.csv`.
+- `eox_benchmark_strict_initial_pass.md` — first strict 12-row Ag/AgCl calibration CSV.
+- `eox_benchmark_intermediate_review.md` — 26 proposed rows (19 calibration-eligible), 18 collapsed
+  groups; METU thesis cross-checks and red flags documented.
+- `eox_benchmark_finalization_review.md` — 14 strict rows (Cihaner/Önal peak + Camarada onset);
+  Codex handoff plan; second finalization report cross-referenced by docs/literature/ entry.
+- `eox_benchmark_fc_scale_curation.md` — Fc/Fc⁺ track: strict set = 0 (no verified "internal Fc
+  standard" wording found); 10 provisional onset + 1 peak groups documented.
+- `eox_benchmark_expansion_agagcl_20_groups.md` — 6 net-new strict Ag/AgCl groups, 14→20 total;
+  corrects prior FSeF/FSF value swap and OSeO journal citation.
+No code, config, scoring, or library CSV changed.
+
 ## 2026-06-19 (later 5) — directive §7 solvent-ESW MAE made computable (benchmark schema + validate wiring)
 New `data/solvent_benchmark.csv` (header-only: solvent, smiles, exp_anodic_V_vs_AgAgCl,
 exp_cathodic_V_vs_AgAgCl, reference, electrolyte, electrode, source, tier) + new
