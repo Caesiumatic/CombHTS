@@ -27,12 +27,24 @@ from eps.properties.redox import (
     ip_eV_to_potential_vs_AgAgCl,
     potential_vs_AgAgCl_to_ip_eV,
 )
+from eps.properties.secondary_descriptors import (
+    anion_vdw_volume_descriptors,
+    cation_reduction_descriptors,
+    ionpair_descriptors,
+    monomer_secondary_descriptors,
+    solvent_secondary_descriptors,
+)
 
 __all__ = [
     "ABS_SHE_V",
     "AGAGCL_SHIFT_V",
     "DEFAULT_EOX_OLIGOMER_LENGTHS",
     "anion_oxidation_potential",
+    "anion_vdw_volume_descriptors",
+    "cation_reduction_descriptors",
+    "ionpair_descriptors",
+    "monomer_secondary_descriptors",
+    "solvent_secondary_descriptors",
     "compute_oligomer_eox_series",
     "extrapolate_infinite_chain",
     "extrapolate_infinite_chain_poly2",

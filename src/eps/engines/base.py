@@ -14,6 +14,10 @@ SUPPORTED_QUANTITIES = frozenset(
         "solvation_free_energy",
         "optical_gap",
         "spin_density",
+        "homo",
+        "lumo",
+        "vertical_ip",
+        "vertical_ea",
     }
 )
 

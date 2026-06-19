@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-06-19 — directive §3 secondary descriptors (additive, reported-only)
+New `src/eps/properties/secondary_descriptors.py`: per-species, cached, failure-tolerant,
+screening-grade descriptors joined into the Tier-1 harvest. PURELY ADDITIVE — none enters a hard
+filter or the composite score (verified: survivors 664→664, composite max-abs-diff = 0.0, total
+7020→7020 with the new section enabled vs disabled). Pinned `configs/tier1.yaml` calibration,
+`configs/scoring.yaml`, and `redox.py` untouched (blob-hash verified).
+
+- **Engine (additive):** `base.py` SUPPORTED_QUANTITIES gains `homo`, `lumo`, `vertical_ip`,
+  `vertical_ea`; `spin_density` now also returns a per-heavy-atom `raw["atomic_spin_density"]`
+  array (sums to 1.0). MockEngine implements all (vertical = adiabatic + reorganization ≥ 0; LUMO >
+  HOMO), and the existing `adiabatic_ip`/`adiabatic_ea`/etc. values are unchanged (same hash basis).
+  XTBEngine adds best-effort real paths (frontier-orbital + Mulliken-spin parsers; single-point
+  vertical) documented as screening approximations; the cache round-trips `raw`, so per-atom arrays
+  persist.
+- **§3.1 monomer (per monomer):** `monomer_HOMO_eV`, `monomer_LUMO_eV`, `monomer_HL_gap_eV`;
+  radical-cation Mulliken spin → `monomer_cation_max_spin`, `_max_spin_atom_idx`, `_max_spin_is_alpha`
+  (α coupling-atom membership via `detect_alpha_carbons`), `_alpha_spin_sum`; `monomer_vertical_IP_eV`,
+  reused `monomer_adiabatic_IP_eV`, `monomer_lambda_ox_eV`.
+- **§3.2 solvent (per solvent):** `solvent_lambda_ox_eV` = vertical IP − adiabatic IP, and
+  `solvent_lambda_red_eV` = vertical EA − adiabatic EA (reusing the anodic/cathodic adiabatic points).
+- **§3.3 electrolyte:** `anion_vdw_volume_A3` (RDKit 3D grid volume, with a flagged
+  `anion_volume_method=bondi_additive_fallback` for anions distance geometry cannot embed, e.g.
+  octahedral PF6⁻); `cation_reduction_raw_V_vs_AgAgCl` (RAW — a reduction potential, deliberately NOT
+  on the oxidation calibration per T11) + the reported `cation_reduction_below_solvent_cathodic`
+  flag; `ionpair_dissociation_dG_kcal` (ALPB contact-pair proxy, `ionpair_method=alpb_contact_pair_approx`,
+  `status=skipped` when the pair can't be assembled — never guessed).
+- Config knob `secondary_descriptors.enabled` (default true) in `tier1.yaml` (calibration block
+  untouched). Verification artifact `outputs/secondary_descriptors.csv`. New tests
+  `tests/test_secondary_descriptors.py` (engine ordering, per-species smokes, cache reuse, strict
+  additivity). Suite green (154 passed, 4 skipped); ruff clean.
+
 ## 2026-06-18 (later 7) — calibrate-dft: emit the DFT-anchored composed xTB->V calibration
 `eps calibrate-dft` now emits the screen-ready COMPOSED calibration that collapses the directive §7
 two-stage design (Fit 1 xTB->DFT, Fit 2 DFT->exp peak) into one linear map from the xTB descriptor

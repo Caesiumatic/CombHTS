@@ -11,6 +11,12 @@ oligomer:
   # enter any hard filter or the composite score). n=1 (the monomer anchor) is added implicitly
   # for the classic 1/n infinite-chain extrapolation.
   eox_oligomer_lengths: [2, 3, 4, 6]
+secondary_descriptors:
+  # Directive §3 secondary descriptors (monomer frontier orbitals / radical-cation spin /
+  # reorganization; solvent oxidation/reduction reorganization; electrolyte cation reduction,
+  # anion vdW volume, ion-pair dissociation). Purely ADDITIVE and REPORTED-ONLY: they never
+  # enter a hard filter or the composite score. Default on per the directive.
+  enabled: true
 calibration:
   monomer_eox:
     enabled: true
