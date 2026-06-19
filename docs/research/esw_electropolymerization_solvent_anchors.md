@@ -80,3 +80,35 @@ The directive's library values agree well with authoritative references (Gong 20
 - **Unverified/incomplete sources** are flagged: DMF and DCM rows rest on community/secondary consensus; NMP's Ue oxidation cell is blank; sulfolane lacks a tetraalkylammonium GC/Pt value. Do not enter these as final without primary-source confirmation.
 - **Some widely circulated "tables" (e.g., AI-generated vendor PDFs quoting MeCN GC +2.5/−2.9 V vs Ag/Ag⁺) were deliberately excluded** as non-authoritative; they were not used as sources here.
 - No DOIs were fabricated; where a precise locator could not be pinned (DMF/DCM consensus values, sulfolane window) this is stated explicitly rather than cited.
+---
+
+## Curation log — rows entered into `data/solvent_benchmark.csv` (2026-06-19)
+
+This doc is the doc-of-record for the solvent-ESW benchmark seeding (directive §7). Six rows were
+curated onto the Ag/AgCl scale; conversions applied consistently (SHE→Ag/AgCl = −0.197 V; SCE→Ag/AgCl
+= +0.044 V), with the native value + reference recorded in each row's `source` field.
+
+| solvent | anodic V (Ag/AgCl) | cathodic V (Ag/AgCl) | electrode / electrolyte | tier | limit_set_by_electrolyte | native (source) |
+|---|---|---|---|---|---|---|
+| acetonitrile | +3.30 | −2.80 | GC / 0.65 M Et₄NBF₄ | B-crossref | TRUE | +3.5/−2.6 vs SHE (Ue/Gong) |
+| propylene carbonate | +3.60 | −3.00 | GC / 0.65 M Et₄NBF₄ | B-crossref | TRUE | +3.8/−2.8 vs SHE (Ue/Gong) |
+| GBL | +5.20 | −3.00 | GC / 0.65 M Et₄NBF₄ | B-crossref | TRUE | +5.4/−2.8 vs SHE (Ue/Gong) |
+| nitromethane | +2.70 | −1.20 | GC / 0.65 M Et₄NBF₄ | B-crossref | FALSE | +2.9/−1.0 vs SHE (Ue/Gong) |
+| benzonitrile | +1.844 | −1.906 | Pt / 0.1 M TBAP | A | FALSE | +1.8/−1.95 vs SCE (IUPAC PAC 1987, 59, 703) |
+| nitrobenzene | +1.844 | −1.006 | Pt / 0.1 M TEABF₄/TBAP-type | B-approx | FALSE | +1.8(mid)/−1.05 vs SCE (windows doc) |
+
+**`limit_set_by_electrolyte` flag (appended boolean column; the validation reader tolerates extra
+trailing columns).** TRUE where the research docs say the anodic edge is electrolyte/anion-set rather
+than intrinsic to the solvent — MeCN, PC, GBL (the Ue/Gong GC limiting-oxidation values are anion-set
+in practice). FALSE for benzonitrile, nitrobenzene, nitromethane, where the entered anodic edge is the
+solvent's own oxidation onset/window.
+
+**DEFERRED — deliberately NOT entered as rows** (thin or under-conditioned sourcing per the research
+docs; entering them would inject systematic error):
+- **DMSO** — anodic ceiling (~+1.5 V vs SCE) traces to Aurbach *Nonaqueous Electrochemistry* with the
+  specific electrolyte/electrode unstated; re-vet with a primary CV source (e.g. 0.1 M TBAP on GC/Pt).
+- **Sulfolane** — quantitative windows are on the Li/Li⁺ battery scale with Li salts; no GC/Pt
+  tetraalkylammonium value located.
+- **NMP** — the Ue/Gong oxidation-limit cell is effectively blank/incomplete; no reliable anodic anchor.
+- **Water** — needs pH- and electrode-resolved RHE handling (≥3 rows: pH 1 GC, pH 7 GC, pH 1 Au), not a
+  single Ag/AgCl value; out of scope for the single-value schema.

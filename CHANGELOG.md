@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-19 (later 7) — seed data/solvent_benchmark.csv (unblocks directive §7 solvent-ESW MAE)
+Added 6 measured Ag/AgCl ESW rows curated from `docs/research/esw_electropolymerization_solvent_anchors.md`
+(Ue/Gong GC dataset) and `docs/research/solvent_windows_and_solvation_reference.md` (Pt values):
+acetonitrile +3.30/−2.80, propylene carbonate +3.60/−3.00, GBL +5.20/−3.00, nitromethane +2.70/−1.20
+(all B-crossref, GC, 0.65 M Et₄NBF₄), benzonitrile +1.844/−1.906 (tier A, Pt, 0.1 M TBAP) and
+nitrobenzene +1.844/−1.006 (B-approx, Pt). Conversions applied consistently (SHE→Ag/AgCl −0.197 V;
+SCE→Ag/AgCl +0.044 V) with the native value+reference recorded per row. Appended a boolean
+`limit_set_by_electrolyte` column (the validation reader tolerates extra trailing columns; TRUE for
+MeCN/PC/GBL whose anodic edge is anion-set). DMSO/sulfolane/NMP/water DEFERRED with reasons in the
+doc-of-record curation log. `eps validate` §7 solvent-ESW MAE now reports a REAL number (was "not
+computable"); mock smoke anodic MAE ≈ 1.86 V, cathodic ≈ 1.12 V (n=6) — real numbers from the cluster.
+Suite green (174 passed, 4 skipped); ruff clean. No code/config/scoring/redox change; pinned
+`configs/tier1.yaml` and existing CSV rows untouched.
+
 ## 2026-06-19 (later 6) — organize 6 research docs into docs/research/ (dedup + rename)
 Eight downloaded research files audited against the repo; 2 dropped (one byte-for-byte duplicate of
 `deep-research-report 20260616.md`; one already present as

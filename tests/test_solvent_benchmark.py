@@ -7,7 +7,6 @@ import pandas as pd
 from eps.engines import CalcRequest, CalcResult, Engine, MockEngine
 from eps.validation.memo import write_validation_memo
 from eps.validation.solvent_benchmark import (
-    DEFAULT_SOLVENT_BENCHMARK_PATH,
     SOLVENT_BENCHMARK_COLUMNS,
     compute_solvent_esw_mae,
     load_solvent_benchmark,
@@ -24,17 +23,27 @@ class CountingEngine(Engine):
         return self.delegate.run(req)
 
 
-def test_repo_solvent_benchmark_is_header_only_with_correct_schema() -> None:
+def test_repo_solvent_benchmark_is_seeded_with_correct_schema() -> None:
+    # The benchmark is now seeded with measured Ag/AgCl rows (directive §7). The required
+    # SOLVENT_BENCHMARK_COLUMNS are preserved as the leading columns, with one appended
+    # boolean column `limit_set_by_electrolyte` that the validation reader tolerates.
     frame = load_solvent_benchmark()
-    assert list(frame.columns) == list(SOLVENT_BENCHMARK_COLUMNS)
-    assert frame.empty  # seeded header-only; rows curated later
+    assert list(frame.columns)[: len(SOLVENT_BENCHMARK_COLUMNS)] == list(SOLVENT_BENCHMARK_COLUMNS)
+    assert "limit_set_by_electrolyte" in frame.columns
+    assert not frame.empty
+    assert set(frame["solvent"]) >= {
+        "acetonitrile", "propylene carbonate", "GBL",
+        "nitromethane", "benzonitrile", "nitrobenzene",
+    }
 
 
 def test_solvent_esw_mae_not_computable_without_rows(tmp_path: Path) -> None:
-    # Header-only benchmark -> not computable AND no engine calls (short-circuits).
+    # A HEADER-ONLY benchmark -> not computable AND no engine calls (short-circuits).
+    header_only = tmp_path / "header_only.csv"
+    pd.DataFrame(columns=list(SOLVENT_BENCHMARK_COLUMNS)).to_csv(header_only, index=False)
     engine = CountingEngine()
     result = compute_solvent_esw_mae(
-        engine=engine, cache_path=tmp_path / "c.sqlite", benchmark_path=DEFAULT_SOLVENT_BENCHMARK_PATH
+        engine=engine, cache_path=tmp_path / "c.sqlite", benchmark_path=header_only
     )
     assert result.computable is False
     assert result.n_benchmark_rows == 0
@@ -70,9 +79,10 @@ def test_solvent_esw_mae_real_number_once_rows_land(tmp_path: Path) -> None:
     assert len(result.per_solvent) == 2
 
 
-def test_memo_keeps_not_computable_with_header_only_benchmark(tmp_path: Path) -> None:
-    # The §7 invariant: with the header-only repo benchmark, the memo still marks solvent-ESW
-    # MAE 'not computable yet' (so the two-gaps invariant in test_invariants holds).
+def test_memo_marks_solvent_esw_computable_with_seeded_benchmark(tmp_path: Path) -> None:
+    # With the seeded repo benchmark, the memo now reports the solvent-ESW MAE as COMPUTABLE
+    # (a real number, never fabricated), while the qualitative yes/no feasibility gap remains
+    # not computable.
     memo_path = write_validation_memo(
         engine=MockEngine(),
         cache_path=tmp_path / "memo.sqlite",
@@ -82,4 +92,7 @@ def test_memo_keeps_not_computable_with_header_only_benchmark(tmp_path: Path) ->
     )
     text = memo_path.read_text(encoding="utf-8")
     assert "Solvent ESW MAE" in text
-    assert text.count("not computable yet") >= 2
+    assert "NOW COMPUTABLE" in text
+    # The remaining §7 gap (yes/no feasibility) is still explicitly not computable.
+    assert "yes/no" in text
+    assert "not computable yet" in text
