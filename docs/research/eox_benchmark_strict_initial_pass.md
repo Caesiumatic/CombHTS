@@ -1,0 +1,69 @@
+# Experimental Oxidation Potential Benchmark for Electropolymerization Monomers
+
+## Scope and curation boundary
+
+I replaced the mixed-reference, mixed-medium seed set with a smaller but auditable benchmark that only includes rows I could trace to explicit literature values, explicit reference electrodes, and enough experimental context to standardize them onto **V vs Ag/AgCl (aq, sat. KCl)**. In this pass, that yielded **12 usable rows** spanning four families with the strongest support in the accessible literature: thiophene/selenophene, EDOT under multiple media/electrolytes, carbazole, and 3-hexylthiophene. I deliberately did **not** pad the dataset with furan, aniline, ProDOT, fluorene, CPDT, benzothiadiazole donor–acceptor units, bithiophene, or terthiophene where the accessible source either lacked a clean reference electrode, reported only a deposition potential rather than an onset/peak/half-wave, or could not be verified to a primary journal article with adequate metadata. citeturn41view0turn33view0turn19view0turn18view0turn44view0turn13view0turn49search0
+
+The strongest primary sources for this benchmark were a 2015 selenophene/thiophene electropolymerization study in acetonitrile/TBATFB, a 2025 PEDOT solvent/dopant study with an explicitly calibrated silver pseudo-reference, a 2019 carbazole electropolymerization study, and a 2023 3-hexylthiophene study using a nonaqueous Ag/Ag⁺ reference whose offset to SCE was stated in the paper itself. Those four sources provided the bulk of the rows below. citeturn41view0turn33view0turn19view0turn18view0
+
+## CSV deliverable
+
+```csv
+monomer_name,monomer_smiles,solvent_name,electrolyte,native_potential_V,native_reference,potential_type,conversion_to_AgAgCl_V,conversion_source,*exp_Eox_V_vs_AgAgCl*,medium,working_electrode,scan_rate_mV_s,*source_doi_or_ref*,source_citation,reliability_tier,notes
+thiophene,c1ccsc1,acetonitrile,"TBATFB; 0.10 M",1.70,SCE,onset,+0.045,"10.1016/S0020-1693(99)00364-0",1.745,nonaqueous,,100,"10.1515/msp-2015-0007","F. Alakhras, Materials Science-Poland, 2015",B,"Primary source; threshold polymerization potential explicitly reported. Nonaqueous to aqueous Ag/AgCl conversion carries extra liquid-junction uncertainty."
+selenophene,c1cc[se]c1,acetonitrile,"TBATFB; 0.10 M",1.55,SCE,onset,+0.045,"10.1016/S0020-1693(99)00364-0",1.595,nonaqueous,,100,"10.1515/msp-2015-0007","F. Alakhras, Materials Science-Poland, 2015",B,"Primary source; threshold polymerization potential explicitly reported. Nonaqueous to aqueous Ag/AgCl conversion carries extra liquid-junction uncertainty."
+EDOT,c1oc2ccsc2o1,water,"Na2B4O7; 0.02 M",0.96,"Ag pseudo-reference on SPE (-0.131 V vs Ag/AgCl)",onset,-0.131,"10.1007/s10853-025-11477-2",0.829,aqueous,"Au SPE",,"10.1007/s10853-025-11477-2","N. Cocuk et al., Journal of Materials Science, 2025",A,"Primary source; internal pseudo-reference explicitly calibrated to Ag/AgCl in the paper."
+EDOT,c1oc2ccsc2o1,water,"NaBF4; 0.02 M",0.67,"Ag pseudo-reference on SPE (-0.131 V vs Ag/AgCl)",onset,-0.131,"10.1007/s10853-025-11477-2",0.539,aqueous,"Au SPE",,"10.1007/s10853-025-11477-2","N. Cocuk et al., Journal of Materials Science, 2025",A,"Primary source; internal pseudo-reference explicitly calibrated to Ag/AgCl in the paper."
+EDOT,c1oc2ccsc2o1,acetonitrile,"LiClO4; 0.02 M",1.13,"Ag pseudo-reference on SPE (-0.131 V vs Ag/AgCl)",onset,-0.131,"10.1007/s10853-025-11477-2",0.999,nonaqueous,"Au SPE",,"10.1007/s10853-025-11477-2","N. Cocuk et al., Journal of Materials Science, 2025",B,"Primary source; nonaqueous row. Paper itself notes that aqueous Ag/AgCl use in acetonitrile can introduce contamination/potential instability; here the pseudo-reference was calibrated to Ag/AgCl."
+EDOT,c1oc2ccsc2o1,acetonitrile,"NaBF4; 0.02 M",1.14,"Ag pseudo-reference on SPE (-0.131 V vs Ag/AgCl)",onset,-0.131,"10.1007/s10853-025-11477-2",1.009,nonaqueous,"Au SPE",,"10.1007/s10853-025-11477-2","N. Cocuk et al., Journal of Materials Science, 2025",B,"Primary source; nonaqueous row with same pseudo-reference calibration."
+EDOT,c1oc2ccsc2o1,acetonitrile,"NaTFPB; 0.02 M",1.36,"Ag pseudo-reference on SPE (-0.131 V vs Ag/AgCl)",onset,-0.131,"10.1007/s10853-025-11477-2",1.229,nonaqueous,"Au SPE",,"10.1007/s10853-025-11477-2","N. Cocuk et al., Journal of Materials Science, 2025",B,"Primary source; nonaqueous row with same pseudo-reference calibration."
+EDOT,c1oc2ccsc2o1,methanol,"NaBF4; 0.02 M",1.24,"Ag pseudo-reference on SPE (-0.131 V vs Ag/AgCl)",onset,-0.131,"10.1007/s10853-025-11477-2",1.109,nonaqueous,"Au SPE",,"10.1007/s10853-025-11477-2","N. Cocuk et al., Journal of Materials Science, 2025",B,"Primary source; methanol row retained separately from acetonitrile/water because medium matters."
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,acetonitrile,"LiClO4; 0.10 M",1.05,SCE,onset,+0.045,"10.1016/S0020-1693(99)00364-0",1.095,nonaqueous,"Pt electrode",50,"10.3389/fmats.2019.00131","E. Contal et al., Frontiers in Materials, 2019, 6, 131",B,"Primary source; nonaqueous to aqueous Ag/AgCl conversion adds junction uncertainty."
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,DMF,"LiClO4; 0.10 M",0.95,SCE,onset,+0.045,"10.1016/S0020-1693(99)00364-0",0.995,nonaqueous,"Pt electrode",50,"10.3389/fmats.2019.00131","E. Contal et al., Frontiers in Materials, 2019, 6, 131",B,"Primary source; solvent dependence captured explicitly. Nonaqueous to aqueous Ag/AgCl conversion adds junction uncertainty."
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,acetonitrile,"TBAB; 0.10 M",1.10,SCE,onset,+0.045,"10.1016/S0020-1693(99)00364-0",1.145,nonaqueous,"Pt electrode",50,"10.3389/fmats.2019.00131","E. Contal et al., Frontiers in Materials, 2019, 6, 131",B,"Primary source; supporting-electrolyte dependence captured explicitly. Nonaqueous to aqueous Ag/AgCl conversion adds junction uncertainty."
+3-hexylthiophene,CCCCCCc1ccsc1,acetonitrile,"LiClO4; 3 mmol in 30 mL (reported); source paper also describes Ag/Ag+ in TBAPF6/CH3CN",1.40,"Ag/Ag+ (0.1 M AgNO3/0.1 M TBAPF6 in CH3CN; +0.320 V vs SCE)",onset,+0.365,"10.32508/stdj.v26i2.4063; 10.1016/S0020-1693(99)00364-0",1.765,nonaqueous,"ITO glass",0.1,"10.32508/stdj.v26i2.4063","Effect of Applied Voltage on the Electrochemical Copolymerization of Thiophene and Dithenopyrrole Derivatives, VNUHCM Journal of Science and Technology Development, 2023",B,"Primary source, but methods section contains internal electrolyte/reference-reporting inconsistencies and an implausibly low stated scan rate (0.1 mV/s); retained verbatim and downgraded."
+```
+
+## Conversion constants used
+
+I used only conversion factors that were either stated explicitly in the source paper or taken from the acetonitrile interconversion work by Pavlishchuk and Addison, which is still the standard secondary source most papers cite for CH₃CN reference-electrode conversions. The 2025 PEDOT paper is especially useful because it directly states that its integrated silver pseudo-reference is **−0.131 V vs Ag/AgCl**; that avoided a second-hand conversion for those rows. citeturn34view2turn33view0turn45search11turn10search8
+
+| Native reference | Additive constant used to reach Ag/AgCl sat. KCl | Basis used here |
+|---|---:|---|
+| SCE | +0.045 V | Ag/AgCl(sat. KCl) is ~0.045 V below SCE in the CH₃CN conversion tables commonly used for nonaqueous electrochemistry |
+| Ag/Ag⁺, 0.1 M AgNO₃ / 0.1 M TBAPF₆ in CH₃CN | +0.365 V | Source paper states +0.320 V vs SCE; then +0.045 V from SCE to Ag/AgCl |
+| Ag pseudo-reference on Metrohm SPE | −0.131 V | Explicitly calibrated to Ag/AgCl in the source paper |
+
+These constants are operational, not universal thermodynamic truths across solvent systems. For the nonaqueous rows, the conversion onto **aqueous** Ag/AgCl must be understood as a project bookkeeping convention, not a solvent-independent standard potential. citeturn32view0turn33view0turn45search11
+
+## Methods and reliability memo
+
+### Reference-scale recommendation
+
+For this project’s existing xTB workflow, keeping a **reporting column in V vs Ag/AgCl** is acceptable so long as every row carries its native reference, the signed conversion, and a medium tag. However, for **future nonaqueous screening**, I recommend migrating the **master internal scale** to **Fc/Fc⁺** and only converting to Ag/AgCl as a presentation layer when needed. Two reasons dominate. First, several of your relevant measurements are in acetonitrile or other nonaqueous media, where forcing everything onto aqueous Ag/AgCl imports additional uncertainty. Second, even a recent PEDOT study that deliberately used Ag/AgCl for cross-solvent comparison explicitly warns that aqueous Ag/AgCl in acetonitrile can cause contamination and potential fluctuations, and the broader electrochemistry literature continues to use Fc/Fc⁺ as the most portable anchor for nonaqueous redox data. citeturn32view0turn31search0turn50search7turn45search11
+
+My practical recommendation is therefore: **store both scales when possible**. For legacy compatibility with your calibration code, keep `*exp_Eox_V_vs_AgAgCl*`; for scientific robustness, add an internal companion field in future curation, `exp_Eox_V_vs_FcFcplus`, and prefer that field whenever the experimental medium is nonaqueous. citeturn32view0turn50search7turn45search11
+
+### Thermodynamic target versus experimental observable
+
+Your computed quantity is built from an **adiabatic ionization process in solution**. In the computational redox literature, that kind of target is tied to the free-energy change for oxidation, i.e. a thermodynamic redox quantity. By contrast, the experimental electropolymerization literature for these monomers overwhelmingly reports **oxidation onset** or sometimes an **anodic peak**, because the monomer oxidation is usually irreversible and immediately coupled to chemical follow-up and film growth. That conceptual mismatch is real and cannot be “fixed” by a cleaner reference-electrode conversion alone. citeturn50search10turn41view0turn33view0turn19view0turn18view0
+
+For calibration, I therefore recommend a two-tier strategy. If the model is intended to rank **electropolymerization initiation propensity**, prioritize **onset** rows, because they report the practical threshold at which monomer oxidation begins under the experimental conditions. If the model is intended to approximate a more nearly thermodynamic redox descriptor, then rows reporting **reversible E1/2** would be preferable, but they are rare for these monomers. In this benchmark, most rows are onset values; they are useful, but they should be interpreted as **kinetically contaminated empirical targets**, not pure equivalents of the adiabatic xTB oxidation free energy. citeturn41view0turn33view0turn19view0turn50search10
+
+### Accuracy expectation
+
+I did **not** verify a defensible, source-grounded **GFN2-xTB-specific** cross-family MAE/R² for oxidation potentials of conjugated electropolymerizable monomers in this pass. What I did verify is that GFN2-xTB is a **general-purpose** extended tight-binding method rather than a dedicated redox-potential model, and that the literature on thiophene oligomers explicitly treats oxidation-potential prediction as a problem requiring comparison against experimental electrochemistry rather than assuming transferable absolute accuracy. citeturn50search0turn50search4turn50search1turn50search5
+
+Because I could not extract a reliable published numeric MAE/R² from the accessible primary-source abstracts alone, I do **not** recommend hard-coding a Tier-1 MAE target such as **0.30 V** as if it were literature-established. The defensible move is to estimate the achievable error **empirically on this curated benchmark**, ideally with nested cross-validation and separate analyses by medium and potential type. Said differently: a numerical performance target should be **measured from your benchmark**, not imported unsafely from a loosely related DFT or ML paper. citeturn50search0turn50search1turn50search10
+
+## Deliberately excluded rows and remaining gaps
+
+Several apparently attractive rows were **intentionally excluded**.
+
+The clearest example is **furan**. I found a 2015 paper whose abstract compares 2-(thiophen-2-yl)furan against **thiophene (1.47 V)** and **furan (1.28 V)** in acetonitrile/LiClO₄, but the accessible abstract text did **not** expose the reference electrode, so I could not standardize those values without guessing. I also found the classic 1999 polyfuran paper reporting electropolymerization of furan at **1.2 V vs Ag/AgCl**, but that is an **applied deposition potential**, not a clean monomer onset/Epa/E1/2, so it is not the same target. citeturn13view0turn49search0turn49search4
+
+I also excluded **pyrrole** from the primary CSV even though a 2021 paper clearly shows that **0.9 V vs Ag/AgCl** was “very close to the minimum potential to achieve pyrrole oxidation” on FTO in acetonitrile/LiClO₄ with 2 wt% water. That wording is too approximate for a calibration target when cleaner onset extractions are possible in principle. citeturn44view0
+
+For **ProDOT** and **EDOP**, the accessible text in this pass came from a review summarizing XDOT/XDOP families rather than from a fully verified primary article with per-row conditions recovered cleanly enough for this benchmark. Those compounds should be recoverable in a second curation pass, but I excluded them here because the present benchmark is supposed to be calibration-grade, not merely suggestive. citeturn38view0turn39view0
+
+That leaves genuine gaps for aniline, furan, ProDOT, fluorene derivatives, CPDT, benzothiadiazole-linked donor–acceptor monomers, bithiophene, and terthiophene. The present file is therefore best viewed as a **high-confidence nucleus** rather than a finished 30–50-row production benchmark. citeturn13view0turn49search0turn38view0turn39view0
