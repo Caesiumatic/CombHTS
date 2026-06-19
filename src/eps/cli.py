@@ -37,7 +37,11 @@ from eps.workflow.dft_calibration import (
     run_dft_calibration,
 )
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
-from eps.workflow.tier2 import write_tier2_dry_run_inputs
+from eps.workflow.tier2 import (
+    DEFAULT_REFINED_WINDOW_MARGIN_V,
+    run_tier2_refined_screen,
+    write_tier2_dry_run_inputs,
+)
 
 DEFAULT_ANALYSIS_OUTDIR = DEFAULT_OUTPUT_PATH.parent / "analysis"
 
@@ -252,6 +256,35 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_OUTPUT_PATH.parent / "tier2_inputs",
         help="Directory for the generated .gjf inputs.",
+    )
+
+    tier2_screen = subparsers.add_parser(
+        "tier2-screen",
+        help="Directive §4.2 refined screen: tighter window filter (-0.5 V) on Tier-1 survivors + composite re-rank",
+    )
+    tier2_screen.add_argument(
+        "--survivors",
+        type=Path,
+        default=DEFAULT_OUTPUT_PATH,
+        help="Tier-1 ranked survivors CSV (the cheap source of the per-triad columns).",
+    )
+    tier2_screen.add_argument(
+        "--dft-results",
+        type=Path,
+        default=None,
+        help="Optional Tier-2 DFT results CSV (per-monomer Eox V vs Ag/AgCl). Absent -> tier2_dft_pending=true.",
+    )
+    tier2_screen.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_OUTPUT_PATH.parent / "tier2_refined.csv",
+        help="Output CSV for the refined, re-ranked survivors.",
+    )
+    tier2_screen.add_argument(
+        "--margin",
+        type=float,
+        default=DEFAULT_REFINED_WINDOW_MARGIN_V,
+        help="Refined window margin in V (monomer AIP must be this far below the solvent anodic limit).",
     )
 
     subparsers.add_parser(
@@ -495,6 +528,31 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Survivors read: {result.n_survivors}; unique monomers: {result.n_unique_monomers}")
         print(f"Wrote {len(result.input_paths)} .gjf inputs (neutral + cation per monomer) to {result.outdir}")
         print(f"Rough estimate: ~{result.estimated_cpu_hours:.0f} CPU-hours (very approximate; for planning only)")
+        return 0
+
+    if args.command == "tier2-screen":
+        if not Path(args.survivors).exists():
+            print(f"ERROR: Tier-1 survivors CSV not found: {args.survivors}")
+            print("  eps run-tier1   # produces the Tier-1 ranked survivors CSV")
+            return 1
+        result = run_tier2_refined_screen(
+            args.survivors,
+            args.output,
+            dft_results_path=args.dft_results,
+            refined_window_margin_V=args.margin,
+        )
+        print(f"Tier-2 refined screen (window margin {result.refined_window_margin_V:.2f} V)")
+        print(f"Tier-1 survivors in: {result.n_tier1_survivors}; Tier-2 refined survivors: {result.n_tier2_survivors}")
+        if result.tier2_dft_pending:
+            print("NOTE: tier2_dft_pending=true — used calibrated Tier-1 Eox (no DFT results CSV supplied).")
+        print(f"Wrote refined CSV: {result.output_path}")
+        _stamp_provenance(
+            result.output_path,
+            engine="tier2-refined",
+            method="composite-rerank",
+            extra={"command": "tier2-screen", "refined_window_margin_V": result.refined_window_margin_V,
+                   "n_tier2_survivors": result.n_tier2_survivors, "tier2_dft_pending": result.tier2_dft_pending},
+        )
         return 0
 
     parser.error(f"Unknown command: {args.command}")
