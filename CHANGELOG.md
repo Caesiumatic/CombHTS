@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-06-19 (later 15) — §7 feasibility: anion-based label↔harvest matching
+Feasibility is governed by the dopant ANION, not the salt name, so `src/eps/validation/feasibility.py`
+now matches by anion. (a) SPECIFIED-electrolyte labels extract the anion (label salt → library salt
+carrying the same anion → RDKit-canonical `anion_smiles` from `data/electrolytes.csv`) and match on
+(monomer canonical SMILES, solvent, anion) — e.g. "Et4NBF4 (BF4-)" now matches harvest TBABF4 (both
+BF4-). (b) UNSPECIFIED/generic-electrolyte labels ("TBA salt", "electrolyte", blank) match on
+(monomer, solvent): predicted-YES iff any surviving triad exists for that pair, predicted-NO if the
+pair is in the harvest but nothing survives, out-of-scope if the pair is absent. Everything else
+unchanged (balanced accuracy + confusion matrix only, never raw accuracy/PASS; out-of-scope breakdown;
+PRELIMINARY caveat). Coverage on the mock 36×13×16 harvest rises **3/27 → 12/27** (out-of-scope 7 → 9).
+New tests: anion match (and anion mismatch) + unspecified monomer+solvent matching; suite green.
+
 ## 2026-06-19 (later 14) — wire §7 qualitative yes/no feasibility metric (DIAGNOSTIC, honest)
 New `src/eps/validation/feasibility.py` + `eps validate --harvest <tier1 all-triads CSV>`: scores the
 screen's binary prediction (survivor = predicted-YES; filtered-out = predicted-NO) against

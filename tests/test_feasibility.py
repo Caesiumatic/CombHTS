@@ -181,24 +181,79 @@ def test_repo_labels_file_loads_with_expected_schema_and_balance() -> None:
     assert int((frame["outcome"] == "NO").sum()) == 9
 
 
-def test_real_labels_against_mock_harvest_reports_balanced_only(tmp_path: Path) -> None:
-    # End-to-end with the real CSV and a synthetic harvest covering the three matchable triads.
+def test_specified_electrolyte_matches_by_anion_not_salt_name() -> None:
+    # Anion-based matching: a label specifying Et4NBF4 (BF4-) must match a harvest TBABF4 triad
+    # (both BF4-) even though the salt NAMES differ; a PF6- harvest must NOT match.
+    labels = _labels_frame([_label(THIO, "YES", electrolyte="Et4NBF4 (BF4-)")])
+    matched = compute_feasibility_metric(
+        labels=labels, harvest=_harvest([(THIO, "acetonitrile", "TBABF4", True)])
+    )
+    assert matched.n_matched == 1 and matched.tp == 1
+
+    mismatched = compute_feasibility_metric(
+        labels=labels, harvest=_harvest([(THIO, "acetonitrile", "TBAPF6", True)])
+    )
+    assert mismatched.n_matched == 0  # BF4- label vs PF6- harvest -> no anion match
+
+
+def test_unspecified_electrolyte_matches_on_monomer_plus_solvent() -> None:
+    # Generic "TBA salt" -> match on (monomer, solvent): predicted-YES if ANY triad survives.
+    labels = _labels_frame([_label(THIO, "YES", electrolyte="TBA salt")])
+    any_survives = compute_feasibility_metric(
+        labels=labels,
+        harvest=_harvest(
+            [(THIO, "acetonitrile", "TBAPF6", False), (THIO, "acetonitrile", "TBAClO4", True)]
+        ),
+    )
+    assert any_survives.n_matched == 1 and any_survives.tp == 1
+
+    # In the harvest but NOTHING survives -> predicted-NO (YES label -> false negative).
+    none_survive = compute_feasibility_metric(
+        labels=labels,
+        harvest=_harvest(
+            [(THIO, "acetonitrile", "TBAPF6", False), (THIO, "acetonitrile", "TBAClO4", False)]
+        ),
+    )
+    assert none_survive.n_matched == 1 and none_survive.fn == 1
+
+    # monomer+solvent ABSENT from the harvest -> out-of-scope (not matched), reported not dropped.
+    absent = compute_feasibility_metric(
+        labels=labels, harvest=_harvest([(PYR, "acetonitrile", "TBAPF6", True)])
+    )
+    assert absent.n_matched == 0
+    assert any("monomer+solvent not in" in reason for reason in absent.out_of_scope_breakdown)
+
+
+def test_real_labels_against_synthetic_harvest_uses_both_match_modes() -> None:
+    # End-to-end with the real CSV. The synthetic harvest covers the in-scope library monomers in
+    # acetonitrile/water so BOTH specified-anion and unspecified monomer+solvent labels match.
     from eps.chemspace import load_monomers
 
     lib = {m.name: m.canonical_smiles for m in load_monomers()}
     harvest = _harvest(
         [
-            (lib["EDOT"], "acetonitrile", "TBAPF6", True),
-            (lib["EDOS"], "acetonitrile", "TBAClO4", False),
-            (lib["aniline"], "acetonitrile", "LiClO4", False),
+            (lib["EDOT"], "acetonitrile", "TBAPF6", True),     # EDOT/MeCN/PF6 (specified) YES
+            (lib["EDOT"], "water", "TBAPF6", True),            # EDOT/H2O (unspecified) YES
+            (lib["pyrrole"], "acetonitrile", "TBABF4", True),  # pyrrole/Et4NBF4->BF4 (specified) YES
+            (lib["N-methylpyrrole"], "acetonitrile", "TBABF4", True),  # N-Me pyrrole BF4 YES
+            (lib["3-methoxythiophene"], "acetonitrile", "TBAPF6", True),  # unspecified YES
+            (lib["carbazole"], "acetonitrile", "TBAPF6", True),  # unspecified YES
+            (lib["EDOS"], "acetonitrile", "TBAClO4", True),    # EDOS/ClO4 (specified) YES
+            (lib["EDOP"], "water", "pTSA", True),              # EDOP/water/pTS (specified) YES
+            (lib["furan"], "acetonitrile", "TBAPF6", False),   # furan/TBA salt (unspecified) NO
+            (lib["aniline"], "acetonitrile", "LiClO4", False),  # aniline/MeCN/ClO4 (specified) NO
+            (lib["aniline"], "water", "NaClO4", False),        # aniline/water (unspecified) NO
+            (lib["thiophene"], "water", "NaClO4", False),      # thiophene/water (unspecified) NO
         ]
     )
     result = compute_feasibility_metric(harvest=harvest)
-    assert result.n_matched == 3
     assert result.computable is True
-    # EDOT YES->survivor=TP; EDOS YES->filtered=FN; aniline NO->filtered=TN.
-    assert (result.tp, result.fn, result.fp, result.tn) == (1, 1, 0, 1)
-    assert result.balanced_accuracy == pytest.approx((0.5 + 1.0) / 2)
+    assert result.n_matched == 12  # up from 3 under the old salt-name matcher
+    # 8 YES all predicted YES; 4 NO all predicted NO -> a perfectly-separated synthetic harvest.
+    assert (result.tp, result.fn, result.fp, result.tn) == (8, 0, 0, 4)
+    assert result.balanced_accuracy == pytest.approx(1.0)
+    # Non-library carbazoles under a generic electrolyte are reported out-of-scope, not dropped.
+    assert any("monomer+solvent not in" in reason for reason in result.out_of_scope_breakdown)
     text = format_feasibility_report(result)
-    assert "coverage: 3 matched" in text
-    assert "out-of-scope: 7 rows" in text
+    assert "coverage: 12 matched" in text
+    assert "BALANCED accuracy" in text and "PASS" not in text
