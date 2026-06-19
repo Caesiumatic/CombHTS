@@ -157,7 +157,7 @@ def test_directional_ordering_holds_in_clean_mock_harvest(tmp_path: Path) -> Non
 
 # --- 5. Honesty invariants: memo never fabricates the two §7 gaps; analyze labels placeholders -
 
-def test_memo_always_marks_two_section7_gaps_not_computable(tmp_path: Path) -> None:
+def test_memo_marks_feasibility_gap_not_computable_and_solvent_esw_computable(tmp_path: Path) -> None:
     memo_path = write_validation_memo(
         engine=MockEngine(),
         cache_path=tmp_path / "memo.sqlite",
@@ -169,8 +169,10 @@ def test_memo_always_marks_two_section7_gaps_not_computable(tmp_path: Path) -> N
 
     assert "Solvent ESW MAE" in text
     assert "yes/no" in text
-    # Both unmeasurable §7 metrics are explicitly not-computable (never a fabricated number).
-    assert text.count("not computable yet") >= 2
+    # The solvent-ESW gap is now closed (seeded benchmark -> a real, never-fabricated number),
+    # while the qualitative yes/no feasibility metric remains explicitly not computable.
+    assert "NOW COMPUTABLE" in text
+    assert "not computable yet" in text
 
 
 def test_analyze_honesty_labels_are_screening_grade_not_validated() -> None:
