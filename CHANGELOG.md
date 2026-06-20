@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-06-19 (later 19) — adopt decide-and-report governance; promote 3 tier-B rows (strict n=9 frozen)
+Operationalized the "directive = delegated PI authority; decide-and-report" operating model.
+- **Governance retag (THINK.md + STATUS.md)**: added the operating-model paragraph to THINK's framing
+  note (decisions that serve the directive and are scientifically sound are PRE-AUTHORIZED — decide,
+  record, report at Friday/group; PI retains veto; escalate ONLY for genuine RESOURCE/SCOPE
+  commitments). Retagged vestigial Forum labels: T1 → self (anchor type decided on physics;
+  strict-vs-relaxed is data-gated by LOO-CV, not a PI gate); T2 → self/report (Ag/AgCl master scale +
+  P&A constants directive-sanctioned); T4 → self/report (the two-stage calibrate-vs-validate split is
+  the directive's own design); T7 → self/report (directive §8 lists both deliverables; produce both).
+  T8 KEPT as the one genuine PI/group escalation but RE-SCOPED to RESOURCE planning (full-scale Tier-2
+  ~100×30×25 = hundreds-to-thousands of CPU-hours on the shared Lop cluster), not correctness approval.
+  STATUS Open debt #3 marked anchor-type DECIDED; "pending PI sign-off" phrasings reframed to
+  decide-and-report; "Immediate next action" rewritten so it no longer reads as waiting on PI approval
+  (next actions are the data-gated live g16 batch and the resource-planning full-scale screen).
+- **Benchmark promotions (relaxed track only)**: MOVED 3 calibration-usable SCE-converted rows from
+  `data/benchmark_candidates.csv` into `data/benchmark.csv` (reformatted to the 29-col schema,
+  tier B, native SCE → Ag/AgCl +0.045 V via Pavlishchuk & Addison 2000, ~0.05–0.15 V junction floor
+  recorded in notes): diphenylamine 0.875 V peak, 3-ethylcarbazole 1.085 V peak, N-vinylcarbazole
+  0.845 V onset. The 4th staged row (aniline E1/2 0.86 V) was NOT promoted — its "pending PI sign-off"
+  reason was replaced with the real scientific reason (E1/2 half-wave is not a peak/onset observable,
+  so it cannot feed either track regardless of approval; the clean aniline PEAK row 0.96 V native
+  Ag/AgCl is already in benchmark.csv) and its `curation_status` set to `excluded (incompatible label)`.
+- **Point counts (mock `eps validate --all-profiles`)**: `agagcl_peak_strict` = **9 (FROZEN)** — the
+  3 promoted rows are tier B and enter the relaxed profiles only; `agagcl_peak_relaxed` 21 → **23**;
+  `agagcl_onset_relaxed` 15 → **16**; `fc_*` 0/skipped. The relaxed fits shift (better conditioning)
+  while the pinned screen is unchanged: `configs/tier1.yaml` slope/intercept/source and
+  `default_screening_profile` UNTOUCHED; the strict-vs-relaxed reconciliation deliberately left for the
+  data-gated g16 LOO-CV tiebreaker. No scientific-honesty caveat removed (screening-grade / provisional
+  / junction-floor language preserved). Count tests updated (benchmark 36→39, candidates 40→37,
+  peak_relaxed 21→23, onset_relaxed 15→16); suite green.
+
 ## 2026-06-19 (later 18) — ingest research partD (eox anchor / ref scale / accuracy / clean data)
 Synced `docs/research/eox_anchor_refscale_accuracy_partD.md` and ingested its findings.
 - **THINK decisions (g16-independent, physical/literature grounds)**: T1 anchor TYPE decided —

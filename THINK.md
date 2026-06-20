@@ -2,22 +2,24 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-18 (Step-2 live-batch session)_
+_Last updated: 2026-06-19 (decide-and-report governance + tier-B promotions)_
 
 ## How to read this
 
 Each entry is a question we have not fully resolved. The `Forum` field says who decides: self = objective/rigor call we make and merely report at group meeting; group-meeting = a tradeoff to surface for discussion; PI sign-off = a resource/scope/policy call. The `Cost` field says how expensive resolution is.
 
+**Operating model — the directive is the PI's delegated authority; decide-and-report.** Decisions that faithfully serve the directive's goal and are scientifically sound are PRE-AUTHORIZED: we decide, record the rationale here, and report at the Friday update / group meeting. The PI retains veto via that cadence; report-then-veto is not ask-then-wait. Escalate to the PI ONLY for genuine RESOURCE/SCOPE commitments (e.g. committing large shared-cluster CPU-hours or researcher-weeks), not for correctness sign-off. When the directive is genuinely ambiguous and experts could disagree, still decide, but flag the assumption explicitly and keep it cheaply reversible.
+
 | ID | Title | Status | Forum | Cost |
 | --- | --- | --- | --- | --- |
-| T1 | Screening calibration anchor: peak vs onset | exploring (resolution proposed) | group-meeting then PI sign-off | scope/policy |
-| T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | open (resolution proposed) | PI sign-off | scope/policy |
+| T1 | Screening calibration anchor: peak vs onset | exploring (anchor type decided) | self (anchor type decided on physics; strict-vs-relaxed data-gated via LOO-CV) | scope/policy |
+| T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | resolution decided | self / report (directive-sanctioned; PI retains veto) | scope/policy |
 | T3 | Potential-type mismatch sets the accuracy ceiling | open | self (rigor) | lit-curation (no compute) |
-| T4 | What ">=30 clean groups" actually validates | open | group-meeting | scope/policy |
+| T4 | What ">=30 clean groups" actually validates | open | self / report (directive's own two-stage design; surface as info) | scope/policy |
 | T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
 | T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (staging proposed) | group-meeting | compute-heavy |
-| T7 | What is the real deliverable? | open | group-meeting | scope/policy |
-| T8 | Chemical-space coverage vs weight tuning | open | group-meeting / PI sign-off | compute-heavy |
+| T7 | What is the real deliverable? | open | self / report (directive §8 lists both; produce both) | scope/policy |
+| T8 | Chemical-space coverage vs weight tuning | open | PI/group (RESOURCE planning: full-scale Tier-2 spend/sequencing) | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
 | T10 | xTB failure clusters: data problem or engine problem? | decided | self (rigor) | one xTB round |
 | T11 | Should the computed solvent anodic limit share the monomer calibration / live on the same scale? | decided | group-meeting | scope/policy |
@@ -26,7 +28,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 ## T1 — Screening calibration anchor: peak vs onset
 - **Status**: exploring -> ANCHOR-TYPE decided (peak for calibration, onset for screening); strict-vs-relaxed still pending live DFT LOO-CV
-- **Forum**: group-meeting then PI sign-off
+- **Forum**: self (anchor type decided on physics; strict-vs-relaxed is data-gated via LOO-CV, not a PI gate)
 - **Cost**: scope/policy
 - **Question**: Which calibration profile should convert every xTB Eox in the screen — `agagcl_peak_strict` (Epa) or `agagcl_onset_relaxed` (Eonset)?
 - **Why it matters**: This single line defines the Eox the whole 50k-triad screen believes; it feeds the constraint-① window filter and the highest composite weight (0.30). Peak vs onset shifts BOTH slope and intercept, so it reshapes the ranking, not just offsets it.
@@ -36,11 +38,12 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Proposed resolution (2026-06-18, literature-backed; PROPOSED, pending PI confirmation)**: STORE BOTH peak and onset; use them for DIFFERENT jobs rather than choosing one. Monomer electro-oxidation is chemically irreversible (the radical cation couples immediately), so there is essentially no reversible E1/2 — the Epa−Eonset gap is ~0.2–0.4 V ([eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md) §3.1). Calibrate the DFT ΔSCF Eox against PEAK (Epa is closer to a thermodynamic vertical/adiabatic ionization observable) — already implemented in `eps calibrate-dft` Fit 2 (peak-only). Use ONSET as the anchor for the constraint-① "fits-in-window" screening filter, because the radical cation forms and film growth begins at onset, well before the peak. This decouples the single peak-vs-onset choice into two physically-matched uses; it does NOT by itself change the pinned `tier1.yaml` anchor.
 - **Decision (2026-06-19, research [eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md) Part A)**: the ANCHOR TYPE is now DECIDED on physical/literature grounds (g16-independent). Calibrate the computed adiabatic-IP Eox against **PEAK (Epa)**: Epa is the closer proxy to a one-electron thermodynamic ionization observable (HOMO/IP-vs-Epa correlations are tight — R² ≈ 0.99 in the DFT literature), whereas onset is a current-threshold/kinetic quantity that is noisier and more method-dependent. Use **ONSET** as the constraint-① in-window SCREENING filter (the radical cation forms and film growth begins at onset; apply an onset margin, e.g. require calibrated Epa ≥ 0.2–0.3 V below the solvent anodic limit). Keep peak and onset as **SEPARATE `label_type` columns and never regress mixed peak/onset rows** (mixing the ~0.15–0.35 V monomer-dependent Epa−Eonset gap into one fit injects ~0.2 V of artificial scatter). The ONLY remaining open sub-question is **strict (tier-A-only peak) vs relaxed (tier-A+B peak)**, to be decided EMPIRICALLY by Fit-2 LOO-CV once the live g16 batch lands. This decision does NOT change the pinned `configs/tier1.yaml` slope/intercept or `default_screening_profile`.
 - **Resolves when**: The group discusses peak vs onset, the PI signs off on the screening calibration anchor (and on the proposed peak-for-DFT / onset-for-window split), and `configs/tier1.yaml` plus `configs/calibration_profiles.yaml` are reconciled onto one agreed anchor. (Anchor TYPE resolved 2026-06-19; only strict-vs-relaxed remains, gated on live DFT LOO-CV.)
+- **Governance retag (2026-06-19, decide-and-report)**: Forum moved group-meeting-then-PI-signoff -> self. The anchor TYPE (peak-for-calibration / onset-for-screening) is an objective physics call we decide and report; the only remaining sub-question (strict vs relaxed peak) is DATA-gated by the Fit-2 LOO-CV tiebreaker after the live g16 batch, not a PI correctness gate.
 - **Links**: [STATUS open debts #3 and #13](STATUS.md#open-debts); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml); [docs/research/eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md); [docs/research/eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md).
 
 ## T2 — Master reference scale: Ag/AgCl vs Fc/Fc+
 - **Status**: resolution decided (Ag/AgCl master scale; conversion constants pinned)
-- **Forum**: PI sign-off
+- **Forum**: self / report (Ag/AgCl master scale + standard P&A conversion are directive-sanctioned; reported at Friday/group, PI retains veto)
 - **Cost**: scope/policy
 - **Question**: Keep aqueous Ag/AgCl as the benchmark master scale, or fund a separate Fc/Fc+ track for nonaqueous data?
 - **Why it matters**: Most clean nonaqueous monomer CVs are reported vs Fc/Fc+; staying Ag/AgCl-only blocks data growth, while force-converting nonaqueous SCE/Ag/Ag+ rows injects liquid-junction error comparable to the model error we are trying to measure.
@@ -49,6 +52,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Proposed resolution (2026-06-18, literature-backed; PROPOSED, pending PI confirmation)**: STANDARDIZE on Ag/AgCl as the master scale and CONVERT native Fc/Fc+ rows at **+0.45 V** (the authoritative MeCN constant, Pavlishchuk & Addison 2000; ≈ +0.45 V vs aq. Ag/AgCl), ACCEPTING a ~0.1 V (up to 0.2 V) systematic floor from the liquid junction. This does NOT discard most data, because the clean nonaqueous monomer literature is already split roughly evenly between direct-Ag/AgCl reports and Fc/Fc+-referenced values that convert cleanly; only no-calibrant pseudo-reference rows are unplaceable and stay excluded ([eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md) §"Ag/AgCl vs Fc/Fc+", Part 2). Crucially, that ~0.1 V floor is COMPARABLE to the MAE<0.15 V target — so it bounds how tightly the calibration can honestly be tuned (now enforced by the Refinement-2 reference-floor note + core-monomer flag). Do NOT force-convert no-calibrant pseudo-references.
 - **Decision (2026-06-19, research [eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md) Part B)**: **Ag/AgCl(sat'd KCl) is the master scale**, with conversion constants now PINNED from **Pavlishchuk & Addison, *Inorg. Chim. Acta* 2000, 298, 97–102, DOI 10.1016/S0020-1693(99)00407-7**. In acetonitrile at 25 °C: Fc/Fc⁺ = **+0.400 V vs SCE**; SCE = **+0.045 V vs Ag/AgCl(sat'd)**; therefore Fc/Fc⁺ = **+0.445 V vs Ag/AgCl (MeCN)**. Also SHE = Ag/AgCl + 0.197 V. **Conversions TO the master scale**: E(vs Ag/AgCl) = E(vs SCE) **+ 0.045**; E(vs Ag/AgCl) = E(vs Fc/Fc⁺) **+ 0.445** (MeCN only); E(vs Ag/AgCl) = E(vs SHE) **− 0.197**. Algebra reason two scales cannot share one fit: in E_exp = a·IP_xTB + b, the intercept **b absorbs the reference-electrode zero**, so two reference frames (Ag/AgCl vs Fc/Fc⁺, offset ~0.445 V) need two intercepts — either convert everything to one scale before fitting (preferred), or fit a shared slope with reference-specific intercepts. **Systematic floor**: converted nonaqueous rows carry ~**0.05–0.15 V** liquid-junction uncertainty (larger across solvents — the Fc couple itself shifts up to ~0.5 V MeCN↔DMSO), so non-MeCN conversions are flagged *approx*. **Caveat**: the P&A vs-SHE number (+0.624 V) carries a ~20 mV internal inconsistency (0.400 + 0.244 = 0.644); cite the SCE-referenced **+0.400 V** (reliable), not the SHE value. No-calibrant pseudo-reference / BFEE / mixed / aqueous-acid rows remain UNPLACEABLE and excluded.
 - **Resolves when**: The PI signs off on either Ag/AgCl-only curation or a separate Fc/Fc+ benchmark/calibration track (the proposal is the former, with the +0.445 V Fc / +0.045 V SCE conversion + accepted ~0.05–0.15 V floor). Constants pinned 2026-06-19; SCE/Fc conversion-staged rows now live in `data/benchmark_candidates.csv` pending PI promotion.
+- **Governance retag (2026-06-19, decide-and-report)**: Forum moved PI-signoff -> self / report. Standardizing on Ag/AgCl with the standard Pavlishchuk & Addison conversion constants is directive-sanctioned and scientifically standard; decided and reported at Friday/group, PI retains veto. On this basis 3 SCE-converted tier-B rows (diphenylamine, 3-ethylcarbazole peaks; N-vinylcarbazole onset) were promoted to the RELAXED track; strict n=9 stays frozen.
 - **Links**: [STATUS open debt #4](STATUS.md#open-debts); [docs/benchmark_methods_memo.md](docs/benchmark_methods_memo.md#recommendation-on-master-scale); [docs/research/eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md); [docs/research/eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md).
 
 ## T3 — Potential-type mismatch sets the accuracy ceiling
@@ -61,11 +65,12 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Current lean**: Report LOO-CV MAE and within-group spread together; never claim < 0.3 V.
 - **Decision (2026-06-19, research [eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md) Part C)**: honest MAE language is **0.20–0.35 V** for onset/Epa-heavy nonaqueous monomer data after linear calibration; **NEVER claim < 0.15 V**. The 0.15 V floor is the quadrature sum of (i) potential-type mismatch (≥0.10–0.15 V — a thermodynamic adiabatic IP regressed against a kinetic irreversible Epa/onset embeds the 0.15–0.35 V monomer-dependent peak/onset overpotential) and (ii) liquid-junction/reference noise (0.05–0.15 V, Part B), and it is INDEPENDENT of the ~0.30 V intrinsic GFN2-xTB redox error (MAD 0.30 V on OROP/ROP313) that calibration only partly removes. **Report MAE SEPARATELY for peak-anchored and onset-anchored subsets** so the two noise regimes are never conflated. (The earlier "never < 0.3 V" lean is superseded: the honest target band is 0.20–0.35 V with a hard 0.15 V floor.)
 - **Resolves when**: The limitation is consistently documented in validation/status language and reported alongside calibration metrics. (Language fixed 2026-06-19.)
+
 - **Links**: [docs/benchmark_methods_memo.md, "Potential Type Mismatch"](docs/benchmark_methods_memo.md#potential-type-mismatch); [docs/benchmark_methods_memo.md, "Accuracy Expectation"](docs/benchmark_methods_memo.md#accuracy-expectation); [docs/research/eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md).
 
 ## T4 — What ">=30 clean groups" actually validates
 - **Status**: open
-- **Forum**: group-meeting
+- **Forum**: self / report (the two-stage calibrate-vs-validate split is the directive's own design; surface as info, not a blocker)
 - **Cost**: scope/policy
 - **Question**: Is the >=30 target a CALIBRATION-purity requirement or a VALIDATION-coverage requirement, and are we calibrating the way the brief intends?
 - **Why it matters**: If >=30 is a validation requirement, we should not be straining benchmark purity to feed the calibration fit; the pressure is on the wrong layer.
@@ -74,6 +79,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Update (2026-06-18, live-batch session)**: the calibration-eligible benchmark is dominated by LARGE exotic molecules (α-sexithiophene; di-aryl benzothiadiazole/selenadiazole D-A; ethylhexyl thieno[3,4-c]pyrrole-diones FTPF/TTPT/STPS; di-furyl carbazoles; DPP-pyridazinediones), NOT the simple single-ring monomers the screen actually targets. Two consequences: (a) opt+freq DFT on those big conjugated molecules is impractically slow — this is what drove the pragmatic opt-only/gas-phase v1 Tier-2 choice and the overnight batch's slowness; (b) a calibration fit on big conjugated molecules then APPLIED to small screen monomers is a domain extrapolation worth flagging (same family as T9's domain-mismatch concern). The new-monomer Eox review ([new_monomer_eox_benchmark_extraction.md](research/new_monomer_eox_benchmark_extraction.md)) supplies clean small-monomer anchors (terthiophene +0.880 V vs Ag/AgCl, Camarada 2011; DTP ~0.52 V; 3-methylthiophene ~1.55 V vs SCE) that would PARTIALLY rebalance the eligible set toward the small monomers the screen targets — a vetted way to shrink that domain gap when those rows are curated in.
 - **Current lean**: Treat the current xTB->experimental fit as the explicit interim stand-in; run the live xTB->DFT batch, then revisit whether ">=30" governs calibration purity, validation coverage, or both. Do not auto-promote the xTB->DFT calibration without PI sign-off.
 - **Resolves when**: The group agrees whether >=30 governs calibration purity, validation coverage, or both; the live xTB->DFT batch is run; and the PI signs off on whether the xTB->DFT calibration replaces the interim xTB->experimental anchor.
+- **Governance retag (2026-06-19, decide-and-report)**: Forum moved group-meeting -> self / report. The calibrate-(xTB->DFT)-then-validate-(DFT->experiment) split is the directive's own two-stage design; surfaced as info, not treated as a blocker.
 - **Links**: [STATUS open debts #1 and #12](STATUS.md#open-debts); [configs/tier1.yaml](configs/tier1.yaml).
 
 ## T5 — Which placeholder axis to make real first
@@ -102,24 +108,26 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 ## T7 — What is the real deliverable?
 - **Status**: open
-- **Forum**: group-meeting
+- **Forum**: self / report (directive §8 lists BOTH the ranked DB and the descriptor/Pareto/shortlist; produce both, treat the descriptor table as the durable asset)
 - **Cost**: scope/policy
 - **Question**: Is the deliverable the composite ranking, or a clean, reproducible, real-physics per-species descriptor table plus a small set of trusted experimental anchors?
 - **Why it matters**: If the screen is a foundation for downstream AI/ML, the composite is just a heuristic the model will re-weight; the durable asset is the descriptor table + coverage, so priority should be "make each axis real + expand coverage", not tune weights.
 - **Thinking / options**: Composite-first keeps attention on ranking triads. Descriptor-table-first treats the ranking as a diagnostic and puts priority on real per-species axes plus trusted anchors.
 - **Current lean**: Treat the descriptor table as the primary product; composite as a diagnostic.
 - **Resolves when**: The group agrees which deliverable should drive prioritization, status language, and next actions.
+- **Governance retag (2026-06-19, decide-and-report)**: Forum moved group-meeting -> self / report. Directive §8 lists BOTH the ranked triad DB and the descriptor/Pareto/shortlist outputs; we produce both and treat the per-species descriptor table as the durable asset, reporting the choice rather than gating on it.
 - **Links**: [README objective](README.md#objective); [AGENTS.md architecture principles](AGENTS.md#architecture-principles-do-not-violate).
 
 ## T8 — Chemical-space coverage vs weight tuning
 - **Status**: open
-- **Forum**: group-meeting / PI sign-off
+- **Forum**: PI/group (the ONE genuine escalation: a RESOURCE-PLANNING conversation, not correctness approval)
 - **Cost**: compute-heavy
 - **Question**: When and how to scale from 15×11×10 toward the spec's ~100×30×25?
 - **Why it matters**: A downstream model can learn weights but cannot learn data that does not exist; coverage likely matters more than composite-weight tuning.
 - **Thinking / options**: Coverage expansion + a real-xTB harvest outputs a reusable descriptor table. Composite refinement tunes the present heuristic before the target chemical space exists.
 - **Current lean**: Prioritize coverage expansion + a real-xTB harvest that outputs a reusable descriptor table, over composite refinement.
-- **Resolves when**: The group/PI chooses a scale-up target and resource plan for moving toward the specified chemical space.
+- **Governance retag (2026-06-19, decide-and-report)**: this is KEPT as a PI/group item but RE-SCOPED — it is the ONE genuine escalation and it is a RESOURCE-PLANNING conversation, NOT correctness approval. Committing the full-scale Tier-2 DFT screen (~100x30x25) consumes hundreds-to-thousands of CPU-hours on the shared 320-core-quota Lop cluster plus researcher-weeks, so the spend/sequencing is planned with the PI/group. Everything upstream of that (calibration governance, master scale, anchor type, the descriptor deliverable) is decide-and-report.
+- **Resolves when**: The PI/group agree the resource plan and sequencing for the full-scale Tier-2 production screen (a spend decision, not a correctness gate).
 - **Links**: [STATUS open debt #12](STATUS.md#open-debts); [AGENTS.md target space](AGENTS.md).
 
 ## T9 — The mock-preview trap after real-xTB calibration is pinned
@@ -181,6 +189,8 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debt #12](STATUS.md#open-debts); [src/eps/workflow/dft_calibration.py](src/eps/workflow/dft_calibration.py); [configs/tier2.yaml](configs/tier2.yaml).
 
 ## Decision log
+
+- 2026-06-19 (decide-and-report governance adopted) — encoded the operating model in the framing note: the directive is the PI's delegated authority, so scientifically-sound decisions that serve the directive are PRE-AUTHORIZED (decide, record here, report at Friday/group; PI retains veto via that cadence). Retagged vestigial PI-signoff/group-meeting Forum labels on already-decided items: T1 (anchor type, physics) -> self; T2 (Ag/AgCl master scale + P&A constants) -> self/report; T4 (two-stage calibrate-vs-validate, the directive's own design) -> self/report; T7 (directive §8 lists both deliverables; produce both) -> self/report. T8 KEPT as the ONE genuine PI/group escalation but RE-SCOPED to RESOURCE planning (full-scale Tier-2 ~100x30x25 CPU-hours/researcher-weeks on the shared Lop cluster), not correctness approval. On the T2 basis, promoted 3 SCE-converted tier-B rows (diphenylamine 0.875 V & 3-ethylcarbazole 1.085 V peaks; N-vinylcarbazole 0.845 V onset) from candidates into benchmark.csv RELAXED track; the aniline E1/2 row was reframed as a settled scientific exclusion (E1/2 is not a peak/onset observable), not a sign-off question. Pinned strict anchor untouched: agagcl_peak_strict stays n=9; peak_relaxed 21->23, onset_relaxed 15->16; configs/tier1.yaml slope/intercept/source and default_screening_profile unchanged.
 
 - 2026-06-19 (T1/T2/T3 resolved on physical/literature grounds, research partD) — ingested `docs/research/eox_anchor_refscale_accuracy_partD.md`. **T1**: anchor TYPE decided — calibrate against PEAK (Epa, the tighter IP/HOMO proxy), screen on ONSET; keep peak/onset as separate label columns, never co-fit; only strict-vs-relaxed (peak) remains, gated on live DFT LOO-CV. **T2**: Ag/AgCl master scale with pinned constants (Pavlishchuk & Addison 2000, DOI 10.1016/S0020-1693(99)00407-7): SCE→Ag/AgCl +0.045 V, Fc/Fc⁺→Ag/AgCl +0.445 V (MeCN), SHE→Ag/AgCl −0.197 V; two scales need two intercepts (b absorbs the reference zero); ~0.05–0.15 V junction floor; cite the +0.400 V SCE constant, not the inconsistent +0.624 V SHE value. **T3**: honest MAE band 0.20–0.35 V, hard floor 0.15 V (quadrature of ≥0.10–0.15 V potential-type mismatch + 0.05–0.15 V junction noise), reported separately for peak- and onset-anchored subsets. The pinned `configs/tier1.yaml` slope/intercept and `default_screening_profile` were deliberately NOT changed (gated on the live g16 batch + the empirical strict-vs-relaxed tiebreaker).
 - 2026-06-19 (feasibility metric wired, DIAGNOSTIC) — `eps validate --harvest` now reports the §7 yes/no metric HONESTLY: balanced accuracy (mean per-class recall) + the 2x2 confusion matrix on the matched in-scope subset ONLY, never a single raw-accuracy figure and never a >85% PASS (the doc's own recommendation). Out-of-scope media (BFEE / aqueous-acid / Ag-pseudo-reference) are excluded and counted; no-harvest and zero-match cases report cleanly without fabricating. Current coverage is tiny (3/27 on the mock harvest) because most labeled monomers/media (generic/Et4NBF4/aqueous/BFEE/pseudo-ref electrolytes) fall outside the 36×13×16 library — so the metric stays PRELIMINARY, exactly as the doc prescribes until ≥20-25 baseline-medium negatives exist.
