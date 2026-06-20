@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-06-20 — docs sync to true state (DFT calibration 417442 running; all-5-axes-real; §8 analyze; sklearn/cluster facts)
+Documentation-only pass: STATUS.md overwritten to the 2026-06-20 snapshot, this CHANGELOG entry
+prepended, THINK.md statuses + Decision log updated. No code, config, data CSV, pinned redox
+function, or scoring weight was touched; `pytest -q` green. Milestones reconciled from on-disk
+evidence (and cluster-only facts tagged "reported"):
+- **DFT calibration batch on Lop (reported running)**: the v1 SMD+Freq full batch (job 417297) was
+  SIGKILLed at the 24h h_rt wall (exit 137) after ~10 DFT points; the method was reverted to the
+  committed gas-phase opt-only v1 (B3LYP/6-31G(d,p), bare ΔE_SCF; SMD+Freq retained as the documented
+  rigor toggle in `configs/tier2.yaml`), the DFT cache was wiped on the method change (different cache
+  key), and the job was resubmitted as **417442** with a 72h wall + unbuffered log (~22 representative
+  monomers, intel24, submitted 2026-06-19 20:05). **Rationale for gas-phase v1**: the near-constant
+  solvation offset is absorbed by the DFT→experiment fit intercept, so it does not change ranking/slope
+  and is not worth the 10–100× cost at v1.
+- **All five composite axes are real GFN2-xTB physics with ZERO per-property failures** — confirmed:
+  the first fully-clean real-xTB harvest (1,650 triads, 15×11×10) ran 0 failures across all seven
+  per-property stages (1,007 survivors); the current mock harvest on the expanded 7,488-triad library
+  (`outputs/tier1_ranked.csv`, engine=mock) likewise shows 0 failures across all per-property stages.
+  The earlier 152-triad EDOS/PF6 smoke failures are RESOLVED (THINK T10). A fresh full REAL-xTB harvest
+  on the 7,488-triad library is PENDING the calibration flip.
+- **`eps analyze` (directive §8)** is wired and test-covered: `summary.csv` (retention + per-property
+  failure counts), distribution PNGs (window margin, anion stability, solubility), a Pareto PNG, a
+  Morgan-fingerprint chemical-space map (PCA→t-SNE), and a SCREENING-GRADE `shortlist.csv` + provenance.
+  (`outputs/analysis/` is regenerated on demand from a scored harvest and is not committed.)
+- **scikit-learn via conda-forge** (sklearn 1.9.0, numpy<2 preserved) unblocks the t-SNE chemical-space
+  map (pip-building numpy 2.4.x had failed under Lop's system GCC 4.8.5).
+- **Library expansion confirmed at 36×13×16 = 7,488 triads** (verified by row count of
+  `data/monomers.csv`/`data/solvents.csv`/`data/electrolytes.csv`).
+- **Lop software inventory (reported)**: ORCA 4.2.1–6.1.0 and Gaussian g16 available; gcc
+  8.4.0/9.3.0/11.3.0 modules (system cc 4.8.5); SGE; intel24 (256 GB) for DFT. NO
+  sTDA/std2/COSMOtherm/openCOSMO-RS modules — an SCS Help Desk install request is pending.
+
 ## 2026-06-19 (later 20) — scripts: DFT-calibration wall limit 24h->72h + unbuffer log
 scripts: DFT-calibration wall limit 24h->72h after the v1 SMD+Freq full batch (job 417297) was
 SIGKILLed at the 24h h_rt wall; reverted to committed gas-phase v1, added PYTHONUNBUFFERED for live
