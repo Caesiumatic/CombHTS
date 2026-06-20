@@ -38,3 +38,9 @@ layer). At the end of a work unit, if a genuine research question, tradeoff, or 
 need was opened, advanced, or resolved, update the relevant THINK.md entry (open ->
 exploring -> decided/parked) and its Decision log. Keep engineering debt in STATUS.md;
 THINK.md is only for items needing scientific judgment. Do not duplicate STATUS content.
+RUN MANIFESTS: Whenever a run is executed or its results become known (from a cluster log,
+qacct, or output inspection), create a manifest under docs/runs/ from docs/runs/TEMPLATE.md
+and add a row to docs/runs/README.md. Manifests record the FACTS of a run (engine, scope,
+job, status, headline numbers, output paths, provenance, caveats) because run artifacts live
+in gitignored outputs/ and never enter the repo. ALWAYS state the engine explicitly (mock vs
+real); never present a mock smoke as a scientific result.

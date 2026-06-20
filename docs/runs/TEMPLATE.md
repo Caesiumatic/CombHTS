@@ -1,0 +1,14 @@
+# Run: <date> — <short label> (<engine>)
+- run_id: <YYYY-MM-DD>_<label>[_<jobid>]
+- date: <ISO date/datetime>
+- command: <exact eps command>
+- engine / method: mock-gfn2 | gfn2-xtb | b3lyp-6-31g(d,p) gas-phase | ...
+- scope: <library MxSxE = N triads | calibration set | which harvest was analyzed>
+- cluster job: <SGE id, queue/node, wall> | local
+- status: completed | running | killed@wall | failed  (+ one-line reason)
+- headline results: <attempted / survivors / retention; OR slope/intercept/R^2/LOO-CV MAE + profile; OR artifacts produced>
+- per-property failures: <count + which stages, or n/a>
+- output artifacts (paths, NOT committed): outputs/...
+- provenance: git commit <sha>; key config values (e.g., tier2.yaml smd_solvent/use_freq)
+- caveats: <e.g., MOCK pipeline smoke only | screening-grade, optical_gap uncalibrated | killed before writeout>
+- supersedes / superseded_by: <run_id or —>
