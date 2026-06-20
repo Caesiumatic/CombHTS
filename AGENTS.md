@@ -22,7 +22,9 @@ ARCHITECTURE PRINCIPLES (do not violate):
 5. The redox-to-(V vs Ag/AgCl) conversion is one tested function; constants pinned.
 
 STACK: Python 3.11+, RDKit, pandas, pydantic, pytest, SQLite (stdlib sqlite3),
-PyYAML. (xtb / stk / DFT added later.) Use a src-layout package `eps`.
+PyYAML. (The xtb backend and a Gaussian DFT backend are now wired, mock-first;
+stk is substituted by documented RDKit α-coupling, as stk is unavailable in the env.)
+Use a src-layout package `eps`.
 STYLE: type hints, docstrings with the physical meaning + units of every quantity,
 small pure functions, pytest for every module. Units always explicit (V, eV, kcal/mol).
 
