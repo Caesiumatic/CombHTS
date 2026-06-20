@@ -5,7 +5,7 @@
 #$ -N combhts_dftcal
 #$ -q intel24
 #$ -pe smp 8
-#$ -l h_rt=24:00:00
+#$ -l h_rt=72:00:00  # 72h: the v1 gas-phase opt-only batch is fast, but the largest conjugated monomers (e.g. alpha-sexithiophene, di-aryl D-A) need headroom; the SQLite cache RESUMES, so if a wall window is still short, just re-qsub and it continues from the completed species.
 # TEMPLATE - do NOT submit blindly. Runs the SMALL DFT-calibration batch with real Gaussian 16.
 #
 # SCOPE: this is the xTB->DFT CALIBRATION batch only: ~32 calibration-eligible benchmark monomers
@@ -32,6 +32,9 @@ conda activate combhts
 export OMP_NUM_THREADS="${NSLOTS:-8}"
 export OMP_STACKSIZE=4G
 ulimit -s unlimited || true
+# Unbuffer Python stdout so per-monomer progress streams live to this SGE log (tail -f), instead of
+# sitting in a block buffer; g16's own output still goes to the node-local GAUSS_SCRDIR scratch.
+export PYTHONUNBUFFERED=1
 
 # Gaussian writes LARGE scratch (.rwf/.chk/.int) files. Keep them NODE-LOCAL: writing to the
 # networked home dir would blow the storage quota. Use the scheduler's $TMPDIR when present.
