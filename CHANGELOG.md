@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-19 (later 20) — scripts: DFT-calibration wall limit 24h->72h + unbuffer log
+scripts: DFT-calibration wall limit 24h->72h after the v1 SMD+Freq full batch (job 417297) was
+SIGKILLed at the 24h h_rt wall; reverted to committed gas-phase v1, added PYTHONUNBUFFERED for live
+progress; cache resumes across resubmits.
+
 ## 2026-06-19 (later 19) — adopt decide-and-report governance; promote 3 tier-B rows (strict n=9 frozen)
 Operationalized the "directive = delegated PI authority; decide-and-report" operating model.
 - **Governance retag (THINK.md + STATUS.md)**: added the operating-model paragraph to THINK's framing
