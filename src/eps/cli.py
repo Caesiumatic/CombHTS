@@ -19,13 +19,13 @@ from eps.validation.benchmark import (
     run_all_calibration_profiles,
     run_calibration_profile,
 )
+from eps.validation.feasibility import compute_feasibility_metric, format_feasibility_report
 from eps.validation.memo import DEFAULT_MEMO_DIR, write_validation_memo
 from eps.validation.sanity import (
     DEFAULT_HARVEST_PATH,
     DEFAULT_SOLVENT,
     run_physical_sanity_checks,
 )
-from eps.validation.feasibility import compute_feasibility_metric, format_feasibility_report
 from eps.validation.solvent_benchmark import compute_solvent_esw_mae
 from eps.workflow.dft_calibration import (
     DEFAULT_CACHE_PATH as DEFAULT_DFTCAL_CACHE_PATH,
