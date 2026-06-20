@@ -1,0 +1,14 @@
+# Run: 2026-06-19 — Tier-1 harvest, MOCK, expanded library (mock-gfn2)
+- run_id: 2026-06-19_tier1-harvest-mock-7488
+- date: 2026-06-19 (file mtime 2026-06-19 15:36; the 16th salt AgClO4 — needed for 7,488 — was only added on 2026-06-19, so this run cannot predate it)
+- command: `eps run-tier1 --engine mock`
+- engine / method: **mock-gfn2 (deterministic MockEngine — NOT physics)**
+- scope: 36×13×16 = 7,488 triads (expanded library)
+- cluster job: local
+- status: completed
+- headline results: **509 survivors**; 0 per-property failures (mock-trivial — the MockEngine never fails)
+- per-property failures: 0 across all 14 `_calc_status` stages (verified from `outputs/tier1_ranked.csv`); not physically meaningful
+- output artifacts (paths, NOT committed): `outputs/tier1_ranked.csv` (on disk, gitignored), `outputs/oligomer_buildingblocks.csv`, `outputs/oligomer_eox_series.csv`, `outputs/secondary_descriptors.csv`
+- provenance: provenance sidecar reports `engine=mock`, `method=mock-gfn2`, library 36/13/16; git commit not stamped in the sidecar
+- caveats: **MOCK — PIPELINE SMOKE ONLY, NOT a scientific result.** The mock calibration applied to mock raw values is meaningless as science (THINK T9). The real-xTB 7,488-triad harvest is PENDING the DFT-anchored calibration flip.
+- supersedes / superseded_by: —

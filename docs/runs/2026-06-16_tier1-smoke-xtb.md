@@ -1,0 +1,14 @@
+# Run: 2026-06-16 — Tier-1 real-xTB smoke (gfn2-xtb)
+- run_id: 2026-06-16_tier1-smoke-xtb
+- date: 2026-06-16
+- command: `eps run-tier1 --engine xtb`
+- engine / method: gfn2-xtb (xtb 6.4.1, --gfn 2, ALPB, --iterations 500 --etemp 400)
+- scope: 15×11×10 = 1,650 triads (pre-expansion library)
+- cluster job: SCS Lop, Grid Engine / qsub (SGE id not pinned in repo) — reported (unverified)
+- status: completed (calculation failures captured as audit rows, not aborted)
+- headline results: 1,650 attempted; **1,273 ranked survivors** in the initial smoke (152 failures present); **1,007 survivors** in the first fully-clean harvest after the EDOS/Se geometry fix + cache rebuild on the T11 single-calibrated-oxidation scale. BOTH numbers are real-xTB; the survivor count dropped 1,273→1,007 because the geometry fix + single-scale (window + anion filters now LIVE on one calibrated scale) recalibration changed which triads pass the filters.
+- per-property failures: initially **152** (EDOS `monomer_Eox`/`dimerization` across 110 triads from RDKit FF geometry corruption on Se; PF6 `anion_Eox` across 45 triads in high-ε media); **later RESOLVED** → 0 failures across all seven stages in the clean harvest (THINK T10).
+- output artifacts (paths, NOT committed): `outputs/tier1_ranked.csv` + the all-triads audit CSV (cluster-only)
+- provenance: git commit not pinned in repo; real GFN2-xTB on the SCS Lop cluster; pre-expansion 15×11×10 library
+- caveats: real-xTB but **screening-grade**, not a validated ranking; the composite is not a recommendation. **THIS IS THE PROJECT'S ONLY REAL-xTB HARVEST TO DATE** — the expanded 7,488-triad real-xTB harvest is still PENDING the calibration flip.
+- supersedes / superseded_by: —
