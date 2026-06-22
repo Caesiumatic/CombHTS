@@ -8,9 +8,11 @@ limit only after the cheap solvent/electrolyte join.  No quantum engine is calle
 
 Selection policy (``measured_first_conservative``):
 
-1. exact ``(solvent, salt)`` measurements, taking the lowest anodic limit;
-2. otherwise all eligible measurements for the solvent, again taking the lowest limit;
-3. otherwise a conservative fallback ``min(curated CSV, computed descriptor)``.
+1. find the lowest exact ``(solvent, salt)`` measurement, or otherwise the lowest eligible
+   measurement for the solvent;
+2. hard-cap that measured value by ``min(curated CSV, computed descriptor)`` so a wider generic
+   formulation can never relax a hard gate relative to the existing conservative evidence;
+3. when no measurement exists, use that same conservative fallback directly.
 
 All values are V vs Ag/AgCl.  The selected row carries its experimental conditions and source
 into the all-triads audit so a measured formulation limit is never presented as universal.
@@ -143,6 +145,10 @@ def apply_condition_aware_solvent_windows(
     measurement_tier: list[str] = []
     measurement_limited: list[bool | str] = []
     candidate_counts: list[int] = []
+    measurement_values: list[float] = []
+    conservative_caps: list[float] = []
+    cap_sources: list[str] = []
+    cap_applied: list[bool] = []
 
     for _, row in out.iterrows():
         key = (str(row["solvent_name"]), str(row["salt"]))
@@ -155,12 +161,19 @@ def apply_condition_aware_solvent_windows(
             count = generic_counts.get(str(row["solvent_name"]), 0)
 
         if measured is not None:
-            selected_values.append(float(measured["anodic_limit_V_vs_AgAgCl"]))
+            measured_value = float(measured["anodic_limit_V_vs_AgAgCl"])
+            conservative_cap, cap_source = _conservative_fallback(row)
+            selected_values.append(min(measured_value, conservative_cap))
             cathodic = _finite_or(
                 measured["cathodic_limit_V_vs_AgAgCl"], row.get("solvent_cathodic_limit_V", np.nan)
             )
             selected_cathodic.append(cathodic)
-            selected_source.append("measured_conditioned")
+            was_capped = conservative_cap < measured_value
+            selected_source.append(
+                "measured_conditioned_capped_by_fallback"
+                if was_capped
+                else "measured_conditioned"
+            )
             condition_match.append(match)
             measured_salt.append(str(measured["salt"]))
             measured_electrolyte.append(str(measured["electrolyte"]))
@@ -170,6 +183,10 @@ def apply_condition_aware_solvent_windows(
             measurement_tier.append(str(measured["tier"]))
             measurement_limited.append(bool(measured["limit_set_by_electrolyte"]))
             candidate_counts.append(count)
+            measurement_values.append(measured_value)
+            conservative_caps.append(conservative_cap)
+            cap_sources.append(cap_source)
+            cap_applied.append(was_capped)
             continue
 
         fallback, fallback_source = _conservative_fallback(row)
@@ -185,6 +202,10 @@ def apply_condition_aware_solvent_windows(
         measurement_tier.append("")
         measurement_limited.append("")
         candidate_counts.append(0)
+        measurement_values.append(float("nan"))
+        conservative_caps.append(fallback)
+        cap_sources.append(fallback_source)
+        cap_applied.append(False)
 
     out["solvent_anodic_limit_V"] = selected_values
     out["solvent_cathodic_limit_V"] = selected_cathodic
@@ -199,6 +220,10 @@ def apply_condition_aware_solvent_windows(
     out["solvent_window_measurement_tier"] = measurement_tier
     out["solvent_window_limit_set_by_electrolyte"] = measurement_limited
     out["solvent_window_candidate_count"] = candidate_counts
+    out["solvent_window_measurement_anodic_V"] = measurement_values
+    out["solvent_window_conservative_cap_V"] = conservative_caps
+    out["solvent_window_conservative_cap_source"] = cap_sources
+    out["solvent_window_cap_applied"] = cap_applied
     return out
 
 

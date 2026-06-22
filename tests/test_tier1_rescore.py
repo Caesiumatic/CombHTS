@@ -34,8 +34,11 @@ def test_rescore_uses_measured_water_window_without_an_engine(
         & (result.all_triads["salt"] == "KCl")
     ]
     assert not water.empty
-    assert water["solvent_anodic_limit_V"].to_numpy() == pytest.approx(1.145)
-    assert set(water["solvent_anodic_limit_source"]) == {"measured_conditioned"}
+    expected = water[
+        ["solvent_anodic_limit_csv_V", "solvent_anodic_limit_calibrated_V"]
+    ].min(axis=1).clip(upper=1.145)
+    assert water["solvent_anodic_limit_V"].to_numpy() == pytest.approx(expected.to_numpy())
+    assert set(water["solvent_window_measurement_anodic_V"]) == {1.145}
     assert result.output_path.exists()
     assert result.all_output_path.exists()
     assert not any(column.endswith("_x") or column.endswith("_y") for column in result.all_triads)

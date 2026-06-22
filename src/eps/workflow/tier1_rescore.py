@@ -51,6 +51,10 @@ _WINDOW_AUDIT_COLUMNS = (
     "solvent_window_measurement_tier",
     "solvent_window_limit_set_by_electrolyte",
     "solvent_window_candidate_count",
+    "solvent_window_measurement_anodic_V",
+    "solvent_window_conservative_cap_V",
+    "solvent_window_conservative_cap_source",
+    "solvent_window_cap_applied",
 )
 
 
