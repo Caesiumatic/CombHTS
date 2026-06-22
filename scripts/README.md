@@ -7,6 +7,7 @@ not submit them blindly from CI or an overnight agent.
 | Script | Command | Engine module |
 | --- | --- | --- |
 | `run_tier1.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
+| `run_tier1_rescore.sge` | `python -m eps.cli rescore-tier1 ...` | none (CSV-only) |
 | `run_validate.sge` | `eps validate --engine xtb --all-profiles` | xTB |
 | `run_memo.sge` | `eps memo --engine xtb --harvest outputs/tier1_all_xtb.csv` | xTB |
 | `run_analyze.sge` | `eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/` | none (read-only) |
@@ -25,6 +26,10 @@ The two ORCA templates are deliberately small, serial route-validation pilots. L
 nodes expose an OpenMPI/hwloc topology crash when ORCA 6.1 starts parallel workers, so these pilots
 request one slot. They retain raw ORCA inputs/outputs under the matching gitignored `outputs/`
 directory and never present failed calculations or mock values as scientific results.
+
+`run_tier1_rescore.sge` is the safe path for a policy/threshold/weight change after a real harvest.
+It reads the existing all-triads CSV and recomputes only conditioned joins, filters, Pareto flags,
+and arithmetic scores; it accepts no Engine and never opens the expensive SQLite cache.
 
 ## The `#$ -S /bin/bash` requirement
 

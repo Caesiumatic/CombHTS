@@ -1,0 +1,25 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_rescore
+#$ -j y
+#$ -pe smp 1
+#$ -l h_rt=01:00:00
+
+# CSV-only policy/filter/score update. No quantum engine and no SQLite cache is opened.
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+cd "${COMBHTS_ROOT:-$HOME/CombHTS}"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+
+python -m eps.cli rescore-tier1 \
+    --input outputs/tier1_real_7488/tier1_all.csv \
+    --output outputs/tier1_real_7488_measured_esw/tier1_ranked.csv \
+    --all-output outputs/tier1_real_7488_measured_esw/tier1_all.csv
