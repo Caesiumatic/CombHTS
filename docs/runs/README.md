@@ -4,6 +4,9 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-22 | 417564 shortlist audit (per-row) | none (docs/analysis) | 30-row shortlist, read-only cross-ref | merged bee31d3 | KEEP 2 / CAVEAT 12 / PARK 10 / REMOVE 6; salt-permutation score degeneracy is top artifact (raw 80% PC -> ~57% over 14 distinct chemistries); analysis only, no scoring change | [link](../audits/shortlist_audit_417564.md) |
+| 2026-06-22 | optical anchors + calibration plan | none (docs/lit-curation) | 9 anchors (6 high + 3 medium), n=6 primary cal target | merged bee31d3 | replaces n=3 sTDA/TDA pilot; 15% optical axis stays DIAGNOSTIC until calibration is run + reviewed | [link](../lit_curation/optical_calibration_plan.md) |
+| 2026-06-22 | library-expansion proposal | none (docs/research) | +76 monomers / +27 solvents / +25 salts, RDKit-verified | merged bee31d3 | PROPOSAL ONLY, not wired; gated on stable ESW/solubility/optical gates before any wiring | [link](../research/library_expansion_proposal.md) |
 | 2026-06-22 | final capped-ESW analysis | none (read-only) | 7,488 / 2,938 survivors | completed | SGE 417564; standard 30-row CSV; 24 PC + 6 MeCN; diagnostic only | [link](2026-06-22_analyze-capped-esw-standard-417564.md) |
 | 2026-06-22 | corrected sTDA/TDA optical pilot | ORCA 6.1 real | 3 dimers x 2 methods | completed | SGE 417557; 3 corrected sTDA + 3 TDA hits; R2=.770/MAE=.097 eV | [link](2026-06-22_orca-optical-corrected-417557.md) |
 | 2026-06-22 | Tier-1 capped ESW re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417562; 2,938 survivors; -1,140/0 gained; strict old-set subset | [link](2026-06-22_tier1-rescore-capped-esw-417562.md) |
