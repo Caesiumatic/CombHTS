@@ -1,11 +1,11 @@
 # Run: 2026-06-21 — Tier-1 harvest, REAL GFN2-xTB, expanded library (gfn2-xtb)
 - run_id: 2026-06-21_tier1-harvest-real-7488
-- date: 2026-06-21 (pre-flight prepared; job not yet submitted)
+- date: 2026-06-21 (submitted as SGE 417538, started 22:44 local; RUNNING)
 - command: `eps run-tier1 --engine xtb --output outputs/tier1_real_7488/tier1_ranked.csv --cache outputs/tier1_real_7488/tier1_cache.sqlite --all-output outputs/tier1_real_7488/tier1_all.csv` (via `qsub scripts/run_tier1.sge`)
 - engine / method: **gfn2-xtb (REAL xtb 6.4.1, `--gfn 2`, ALPB; conformer_search ENABLED — 100 ETKDGv3/MMFF94 conformers per geometry)** — NOT mock
 - scope: 36×13×16 = 7,488 triads (expanded library: +Se-monomers, +salts incl. AgClO4)
-- cluster job: SCS Lop, Grid Engine / qsub; `-pe smp 4`, `h_rt=72:00:00` (intel24 or appropriate queue) — reported (unverified)
-- status: **running** (pre-flight complete; awaiting human qsub — see FINISH block / this commit)
+- cluster job: SCS Lop, Grid Engine / qsub; SGE **417538**, queue **ib2**, 4 slots (`-pe smp 4`), `h_rt=72:00:00`, started 2026-06-21 22:44 local — reported (unverified; the repo cannot confirm cluster state)
+- status: **running** (submitted as 417538 on Lop ib2; results pending)
 - calibration: pinned **agagcl_peak_strict_2026_06_17_xtb_v3** (slope 0.725837, intercept −3.145372), read as-is from `configs/tier1.yaml`; UNCHANGED in this pre-flight
 - headline results: **TBD** (survivors / retention pending run completion)
 - per-property failures: **TBD** — EXPECTED: new Se-monomers + new salts (incl. AgClO4) were NOT in the historical 1,650-triad real-xTB run, so some new per-species failures are anticipated. The engine captures them as audit rows (`*_calc_status=failed`) via `_safe_calculate` and CONTINUES — never aborts (AGENTS invariant). Inspect the failure audit in `tier1_all.csv` BEFORE running analyze.
