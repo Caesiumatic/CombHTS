@@ -1,0 +1,52 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_solv_grid
+#$ -j y
+#$ -pe smp 1
+#$ -l h_rt=48:00:00
+
+# Representative monomer x solvent openCOSMO-RS dGsolv expansion pilot (descriptor validation).
+# SERIAL (smp 1 / nprocs 1) avoids the Lop OpenMPI/hwloc topology crash seen in jobs 417540/417542.
+# Writes to outputs/solvation_cosmors_pilot/ and a FRESH cache seeded (copy, read-only source) from
+# the 3-point pilot cache so the cached MeCN points are reused and the pilot artifacts are untouched.
+# This script PREPARES the run; a human submits it with qsub. It does NOT change the Tier-1 scoring.
+
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export OMP_NUM_THREADS="${NSLOTS:-1}"
+
+COMBHTS_ROOT="${COMBHTS_ROOT:-$HOME/CombHTS}"
+cd "$COMBHTS_ROOT"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+
+OUTDIR="$PWD/outputs/solvation_cosmors_pilot"
+CACHE="$OUTDIR/cache.sqlite"
+# Source of the 3 cached MeCN pilot points (override with PILOT_CACHE if relocated).
+PILOT_CACHE="${PILOT_CACHE:-$HOME/CombHTS_pilot_work/outputs/orca_solvation_pilot/cache.sqlite}"
+
+mkdir -p "$OUTDIR"
+export EPS_ORCA_WORK_ROOT="$OUTDIR/raw"
+
+# Seed the fresh cache from the pilot cache so thiophene/EDOT/pyrrole in MeCN are reused, not
+# recomputed. The pilot cache is only read (cp), never modified. Skip if already seeded.
+if [ -f "$PILOT_CACHE" ] && [ ! -f "$CACHE" ]; then
+    echo "Seeding fresh cache from pilot cache: $PILOT_CACHE -> $CACHE"
+    cp "$PILOT_CACHE" "$CACHE"
+else
+    echo "No seed performed (pilot cache missing or fresh cache already present): PILOT_CACHE=$PILOT_CACHE CACHE=$CACHE"
+fi
+
+# Pre-flight: print the computed-vs-cached-vs-deferred plan before doing any compute.
+python -m eps.cli orca-pilot-solvation-grid --engine orca --outdir "$OUTDIR" --cache "$CACHE" --plan-only
+
+# Real run (only missing points are computed; cached MeCN points are reused).
+python -m eps.cli orca-pilot-solvation-grid --engine orca --outdir "$OUTDIR" --cache "$CACHE"

@@ -13,13 +13,15 @@ from eps.calibration import LinearCalibration, fit_linear_calibration
 from eps.chemspace import load_monomers, load_solvents
 from eps.engines import CalcRequest, Engine, MockEngine, OrcaConfig, OrcaEngine, SpeciesSpec
 from eps.storage import SQLiteCache
-from eps.storage.cache import cached_run
+from eps.storage.cache import CacheKey, cached_run
 from eps.structures.oligomer import load_polymerization_specs, oligomer_smiles
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "configs" / "orca_pilots.yaml"
 DEFAULT_SOLVATION_OUTDIR = PROJECT_ROOT / "outputs" / "orca_solvation_pilot"
 DEFAULT_OPTICAL_OUTDIR = PROJECT_ROOT / "outputs" / "orca_optical_pilot"
+DEFAULT_SOLVATION_GRID_CONFIG_PATH = PROJECT_ROOT / "configs" / "solvation_cosmors_pilot.yaml"
+DEFAULT_SOLVATION_GRID_OUTDIR = PROJECT_ROOT / "outputs" / "solvation_cosmors_pilot"
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,23 @@ class OrcaSolvationPilotResult:
     cache_path: Path
     n_ok: int
     n_failed: int
+    engine_label: str
+
+
+@dataclass(frozen=True)
+class OrcaSolvationGridResult:
+    """Monomer x solvent openCOSMO-RS dGsolv grid (descriptor validation, not solubility)."""
+
+    points: pd.DataFrame
+    plan: pd.DataFrame
+    points_path: Path
+    plan_path: Path
+    cache_path: Path
+    n_ok: int
+    n_failed: int
+    n_cached: int
+    n_computed: int
+    n_deferred: int
     engine_label: str
 
 
@@ -128,6 +147,223 @@ def run_orca_solvation_pilot(
         n_failed=int(len(points) - n_ok),
         engine_label=engine_label,
     )
+
+
+def load_solvation_grid_config(path: str | Path = DEFAULT_SOLVATION_GRID_CONFIG_PATH) -> dict:
+    """Load the monomer x solvent dGsolv grid configuration."""
+
+    with Path(path).open("r", encoding="utf-8") as handle:
+        config = yaml.safe_load(handle) or {}
+    grid = config.get("grid") if isinstance(config, dict) else None
+    if not isinstance(grid, dict) or not {"monomers", "solvents"}.issubset(grid):
+        raise ValueError(f"{path} must contain a grid mapping with monomers and solvents")
+    return grid
+
+
+def plan_solvation_grid(
+    grid: dict,
+    cache: SQLiteCache,
+    method: str,
+) -> pd.DataFrame:
+    """Classify every (monomer, solvent) point as cached, compute, or deferred (pre-flight).
+
+    The classification only reads the cache; it never runs the engine. ``cached`` means an
+    identical (canonical SMILES, charge 0, method, library solvent, quantity) row already exists
+    so the run will reuse it; ``compute`` means the run will call ORCA; ``deferred`` means the
+    solvent has no ORCA built-in openCOSMO-RS sigma profile and is not computed by this pilot.
+    """
+
+    monomers = {monomer.name: monomer for monomer in load_monomers()}
+    rows: list[dict[str, object]] = []
+    for name in grid["monomers"]:
+        monomer = monomers[str(name)]
+        for entry in grid["solvents"]:
+            solvent_name = str(entry["solvent_name"])
+            key = CacheKey(
+                canonical_smiles=monomer.canonical_smiles,
+                charge=0,
+                method=method,
+                solvent_name=solvent_name,
+                quantity="solvation_free_energy",
+            )
+            cached = cache.get(key) is not None
+            rows.append(
+                {
+                    "monomer_name": monomer.name,
+                    "solvent_name": solvent_name,
+                    "orca_solvent_name": str(entry["orca_cosmors_name"]),
+                    "status": "cached" if cached else "compute",
+                    "reason": "",
+                }
+            )
+        for entry in grid.get("deferred_solvents", []) or []:
+            rows.append(
+                {
+                    "monomer_name": monomer.name,
+                    "solvent_name": str(entry["solvent_name"]),
+                    "orca_solvent_name": "",
+                    "status": "deferred",
+                    "reason": str(entry.get("reason", "")),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def run_orca_solvation_grid_pilot(
+    *,
+    engine: Engine,
+    method: str,
+    config_path: str | Path = DEFAULT_SOLVATION_GRID_CONFIG_PATH,
+    cache_path: str | Path | None = None,
+    outdir: str | Path = DEFAULT_SOLVATION_GRID_OUTDIR,
+    engine_label: str,
+) -> OrcaSolvationGridResult:
+    """Run the stratified monomer x solvent dGsolv grid through the Engine/cache path.
+
+    Only points with an ORCA built-in openCOSMO-RS solvent are computed; cached points are
+    reused transparently. Deferred (no built-in profile) points are recorded with NaN dGsolv so
+    the points table is an honest, self-documenting computed-vs-needed record.
+    """
+
+    grid = load_solvation_grid_config(config_path)
+    monomers = {monomer.name: monomer for monomer in load_monomers()}
+    solvents = {solvent.name: solvent for solvent in load_solvents()}
+    out = Path(outdir)
+    out.mkdir(parents=True, exist_ok=True)
+    cache_file = Path(cache_path) if cache_path is not None else out / "cache.sqlite"
+    cache = SQLiteCache(cache_file)
+
+    plan = plan_solvation_grid(grid, cache, method)
+    plan_path = out / "solvation_grid_plan.csv"
+    plan.to_csv(plan_path, index=False)
+    n_cached = int((plan["status"] == "cached").sum())
+    n_computed_planned = int((plan["status"] == "compute").sum())
+    n_deferred = int((plan["status"] == "deferred").sum())
+
+    rows: list[dict[str, object]] = []
+    for name in grid["monomers"]:
+        monomer = monomers[str(name)]
+        for entry in grid["solvents"]:
+            solvent_name = str(entry["solvent_name"])
+            orca_name = str(entry["orca_cosmors_name"])
+            solvent = solvents[solvent_name]
+            was_cached = bool(
+                cache.get(
+                    CacheKey(
+                        canonical_smiles=monomer.canonical_smiles,
+                        charge=0,
+                        method=method,
+                        solvent_name=solvent_name,
+                        quantity="solvation_free_energy",
+                    )
+                )
+                is not None
+            )
+            request = CalcRequest(
+                species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
+                method=method,
+                solvent_eps_r=solvent.eps_r,
+                quantity="solvation_free_energy",
+                solvent_model_name=orca_name,
+            )
+            try:
+                result = cached_run(cache, engine, request, solvent.name)
+                rows.append(
+                    _grid_row(
+                        monomer,
+                        solvent_name,
+                        orca_name,
+                        method,
+                        dG=result.value,
+                        status="ok",
+                        cache_hit=was_cached,
+                        error="",
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 - pilot must preserve all failures.
+                rows.append(
+                    _grid_row(
+                        monomer,
+                        solvent_name,
+                        orca_name,
+                        method,
+                        dG=float("nan"),
+                        status="failed",
+                        cache_hit=was_cached,
+                        error=_error(exc),
+                    )
+                )
+        for entry in grid.get("deferred_solvents", []) or []:
+            rows.append(
+                _grid_row(
+                    monomer,
+                    str(entry["solvent_name"]),
+                    "",
+                    method,
+                    dG=float("nan"),
+                    status="deferred",
+                    cache_hit=False,
+                    error=str(entry.get("reason", "")),
+                )
+            )
+
+    points = pd.DataFrame(rows)
+    points_path = out / "solvation_grid_points.csv"
+    points.to_csv(points_path, index=False)
+    n_ok = int((points["calc_status"] == "ok").sum())
+    n_failed = int((points["calc_status"] == "failed").sum())
+    return OrcaSolvationGridResult(
+        points=points,
+        plan=plan,
+        points_path=points_path,
+        plan_path=plan_path,
+        cache_path=cache_file,
+        n_ok=n_ok,
+        n_failed=n_failed,
+        n_cached=n_cached,
+        n_computed=n_computed_planned,
+        n_deferred=n_deferred,
+        engine_label=engine_label,
+    )
+
+
+def build_real_orca_solvation_grid_engine(
+    config_path: str | Path = DEFAULT_SOLVATION_GRID_CONFIG_PATH,
+):
+    """Construct the real ORCA/openCOSMO-RS engine and method label for the grid pilot."""
+
+    grid = load_solvation_grid_config(config_path)
+    config = OrcaConfig(
+        nprocs=int(grid["nprocs"]),
+        maxcore_mb=int(grid["maxcore_mb"]),
+        optical_mode="cosmors",
+    )
+    return OrcaEngine(config), config.method_label()
+
+
+def _grid_row(
+    monomer,
+    solvent_name: str,
+    orca_name: str,
+    method: str,
+    *,
+    dG: float,
+    status: str,
+    cache_hit: bool,
+    error: str,
+) -> dict[str, object]:
+    return {
+        "monomer_name": monomer.name,
+        "monomer_class": monomer.monomer_class,
+        "monomer_canonical_smiles": monomer.canonical_smiles,
+        "solvent_name": solvent_name,
+        "orca_solvent_name": orca_name,
+        "solvation_dG_kcal_mol": dG,
+        "calc_status": status,
+        "cache_hit": cache_hit,
+        "calc_error": error,
+        "engine_method": method,
+    }
 
 
 def run_orca_optical_pilot(

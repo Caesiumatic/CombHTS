@@ -43,10 +43,14 @@ from eps.workflow.orca_pilots import (
 )
 from eps.workflow.orca_pilots import (
     DEFAULT_OPTICAL_OUTDIR,
+    DEFAULT_SOLVATION_GRID_CONFIG_PATH,
+    DEFAULT_SOLVATION_GRID_OUTDIR,
     DEFAULT_SOLVATION_OUTDIR,
     build_mock_orca_pilot_engines,
     build_real_orca_pilot_engines,
+    build_real_orca_solvation_grid_engine,
     run_orca_optical_pilot,
+    run_orca_solvation_grid_pilot,
     run_orca_solvation_pilot,
 )
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
@@ -259,6 +263,40 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=DEFAULT_SOLVATION_OUTDIR,
         help="Directory for solvation_points.csv and the default cache.",
+    )
+
+    orca_solvation_grid = subparsers.add_parser(
+        "orca-pilot-solvation-grid",
+        help="Run the stratified monomer x solvent openCOSMO-RS dGsolv expansion pilot",
+    )
+    orca_solvation_grid.add_argument(
+        "--engine",
+        choices=("mock", "orca"),
+        default="mock",
+        help="Calculation engine: deterministic mock or real ORCA 6.1.",
+    )
+    orca_solvation_grid.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_SOLVATION_GRID_CONFIG_PATH,
+        help="Monomer x solvent dGsolv grid YAML configuration.",
+    )
+    orca_solvation_grid.add_argument(
+        "--cache",
+        type=Path,
+        default=None,
+        help="SQLite cache path; defaults to <outdir>/cache.sqlite. Seed it from the pilot cache to reuse points.",
+    )
+    orca_solvation_grid.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_SOLVATION_GRID_OUTDIR,
+        help="Directory for the grid points/plan CSVs and the default cache.",
+    )
+    orca_solvation_grid.add_argument(
+        "--plan-only",
+        action="store_true",
+        help="Pre-flight only: write the computed-vs-cached-vs-deferred plan and exit (no engine run).",
     )
 
     orca_optical = subparsers.add_parser(
@@ -651,6 +689,62 @@ def main(argv: list[str] | None = None) -> int:
             engine=args.engine,
             method=method,
             extra={"command": args.command, "n_ok": result.n_ok, "n_failed": result.n_failed},
+        )
+        if args.engine == "mock":
+            print("NOTE: mock engine -> non-physical numbers; use --engine orca on Lop for real values.")
+        return 0 if result.n_failed == 0 else 2
+
+    if args.command == "orca-pilot-solvation-grid":
+        if args.engine == "mock":
+            mock_engines = build_mock_orca_pilot_engines()
+            engine, method = mock_engines[0], mock_engines[1]
+        else:
+            engine, method = build_real_orca_solvation_grid_engine(args.config)
+        if args.plan_only:
+            from eps.storage import SQLiteCache
+            from eps.workflow.orca_pilots import load_solvation_grid_config, plan_solvation_grid
+
+            outdir = Path(args.outdir)
+            outdir.mkdir(parents=True, exist_ok=True)
+            cache_file = Path(args.cache) if args.cache is not None else outdir / "cache.sqlite"
+            grid = load_solvation_grid_config(args.config)
+            plan = plan_solvation_grid(grid, SQLiteCache(cache_file), method)
+            plan_path = outdir / "solvation_grid_plan.csv"
+            plan.to_csv(plan_path, index=False)
+            counts = plan["status"].value_counts().to_dict()
+            print(f"ORCA dGsolv grid PRE-FLIGHT plan ({method}); cache: {cache_file}")
+            print(f"Points: cached={counts.get('cached', 0)}; compute={counts.get('compute', 0)}; "
+                  f"deferred={counts.get('deferred', 0)} (no built-in COSMORS profile)")
+            print(f"Wrote plan CSV: {plan_path}")
+            return 0
+        result = run_orca_solvation_grid_pilot(
+            engine=engine,
+            method=method,
+            config_path=args.config,
+            cache_path=args.cache,
+            outdir=args.outdir,
+            engine_label=args.engine,
+        )
+        print(f"ORCA/openCOSMO-RS dGsolv grid engine: {args.engine} ({method})")
+        print(f"Plan: cached={result.n_cached}; to-compute={result.n_computed}; "
+              f"deferred={result.n_deferred} (no built-in COSMORS profile)")
+        print(f"Computed points: {result.n_ok} ok; {result.n_failed} failed")
+        print(f"Wrote points CSV: {result.points_path}")
+        print(f"Wrote plan CSV: {result.plan_path}")
+        print(f"SQLite cache: {result.cache_path}")
+        print("NOTE: dGsolv is a SOLVATION FREE ENERGY, not solubility. The 20% Tier-1 axis is UNCHANGED. "
+              "See docs/lit_curation/solubility_descriptor_status.md")
+        _stamp_provenance(
+            result.points_path,
+            engine=args.engine,
+            method=method,
+            extra={
+                "command": args.command,
+                "n_ok": result.n_ok,
+                "n_failed": result.n_failed,
+                "n_cached": result.n_cached,
+                "n_deferred": result.n_deferred,
+            },
         )
         if args.engine == "mock":
             print("NOTE: mock engine -> non-physical numbers; use --engine orca on Lop for real values.")

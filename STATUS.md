@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 (salt-role gate verified on the real 7,488-triad harvest; SGE 417569/417571)_
+_Last updated: 2026-06-22 (dimerization proton-offset diagnosis complete; optical calibration still awaiting human qsub submission)_
 
 ## Current phase
 
@@ -13,6 +13,11 @@ Directive items 2 and 3 have reached the pilot/implementation milestone.
   templates now cover openCOSMO-RS solvation and paired sTDA/TDA optical pilots.
 - Real openCOSMO-RS job 417544 completed 3/3 points. Corrected optical job 417557 completed 3/3
   sTDA recalculations plus 3/3 TDA cache hits; its standard CSV/JSON now reproduce the raw spectra.
+- The six-HIGH-anchor computed-to-experiment optical workflow is prepared on
+  `calib/optical-n6`: serial ORCA sTDA+TDA dimers, a distinct resumable cache/output directory,
+  staging-row provenance, and post-run slope/intercept/R2/LOO-CV/per-class/leverage analysis.
+  It has **not been submitted** and has no real n=6 result yet. The corrected pilot cache has
+  0/12 exact-key overlaps, so all six anchor dimers need both real methods.
 - The expanded real GFN2-xTB Tier-1 job 417538 completed with zero failures in all seven core/
   scored stages. CSV-only job 417553 produced 2,961/7,488 survivors, but its shortlist exposed that
   uncapped generic GBL evidence (5.2 V) dominated all top-20 rows. It is retained as a diagnostic,
@@ -110,16 +115,21 @@ pass. This remains a screening/route-validation milestone, not an experimental r
    shortlist views now collapse only exact score classes and expose every tied salt; the full audit
    remains per-salt. A separate config-driven role gate excludes reference-only and acid rows.
    Remaining debt is a validated cation/salt-compatibility model, not further tie-breaking.
-3. The corrected three-dimer optical fit is route evidence only; it remains too small and
-   ill-conditioned for scoring and needs the six experimental anchors/per-class expansion.
+3. The corrected three-dimer optical fit is route evidence only. The six-anchor/per-class
+   expansion is prepared but awaiting human submission; no real n=6 regression exists yet.
 4. Solubility remains a dGsolv proxy without lattice/fusion, concentration, aggregation,
    protonation, or salt-compatibility terms. openCOSMO-RS improves the descriptor, not the claim.
-5. Optical calibration needs the six experimental neutral-polymer anchors, longer-chain/geometry
-   sensitivity, and per-class validation. The three-dimer pilot must not change the 15% score axis.
+5. Optical calibration still needs completion of the prepared six-anchor run plus longer-chain/
+   geometry sensitivity and review. The prepared n=6 baseline deliberately uses pilot-matched
+   dimers and therefore does not satisfy the polymer-limit gate. The 15% axis remains diagnostic.
 6. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
    conductivity, ion pairing, acid/base speciation, and condition-specific anion limits are sparse.
-7. Dimerization has an unknown proton-reference offset; polymer doping onset is reported but not
-   calibrated; Tier-2 production still lacks the full solvent-/ion-specific execution matrix.
+7. Dimerization's proton-reference ambiguity is now diagnosed as one common additive intercept:
+   it cancels exactly from the min-max 15% ranking term, but absolute solution thermochemistry and
+   monomer-dependent validation remain open. Use a unit-slope, multi-anchor experimental intercept
+   only when exact-reaction equilibrium/Hess-cycle data exist; kinetics/onsets are not anchors.
+   Polymer doping onset is reported but not calibrated; Tier-2 production still lacks the full
+   solvent-/ion-specific execution matrix.
 8. Validation coverage remains below directive gates, and the library is 36x13x16 versus the
    requested roughly 80-150 x 25-35 x 20-30. The vetted +76/+27/+25 library-expansion proposal
    (`docs/research/library_expansion_proposal.md`, merged bee31d3) is PROPOSAL ONLY and stays gated
