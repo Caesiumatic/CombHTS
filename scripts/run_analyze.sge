@@ -23,6 +23,9 @@ export OMP_NUM_THREADS="${NSLOTS:-4}"
 export OMP_STACKSIZE=4G
 ulimit -s unlimited || true
 
-cd "$HOME/CombHTS"
+cd "${COMBHTS_ROOT:-$HOME/CombHTS}"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 
-eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/
+HARVEST="${HARVEST:-outputs/tier1_all_xtb.csv}"
+ANALYSIS_OUTDIR="${ANALYSIS_OUTDIR:-outputs/analysis}"
+python -m eps.cli analyze --harvest "$HARVEST" --outdir "$ANALYSIS_OUTDIR"

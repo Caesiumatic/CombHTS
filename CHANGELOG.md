@@ -36,6 +36,10 @@ constants, or monomer-Eox calibration coefficients changed.
   all-triads harvest. It restores the pre-policy window, applies the conditioned ESW join, rebuilds
   hard-filter annotations/Pareto/composite columns, and writes new CSVs without opening SQLite or
   retrying uncached report-only failures. Idempotency and measured-water behavior are tested.
+- Executed that path on Lop as SGE 417553 (31 s, no Engine): the real 7,488-triad survivor set
+  changed 4,078 -> 2,961; 1,140 old survivors dropped and 23 PC/GBL triads entered. Window-pass
+  rows fell 6,352 -> 4,244 while other hard-filter pass counts were unchanged; water and DMSO now
+  have zero survivors, and old/new top-50 overlap is 0/50. The old shortlist is superseded.
 
 ## 2026-06-22 — directive gap audit; Lop verification; ESW risk and ORCA routes
 
