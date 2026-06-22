@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 (n=6 optical calibration prepared; awaiting human qsub submission)_
+_Last updated: 2026-06-22 (dimerization proton-offset diagnosis complete; optical calibration still awaiting human qsub submission)_
 
 ## Current phase
 
@@ -124,8 +124,12 @@ pass. This remains a screening/route-validation milestone, not an experimental r
    dimers and therefore does not satisfy the polymer-limit gate. The 15% axis remains diagnostic.
 6. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
    conductivity, ion pairing, acid/base speciation, and condition-specific anion limits are sparse.
-7. Dimerization has an unknown proton-reference offset; polymer doping onset is reported but not
-   calibrated; Tier-2 production still lacks the full solvent-/ion-specific execution matrix.
+7. Dimerization's proton-reference ambiguity is now diagnosed as one common additive intercept:
+   it cancels exactly from the min-max 15% ranking term, but absolute solution thermochemistry and
+   monomer-dependent validation remain open. Use a unit-slope, multi-anchor experimental intercept
+   only when exact-reaction equilibrium/Hess-cycle data exist; kinetics/onsets are not anchors.
+   Polymer doping onset is reported but not calibrated; Tier-2 production still lacks the full
+   solvent-/ion-specific execution matrix.
 8. Validation coverage remains below directive gates, and the library is 36x13x16 versus the
    requested roughly 80-150 x 25-35 x 20-30. The vetted +76/+27/+25 library-expansion proposal
    (`docs/research/library_expansion_proposal.md`, merged bee31d3) is PROPOSAL ONLY and stays gated

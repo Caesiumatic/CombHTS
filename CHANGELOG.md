@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-06-22 — diagnosed dimerization proton offset and specified absolute anchor
+
+- Traced the implemented neutral-dimer cycle and identified `2*G(H+)` as the only unknown
+  absolute-reference term. It is one common additive intercept, so it cancels exactly from the
+  unchanged min-max-normalized 15% ranking axis.
+- Audited the completed 36-monomer real-GFN2-xTB harvest (-42.094 to +73.839 kcal/mol) and the
+  benchmark schema. Existing benchmark rows are oxidation data, not exact-reaction equilibrium
+  free energies, and cannot anchor the intercept.
+- Added `docs/dimerization_offset_diagnosis.md` with ranked anchoring options. Recommended a
+  unit-slope, matched multi-anchor experimental intercept, supported by a consistent
+  solvent-specific proton convention; retained relative-only interpretation until such data exist.
+- Local analysis only: no engine/cluster run and no scoring, weight, config, or source change.
+
 ## 2026-06-22 — prepared six-anchor optical calibration (awaiting human submission)
 
 Prepared a new diagnostic computed-to-experiment optical calibration artifact without submitting
