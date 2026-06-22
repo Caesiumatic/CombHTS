@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 09:55 CDT_
+_Last updated: 2026-06-22 11:00 CDT_
 
 ## Current phase
 
@@ -14,12 +14,10 @@ Directive items 2 and 3 have reached the pilot/implementation milestone.
   ORCA calculations; corrected raw values prove the route, but the submitted sTDA postprocessor
   misread an unrelated numeric table. The parser is fixed and regression-tested locally; the
   cluster CSV/cache is explicitly invalid until a corrected sTDA-only rerun.
-- The expanded real GFN2-xTB Tier-1 job 417538 also completed: 7,488 triads, 4,078 survivors
-  under the **old computed-only ESW gate**, and zero failures in all seven core/scored stages.
-  Re-score from its existing cache under the new gate before analysis or recommendation.
-- `eps rescore-tier1` now provides that re-score as a strict CSV-only path: it accepts no Engine,
-  never opens SQLite, and therefore cannot retry failed report-only xTB calculations. Lop execution
-  against 417538 is the current in-progress work unit.
+- The expanded real GFN2-xTB Tier-1 job 417538 completed with zero failures in all seven core/
+  scored stages. CSV-only job 417553 has now superseded its old gate: **2,961/7,488 survivors
+  (39.5%)**, down from 4,078/7,488. The new and old top-50 lists overlap 0/50, so the old shortlist
+  must not be used. Directive-§8 analysis of the corrected harvest is next.
 
 Local verification is green: **205 passed, 5 skipped**; `ruff check .` and `git diff --check`
 pass. This remains a screening/route-validation milestone, not an experimental recommendation.
@@ -45,13 +43,16 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 - Real Tier-1 job 417538 completed in 10 h 54 m 54 s. Core stages had zero failed triad rows.
   Report-only failures remain fully audited: spin-density secondary monomer rows 7,488; water
   cathodic/secondary-solvent rows 576 each; ion-pair rows 3,744.
+- Measured-first re-score 417553 used no Engine and completed in 31 s. It removed 1,140 old
+  survivors and admitted 23 (net -1,117); window-pass rows fell 6,352 -> 4,244 while anion and
+  solvation pass counts were unchanged. DMSO and water now have zero survivors.
 
 ## Open scientific and engineering debt
 
 1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
    analysis must expand; a conditioned formulation limit is not a universal solvent constant.
-2. The 417538 final CSV predates the measured-first gate. Run the new CSV-only re-score on Lop and
-   audit the new ranking/all-triads CSVs before `eps analyze`.
+2. The 23 newly admitted PC/GBL triads come from generic measured formulation windows that exceed
+   the old prior; audit them and the zero-overlap top-50 before any experimental recommendation.
 3. Job 417545's ORCA calculations are valid, but its generated sTDA CSV/cache values are not.
    Sync the fixed absorption-block parser, delete only the three invalid sTDA cache rows, and rerun;
    the three valid TDA cache rows should be reused.
@@ -68,8 +69,8 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 
 ## Immediate next actions
 
-1. Sync the completed code to Lop. Re-score job 417538 from the same real-xTB cache under the new
-   ESW gate, audit survivor/failure changes, then run `eps analyze` and update its manifest.
+1. Run `eps analyze` on `outputs/tier1_real_7488_measured_esw/tier1_all.csv`; inspect the corrected
+   shortlist/Pareto set and explicitly audit the 23 PC/GBL gains.
 2. Re-run only the invalid ORCA sTDA cache entries with the fixed parser; verify the standard
    CSV/JSON reproduce the raw-output values and diagnostic fit recorded above.
 3. Expand exact-formulation ESW and solubility anchors, then run the six-anchor/per-class optical

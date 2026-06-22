@@ -20,5 +20,9 @@ export OMP_NUM_THREADS="${NSLOTS:-1}"
 
 cd "${COMBHTS_ROOT:-$HOME/CombHTS}"
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
-export EPS_ORCA_WORK_ROOT="$PWD/outputs/orca_optical_pilot/raw"
-python -m eps.cli orca-pilot-optical --engine orca
+ORCA_OPTICAL_OUTDIR="${ORCA_OPTICAL_OUTDIR:-outputs/orca_optical_pilot}"
+ORCA_OPTICAL_CACHE="${ORCA_OPTICAL_CACHE:-$ORCA_OPTICAL_OUTDIR/cache.sqlite}"
+export EPS_ORCA_WORK_ROOT="${EPS_ORCA_WORK_ROOT:-$ORCA_OPTICAL_OUTDIR/raw}"
+python -m eps.cli orca-pilot-optical --engine orca \
+    --cache "$ORCA_OPTICAL_CACHE" \
+    --outdir "$ORCA_OPTICAL_OUTDIR"

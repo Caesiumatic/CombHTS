@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — Tier-1 measured-first ESW re-score (no engine)
+- run_id: 2026-06-22_tier1-rescore-measured-esw-417553
+- date: 2026-06-22 10:56:48 CDT
+- command: `python -m eps.cli rescore-tier1 --input outputs/tier1_real_7488/tier1_all.csv --output outputs/tier1_real_7488_measured_esw/tier1_ranked.csv --all-output outputs/tier1_real_7488_measured_esw/tier1_all.csv`
+- engine / method: **none** / CSV-only conditioned join + filters + arithmetic score
+- scope: completed real-GFN2-xTB 36x13x16 = 7,488-triad audit from SGE 417538
+- cluster job: SGE 417553, `compute-2-18.local`, 1 slot, 31 s wall, maxvmem 141.371 MB, exit 0
+- status: completed
+- headline results: survivors 4,078 -> 2,961 (54.5% -> 39.5%); 1,140 old survivors dropped, 23 gained, net -1,117. Window-pass rows 6,352 -> 4,244; anion/solvation pass counts unchanged. DMSO and water survivors fell to zero. New top-50 overlap with the old top-50 is 0/50; 206 Pareto-front rows.
+- per-property failures: no calculations executed; source harvest's existing audit statuses were preserved byte-for-value
+- output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_measured_esw/tier1_ranked.csv`, `tier1_all.csv`, and provenance sidecar
+- provenance: git commit `ab80604`; source harvest SGE 417538 / real GFN2-xTB; gate policy `measured_first_conservative`; 5,760 measured-conditioned rows and 1,728 fallback rows
+- caveats: this is the first physically corrected gate result, but still screening-grade. The 23 gained triads are in propylene carbonate/GBL, whose generic measured formulation windows exceed the old priors; audit them before recommendation. Sparse exact-salt coverage and the uncalibrated solubility/optical/dimerization axes remain.
+- supersedes / superseded_by: supersedes the 4,078-survivor old-gate ranking from `2026-06-21_tier1-harvest-real-7488`; superseded_by —

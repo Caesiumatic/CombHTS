@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-22 | Tier-1 measured-first ESW re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417553 exit 0; 4,078->2,961 survivors; top-50 overlap 0/50 | [link](2026-06-22_tier1-rescore-measured-esw-417553.md) |
 | 2026-06-22 | sTDA/TDA serial pilot | ORCA 6.1 real | 3 dimers x 2 methods | completed ORCA / invalid initial sTDA postprocess | SGE 417545 exit 0; corrected raw fit R2=.770/MAE=.097 eV; parser fixed locally, cluster rerun pending | [link](2026-06-22_orca-optical-real-417545.md) |
 | 2026-06-22 | openCOSMO-RS serial pilot | ORCA 6.1 real | 3 monomers in MeCN | completed | SGE 417544; 3/3; dGsolv -4.13/-7.91/-6.98 kcal/mol | [link](2026-06-22_orca-solvation-real-417544.md) |
 | 2026-06-22 | openCOSMO-RS parallel diagnostic | ORCA 6.1 real | 3 monomers in MeCN | failed | SGE 417542; OpenMPI/hwloc crash; 0 values cached | [link](2026-06-22_orca-solvation-real-417542.md) |
