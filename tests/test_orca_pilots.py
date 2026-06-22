@@ -15,9 +15,13 @@ from eps.engines.orca import (
 )
 from eps.workflow.orca_pilots import (
     build_mock_orca_pilot_engines,
+    load_solvation_grid_config,
+    plan_solvation_grid,
     run_orca_optical_pilot,
+    run_orca_solvation_grid_pilot,
     run_orca_solvation_pilot,
 )
+from eps.storage import SQLiteCache
 
 
 def test_orca_cosmors_input_uses_internal_solvent_and_explicit_state() -> None:
@@ -110,6 +114,46 @@ def test_orca_persistent_relative_work_root_passes_a_valid_input_path(
 
     assert "ORCA TERMINATED NORMALLY" in output
     assert len(list((tmp_path / "relative-raw").glob("eps-orca-*/pilot.out"))) == 1
+
+
+def test_solvation_grid_config_solvents_are_orca_builtin() -> None:
+    """The shipped grid config must only compute solvents ORCA recognizes, and defer the rest."""
+
+    grid = load_solvation_grid_config()
+    computed = {str(entry["orca_cosmors_name"]) for entry in grid["solvents"]}
+    # Verified against ORCA 6.1.0-418's COSMORS(...) keyword table on Lop (2026-06-22).
+    assert computed == {"Acetonitrile", "Nitromethane", "Water"}
+    deferred = {str(entry["solvent_name"]) for entry in grid["deferred_solvents"]}
+    assert deferred == {"propylene carbonate", "NMP"}
+
+
+def test_solvation_grid_is_mock_first_with_deferred_and_cache_reuse(tmp_path: Path) -> None:
+    engine, method = build_mock_orca_pilot_engines()[0], build_mock_orca_pilot_engines()[1]
+    grid = load_solvation_grid_config()
+    n_monomers = len(grid["monomers"])
+    n_compute_solvents = len(grid["solvents"])
+    n_deferred_solvents = len(grid["deferred_solvents"])
+
+    cache_path = tmp_path / "grid.sqlite"
+    outdir = tmp_path / "grid"
+    result = run_orca_solvation_grid_pilot(
+        engine=engine, method=method, cache_path=cache_path, outdir=outdir, engine_label="mock"
+    )
+    assert result.n_ok == n_monomers * n_compute_solvents
+    assert result.n_failed == 0
+    assert result.n_deferred == n_monomers * n_deferred_solvents
+    assert result.n_computed == n_monomers * n_compute_solvents  # nothing cached on first run
+    assert result.points_path.exists()
+    assert result.plan_path.exists()
+    # Deferred rows carry no computed value.
+    deferred_rows = result.points[result.points["calc_status"] == "deferred"]
+    assert deferred_rows["solvation_dG_kcal_mol"].isna().all()
+
+    # Pre-flight plan over the populated cache must mark every computable point as cached.
+    plan = plan_solvation_grid(grid, SQLiteCache(cache_path), method)
+    assert int((plan["status"] == "cached").sum()) == n_monomers * n_compute_solvents
+    assert int((plan["status"] == "deferred").sum()) == n_monomers * n_deferred_solvents
+    assert int((plan["status"] == "compute").sum()) == 0
 
 
 @pytest.mark.skipif(shutil.which("orca") is None, reason="ORCA not installed")

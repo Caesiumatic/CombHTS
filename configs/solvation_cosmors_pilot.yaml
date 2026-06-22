@@ -1,0 +1,55 @@
+# Representative monomer x solvent openCOSMO-RS dGsolv expansion pilot.
+#
+# PURPOSE: extend the 3-molecule openCOSMO-RS solvation pilot (thiophene/EDOT/pyrrole in MeCN,
+# docs/runs/2026-06-22_orca-solvation-real-417544.md) toward a stratified monomer x solvent set,
+# to VALIDATE the dGsolv descriptor across chemistries. This is descriptor validation, NOT a
+# production sweep, and NOT a solubility calibration.
+#
+# HONESTY (see docs/lit_curation/solubility_descriptor_status.md): dGsolv is a SOLVATION FREE
+# ENERGY (transfer of one solute molecule from gas to dilute solution). It is NOT solubility.
+# It omits the solute lattice/fusion enthalpy, finite concentration, aggregation, protonation,
+# and salt compatibility. The 20% Tier-1 "solubility" axis is UNCHANGED by this pilot.
+#
+# Engine/method: ORCA 6.1 / openCOSMO-RS 24a, BP86/def2-TZVPD (same as the pilot). Serial
+# (nprocs 1) to avoid the Lop OpenMPI/hwloc topology crash seen in jobs 417540/417542.
+grid:
+  # Stratified subset of library monomers (data/monomers.csv), one representative per major
+  # chemistry. thiophene/EDOT/pyrrole are the cached pilot points (reused, not recomputed in MeCN).
+  monomers:
+    - thiophene          # heteroaromatic, S parent           [cached in MeCN]
+    - pyrrole            # heteroaromatic, N-H parent          [cached in MeCN]
+    - furan              # heteroaromatic, O parent
+    - selenophene        # heteroaromatic, Se parent (chalcogen series)
+    - EDOT               # alkylenedioxythiophene (dioxy donor) [cached in MeCN]
+    - EDOP               # alkylenedioxypyrrole (dioxy donor, N)
+    - 3-hexylthiophene   # alkylthiophene: solubilizing alkyl chain effect
+    - bithiophene        # oligothiophene: conjugation-length / size effect
+    - aniline            # aniline (amine donor family)
+    - carbazole          # large fused, low-solubility contrast
+    - CPDT               # fused-donor scaffold (cyclopentadithiophene)
+    - 3-methoxythiophene # alkoxythiophene: polar substituent
+
+  # Library solvents WITH an ORCA built-in openCOSMO-RS sigma profile (verified against the
+  # ORCA 6.1.0-418 binary's COSMORS(...) keyword table on Lop, 2026-06-22). These directly
+  # anchor the corrected shortlist (MeCN, nitromethane) plus a water control.
+  solvents:
+    - solvent_name: acetonitrile   # library name -> ORCA COSMORS keyword
+      orca_cosmors_name: Acetonitrile
+    - solvent_name: nitromethane
+      orca_cosmors_name: Nitromethane
+    - solvent_name: water          # CONTROL (high-dielectric protic; not a target process solvent)
+      orca_cosmors_name: Water
+
+  # Shortlist-anchor solvents the pilot does NOT compute: ORCA 6.1 ships NO built-in
+  # openCOSMO-RS sigma profile for these (no COSMORS(PROPYLENE CARBONATE) / COSMORS(NMP) keyword).
+  # Computing them needs a custom solvent sigma-profile parametrization, which is out of pilot
+  # scope and not wired into OrcaEngine. Listed here for honest computed-vs-needed accounting.
+  deferred_solvents:
+    - solvent_name: propylene carbonate
+      reason: "no built-in COSMORS(...) profile in ORCA 6.1.0-418; needs custom solvent sigma-profile"
+    - solvent_name: NMP
+      reason: "no built-in COSMORS(...) profile in ORCA 6.1.0-418; needs custom solvent sigma-profile"
+
+  # Serial avoids Lop's OpenMPI/hwloc topology crash on the older compute nodes.
+  nprocs: 1
+  maxcore_mb: 2000
