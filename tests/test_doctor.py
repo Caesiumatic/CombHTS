@@ -22,6 +22,9 @@ def test_doctor_runs_and_reports_valid_statuses() -> None:
     # Cluster binaries are WARN or PASS, never FAIL (they are cluster-only).
     assert by_name["binary:xtb"].status in {PASS, WARN}
     assert by_name["binary:g16"].status in {PASS, WARN}
+    assert by_name["binary:orca"].status in {PASS, WARN}
+    assert by_name["config:configs/orca_pilots.yaml"].status == PASS
+    assert by_name["data:data/solvent_windows.csv"].status == PASS
 
     # Tier-2 readiness: g16 availability (cluster-only -> never FAIL) and the effective method.
     assert by_name["tier2:g16"].status in {PASS, WARN}

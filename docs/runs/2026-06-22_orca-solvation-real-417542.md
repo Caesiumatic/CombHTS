@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — openCOSMO-RS parallel diagnostic (real ORCA)
+- run_id: 2026-06-22_orca-solvation-real-417542
+- date: 2026-06-22 09:03:03 CDT
+- command: `python -m eps.cli orca-pilot-solvation --engine orca`
+- engine / method: ORCA 6.1/openCOSMO-RS 24a, BP86/def2-TZVPD; real engine
+- scope: thiophene, EDOT, pyrrole in acetonitrile; 4-core diagnostic with raw-output retention
+- cluster job: SGE 417542, `compute-2-15.local`, 17 s wall
+- status: failed (exit 2; 0/3 points)
+- headline results: reproduced an OpenMPI/hwloc topology segfault while ORCA launched parallel workers.
+- per-property failures: solvation_free_energy 3/3
+- output artifacts (paths, NOT committed): Lop `outputs/orca_solvation_pilot/raw/`; `$HOME/combhts_orca_solv.o417542`
+- provenance: git commit `c325cc6` + dirty diagnostic patch; 4 cores; ORCA module `6.1.0-418`, OpenMPI `4.1.8`
+- caveats: platform-launch failure, not a method result; no scientific value was cached.
+- supersedes / superseded_by: supersedes 417540; superseded_by `2026-06-22_orca-solvation-real-417544`

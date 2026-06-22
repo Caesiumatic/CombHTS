@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — ORCA solvation route smoke (mock)
+- run_id: 2026-06-22_orca-solvation-mock-smoke
+- date: 2026-06-22
+- command: `.venv/bin/eps orca-pilot-solvation --engine mock --outdir /tmp/combhts-orca-solv-mock`
+- engine / method: MockEngine / `mock-orca-cosmors` (**non-physical**)
+- scope: thiophene, EDOT, pyrrole in acetonitrile; route/cache/CSV smoke only
+- cluster job: local
+- status: completed
+- headline results: 3/3 mock points written; 0 failures
+- per-property failures: 0; mock-trivial
+- output artifacts (paths, NOT committed): `/tmp/combhts-orca-solv-mock/`
+- provenance: git commit `c325cc6` + dirty pilot implementation; `configs/orca_pilots.yaml`
+- caveats: MOCK PIPELINE SMOKE ONLY; values are not solvation energies and are not scientific results.
+- supersedes / superseded_by: superseded_by `2026-06-22_orca-solvation-real-417544`

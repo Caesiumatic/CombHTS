@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — sTDA/TDA parallel diagnostic (real ORCA)
+- run_id: 2026-06-22_orca-optical-real-417543
+- date: 2026-06-22 09:03:03 CDT
+- command: `python -m eps.cli orca-pilot-optical --engine orca`
+- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), sTDA + TDA; real engine
+- scope: thiophene, EDOT, pyrrole dimers; 4-core diagnostic with raw-output retention
+- cluster job: SGE 417543, `compute-2-18.local`, 17 s wall
+- status: failed (exit 2; 0/3 paired points)
+- headline results: reproduced the same OpenMPI/hwloc topology segfault (ORCA exit 139) in all six calls.
+- per-property failures: sTDA 3/3; TDA/TD-DFT 3/3
+- output artifacts (paths, NOT committed): Lop `outputs/orca_optical_pilot/raw/`; `$HOME/combhts_orca_opt.o417543`
+- provenance: git commit `c325cc6` + dirty diagnostic patch; 4 cores; ORCA module `6.1.0-418`, OpenMPI `4.1.8`
+- caveats: platform-launch failure, not a method result; no scientific value was cached.
+- supersedes / superseded_by: supersedes 417541; superseded_by `2026-06-22_orca-optical-real-417545`

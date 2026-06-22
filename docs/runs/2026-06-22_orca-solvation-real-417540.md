@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — openCOSMO-RS parallel pilot first attempt (real ORCA)
+- run_id: 2026-06-22_orca-solvation-real-417540
+- date: 2026-06-22 09:00:33 CDT
+- command: `python -m eps.cli orca-pilot-solvation --engine orca`
+- engine / method: ORCA 6.1/openCOSMO-RS 24a, BP86/def2-TZVPD; real engine
+- scope: thiophene, EDOT, pyrrole in acetonitrile; 4-core route pilot
+- cluster job: SGE 417540, `compute-2-21.local`, 17 s wall
+- status: failed (exit 2; 0/3 points)
+- headline results: ORCA subprocesses failed before a usable dGsolv was produced.
+- per-property failures: solvation_free_energy 3/3
+- output artifacts (paths, NOT committed): Lop `$HOME/CombHTS_pilot_work/outputs/orca_solvation_pilot/`; `$HOME/combhts_orca_solv.o417540`
+- provenance: git commit `c325cc6` + dirty pilot implementation; 4 cores; ORCA module `6.1.0-418`
+- caveats: failed route diagnostic; no scientific value was cached or reported.
+- supersedes / superseded_by: superseded_by `2026-06-22_orca-solvation-real-417542`

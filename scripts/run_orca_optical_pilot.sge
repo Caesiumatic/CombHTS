@@ -1,0 +1,24 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_orca_opt
+#$ -j y
+#$ -pe smp 1
+#$ -l h_rt=24:00:00
+
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export OMP_NUM_THREADS="${NSLOTS:-1}"
+
+cd "${COMBHTS_ROOT:-$HOME/CombHTS}"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export EPS_ORCA_WORK_ROOT="$PWD/outputs/orca_optical_pilot/raw"
+python -m eps.cli orca-pilot-optical --engine orca

@@ -48,6 +48,10 @@ from eps.properties.secondary_descriptors import (
     monomer_secondary_descriptors,
     solvent_secondary_descriptors,
 )
+from eps.properties.solvent_windows import (
+    apply_condition_aware_solvent_windows,
+    load_solvent_window_measurements,
+)
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache
 from eps.structures.geometry import (
@@ -103,6 +107,15 @@ def run_tier1(
     solvents = load_solvents()
     electrolytes = load_electrolytes()
     tier1_config = load_tier1_config(tier1_config_path)
+    solvent_window_config = tier1_config.get("solvent_window_gate", {}) or {}
+    solvent_window_measurements = None
+    if bool(solvent_window_config.get("enabled", False)):
+        window_path = Path(
+            solvent_window_config.get("measurements_path", "data/solvent_windows.csv")
+        )
+        if not window_path.is_absolute():
+            window_path = PROJECT_ROOT / window_path
+        solvent_window_measurements = load_solvent_window_measurements(window_path)
 
     oligomer_config = tier1_config.get("oligomer", {})
     oligomer_n = int(oligomer_config.get("n", DEFAULT_OLIGOMER_N))
@@ -168,6 +181,8 @@ def run_tier1(
         electrolytes=electrolytes,
         cation_table=cation_table,
         pair_table=pair_table,
+        solvent_window_measurements=solvent_window_measurements,
+        solvent_window_config=solvent_window_config,
     )
     all_triads = annotate_tier1_filters(triads, tier1_config)
     filtered = apply_tier1_filters(all_triads, tier1_config)
@@ -571,6 +586,8 @@ def build_triad_table(
     electrolytes: list[Electrolyte],
     cation_table: pd.DataFrame | None = None,
     pair_table: pd.DataFrame | None = None,
+    solvent_window_measurements: pd.DataFrame | None = None,
+    solvent_window_config: dict | None = None,
 ) -> pd.DataFrame:
     """Build all monomer x solvent x electrolyte triads by joining precomputed tables.
 
@@ -619,6 +636,14 @@ def build_triad_table(
         .merge(solvent_table, on="solvent_name", how="left", validate="many_to_one")
         .merge(electrolyte_props, on="solvent_name", how="left", validate="many_to_many")
     )
+    if solvent_window_measurements is not None:
+        window_config = solvent_window_config or {}
+        triads = apply_condition_aware_solvent_windows(
+            triads,
+            solvent_window_measurements,
+            policy=str(window_config.get("policy", "measured_first_conservative")),
+            fallback_policy=str(window_config.get("fallback_policy", "min_csv_computed")),
+        )
     triads["window_margin_V"] = (
         triads["solvent_anodic_limit_V"] - triads["monomer_Eox_filter_V_vs_AgAgCl"]
     )

@@ -2,6 +2,16 @@ filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
   max_solvation_dG_kcal_mol: -3.0
+solvent_window_gate:
+  # Practical ESW is condition-dependent. Select after the cheap solvent+salt join:
+  # exact (solvent,salt) measured rows first, otherwise the conservative measured solvent
+  # lower bound, and only then min(curated CSV, computed descriptor) as a flagged fallback.
+  # The computed molecular oxidation descriptor remains in the audit but is no longer allowed
+  # to override a conditioned measurement (e.g. water's pathological computed 3.77 V value).
+  enabled: true
+  policy: measured_first_conservative
+  measurements_path: data/solvent_windows.csv
+  fallback_policy: min_csv_computed
 conformer_search:
   # Directive §4.1 MMFF94 conformer search for geometry generation. enabled=true embeds
   # n_conformers ETKDGv3 conformers, MMFF94-optimizes each, hands the lowest-energy one to xTB.
