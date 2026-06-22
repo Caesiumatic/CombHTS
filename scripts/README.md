@@ -15,6 +15,7 @@ not submit them blindly from CI or an overnight agent.
 | `run_dft_calibration.sge` | `eps calibrate-dft --engine gaussian --config configs/tier2.yaml` | xTB + Gaussian 16 |
 | `run_orca_solvation_pilot.sge` | `python -m eps.cli orca-pilot-solvation --engine orca` | ORCA 6.1/openCOSMO-RS |
 | `run_orca_optical_pilot.sge` | `python -m eps.cli orca-pilot-optical --engine orca` | ORCA 6.1 sTDA + TDA/TD-DFT |
+| `run_optical_calibration_n6.sge` | `python scripts/run_optical_calibration_n6.py --engine orca` | ORCA 6.1 sTDA + TDA/TD-DFT |
 
 `run_dft_calibration.sge` is the only template that loads **Gaussian 16** (`module load
 gaussian/g16`). It runs the SMALL xTB->DFT calibration batch (~32 unique monomers x neutral+cation
@@ -26,6 +27,10 @@ The two ORCA templates are deliberately small, serial route-validation pilots. L
 nodes expose an OpenMPI/hwloc topology crash when ORCA 6.1 starts parallel workers, so these pilots
 request one slot. They retain raw ORCA inputs/outputs under the matching gitignored `outputs/`
 directory and never present failed calculations or mock values as scientific results.
+
+The n=6 optical template is also serial. It reads the six HIGH experimental anchors directly from
+the staging-derived selection CSV, writes to `outputs/optical_calibration_n6/`, and keeps its cache
+separate from the corrected n=3 pilot. Its analysis is diagnostic and cannot update scoring.
 
 `run_tier1_rescore.sge` is the safe path for a policy/threshold/weight change after a real harvest.
 It reads the existing all-triads CSV and recomputes only conditioned joins, filters, Pareto flags,
