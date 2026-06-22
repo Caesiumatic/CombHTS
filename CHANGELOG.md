@@ -1,9 +1,10 @@
 # Changelog
 
-## 2026-06-22 — prepared six-anchor optical calibration (awaiting human submission)
+## 2026-06-22 — prepared and submitted six-anchor optical calibration
 
-Prepared a new diagnostic computed-to-experiment optical calibration artifact without submitting
-an SGE job and without changing production scoring, weights, calibration profiles, or engines.
+Prepared a new diagnostic computed-to-experiment optical calibration artifact, then submitted it
+after explicit user authorization. Production scoring, weights, calibration profiles, and engines
+remain unchanged.
 
 - Added a staging-traceable six-HIGH-anchor runner using the corrected pilot's neutral-dimer,
   serial ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN) sTDA+TDA protocol. PProDOP remains a staging-only
@@ -19,6 +20,9 @@ an SGE job and without changing production scoring, weights, calibration profile
   scientific results. No qsub, xTB, Gaussian, or local ORCA calculation was run.
 - The dimer baseline does not satisfy the planned longer-chain/geometry/phase gates. The 15%
   optical axis remains diagnostic pending real completion and scientific review.
+- After explicit user authorization, submitted the prepared serial script as SGE **417587** at
+  15:37:51 CDT. Scheduler state was `qw` (queued), one slot, 72 h walltime. No real result was
+  available at record time; the manifest and run index now distinguish submission from completion.
 
 ## 2026-06-22 — real-harvest verification of the salt-role gate and distinct ranking
 

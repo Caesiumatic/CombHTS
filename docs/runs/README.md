@@ -4,7 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-06-22 | optical calibration n=6 | ORCA 6.1 real requested | 6 HIGH anchors × neutral dimers × sTDA/TDA | prepared — awaiting submission | exact pilot-cache overlap 0/12; serial qsub prepared; no real result yet; 15% axis unchanged | [link](2026-06-22_optical-calib-n6.md) |
+| 2026-06-22 | optical calibration n=6 | ORCA 6.1 real | 6 HIGH anchors × neutral dimers × sTDA/TDA | submitted — queued | SGE 417587; exact pilot-cache overlap 0/12; no real result yet; 15% axis unchanged | [link](2026-06-22_optical-calib-n6.md) |
 | 2026-06-22 | analyze salt-role-fixed ranking | none (read-only) | 7,488 / 2,143 per-salt survivors / 1,127 score-classes | completed | SGE 417571; distinct top-30 = 19 PC / 6 MeCN / 3 nitromethane / 2 NMP; no AgClO4/HClO4 | [link](2026-06-22_analyze-salt-fixed-417571.md) |
 | 2026-06-22 | Tier-1 salt-role gate re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417569; 2,938 -> 2,143 survivors; -795/0 gained; ranked 1,127 score-classes | [link](2026-06-22_tier1-rescore-salt-fixed-417569.md) |
 | 2026-06-22 | Tier-1 salt-role re-score first submission | none (pre-exec) | intended real xTB 7,488 triads | failed before execution | SGE 417568; relative scheduler log path missing; 0 s, no output | [link](2026-06-22_tier1-rescore-salt-fixed-417568.md) |
