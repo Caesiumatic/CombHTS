@@ -50,6 +50,8 @@ from eps.workflow.orca_pilots import (
     run_orca_solvation_pilot,
 )
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
+from eps.workflow.tier1_rescore import DEFAULT_OUTDIR as DEFAULT_RESCORE_OUTDIR
+from eps.workflow.tier1_rescore import rescore_tier1_harvest
 from eps.workflow.tier2 import (
     DEFAULT_REFINED_WINDOW_MARGIN_V,
     run_tier2_refined_screen,
@@ -130,6 +132,24 @@ def main(argv: list[str] | None = None) -> int:
     tier1.add_argument("--cache", type=Path, default=DEFAULT_CACHE_PATH, help="SQLite cache path")
     tier1.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Ranked CSV output path")
     tier1.add_argument("--all-output", type=Path, default=None, help="All-triads audit CSV output path")
+
+    rescore = subparsers.add_parser(
+        "rescore-tier1",
+        help="Reapply Tier-1 window policy, filters, and scoring to an existing audit CSV (no engine)",
+    )
+    rescore.add_argument("--input", type=Path, required=True, help="Existing tier1_all.csv")
+    rescore.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_RESCORE_OUTDIR / "tier1_ranked.csv",
+        help="Re-scored ranked CSV output path.",
+    )
+    rescore.add_argument(
+        "--all-output",
+        type=Path,
+        default=DEFAULT_RESCORE_OUTDIR / "tier1_all.csv",
+        help="Re-scored all-triads audit CSV output path.",
+    )
 
     validate = subparsers.add_parser("validate", help="Run benchmark validation")
     validate.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
@@ -440,6 +460,31 @@ def main(argv: list[str] | None = None) -> int:
         )
         if result.surviving_triads == 0:
             print(f"WARNING: Tier-1 produced zero survivors. See all-triads audit CSV: {result.all_output_path}")
+        return 0
+
+    if args.command == "rescore-tier1":
+        result = rescore_tier1_harvest(
+            args.input,
+            output_path=args.output,
+            all_output_path=args.all_output,
+        )
+        print("Tier-1 CSV-only re-score: no Engine or SQLite cache opened")
+        print(f"Tier 1 total triads: {result.total_triads}")
+        print(f"Tier 1 surviving triads: {result.surviving_triads}")
+        print(f"Tier 1 retention fraction: {result.retention_fraction:.3f}")
+        print(f"Wrote ranked CSV: {result.output_path}")
+        print(f"Wrote all-triads audit CSV: {result.all_output_path}")
+        _stamp_provenance(
+            result.output_path,
+            engine="none",
+            method="csv-only/measured-first-rescore",
+            extra={
+                "command": args.command,
+                "source": str(result.input_path),
+                "total_triads": result.total_triads,
+                "surviving_triads": result.surviving_triads,
+            },
+        )
         return 0
 
     if args.command == "validate":

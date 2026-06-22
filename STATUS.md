@@ -17,6 +17,9 @@ Directive items 2 and 3 have reached the pilot/implementation milestone.
 - The expanded real GFN2-xTB Tier-1 job 417538 also completed: 7,488 triads, 4,078 survivors
   under the **old computed-only ESW gate**, and zero failures in all seven core/scored stages.
   Re-score from its existing cache under the new gate before analysis or recommendation.
+- `eps rescore-tier1` now provides that re-score as a strict CSV-only path: it accepts no Engine,
+  never opens SQLite, and therefore cannot retry failed report-only xTB calculations. Lop execution
+  against 417538 is the current in-progress work unit.
 
 Local verification is green: **205 passed, 5 skipped**; `ruff check .` and `git diff --check`
 pass. This remains a screening/route-validation milestone, not an experimental recommendation.
@@ -47,8 +50,8 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 
 1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
    analysis must expand; a conditioned formulation limit is not a universal solvent constant.
-2. The 417538 final CSV predates the measured-first gate. Sync this code to Lop and regenerate
-   ranking/all-triads CSVs from its existing SQLite cache before `eps analyze`.
+2. The 417538 final CSV predates the measured-first gate. Run the new CSV-only re-score on Lop and
+   audit the new ranking/all-triads CSVs before `eps analyze`.
 3. Job 417545's ORCA calculations are valid, but its generated sTDA CSV/cache values are not.
    Sync the fixed absorption-block parser, delete only the three invalid sTDA cache rows, and rerun;
    the three valid TDA cache rows should be reused.

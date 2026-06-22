@@ -32,6 +32,10 @@ constants, or monomer-Eox calibration coefficients changed.
   not the new-gate survivor count.
 - Verification: `205 passed, 5 skipped`; ruff and `git diff --check` clean. Updated STATUS, THINK,
   scripts documentation, provenance inputs, and the run-manifest index.
+- Added `eps rescore-tier1` plus an SGE template for strict no-engine re-scoring of an existing
+  all-triads harvest. It restores the pre-policy window, applies the conditioned ESW join, rebuilds
+  hard-filter annotations/Pareto/composite columns, and writes new CSVs without opening SQLite or
+  retrying uncached report-only failures. Idempotency and measured-water behavior are tested.
 
 ## 2026-06-22 — directive gap audit; Lop verification; ESW risk and ORCA routes
 
