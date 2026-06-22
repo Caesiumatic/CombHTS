@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — corrected sTDA cache rerun, path diagnostic (real ORCA)
+- run_id: 2026-06-22_orca-optical-corrected-417556
+- date: 2026-06-22 11:01:18 CDT
+- command: `qsub -v ORCA_OPTICAL_OUTDIR=outputs/orca_optical_pilot_corrected,ORCA_OPTICAL_CACHE=outputs/orca_optical_pilot_corrected/cache.sqlite scripts/run_orca_optical_pilot.sge`
+- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), sTDA; real engine requested; TDA cache copied from 417545
+- scope: three invalid sTDA cache rows deleted from a copy; three valid TDA rows retained
+- cluster job: SGE 417556, `compute-1-8.local`, 1 slot, 11 s wall, exit 2
+- status: failed before calculation (relative persistent-work-root path was repeated after cwd change)
+- headline results: 0/3 sTDA calls started successfully; 3/3 copied TDA cache hits remained valid
+- per-property failures: sTDA 3/3 input-open failures; TDA 0/3 (cache hits)
+- output artifacts (paths, NOT committed): Lop `outputs/orca_optical_pilot_corrected/`; raw logs show `Cannot open input file`
+- provenance: git commit `96281c5`; ORCA module 6.1.0-418; relative `EPS_ORCA_WORK_ROOT`
+- caveats: engineering path diagnostic only; no new scientific result and no valid value overwritten. Fixed by resolving the persistent root to an absolute path before creating the ORCA working directory, with a regression test.
+- supersedes / superseded_by: superseded_by corrected rerun pending
