@@ -110,6 +110,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Update (2026-06-22, direct Lop audit)**: standalone `stda`/`std2` remain absent, but ORCA 6.1 is installed and the ORCA 6.1 manual exposes built-in sTDA/sTD-DFT. The route is therefore no longer wholly install-gated: an ORCA-backed, Engine-cached sTDA/TD-DFT pilot on the six existing optical-gap anchors can start now. It is not the identical external sTDA-xTB executable, so method identity must be explicit and a small per-class calibration must precede any score change.
 - **Update (2026-06-22, real ORCA pilot)**: ORCA 6.1 route execution is now verified on Lop. Serial job 417545 completed 3/3 CAM-B3LYP/def2-SVP/CPCM(MeCN) sTDA and 3/3 conventional TDA calculations on thiophene/EDOT/pyrrole dimers. Corrected raw pairs (sTDA/TDA, eV) are 4.870/4.396, 4.870/4.687, and 5.488/5.004; the diagnostic three-point fit is slope 0.748, intercept 0.900 eV, R2 0.770, MAE 0.097 eV. This proves the route, but does not validate a score change: thiophene and EDOT have nearly identical sTDA gaps yet differ by 0.291 eV in TDA, making the tiny fit ill-conditioned. An initial broad regex misparsed an unrelated 2 cm-1 row as every sTDA value; the parser is now restricted to the electric-dipole absorption block and regression-tested. The generated cluster CSV/cache remains invalid until that fix is synced and the cheap sTDA-only rerun is made. Next scientific step remains the six experimental anchors plus per-class/geometry sensitivity, not production rollout.
 - **Corrected artifact closure (2026-06-22, SGE 417557)**: the fixed parser recomputed all three sTDA rows while reusing all three TDA cache rows. Standard CSV/JSON now reproduce the raw pairs and fit above exactly; route engineering is closed. The scientific conclusion is unchanged: three dimers are insufficient to calibrate the production optical axis.
+- **Update (2026-06-22, n=6 calibration prepared)**: the six HIGH staging anchors now have a serial ORCA sTDA+TDA execution path and a ready post-run computed-to-experiment analysis (slope/intercept/R2, LOO-CV MAE, per-class residuals, leverage flags). Exact-key inspection of the corrected pilot cache found 0/12 reusable anchor requests: its thiophene/EDOT/pyrrole dimers are not the PEDOP/PProDOP/P3HT/PEDOS/PFO/DTP anchor dimers. This run is intentionally a pilot-matched **dimer baseline**, not the plan's polymer-limit extrapolation; it will quantify whether the six-anchor line is even coherent before paying for length/geometry sweeps. That sequencing advances T6 but does not resolve it, and no scoring change is authorized.
 - **Resolves when**: The group accepts the oligomer/sTDA route (with range-separated TD-DFT calibration as Step-2, validated per class) or explicitly chooses to pivot to an ML/GNN predictor.
 - **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
 
@@ -215,6 +216,13 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debt #12](STATUS.md#open-debts); [src/eps/workflow/dft_calibration.py](src/eps/workflow/dft_calibration.py); [configs/tier2.yaml](configs/tier2.yaml).
 
 ## Decision log
+
+- 2026-06-22 (n=6 optical calibration prepared; no job submitted) — chose a pilot-matched neutral
+  dimer baseline for the six HIGH experimental anchors before the more expensive polymer-limit and
+  geometry sweeps. The prepared analysis fits sTDA and TDA separately to experiment and makes LOO,
+  class residuals, and leverage explicit. This is a sequencing decision, not acceptance of dimers
+  as polymer models: the longer-chain/geometry/phase gate remains open and the 15% optical axis
+  remains diagnostic. Direct corrected-cache inspection found 0/12 exact anchor-method hits.
 
 - 2026-06-22 (real-harvest verification, SGE 417569/417571) — the salt-role guard and exact-tie
   presentation collapse behaved exactly as intended on all 7,488 real-xTB triads: 2,938 -> 2,143

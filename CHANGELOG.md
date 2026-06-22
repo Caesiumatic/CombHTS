@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-22 — prepared six-anchor optical calibration (awaiting human submission)
+
+Prepared a new diagnostic computed-to-experiment optical calibration artifact without submitting
+an SGE job and without changing production scoring, weights, calibration profiles, or engines.
+
+- Added a staging-traceable six-HIGH-anchor runner using the corrected pilot's neutral-dimer,
+  serial ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN) sTDA+TDA protocol. PProDOP remains a staging-only
+  molecule with auto-derived 2,5-alpha coupling; the existing approximate DTP coupling is exposed.
+- Added exact-key, read-only pilot-cache seeding into a distinct resumable n=6 cache. Direct Lop
+  inspection found 0/12 matching requests, so the corrected pilot remains untouched and all six
+  anchor dimers require both real methods.
+- Added the post-run regression scaffold for sTDA->experiment and TDA->experiment with slope,
+  intercept, R2, in-sample MAE, LOO-CV MAE, per-class residuals, and leverage flags, plus an explicit
+  comparison to the n=3 method-to-method pilot. It refuses mock or incomplete inputs.
+- Added a serial 72 h SGE script and prepared run manifest. Local mock-first execution completed
+  6/6 pairs and a rerun hit 12/12 target-cache rows; mock values stayed in `/tmp` and are not
+  scientific results. No qsub, xTB, Gaussian, or local ORCA calculation was run.
+- The dimer baseline does not satisfy the planned longer-chain/geometry/phase gates. The 15%
+  optical axis remains diagnostic pending real completion and scientific review.
+
 ## 2026-06-22 — real-harvest verification of the salt-role gate and distinct ranking
 
 Applied the merged gate/presentation fix to the existing 7,488-triad real-GFN2-xTB harvest on Lop.
