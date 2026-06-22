@@ -40,6 +40,9 @@ constants, or monomer-Eox calibration coefficients changed.
   changed 4,078 -> 2,961; 1,140 old survivors dropped and 23 PC/GBL triads entered. Window-pass
   rows fell 6,352 -> 4,244 while other hard-filter pass counts were unchanged; water and DMSO now
   have zero survivors, and old/new top-50 overlap is 0/50. The old shortlist is superseded.
+- Corrected-optical rerun 417556 failed before computation because a relative persistent ORCA
+  work root was reused after changing cwd. Resolved the root to an absolute path and added a fake-
+  ORCA regression test; the copied three-point TDA cache remained intact and no value was replaced.
 
 ## 2026-06-22 — directive gap audit; Lop verification; ESW risk and ORCA routes
 

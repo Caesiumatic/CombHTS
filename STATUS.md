@@ -56,6 +56,8 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 3. Job 417545's ORCA calculations are valid, but its generated sTDA CSV/cache values are not.
    Sync the fixed absorption-block parser, delete only the three invalid sTDA cache rows, and rerun;
    the three valid TDA cache rows should be reused.
+   First corrected attempt 417556 failed before computation on a relative scratch-path bug; the
+   absolute-path fix is implemented and the preserved TDA cache remains reusable.
 4. Solubility remains a dGsolv proxy without lattice/fusion, concentration, aggregation,
    protonation, or salt-compatibility terms. openCOSMO-RS improves the descriptor, not the claim.
 5. Optical calibration needs the six experimental neutral-polymer anchors, longer-chain/geometry

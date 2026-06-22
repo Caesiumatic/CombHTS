@@ -92,6 +92,26 @@ def test_orca_pilots_are_mock_first_and_write_a_fit(tmp_path: Path) -> None:
     assert optical.calibration_path.exists()
 
 
+def test_orca_persistent_relative_work_root_passes_a_valid_input_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fake_orca = tmp_path / "fake-orca"
+    fake_orca.write_text(
+        "#!/bin/sh\n"
+        "test -f \"$1\" || exit 2\n"
+        "printf 'ORCA TERMINATED NORMALLY\\n'\n",
+        encoding="utf-8",
+    )
+    fake_orca.chmod(0o755)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("EPS_ORCA_WORK_ROOT", "relative-raw")
+
+    output = OrcaEngine()._run(str(fake_orca), "! fake\n")
+
+    assert "ORCA TERMINATED NORMALLY" in output
+    assert len(list((tmp_path / "relative-raw").glob("eps-orca-*/pilot.out"))) == 1
+
+
 @pytest.mark.skipif(shutil.which("orca") is None, reason="ORCA not installed")
 def test_orca_live_cosmors_single_monomer(tmp_path: Path) -> None:
     engine = OrcaEngine(OrcaConfig(optical_mode="cosmors", nprocs=1, maxcore_mb=1000))

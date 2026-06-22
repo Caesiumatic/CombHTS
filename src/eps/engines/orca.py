@@ -126,7 +126,7 @@ class OrcaEngine(Engine):
     def _run(self, binary: str, input_text: str) -> str:
         persistent_root = os.environ.get("EPS_ORCA_WORK_ROOT")
         if persistent_root:
-            root = Path(persistent_root)
+            root = Path(persistent_root).resolve()
             root.mkdir(parents=True, exist_ok=True)
             context = nullcontext(tempfile.mkdtemp(prefix="eps-orca-", dir=root))
         else:
