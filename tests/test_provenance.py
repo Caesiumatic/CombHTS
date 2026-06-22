@@ -48,6 +48,7 @@ def test_config_hashes_are_stable_across_calls() -> None:
         "configs/scoring.yaml",
         "configs/calibration_profiles.yaml",
         "configs/validation.yaml",
+        "configs/orca_pilots.yaml",
     }
 
 

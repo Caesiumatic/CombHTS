@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — sTDA/TDA parallel pilot first attempt (real ORCA)
+- run_id: 2026-06-22_orca-optical-real-417541
+- date: 2026-06-22 09:00:33 CDT
+- command: `python -m eps.cli orca-pilot-optical --engine orca`
+- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), sTDA + TDA; real engine
+- scope: thiophene, EDOT, pyrrole dimers; 4-core paired route pilot
+- cluster job: SGE 417541, `compute-2-19.local`, 17 s wall
+- status: failed (exit 2; 0/3 paired points)
+- headline results: all ORCA subprocesses exited 139 before an excitation was parsed.
+- per-property failures: sTDA 3/3; TDA/TD-DFT 3/3
+- output artifacts (paths, NOT committed): Lop `$HOME/CombHTS_pilot_work/outputs/orca_optical_pilot/`; `$HOME/combhts_orca_opt.o417541`
+- provenance: git commit `c325cc6` + dirty pilot implementation; 4 cores; ORCA module `6.1.0-418`
+- caveats: failed route diagnostic; no scientific value was cached or reported.
+- supersedes / superseded_by: superseded_by `2026-06-22_orca-optical-real-417543`

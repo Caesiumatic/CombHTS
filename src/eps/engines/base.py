@@ -46,6 +46,9 @@ class CalcRequest:
         method: Engine method label, such as ``mock-gfn2`` or later ``gfn2-xtb``.
         solvent_eps_r: Relative dielectric constant of the solvent, or None for gas phase.
         xtb_gbsa_name: Optional xTB ALPB solvent keyword for real xTB backends.
+        solvent_model_name: Optional backend-native solvent name (for example the ORCA
+            openCOSMO-RS internal database key). The SQLite key still uses the explicit
+            ``solvent_name`` passed to ``cached_run``.
         quantity: Requested quantity. Supported values are listed in
             ``SUPPORTED_QUANTITIES``.
     """
@@ -55,6 +58,7 @@ class CalcRequest:
     solvent_eps_r: float | None
     quantity: str
     xtb_gbsa_name: str | None = None
+    solvent_model_name: str | None = None
     supported_quantities: ClassVar[frozenset[str]] = SUPPORTED_QUANTITIES
 
     def __post_init__(self) -> None:

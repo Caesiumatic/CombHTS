@@ -28,11 +28,13 @@ CONFIG_FILES = (
     "configs/scoring.yaml",
     "configs/calibration_profiles.yaml",
     "configs/validation.yaml",
+    "configs/orca_pilots.yaml",
 )
 LIBRARY_FILES = (
     "data/monomers.csv",
     "data/solvents.csv",
     "data/electrolytes.csv",
+    "data/solvent_windows.csv",
 )
 
 

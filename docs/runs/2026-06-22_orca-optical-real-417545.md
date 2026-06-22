@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — sTDA/TDA serial pilot (real ORCA)
+- run_id: 2026-06-22_orca-optical-real-417545
+- date: 2026-06-22 09:05:03 CDT
+- command: `python -m eps.cli orca-pilot-optical --engine orca`
+- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), sTDA + TDA; **real engine**
+- scope: thiophene, EDOT, pyrrole dimers; three paired per-species route checks
+- cluster job: SGE 417545, `compute-1-13.local`, 1 slot, 2,896 s wall, maxvmem 374.219 MB, exit 0
+- status: completed ORCA calculations; generated sTDA CSV/cache invalidated by a parser bug (corrected values recovered from retained raw output)
+- headline results: 3/3 sTDA and 3/3 TDA calculations terminated normally. Corrected raw pairs (sTDA / TDA, eV): thiophene 4.870360 / 4.396; EDOT 4.869517 / 4.687; pyrrole 5.488049 / 5.004. Diagnostic fit `TDA = 0.747765*sTDA + 0.900028`, R2=0.7701, in-sample MAE=0.0973 eV.
+- per-property failures: ORCA methods 0/6. Postprocessing failure: the submitted parser searched all numeric rows and stored the unrelated 2 cm-1 row as 0.000248 eV for every sTDA point, so the job-generated CSV/SQLite sTDA values and null calibration are invalid. The source parser now scopes matching to the electric-dipole absorption block and has a regression test using this real output format.
+- output artifacts (paths, NOT committed): Lop `$HOME/CombHTS_pilot_work/outputs/orca_optical_pilot/` (SQLite cache plus retained raw ORCA files); `$HOME/combhts_orca_opt.o417545`
+- provenance: git commit `c325cc6` + dirty pilot implementation; `configs/orca_pilots.yaml`; serial fallback; ORCA module `6.1.0-418`
+- caveats: route-validation dimer set only, not a production/per-class calibration. Two nearly identical sTDA values map to TDA values differing by 0.291 eV, so the three-point fit is poorly conditioned and must not replace the Tier-1 gap axis. Serial execution avoids the Lop OpenMPI/hwloc crash. The corrected parser still needs one cluster rerun (the TDA cache can be reused; only invalid sTDA rows should be recomputed) before the standard CSV/JSON artifacts are authoritative.
+- supersedes / superseded_by: supersedes 417541 and 417543; superseded_by —

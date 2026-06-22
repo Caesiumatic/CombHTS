@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-06-22 — condition-aware ESW gate; real ORCA solvation/optical pilots; real Tier-1 harvest completed
+
+Completed directive items 2 and 3 at implementation/pilot scope. No scoring weights, pinned redox
+constants, or monomer-Eox calibration coefficients changed.
+
+- Replaced computed-only solvent-window gating with a post-join, condition-aware
+  `measured_first_conservative` policy. Added versioned `data/solvent_windows.csv` records with
+  salt/electrolyte/electrode/reference/cutoff/source/tier metadata. Exact `(solvent,salt)` rows win;
+  otherwise the lowest eligible solvent measurement is used; only true gaps fall back to
+  `min(curated CSV, computed/calibrated descriptor)`. The computed value remains audited.
+- Added water/MeCN/DCM/DMF/DMSO control tests plus replicate and fallback tests. Water/KCl now gates
+  at 1.145 V vs Ag/AgCl instead of the pathological computed ~3.77 V prior. THINK T14 is decided and
+  implemented; sparse exact-formulation coverage remains data debt.
+- Added a narrow real `OrcaEngine`, mock-first solvation/optical workflows, CLI commands,
+  cache-safe method labels, raw-output retention, provenance hashing, doctor checks, configuration,
+  tests, and serial Lop SGE templates. openCOSMO-RS returns kcal/mol; sTDA/TDA return eV.
+- Real openCOSMO-RS job 417544 completed 3/3 MeCN points (thiophene -4.132112, EDOT -7.908007,
+  pyrrole -6.982100 kcal/mol). Real optical job 417545 completed all six ORCA calculations; corrected
+  raw `(sTDA,TDA)` dimer pairs are (4.870360,4.396), (4.869517,4.687), and (5.488049,5.004) eV.
+  The route-only fit is slope 0.747765/intercept 0.900028 eV, R2 0.7701, MAE 0.0973 eV and is too
+  small/ill-conditioned to alter scoring.
+- Diagnosed two pilot failures instead of hiding them. Four-core jobs 417540-543 hit Lop's
+  OpenMPI/hwloc topology segfault; serial jobs succeeded. The first sTDA parser matched an unrelated
+  2 cm-1 table row and invalidated job 417545's generated sTDA CSV/cache. Parsing is now confined to
+  the electric-dipole absorption block with a real-format regression test; a cluster sTDA-only rerun
+  remains before those standard artifacts are authoritative. All attempts have run manifests.
+- Real GFN2-xTB Tier-1 job 417538 also completed exit 0: 7,488 triads, 4,078 survivors under the old
+  computed-only ESW gate, and zero failures in all seven core/scored stages. Report-only failures are
+  recorded in its manifest. Its cache must be re-scored under the new measured-first gate; 4,078 is
+  not the new-gate survivor count.
+- Verification: `205 passed, 5 skipped`; ruff and `git diff --check` clean. Updated STATUS, THINK,
+  scripts documentation, provenance inputs, and the run-manifest index.
+
 ## 2026-06-22 — directive gap audit; Lop verification; ESW risk and ORCA routes
 
 Documentation/research-state update after reviewing both directive PDFs, the implementation,

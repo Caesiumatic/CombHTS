@@ -3,7 +3,7 @@
 Reports PASS / WARN / FAIL for the things that have actually bitten this project (a broken
 venv, a missing module, an unparseable config, an absent data file). It runs no calculations,
 makes no network calls, and uses no subprocess beyond ``shutil.which`` for the cluster
-binaries. ``xtb`` / ``g16`` are cluster-only, so their absence is a WARN, never a FAIL.
+binaries. ``xtb`` / ``g16`` / ``orca`` are cluster-only, so absence is a WARN, never a FAIL.
 """
 
 from __future__ import annotations
@@ -20,18 +20,20 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MIN_PYTHON = (3, 11)
 REQUIRED_IMPORTS = ("rdkit", "pandas", "numpy")
 OPTIONAL_IMPORTS = ("matplotlib", "sklearn")
-CLUSTER_BINARIES = ("xtb", "g16")
+CLUSTER_BINARIES = ("xtb", "g16", "orca")
 PINNED_CONFIGS = (
     "configs/tier1.yaml",
     "configs/scoring.yaml",
     "configs/calibration_profiles.yaml",
     "configs/validation.yaml",
+    "configs/orca_pilots.yaml",
 )
 EXPECTED_DATA = (
     "data/monomers.csv",
     "data/solvents.csv",
     "data/electrolytes.csv",
     "data/benchmark.csv",
+    "data/solvent_windows.csv",
 )
 
 PASS = "PASS"

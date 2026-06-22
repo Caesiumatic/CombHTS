@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — openCOSMO-RS serial pilot (real ORCA)
+- run_id: 2026-06-22_orca-solvation-real-417544
+- date: 2026-06-22 09:05:03 CDT
+- command: `python -m eps.cli orca-pilot-solvation --engine orca`
+- engine / method: ORCA 6.1/openCOSMO-RS 24a, BP86/def2-TZVPD; **real engine**
+- scope: neutral thiophene, EDOT, and pyrrole in acetonitrile; 3 per-species points
+- cluster job: SGE 417544, `compute-0-8.local`, 1 slot, 353 s wall, exit 0
+- status: completed
+- headline results: 3/3 succeeded; dGsolv = thiophene -4.132112, EDOT -7.908007, pyrrole -6.982100 kcal/mol
+- per-property failures: solvation_free_energy 0/3
+- output artifacts (paths, NOT committed): Lop `$HOME/CombHTS_pilot_work/outputs/orca_solvation_pilot/` (CSV, SQLite cache, provenance, raw ORCA files); `$HOME/combhts_orca_solv.o417544`
+- provenance: git commit `c325cc6` + dirty pilot implementation; `configs/orca_pilots.yaml`; serial fallback; ORCA module `6.1.0-418`
+- caveats: route-validation pilot, not an experimental solubility calibration; dGsolv alone omits lattice/fusion and concentration terms. Serial execution avoids a Lop OpenMPI/hwloc crash seen in 417540/417542.
+- supersedes / superseded_by: supersedes 417540 and 417542; superseded_by —

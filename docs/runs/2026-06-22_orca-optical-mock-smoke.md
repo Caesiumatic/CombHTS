@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — ORCA optical route smoke (mock)
+- run_id: 2026-06-22_orca-optical-mock-smoke
+- date: 2026-06-22
+- command: `.venv/bin/eps orca-pilot-optical --engine mock --outdir /tmp/combhts-orca-opt-mock`
+- engine / method: MockEngine / `mock-orca-stda` + `mock-orca-tddft` (**non-physical**)
+- scope: thiophene, EDOT, pyrrole dimers; paired route/cache/parser/fit smoke only
+- cluster job: local
+- status: completed
+- headline results: 3/3 mock pairs; mock fit R2=0.2247 (meaningless physically)
+- per-property failures: 0; mock-trivial
+- output artifacts (paths, NOT committed): `/tmp/combhts-orca-opt-mock/`
+- provenance: git commit `c325cc6` + dirty pilot implementation; `configs/orca_pilots.yaml`
+- caveats: MOCK PIPELINE SMOKE ONLY; values and calibration are not scientific results.
+- supersedes / superseded_by: superseded_by `2026-06-22_orca-optical-real-417545`

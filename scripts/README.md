@@ -4,20 +4,27 @@ Version-controlled `qsub` templates for running CombHTS on the SCS Lop cluster. 
 **templates** — review and adjust resources (`-pe smp`, `-l h_rt`) before submitting, and do
 not submit them blindly from CI or an overnight agent.
 
-| Script | Command | Loads xtb? |
-| --- | --- | :---: |
-| `run_tier1.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | yes |
-| `run_validate.sge` | `eps validate --engine xtb --all-profiles` | yes |
-| `run_memo.sge` | `eps memo --engine xtb --harvest outputs/tier1_all_xtb.csv` | yes |
-| `run_analyze.sge` | `eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/` | no (read-only) |
-| `run_oligomer.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | yes |
-| `run_dft_calibration.sge` | `eps calibrate-dft --engine gaussian --config configs/tier2.yaml` | yes (+ **g16**) |
+| Script | Command | Engine module |
+| --- | --- | --- |
+| `run_tier1.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
+| `run_validate.sge` | `eps validate --engine xtb --all-profiles` | xTB |
+| `run_memo.sge` | `eps memo --engine xtb --harvest outputs/tier1_all_xtb.csv` | xTB |
+| `run_analyze.sge` | `eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/` | none (read-only) |
+| `run_oligomer.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
+| `run_dft_calibration.sge` | `eps calibrate-dft --engine gaussian --config configs/tier2.yaml` | xTB + Gaussian 16 |
+| `run_orca_solvation_pilot.sge` | `python -m eps.cli orca-pilot-solvation --engine orca` | ORCA 6.1/openCOSMO-RS |
+| `run_orca_optical_pilot.sge` | `python -m eps.cli orca-pilot-optical --engine orca` | ORCA 6.1 sTDA + TDA/TD-DFT |
 
 `run_dft_calibration.sge` is the only template that loads **Gaussian 16** (`module load
 gaussian/g16`). It runs the SMALL xTB->DFT calibration batch (~32 unique monomers x neutral+cation
 gas-phase opts), which is DISTINCT from the full Tier-2 production screen (a separate PI decision).
 It sets a NODE-LOCAL `GAUSS_SCRDIR` (Gaussian's large scratch files must not land on the networked
 home dir) and cleans it up on exit.
+
+The two ORCA templates are deliberately small, serial route-validation pilots. Lop's older compute
+nodes expose an OpenMPI/hwloc topology crash when ORCA 6.1 starts parallel workers, so these pilots
+request one slot. They retain raw ORCA inputs/outputs under the matching gitignored `outputs/`
+directory and never present failed calculations or mock values as scientific results.
 
 ## The `#$ -S /bin/bash` requirement
 
@@ -48,11 +55,12 @@ qstat -j <job_id>                  # detailed job info
 ## Shared preamble (what every script does)
 
 - `set -uo pipefail` — fail on unset vars / pipe errors.
-- Source `/etc/profile.d/modules.sh` (guarded) so `module` is available, then
-  `module load anaconda/3-2023.09` and (except `run_analyze`) `module load xtb/6.4.1`.
+- Source `/etc/profile.d/modules.sh` (guarded) so `module` is available, then load Anaconda and
+  the matching engine module (xTB, Gaussian, or ORCA/OpenMPI).
 - Activate the conda env: `conda activate combhts`.
-- `OMP_NUM_THREADS="${NSLOTS:-4}"` ties xTB's threads to the granted slots;
+- `OMP_NUM_THREADS` is tied to the granted slots (four for xTB templates, one for ORCA pilots);
   `OMP_STACKSIZE=4G` and `ulimit -s unlimited` avoid stack-overflow crashes on larger systems.
-- `cd "$HOME/CombHTS"` then the matching `eps ...` command.
+- `cd "$HOME/CombHTS"` then run the matching command. The ORCA pilots optionally accept an
+  alternate checkout through `COMBHTS_ROOT` (used for isolated pre-commit cluster snapshots).
 
 Do **not** run production calculations in an interactive login session — submit via `qsub`.

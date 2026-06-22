@@ -1,0 +1,21 @@
+# Small, real ORCA 6.1 method pilots. These are route-validation runs, not production results.
+solvation:
+  solvent_name: acetonitrile
+  orca_cosmors_name: Acetonitrile
+  monomers: [thiophene, EDOT, pyrrole]
+  # Serial avoids Lop's OpenMPI/hwloc topology crash on the older compute nodes.
+  nprocs: 1
+  maxcore_mb: 2000
+
+optical:
+  monomers: [thiophene, EDOT, pyrrole]
+  oligomer_n: 2
+  functional: CAM-B3LYP
+  basis: def2-SVP
+  solvent_name: acetonitrile
+  orca_solvent_name: Acetonitrile
+  nroots: 5
+  ethresh_eV: 6.0
+  # Serial avoids Lop's OpenMPI/hwloc topology crash on the older compute nodes.
+  nprocs: 1
+  maxcore_mb: 2000

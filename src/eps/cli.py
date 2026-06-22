@@ -38,6 +38,17 @@ from eps.workflow.dft_calibration import (
     MOCK_XTB_METHOD,
     run_dft_calibration,
 )
+from eps.workflow.orca_pilots import (
+    DEFAULT_CONFIG_PATH as DEFAULT_ORCA_PILOT_CONFIG_PATH,
+)
+from eps.workflow.orca_pilots import (
+    DEFAULT_OPTICAL_OUTDIR,
+    DEFAULT_SOLVATION_OUTDIR,
+    build_mock_orca_pilot_engines,
+    build_real_orca_pilot_engines,
+    run_orca_optical_pilot,
+    run_orca_solvation_pilot,
+)
 from eps.workflow.tier1 import DEFAULT_CACHE_PATH, DEFAULT_OUTPUT_PATH, run_tier1
 from eps.workflow.tier2 import (
     DEFAULT_REFINED_WINDOW_MARGIN_V,
@@ -199,6 +210,64 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=None,
         help="Run on at most N monomers (after dedup by canonical SMILES).",
+    )
+
+    orca_solvation = subparsers.add_parser(
+        "orca-pilot-solvation",
+        help="Run the mock-first ORCA/openCOSMO-RS solvation-route pilot",
+    )
+    orca_solvation.add_argument(
+        "--engine",
+        choices=("mock", "orca"),
+        default="mock",
+        help="Calculation engine: deterministic mock or real ORCA 6.1.",
+    )
+    orca_solvation.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_ORCA_PILOT_CONFIG_PATH,
+        help="Small ORCA pilot YAML configuration.",
+    )
+    orca_solvation.add_argument(
+        "--cache",
+        type=Path,
+        default=None,
+        help="SQLite cache path; defaults to <outdir>/cache.sqlite.",
+    )
+    orca_solvation.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_SOLVATION_OUTDIR,
+        help="Directory for solvation_points.csv and the default cache.",
+    )
+
+    orca_optical = subparsers.add_parser(
+        "orca-pilot-optical",
+        help="Run paired mock-first ORCA sTDA and TDA/TD-DFT optical pilots",
+    )
+    orca_optical.add_argument(
+        "--engine",
+        choices=("mock", "orca"),
+        default="mock",
+        help="Calculation engine: deterministic mock or real ORCA 6.1.",
+    )
+    orca_optical.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_ORCA_PILOT_CONFIG_PATH,
+        help="Small ORCA pilot YAML configuration.",
+    )
+    orca_optical.add_argument(
+        "--cache",
+        type=Path,
+        default=None,
+        help="SQLite cache path; defaults to <outdir>/cache.sqlite.",
+    )
+    orca_optical.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_OPTICAL_OUTDIR,
+        help="Directory for paired points, calibration JSON, report, and default cache.",
     )
 
     sanity = subparsers.add_parser(
@@ -513,6 +582,75 @@ def main(argv: list[str] | None = None) -> int:
         if args.engine == "mock":
             print("NOTE: mock engine -> non-physical numbers (T9). Real numbers come from --engine gaussian on the cluster.")
         return 0
+
+    if args.command == "orca-pilot-solvation":
+        engines = (
+            build_mock_orca_pilot_engines()
+            if args.engine == "mock"
+            else build_real_orca_pilot_engines(args.config)
+        )
+        engine, method = engines[0], engines[1]
+        result = run_orca_solvation_pilot(
+            engine=engine,
+            method=method,
+            config_path=args.config,
+            cache_path=args.cache,
+            outdir=args.outdir,
+            engine_label=args.engine,
+        )
+        print(f"ORCA/openCOSMO-RS pilot engine: {args.engine} ({method})")
+        print(f"Solvation points: {result.n_ok} ok; {result.n_failed} failed")
+        print(f"Wrote points CSV: {result.points_path}")
+        _stamp_provenance(
+            result.points_path,
+            engine=args.engine,
+            method=method,
+            extra={"command": args.command, "n_ok": result.n_ok, "n_failed": result.n_failed},
+        )
+        if args.engine == "mock":
+            print("NOTE: mock engine -> non-physical numbers; use --engine orca on Lop for real values.")
+        return 0 if result.n_failed == 0 else 2
+
+    if args.command == "orca-pilot-optical":
+        engines = (
+            build_mock_orca_pilot_engines()
+            if args.engine == "mock"
+            else build_real_orca_pilot_engines(args.config)
+        )
+        result = run_orca_optical_pilot(
+            stda_engine=engines[2],
+            tddft_engine=engines[4],
+            stda_method=engines[3],
+            tddft_method=engines[5],
+            config_path=args.config,
+            cache_path=args.cache,
+            outdir=args.outdir,
+            engine_label=args.engine,
+        )
+        print(f"ORCA optical pilot engine: {args.engine}")
+        print(f"Paired sTDA/TDA points: {result.n_paired}; failed pairs: {result.n_failed}")
+        if result.calibration is not None:
+            print(
+                "Pilot fit: TDDFT_gap_eV = "
+                f"{result.calibration.slope:.6f} * sTDA_gap_eV + "
+                f"{result.calibration.intercept:.6f}; R^2={result.calibration.r2:.4f}"
+            )
+        print(f"Wrote points CSV: {result.points_path}")
+        print(f"Wrote report: {result.report_path}")
+        print(f"Wrote calibration JSON: {result.calibration_path}")
+        _stamp_provenance(
+            result.points_path,
+            engine=args.engine,
+            method=f"{engines[3]} + {engines[5]}",
+            extra={
+                "command": args.command,
+                "n_paired": result.n_paired,
+                "n_failed": result.n_failed,
+            },
+        )
+        if args.engine == "mock":
+            print("NOTE: mock engine -> non-physical numbers; use --engine orca on Lop for real values.")
+        return 0 if result.n_failed == 0 else 2
 
     if args.command == "sanity":
         if not Path(args.harvest).exists():
