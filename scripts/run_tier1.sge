@@ -3,10 +3,16 @@
 #$ -N combhts_tier1
 #$ -j y
 #$ -pe smp 4
-#$ -l h_rt=24:00:00
+#$ -l h_rt=72:00:00
 # TEMPLATE — do not submit blindly. Real GFN2-xTB Tier-1 harvest on the SCS Lop cluster.
 # The leading "#$ -S /bin/bash" is REQUIRED: without it the scheduler may misparse this
 # script under csh.
+#
+# WALL: h_rt raised 24h -> 72h for the FULL 7,488-triad harvest (conformer_search enabled,
+# 100 ETKDG/MMFF94 conformers per geometry — much heavier than the 1,650-triad smoke). The
+# per-species SQLite cache commits incrementally (one commit per engine call), so a wall-kill
+# is RESUMABLE, not data loss: just qsub again with the SAME --cache and it skips everything
+# already in the cache. 72h is an estimate (reported); adjust to the queue's policy.
 
 set -uo pipefail
 
@@ -26,4 +32,12 @@ ulimit -s unlimited || true
 
 cd "$HOME/CombHTS"
 
-eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv
+# CLEAN OUTPUT PATH: write the REAL harvest to its own directory + a FRESH cache, so the
+# on-disk MOCK run (outputs/tier1_ranked.csv, outputs/tier1_cache.sqlite) is neither
+# overwritten nor mixed in. Re-submitting against the same --cache resumes the harvest.
+mkdir -p outputs/tier1_real_7488
+
+eps run-tier1 --engine xtb \
+    --output     outputs/tier1_real_7488/tier1_ranked.csv \
+    --cache      outputs/tier1_real_7488/tier1_cache.sqlite \
+    --all-output outputs/tier1_real_7488/tier1_all.csv

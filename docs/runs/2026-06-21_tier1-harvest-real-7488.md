@@ -1,0 +1,15 @@
+# Run: 2026-06-21 — Tier-1 harvest, REAL GFN2-xTB, expanded library (gfn2-xtb)
+- run_id: 2026-06-21_tier1-harvest-real-7488
+- date: 2026-06-21 (pre-flight prepared; job not yet submitted)
+- command: `eps run-tier1 --engine xtb --output outputs/tier1_real_7488/tier1_ranked.csv --cache outputs/tier1_real_7488/tier1_cache.sqlite --all-output outputs/tier1_real_7488/tier1_all.csv` (via `qsub scripts/run_tier1.sge`)
+- engine / method: **gfn2-xtb (REAL xtb 6.4.1, `--gfn 2`, ALPB; conformer_search ENABLED — 100 ETKDGv3/MMFF94 conformers per geometry)** — NOT mock
+- scope: 36×13×16 = 7,488 triads (expanded library: +Se-monomers, +salts incl. AgClO4)
+- cluster job: SCS Lop, Grid Engine / qsub; `-pe smp 4`, `h_rt=72:00:00` (intel24 or appropriate queue) — reported (unverified)
+- status: **running** (pre-flight complete; awaiting human qsub — see FINISH block / this commit)
+- calibration: pinned **agagcl_peak_strict_2026_06_17_xtb_v3** (slope 0.725837, intercept −3.145372), read as-is from `configs/tier1.yaml`; UNCHANGED in this pre-flight
+- headline results: **TBD** (survivors / retention pending run completion)
+- per-property failures: **TBD** — EXPECTED: new Se-monomers + new salts (incl. AgClO4) were NOT in the historical 1,650-triad real-xTB run, so some new per-species failures are anticipated. The engine captures them as audit rows (`*_calc_status=failed`) via `_safe_calculate` and CONTINUES — never aborts (AGENTS invariant). Inspect the failure audit in `tier1_all.csv` BEFORE running analyze.
+- output artifacts (paths, NOT committed; `outputs/` is gitignored): `outputs/tier1_real_7488/tier1_ranked.csv` (survivors), `outputs/tier1_real_7488/tier1_all.csv` (all-triads audit), `outputs/tier1_real_7488/tier1_cache.sqlite` (fresh, resumable). The on-disk MOCK run (`outputs/tier1_ranked.csv`, `outputs/tier1_cache.sqlite`) is left untouched.
+- provenance: git commit 5018c6a (pre-flight); real GFN2-xTB on the SCS Lop cluster; library 36/13/16; calibration config `configs/tier1.yaml` pinned profile unchanged
+- caveats: real-xTB but **screening-grade**, not a validated ranking; the composite is not a recommendation. Cache commits incrementally (one commit per engine call) so a wall-kill is resumable, not total loss; re-submit against the same `--cache`. Calibration is the provisional xTB-anchored profile (the live xTB→DFT refit remains PENDING per THINK).
+- supersedes / superseded_by: supersedes 2026-06-16_tier1-smoke-xtb (1,650 triads, pre-expansion) as the first REAL-xTB harvest on the full 7,488-triad library; the 2026-06-19 MOCK 7,488 run is smoke-only, not superseded by data
