@@ -1,0 +1,1980 @@
+{
+  "esw": [
+    {
+      "solvent": "acetonitrile",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 3.5,
+          "cathodic_limit_orig_V": -2.6,
+          "reference_electrode": "SHE (compilation converts original SCE values; SCE = 0.24 V vs SHE per source). Underlying primary data: Ue, Ida & Mori J. Electrochem. Soc. 1994, ref. electrode in original work)",
+          "supporting_electrolyte": "0.65 M Et4NBF4",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "1 mA cm-2 threshold current density; 5 mV s-1 scan rate; 25 C",
+          "source_doi": "10.1039/C5EE02341F",
+          "citation": "K. Gong, Q. Fang, S. Gu, S. F. Y. Li, Y. Yan, 'Nonaqueous redox-flow batteries: organic solvents, supporting electrolytes, and redox pairs', Energy Environ. Sci., 2015, 8, 3515-3530, Table 1 (acetonitrile row: Ered = -2.6 V, Eoxi = +3.5 V vs SHE, ECW = 6.1 V). Values attributed in footnote to ref. 59 = M. Ue, K. Ida, S. Mori, J. Electrochem. Soc., 1994, 141(11), 2989-2996 (DOI 10.1149/1.2059270), the primary source; criterion 1 mA cm-2, glassy carbon, 0.65 M Et4NBF4, 25 C, 5 mV/s. Plausible window (6.1 V).",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": 3.2,
+          "cathodic_limit_orig_V": -3.1,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "0.1 M TBABF4 (TBA BF4)",
+          "working_electrode": "Pt",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1039/D0GC01247E",
+          "citation": "C. Schotten, T. P. Nicholls, R. A. Bourne, N. Kapur, B. N. Nguyen, C. E. Willans, 'Making electrochemistry easily accessible to the synthetic chemist', Green Chem., 2020, 22, 3358-3375, Table 3 (MeCN, 0.1 M TBABF4, Pt: -3.1 to +3.2 V, window 6.3 V). Footnote: values referenced to SCE, compiled from refs 110-113 (secondary compilation; no current-density cutoff criterion stated). Note: project memo labeled this 'Yan et al.' but the actual authors are Schotten et al.",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": 2.4,
+          "cathodic_limit_orig_V": -3.5,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "LiClO4",
+          "working_electrode": "Pt",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1039/D0GC01247E",
+          "citation": "C. Schotten, T. P. Nicholls, R. A. Bourne, N. Kapur, B. N. Nguyen, C. E. Willans, 'Making electrochemistry easily accessible to the synthetic chemist', Green Chem., 2020, 22, 3358-3375, Table 3 (MeCN, LiClO4, Pt: -3.5 to +2.4 V, window 5.8 V). Footnote: values referenced to SCE, compiled from refs 110-113 (secondary compilation; electrolyte concentration not given; no current-density cutoff criterion stated). Same table also lists the TBABF4 entry above.",
+          "confidence": "med"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1039/C5EE02341F confirmed real and correctly cited: Gong, Fang, Gu, Li, Yan, Energy Environ. Sci. 2015, vol 8 (resolves doi.org -> xlink.rsc.org -> pubs.rsc.org), title and authors match exactly; article concerns nonaqueous redox-flow batteries, organic solvents, supporting electrolytes. Primary source DOI 10.1149/1.2059270 also confirmed real: Ue, Ida, Mori, J. Electrochem. Soc. 1994, vol 141 (p. 2989, corroborated by independent search), the well-known Ue electrochemical-window compilation. Values physically plausible for acetonitrile: -2.6 to +3.5 V vs SHE = 6.1 V window (within MeCN's typical 5-6.5 V range), anodic positive / cathodic negative as expected. All four conditions present: glassy carbon WE, 0.65 M Et4NBF4 electrolyte, SHE ref (converted from SCE), 1 mA/cm2 cutoff with 5 mV/s, 25 C. High confidence warranted."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "DOI 10.1039/D0GC01247E confirmed real and correctly cited: Schotten, Nicholls, Bourne, Kapur, Nguyen, Willans, Green Chem. 2020, vol 22; title and all six authors match exactly; article concerns making electrochemistry accessible to synthetic chemists. Candidate honestly flags that the project memo mislabeled this as 'Yan et al.' Values physically plausible: -3.1 to +3.2 V vs SCE = 6.3 V window, plausible for MeCN/Pt/TBABF4, correct polarity. SCE ref, 0.1 M TBABF4 electrolyte, Pt WE all present. Downgraded to low because: (a) cutoff criterion explicitly 'not stated' (this is a secondary compilation from refs 110-113, not primary data), and (b) I could not load the full-text Table 3 to confirm the exact -3.1/+3.2 numbers (RSC page returned only abstract/metadata), so the specific limits remain unverified against the source table."
+        },
+        {
+          "index": 2,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "Same source DOI 10.1039/D0GC01247E confirmed real and correctly cited (Schotten et al., Green Chem. 2020, vol 22). Values physically plausible: -3.5 to +2.4 V vs SCE = 5.8 V window, within MeCN range, correct polarity. SCE ref, LiClO4 electrolyte, Pt WE present. Downgraded to low because: (a) cutoff criterion 'not stated', (b) electrolyte concentration missing, (c) secondary compilation (refs 110-113), and (d) full-text Table 3 could not be loaded to confirm the exact -3.5/+2.4 values against the source. Plausible and not impossible, so kept, but unconfirmed at the row level."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "dichloromethane",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 0.89,
+          "cathodic_limit_orig_V": -2.18,
+          "reference_electrode": "DMFc0/+ (decamethylferrocene internal reference; physical reference electrode was Ag/AgCl)",
+          "supporting_electrolyte": "100 mM [NnBu4]Cl (tetra-n-butylammonium chloride)",
+          "working_electrode": "Pt macrodisc (0.25 mm radius)",
+          "cutoff_criterion": "Solvent limit (anodic or cathodic) taken as the potential at which the background current equals the anodic/cathodic peak current of 1 mM DMFc; scan rate 50 mV/s",
+          "source_doi": "10.1039/D2CP00696K",
+          "citation": "A. W. Black and P. N. Bartlett, 'Selection and characterisation of weakly coordinating solvents for semiconductor electrodeposition', Phys. Chem. Chem. Phys., 2022, 24, 8093-8103, Table 2 (DCM row). Window = 3.07 V; plausible.",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": 1.8,
+          "cathodic_limit_orig_V": -1.95,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "tetra-n-butylammonium perchlorate (TBAP)",
+          "working_electrode": "Pt",
+          "cutoff_criterion": "not stated (compiled accessible potential range; no current-density threshold given)",
+          "source_doi": "10.1351/pac198759050703",
+          "citation": "Compiled solvent accessible-potential-range value, Pure Appl. Chem., 1987, 59(5), 703-714 (originating from C. K. Mann, 'Nonaqueous Solvents for Electrochemical Use', in Electroanalytical Chemistry, vol. 3, 1969). DCM/Pt/TBAP range -1.95 to +1.8 V vs SCE; total ~3.75 V (plausible). Value extracted from scanned PDF text; table image could not be cleanly OCR-verified, hence reduced confidence.",
+          "confidence": "med"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1039/D2CP00696K confirmed via CrossRef/RSC: Black & Bartlett, 'Selection and characterisation of weakly coordinating solvents for semiconductor electrodeposition', Phys. Chem. Chem. Phys., 2022, 24(14), 8093-8103 - matches citation exactly. Full-text HTML (pubs.rsc.org/en/content/articlehtml/2022/cp/d2cp00696k) Table 2 DCM row verified verbatim: anodic +0.89 V, cathodic -2.18 V vs DMFc0/+, window 3.07 V; 100 mM [NnBu4]Cl electrolyte, Pt disc (0.25 mm radius) working electrode, cutoff = potential where background current equals anodic/cathodic peak current of 1 mM DMFc at 50 mV/s. All fields present and physically plausible (anodic positive, cathodic negative, 3.07 V total). Every candidate field corroborated by the primary source."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "DOI 10.1351/pac198759050703 EXISTS and resolves (DeGruyter); CrossRef shows it is Kadish & Anderson, 'Purification of solvents for electroanalysis: benzonitrile; dichloromethane; 1,1-dichloroethane and 1,2-dichloroethane', Pure Appl. Chem., 1987, 59(5), 703-714 - vol/issue/pages match citation and the paper IS about DCM electroanalysis, so DOI is real and topically related (not grounds for rejection). Values -1.95 to +1.8 V vs SCE (~3.75 V) are physically plausible for DCM/Pt/TBAP and consistent with classic Mann compilation. KEEP per criteria. Confidence LOW because: (1) citation misattributes provenance - it frames the source as a 'compiled accessible-potential-range from C. K. Mann (1969)' but the DOI'd article is a Kadish/Anderson purification paper, not a Mann compilation table; (2) could NOT independently confirm the exact -1.95/+1.8 V pair appears in this specific article (candidate itself admits table image was not cleanly OCR-verified); (3) cutoff criterion not stated. Reference electrode (SCE), electrolyte (TBAP), and working electrode (Pt) are present but cutoff absent."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "propylene carbonate",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 2.5,
+          "cathodic_limit_orig_V": -3,
+          "reference_electrode": "Ag/AgNO3",
+          "supporting_electrolyte": "0.1 M Bu4NBF4 (tetrabutylammonium tetrafluoroborate)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "threshold current density 0.1 mA cm-2 (CV at 10 mV/s)",
+          "source_doi": "10.1039/D4GC06199C",
+          "citation": "A. Prudlik, A. Matei, A. Scherkus, J. I. Bardagi, S. B. Beil, R. Francke, 'On the use of propylene carbonate and dimethyl carbonate as green solvents in organic electrosynthesis', Green Chemistry, 2025, 27 (issue 16), 4280-4288. Primary CV measurement; window stated verbatim as 'reaching from around -3.0 V to approx. 2.5 V vs. Ag/AgNO3'. Total window approx. 5.5 V (anodic > cathodic, < 7 V; plausible). Values printed as approximate ('around'/'approx.').",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": 3.8,
+          "cathodic_limit_orig_V": -2.8,
+          "reference_electrode": "SHE",
+          "supporting_electrolyte": "0.65 M Et4NBF4 (tetraethylammonium tetrafluoroborate)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "threshold current density 1 mA cm-2 (CV at 5 mV/s, 25 degC)",
+          "source_doi": "10.1149/1.2059270",
+          "citation": "Primary source: M. Ue, K. Ida, S. Mori, 'Electrochemical Properties of Organic Liquid Electrolytes Based on Quaternary Onium Salts for Electrical Double-Layer Capacitors', J. Electrochem. Soc., 1994, 141 (11), 2989-2996 (DOI 10.1149/1.2059270). Exact PC values (Ered = -2.8 V, Eoxi = +3.8 V vs SHE; ECW = 6.6 V; 0.65 M Et4NBF4, glassy carbon, 5 mV/s, 25 degC, 1 mA cm-2 threshold) were read from Table 1 of the project's already-cited review: K. Gong, Q. Fang, S. Gu, S. F. Y. Li, Y. Yan, 'Nonaqueous redox-flow batteries: organic solvents, supporting electrolytes, and redox pairs', Energy & Environmental Science, 2015, 8, 3515-3530 (DOI 10.1039/C5EE02341F), which attributes them to Ue (ref 59). Total window 6.6 V (anodic > cathodic, < 7 V; plausible).",
+          "confidence": "high"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1039/D4GC06199C confirmed real via RSC (pubs.rsc.org/doi/d4gc06199c) and crossref search: Prudlik, Matei, Scherkus, Bardagi, Beil, Francke, 'On the use of propylene carbonate and dimethyl carbonate as green solvents in organic electrosynthesis', Green Chem. 2025, 27(16), 4280-4288 — matches citation verbatim (authors, journal, vol/issue/pages). SI PDF (d4gc06199c1.pdf) directly corroborates every stated condition: glassy carbon working electrode (1.6 mm disk), Ag/AgNO3 reference (Ag wire / 0.01 M AgNO3), 0.1 M Bu4NBF4 supporting electrolyte, cutoff criterion exactly |0.1 mA cm-2|, scan rate 10 mV/s. The specific numeric limits -3.0 V / 2.5 V live in Figure S3 (a graphic), so could not be text-extracted, but the verbatim 'around'/'approx.' framing and ~5.5 V total window (anodic positive, cathodic negative, <7 V) are physically plausible for PC and consistent with the figure description. Limits, RE, electrolyte, WE, and cutoff all present."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1149/1.2059270 confirmed real via IOPscience/JES: Ue, Ida, Mori, 'Electrochemical Properties of Organic Liquid Electrolytes Based on Quaternary Onium Salts for Electrical Double-Layer Capacitors', J. Electrochem. Soc. 1994, 141(11), 2989 — matches citation. Abstract confirms Et4N+/BF4-/propylene carbonate gives a wide stable potential window, on-topic for PC ESW. Values (Ered -2.8 V, Eoxi +3.8 V vs SHE; ECW 6.6 V; 0.65 M Et4NBF4; glassy carbon; 5 mV/s; 25 C; 1 mA cm-2) are physically plausible for PC: anodic positive, cathodic negative, total 6.6 V (<7 V). All required fields (RE=SHE, electrolyte, WE, cutoff) present. Note the exact numeric limits were transcribed second-hand from Table 1 of the Gong et al. 2015 EES review (DOI 10.1039/C5EE02341F, also confirmed real), not read from Ue's primary table directly; the primary paper was confirmed to exist and concern this exact system, so confidence remains high, with the minor caveat that precise digits rely on the review's transcription."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "N,N-dimethylformamide",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 1.7,
+          "cathodic_limit_orig_V": -2.2,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "0.1 M TBA ClO4 (tetrabutylammonium perchlorate)",
+          "working_electrode": "Pt",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1039/D0GC01247E",
+          "citation": "C. Schotten, T. P. Nicholls, R. A. Bourne, N. Kapur, B. N. Nguyen, C. E. Willans, 'Making electrochemistry easily accessible to the synthetic chemist', Green Chemistry, 2020, 22, 3358-3375, Table 3 (DMF row). Table caption: 'Potentials windows for typical solvents used in synthetic electrochemistry'; footnote: values referenced to SCE, working electrode Pt, electrolyte 0.1 M TBA ClO4, attributed to the authors' refs 110-113. Total window 3.9 V (plausible). NOTE: this is the source the project memo labels 'Yan et al. Green Chem. 2020 10.1039/D0GC01247E Table 3'; the actual first author is Schotten, not Yan. No current-density cutoff criterion is given in the table, so the limits are practical-CV-edge values without a stated threshold.",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": null,
+          "cathodic_limit_orig_V": null,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "not stated",
+          "working_electrode": "not stated",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1039/C8SE00175H",
+          "citation": "L. M. Reid, T. Li, Y. Cao, C. P. Berlinguette, 'Organic chemistry at anodes and photoanodes', Sustainable Energy & Fuels, 2018, 2, 1905-1927, Figure 3. The figure plots only the ANODIC potential range of DMF (and other solvents) referenced to SCE, adapted from the authors' ref. 47; no cathodic limit is shown and no numeric axis value, supporting electrolyte, working electrode, or current cutoff is printed in the figure. DMF appears to extend to roughly +2.5 V vs SCE but no exact printed number is given (figure-only), so anodic/cathodic limits left null per do-not-approximate rule. Recorded as a low-confidence corroborating entry.",
+          "confidence": "low"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1039/D0GC01247E VERIFIED real and on-topic: 'Making electrochemistry easily accessible to the synthetic chemist', Schotten, Nicholls, Bourne, Kapur, Nguyen, Willans, Green Chem. 2020, 22, 3358-3375. Full-text HTML (pubs.rsc.org/en/content/articlehtml/2020/gc/d0gc01247e) Table 3 'Potentials windows for typical solvents used in synthetic electrochemistry' confirms the DMF row EXACTLY: anodic +1.7 V, cathodic -2.2 V, working electrode Pt, electrolyte 0.1 M TBA ClO4, referenced to SCE. Total window 3.9 V is physically plausible for DMF (within 1.5-7 V; anodic positive, cathodic negative). Citation's correction is accurate: first author is Schotten, not 'Yan' as the project memo mislabeled. Cutoff criterion legitimately 'not stated' (practical CV-edge values, no current-density threshold given in the table) but ref electrode, electrolyte, and working electrode are all present. All conditions and both numeric limits independently confirmed against the source -> high confidence."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "DOI 10.1039/C8SE00175H VERIFIED real and on-topic: 'Organic chemistry at anodes and photoanodes', Reid, Li, Cao, Berlinguette, Sustainable Energy & Fuels 2018, 2(9), 1905-1927 -- bibliographic metadata matches the citation exactly (authors, journal, volume, issue, pages all confirmed via RSC). Article subject (anodic/photoanodic oxidation of organic substrates and solvents) is consistent with a figure on solvent anodic ranges. Could NOT directly confirm Figure 3's specific content (paywalled body; UBC and search pages returned only metadata) -> confidence downgraded for that reason. No physical-plausibility risk: both anodic_limit and cathodic_limit are null, so there are no numeric values that could be impossible. Reference electrode SCE given; supporting electrolyte, working electrode, and cutoff honestly marked 'not stated'; limits left null per do-not-approximate rule. Incomplete-but-honest, self-described low-confidence figure-only corroborating entry; nothing fabricated about the reference and nothing physically impossible -> keep=true, low confidence."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "dimethyl sulfoxide",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 1.3,
+          "cathodic_limit_orig_V": -2.52,
+          "reference_electrode": "Fc+/Fc",
+          "supporting_electrolyte": "0.25 mol dm-3 tetrabutylammonium methanesulfonate",
+          "working_electrode": "Pt (1 mm diameter disk; counter: coiled Pt wire)",
+          "cutoff_criterion": "not stated (breakdown read from CV background at 10 mV/s, 26 C; no current-density threshold given)",
+          "source_doi": "10.1039/D0CP03277H",
+          "citation": "W. Monnens, C. Deferm, K. Binnemans, J. Fransaer, 'Indium electrodeposition from indium(III) methanesulfonate in DMSO', Phys. Chem. Chem. Phys., 2020, 22, 24526-24534. Verbatim: 'The cathodic and anodic breakdown of DMSO occur at -2.52 V vs. Fc+/Fc and +1.30 V vs. Fc+/Fc, respectively, indicating that the electrochemical window of DMSO is 3.52 V wide.' Plausibility: window 3.82 V (anodic minus cathodic), anodic > cathodic, total < 7 V; OK.",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": 1,
+          "cathodic_limit_orig_V": -1,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "0.01 M TBAPF6",
+          "working_electrode": "Pt",
+          "cutoff_criterion": "not stated (compiled table, no current-density threshold given)",
+          "source_doi": "10.1039/D0GC01247E",
+          "citation": "C. Schotten, T. P. Nicholls, R. A. Bourne, N. Kapur, B. N. Nguyen, C. E. Willans, 'Making electrochemistry easily accessible to the synthetic chemist', Green Chem., 2020, 22, 3358-3375, Table 3 ('Potentials windows for typical solvents used in synthetic electrochemistry'). DMSO row: electrolyte 0.01 M TBAPF6, electrode Pt, cathodic -1.0 V, anodic +1.0 V, window 2 V. Footnote: 'Values referenced to SCE, taken from ref. 110-113' (secondary compilation; primary refs include Francke et al. Electrochim. Acta 2012, 62, 372; Luca et al. Org. Chem. Front. 2015, 2, 823; Polcari et al. Chem. Rev. 2016, 116, 13234; Fuchigami et al. Wiley 2014). Plausibility: window 2 V, anodic > cathodic; OK. This is the Green Chem. 2020 D0GC01247E Table 3 the project already cites.",
+          "confidence": "med"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1039/D0CP03277H confirmed real and on-topic: Monnens, Deferm, Binnemans, Fransaer, 'Indium electrodeposition from indium(iii) methanesulfonate in DMSO', Phys. Chem. Chem. Phys. 2020, 22, 24526-24534 — all metadata matches. Full-text HTML confirms the exact verbatim quote: cathodic -2.52 V and anodic +1.30 V vs Fc+/Fc, window 3.52 V wide. Conditions all confirmed: 0.25 mol dm-3 TBA methanesulfonate, Pt 1 mm disk + coiled Pt wire counter, Fc+/Fc ref, 10 mV/s, 26 C. Physically plausible: anodic positive, cathodic negative, ~3.5-3.8 V span within DMSO range. Minor: curator's plausibility annotation computes 3.82 V (anodic-minus-cathodic) vs paper's stated 3.52 V — an annotation arithmetic quirk, not a data error; the cited values are verbatim correct. Cutoff criterion accurately flagged as not stated."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "med",
+          "verify_note": "DOI 10.1039/D0GC01247E confirmed real and on-topic: Schotten, Nicholls, Bourne, Kapur, Nguyen, Willans, 'Making electrochemistry easily accessible to the synthetic chemist', Green Chem. 2020, 22, 3358-3375 — all metadata matches. Full-text HTML confirms Table 3 DMSO row: 0.01 M TBAPF6, Pt electrode, cathodic -1.0 V, anodic +1.0 V, 2 V window, referenced to SCE, from refs 110-113. Physically plausible: anodic positive, cathodic negative, 2 V within DMSO range. This is a secondary compilation (round 1.0/-1.0 V values, refs to primary sources), and cutoff criterion is not stated — hence confidence held at med rather than high. Keep=true; conditions present, values verified, DOI confirmed."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "tetrahydrofuran",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 0.7,
+          "cathodic_limit_orig_V": -3.5,
+          "reference_electrode": "Fc/Fc+ (potentials referenced to ferrocene Fc+/Fc at 0 V; measured against a bare Ag0 wire fritted pseudo-reference in electrolyte)",
+          "supporting_electrolyte": "0.10 M TBAPF6 (tetra-n-butylammonium hexafluorophosphate)",
+          "working_electrode": "glassy carbon (GC), 3 mm diameter",
+          "cutoff_criterion": "not stated (practical CV solvent/electrolyte window edge; experimentally determined accessible window at 200 mV/s, no explicit current-density threshold reported)",
+          "source_doi": "10.1021/acs.inorgchem.5c05041",
+          "citation": "Niklas, J. E.; Duffy, M. I.; La Pierre, H. S. 'A Guide to Nonaqueous Electrochemistry of f-Element Complexes.' Inorganic Chemistry, 2026, 65(7), 3758-3770. Table of established windows / E1/2 of metallocene references for solvent-electrolyte combinations; THF/TBAPF6 row. Conditions per table caption: WE GC 3 mm; RE bare Ag0 wire fritted in electrolyte; CE Pt wire 0.5 mm; scan rate 200 mV/s; all electrolyte concentrations 0.10 M. Window total 4.2 V (plausible).",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": 0,
+          "cathodic_limit_orig_V": -3.3,
+          "reference_electrode": "Fc/Fc+ (potentials referenced to ferrocene Fc+/Fc at 0 V; measured against a bare Ag0 wire fritted pseudo-reference in electrolyte)",
+          "supporting_electrolyte": "0.10 M TBABPh4 (tetra-n-butylammonium tetraphenylborate)",
+          "working_electrode": "glassy carbon (GC), 3 mm diameter",
+          "cutoff_criterion": "not stated (practical CV solvent/electrolyte window edge; experimentally determined accessible window at 200 mV/s, no explicit current-density threshold reported); narrow anodic limit (0.0 V vs Fc/Fc+) set by oxidation of the BPh4- anion rather than THF itself",
+          "source_doi": "10.1021/acs.inorgchem.5c05041",
+          "citation": "Niklas, J. E.; Duffy, M. I.; La Pierre, H. S. 'A Guide to Nonaqueous Electrochemistry of f-Element Complexes.' Inorganic Chemistry, 2026, 65(7), 3758-3770. THF/TBABPh4 row of the established-windows table. Conditions per table caption: WE GC 3 mm; RE bare Ag0 wire fritted in electrolyte; CE Pt wire 0.5 mm; scan rate 200 mV/s; 0.10 M electrolyte. Window total 3.3 V (plausible); anodic limit is electrolyte-anion-limited (BPh4-), not solvent-limited.",
+          "confidence": "high"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1021/acs.inorgchem.5c05041 confirmed via publisher redirect (pubs.acs.org) and open-access PMC12933887. Citation matches verbatim: Niklas, Duffy, La Pierre, 'A Guide to Nonaqueous Electrochemistry of f-Element Complexes,' Inorg. Chem. 2026, 65(7), 3758-3770. THF/TBAPF6 row in the established-windows table gives anodic +0.7 V and cathodic -3.5 V vs Fc/Fc+ — exact match. Conditions match caption exactly (WE GC 3 mm; RE bare Ag0 wire fritted in electrolyte; CE Pt wire 0.5 mm; 200 mV/s; 0.10 M). Window 4.2 V is physically plausible for THF. Cutoff criterion honestly noted as not stated (no current-density threshold reported), but RE/electrolyte/WE/CE/scan-rate all present and verified."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "Same confirmed DOI/article as index 0 (verified via ACS redirect and open-access PMC12933887). THF/TBABPh4 row in the table gives anodic 0.0 V and cathodic -3.3 V vs Fc/Fc+ — exact match to candidate. Article explicitly states TBABPh4 windows are smaller than TBAPF6 because BPh4- 'can be oxidized at sufficiently anodic potentials,' confirming the candidate's claim that the 0.0 V anodic limit is anion-limited rather than solvent-limited. Window 3.3 V is physically plausible. Conditions match caption. Cutoff criterion honestly noted as not stated; all other conditions present and verified."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "nitromethane",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 1,
+          "cathodic_limit_orig_V": -2.9,
+          "reference_electrode": "SHE (converted in source via SCE = +0.24 V vs SHE; underlying measurement reported vs SCE)",
+          "supporting_electrolyte": "0.65 M Et4NBF4 (Et4N BF4)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "1 mA cm-2 current-density threshold (25 C, 5 mV s-1 scan rate)",
+          "source_doi": "10.1039/C5EE02341F",
+          "citation": "X. Gong, Q. Huang, T. Vu, F. R. Brushett et al., 'Nonaqueous redox-flow batteries: organic solvents, supporting electrolytes, and redox pairs', Energy Environ. Sci., 2015, 8, 3515-3530, Table 1 row 'Nitromethane (NM)': Ered = 2.9 (i.e. -2.9 V vs SHE), Eoxi = +1.0 V vs SHE, ECW = 3.9 V. Footnotes h/i state conditions (0.65 M Et4NBF4, 25 C, glassy carbon, 5 mV/s, 1 mA cm-2 threshold) and that values were converted using SCE = 0.24 V vs SHE. Data attributed to ref. 59 = M. Ue, K. Ida, S. Mori, J. Electrochem. Soc., 1994, 141, 2989-2996. NOTE: Eoxi=+1.0 V vs SHE is unusually low for an anodic solvent limit (likely reflects the SHE conversion convention used); window 3.9 V is plausible.",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": null,
+          "cathodic_limit_orig_V": null,
+          "reference_electrode": "not directly extracted (original Ue measurements reported vs an internal reference; Gong review converted via SCE = +0.24 V vs SHE)",
+          "supporting_electrolyte": "0.65 M Et4NBF4 (Et4N BF4)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "1 mA cm-2 current-density threshold (25 C, 5 mV s-1 scan rate)",
+          "source_doi": "10.1149/1.2059270",
+          "citation": "M. Ue, K. Ida, S. Mori, 'Electrochemical Properties of Organic Liquid Electrolytes Based on Quaternary Onium Salts for Electrical Double-Layer Capacitors', J. Electrochem. Soc., 1994, 141(11), 2989-2996. This is the PRIMARY source for the nitromethane limiting reduction (Ered) and oxidation (Eoxi) potentials re-tabulated by Gong et al. (candidate 1). DOI and full citation confirmed via IOPscience; the original-reference verbatim numerical limits for nitromethane could NOT be read from accessible full text (paywalled), so anodic/cathodic fields left null to avoid reporting unverified converted values. Conditions per derived table: 0.65 M Et4NBF4, glassy carbon, 25 C, 5 mV/s, 1 mA cm-2 threshold.",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": 2.9,
+          "cathodic_limit_orig_V": null,
+          "reference_electrode": "Fc/Fc+ (ferrocene/ferrocenium)",
+          "supporting_electrolyte": "Et4NBF4 (BF4- salt); table also gives +2.3 V with a perchlorate salt",
+          "working_electrode": "Pt (platinum)",
+          "cutoff_criterion": "10 uA/mm2 (= 1 mA cm-2)",
+          "source_doi": "",
+          "citation": "ALS Co., Ltd. (BAS), technical support page 'Solvent and Supporting Electrolyte', Table 8 (https://www.als-japan.com/2075.html). Nitromethane positive (anodic) potential limit: +2.3 V with perchlorate ion, +2.9 V with BF4- ion (vs Fc/Fc+, Pt electrode, cutoff 10 uA/mm2 = 1 mA cm-2). Negative (cathodic) limit not stated for nitromethane in the extracted table. This is a secondary compilation (Izutsu 'Electrochemistry in Nonaqueous Solutions' lineage) with no primary DOI given for the nitromethane row; recorded as independent corroboration of the anodic limit only.",
+          "confidence": "low"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "DOI 10.1039/C5EE02341F CONFIRMED real and on-topic: Gong, Fang, Gu, Li, Yan, 'Nonaqueous redox-flow batteries: organic solvents, supporting electrolytes, and redox pairs', Energy Environ. Sci., 2015, 8, 3515-3530 (title/journal/year/vol/pages all match; note the citation's author list 'X. Gong, Q. Huang, T. Vu, F. R. Brushett' is garbled — actual first author is K. Gong, but the DOI/article identity is solid). I extracted Table 1 directly from the publisher PDF: the nitromethane (NM) row reads Ered=1.0, Eoxi=2.9, ECW=3.9 V (vs SHE). Footnotes h/i confirm conditions verbatim (0.65 M Et4NBF4, 25 C, glassy carbon, 5 mV/s, 1 mA cm-2 threshold; SCE=0.24 V vs SHE conversion) and attribution to ref 59 (Ue). ALL FOUR conditions present. WINDOW PLAUSIBLE (3.9 V). PROBLEM: the candidate SWAPPED anodic/cathodic — it records anodic=+1.0 and cathodic=-2.9, but the source has oxidation/anodic=+2.9 and reduction/cathodic~=-1.0 (ECW=Eoxi-Ered=2.9-(-1.0)=3.9). The candidate's own note that 'Eoxi=+1.0 is unusually low for an anodic limit' is the symptom of this inversion. Correct anodic limit is +2.9 V (corroborated by candidate 2). Keeping because source and window are valid, but confidence LOW because the limit fields are mis-assigned and need correction (anodic should be +2.9, cathodic ~ -1.0)."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "med",
+          "verify_note": "DOI 10.1149/1.2059270 CONFIRMED real via IOPscience: Ue, Ida, Mori, 'Electrochemical Properties of Organic Liquid Electrolytes Based on Quaternary Onium Salts for Electrical Double-Layer Capacitors', J. Electrochem. Soc., 1994, 141(11), 2989 — title/authors/journal/vol/issue/year/page all match the citation exactly. This is the genuine PRIMARY source (= ref 59) underlying candidate 0's Gong-tabulated nitromethane limits. anodic/cathodic left null because the original verbatim numbers are paywalled and were not directly read — an honest, defensible choice (no impossible values asserted). Conditions present (0.65 M Et4NBF4, glassy carbon, 25 C, 5 mV/s, 1 mA cm-2). Reference-electrode field is vague ('internal reference; converted via SCE=0.24 V vs SHE'). Confidence MED: DOI fully confirmed and source genuinely relevant, but the nitromethane limit values themselves were not independently read here and the ref-electrode description is incomplete."
+        },
+        {
+          "index": 2,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "No DOI provided (source_doi empty), so no DOI to confirm — but I FETCHED the cited URL https://www.als-japan.com/2075.html and CONFIRMED the exact statement: 'in the nitromethane solvent NM the positive potential limit of the perchlorate ion is +2.3 V, whereas for the BF4- ion it is +2.9 V (compared to Fc/Fc+)', measured on Pt vs Fc/Fc+. Anodic +2.9 V vs Fc/Fc+ on Pt is PHYSICALLY PLAUSIBLE and independently corroborates the corrected anodic limit of candidate 0 (+2.9 V). Electrolyte (Et4NBF4 / perchlorate), working electrode (Pt), reference (Fc/Fc+), and cutoff (10 uA/mm2 = 1 mA cm-2) all present; CATHODIC limit absent (not stated for NM). Confidence LOW: secondary web compilation (Izutsu 'Electrochemistry in Nonaqueous Solutions' lineage) with no primary DOI, anodic-only, and per the directive any source whose DOI cannot be confirmed (here none exists) is downgraded. Kept because the value is real, plausible, and corroborating."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "water",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 1.1,
+          "cathodic_limit_orig_V": -1.3,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "0.1 M KCl",
+          "working_electrode": "C (carbon)",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1039/D0GC01247E",
+          "citation": "Schotten, Nicholls, Bourne, Kapur, Nguyen, Willans, Green Chemistry, 2020, vol. 22, pp. 3358-3375, Table 3 (H2O row, 0.1 M KCl, C electrode); values referenced to SCE, compiled from refs 110-113. Note: this is the project's existing 10.1039/D0GC01247E citation (authored by Schotten et al., not Yan); it is a review compilation of literature values, not the original primary measurement, and no current-density cutoff criterion is stated.",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": 0,
+          "cathodic_limit_orig_V": -1.7,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "1 M KCl",
+          "working_electrode": "Hg (mercury)",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1039/D0GC01247E",
+          "citation": "Schotten, Nicholls, Bourne, Kapur, Nguyen, Willans, Green Chemistry, 2020, vol. 22, pp. 3358-3375, Table 3 (H2O row, 1 M KCl, Hg electrode); values referenced to SCE, compiled from refs 110-113. Review compilation, not original primary measurement; no current-density cutoff criterion stated. Mercury electrode extends the cathodic limit (low H2-evolution overpotential window).",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": 2.3,
+          "cathodic_limit_orig_V": -2,
+          "reference_electrode": "Ag/AgCl",
+          "supporting_electrolyte": "saturated NaClO4 aqueous solution (SSPAS)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "not stated (onset of oxidation/reduction current by CV; scan rate 30-200 mV/s)",
+          "source_doi": "10.1038/srep45048",
+          "citation": "Tomiyasu, Shikata, Takao, Asanuma, Taruta, Park, 'An aqueous electrolyte of the widest potential window and its superior capability for capacitors', Scientific Reports, 2017, vol. 7, art. 45048. Primary source. Wide ~3.2 V window is for a saturated (water-in-salt-like) NaClO4 electrolyte, NOT a standard dilute aqueous window; no explicit current-density cutoff criterion stated.",
+          "confidence": "med"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "med",
+          "verify_note": "DOI 10.1039/D0GC01247E CONFIRMED real and on-topic: Schotten, Nicholls, Bourne, Kapur, Nguyen, Willans, 'Making electrochemistry easily accessible to the synthetic chemist', Green Chem. 2020, 22, 3358-3375. Article HTML Table 3 ('Potential windows for typical solvents used in synthetic electrochemistry') contains the exact H2O row: 0.1 M KCl, C electrode, cathodic -1.3 V, anodic +1.1 V vs SCE (2.4 V window) -- matches candidate values exactly. Window 2.4 V and anodic-positive/cathodic-negative polarity are physically plausible for water on carbon. RE (SCE), electrolyte (0.1 M KCl), WE (C) all present. Cutoff criterion genuinely 'not stated' -- it is a review compilation, so confidence held at med for the missing cutoff field; the numeric values are primary-source verified."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "med",
+          "verify_note": "Same DOI 10.1039/D0GC01247E CONFIRMED real and on-topic. Article HTML Table 3 contains the exact H2O row: 1 M KCl, Hg electrode, cathodic -1.7 V, anodic 0 V vs SCE (1.7 V window) -- matches candidate values exactly. Physically plausible: Hg has high H2-evolution overpotential extending the cathodic limit, and its anodic limit near 0 V vs SCE is correct because mercury oxidizes/dissolves at low positive potentials. RE (SCE), electrolyte (1 M KCl), WE (Hg) all present. Cutoff criterion genuinely 'not stated' (review compilation), so confidence held at med for the missing cutoff field; numeric values are primary-source verified."
+        },
+        {
+          "index": 2,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1038/srep45048 CONFIRMED real and primary: Tomiyasu, Shikata, Takao, Asanuma, Taruta, Park, 'An aqueous electrolyte of the widest potential window and its superior capability for capacitors', Sci. Rep. 2017, 7, 45048. PMC open-access full text confirms saturated NaClO4 (SSPAS) electrolyte, glassy carbon WE, Ag/AgCl RE, Pt counter, scan rates 30-200 mV/s. Reported limits: positive scan to +2.3 V and negative scan to -2.0 V vs Ag/AgCl, total ~3.2 V -- matches candidate values exactly. ~3.2 V is within plausible range and is the special saturated water-in-salt-type window, correctly flagged in the citation as non-standard. RE, electrolyte, WE, scan rate all present; cutoff defined as onset of ox/red current by CV. Fully primary-source verified."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "gamma-butyrolactone",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 5.4,
+          "cathodic_limit_orig_V": -2.8,
+          "reference_electrode": "SHE (value converted in source from SCE using SCE = +0.24 V vs SHE; original measurement by Ue et al. was vs SCE)",
+          "supporting_electrolyte": "0.65 M Et4NBF4 (tetraethylammonium tetrafluoroborate)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "1 mA/cm2 threshold current density (5 mV/s scan rate, 25 C)",
+          "source_doi": "10.1039/C5EE02341F",
+          "citation": "Q. Liu, A. E. S. Sleightholme, A. A. Shinkle, Y. Li, L. T. Thompson et al.; reported in Y. Gong (Leyuan Gong), Q. Fang, K. Gong et al., 'Nonaqueous redox-flow batteries: organic solvents, supporting electrolytes, and redox pairs', Energy Environ. Sci., 2015, 8, 3515-3530, Table 1 (g-Butyrolactone (GBL) row): Ered = -2.8 V, Eoxi = +5.4 V vs SHE, ECW = 8.2 V. NOTE: total window 8.2 V exceeds 7 V and is implausibly wide for a real CV solvent limit on glassy carbon at 1 mA/cm2 - treat as upper-bound/passivation-influenced value, not a practical cutoff. Values are a SHE-converted reproduction of primary data from Ue, Ida & Mori 1994 (ref 59).",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": null,
+          "cathodic_limit_orig_V": null,
+          "reference_electrode": "SCE (original primary measurement; numeric vs-SCE values not directly readable - full text paywalled)",
+          "supporting_electrolyte": "0.65 M Et4NBF4 (tetraethylammonium tetrafluoroborate)",
+          "working_electrode": "glassy carbon",
+          "cutoff_criterion": "1 mA/cm2 threshold current density (5 mV/s scan rate, 25 C)",
+          "source_doi": "10.1149/1.2059270",
+          "citation": "M. Ue, K. Ida and S. Mori, 'Electrochemical Properties of Organic Liquid Electrolytes Based on Quaternary Onium Salts for Electrical Double-Layer Capacitors', J. Electrochem. Soc., 1994, 141(11), 2989-2996. PRIMARY SOURCE for the GBL limiting reduction/oxidation potentials cited by Gong et al. EES 2015 (their ref 59). DOI and full citation confirmed; conditions confirmed (0.65 M Et4NBF4, glassy carbon, 5 mV/s, 1 mA/cm2, 25 C, vs SCE). Original vs-SCE numeric anodic/cathodic limits could NOT be read directly (paywalled full text); when converted to SHE by Gong they are Eoxi=+5.4 V, Ered=-2.8 V vs SHE. anodic/cathodic left null here to avoid asserting unverified vs-SCE numbers; see C5EE02341F candidate for the SHE-converted figures.",
+          "confidence": "med"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "med",
+          "verify_note": "DOI 10.1039/C5EE02341F VERIFIED real and on-topic: Gong, Fang, Gu, Li, Yan, 'Nonaqueous redox-flow batteries: organic solvents, supporting electrolytes, and redox pairs', Energy Environ. Sci., 2015, 8, 3515-3530 (title/journal/year/volume/pages all match). Fetched the article HTML full text and confirmed Table 1 GBL row EXACTLY as cited: Ered = -2.8 V, Eoxi = +5.4 V vs SHE, ECW = 8.2 V, cited as ref 59 (Ue et al. 1994), with stated conditions '0.65 M Et4NBF4, 25 C, glassy carbon, 5 mV/s, 1 mA/cm2 threshold' and 'converted by SCE = 0.24 V vs SHE' -- every transcribed value matches the source. All required fields present (ref electrode SHE+SCE conversion, electrolyte, WE, cutoff). Sign convention correct (anodic +, cathodic -). PLAUSIBILITY: total window 8.2 V exceeds the task's ~1.5-7 V band, but this is the literature-reported value, accurately reproduced; the +5.4 V anodic limit is a known passivation-layer-inflated apparent limit for lactones on glassy carbon at 1 mA/cm2, NOT a true thermodynamic onset and NOT a fabricated/impossible number -- the candidate's own note flags this correctly. keep=true because values are real and accurately cited, but confidence held at med (not high) because the window is passivation-influenced/non-practical and the citation garbles the author list ('Y. Gong (Leyuan Gong)' -- actual lead author is Ke Gong, senior author Yushan Yan)."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "DOI 10.1149/1.2059270 VERIFIED real and on-topic: Ue, Ida, Mori, 'Electrochemical Properties of Organic Liquid Electrolytes Based on Quaternary Onium Salts for Electrical Double-Layer Capacitors', J. Electrochem. Soc., 1994, 141(11), 2989 -- exact match to citation (authors, title, journal, year, volume, issue, page). This is the genuine primary source for the GBL limiting potentials reproduced by Gong 2015 (their ref 59), and conditions (0.65 M Et4NBF4, glassy carbon, 5 mV/s, 1 mA/cm2, 25 C, vs SCE) are consistent with the secondary source. HOWEVER, anodic_limit_orig_V and cathodic_limit_orig_V are both null: the candidate honestly states the vs-SCE numbers could not be read directly (paywalled full text), so this record carries NO usable ESW limit value on its own and serves only as a provenance/primary-source pointer to the SHE-converted figures in candidate 0. keep=true (DOI exists, on-topic, conditions present, conservative/honest about not asserting unread numbers), but confidence_final=low because the actual limit values were never directly confirmed from this source and the entry contains no numeric window."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "sulfolane",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 5,
+          "cathodic_limit_orig_V": null,
+          "reference_electrode": "Li/Li+",
+          "supporting_electrolyte": "1 M LiPF6",
+          "working_electrode": "Pt (also LiNi0.5Mn1.5O4)",
+          "cutoff_criterion": "not stated (reported as the oxidation/anodic-stability potential onset from linear-sweep/cyclic voltammetry; explicit current-density threshold not given in accessible text)",
+          "source_doi": "10.1016/j.electacta.2014.03.190",
+          "citation": "Xing, L. et al. 'On anodic stability and decomposition mechanism of sulfolane in high-voltage lithium ion battery.' Electrochimica Acta 2014, vol. 133, pp. 117-122. Reported: oxidation potential of 1 M LiPF6/sulfolane (SL) on Pt is ~5.0 V vs Li/Li+; anodic stability order LiPF6/SL > LiBF4/SL > LiClO4/SL. Battery-context window: only the anodic (oxidation) side is reported; cathodic side not separately quantified.",
+          "confidence": "high"
+        },
+        {
+          "anodic_limit_orig_V": 5.86,
+          "cathodic_limit_orig_V": null,
+          "reference_electrode": "Li/Li+",
+          "supporting_electrolyte": "LiDFOB (10.7 wt%) in sulfolane-plasticized UV-cured gel polymer electrolyte (GPE-80, 80 wt% sulfolane)",
+          "working_electrode": "stainless steel (SS|GPE|Li cell)",
+          "cutoff_criterion": "not stated (oxidation potential read from linear sweep voltammetry over -0.5 to 8.0 V at 2 mV/s; explicit current-density threshold not given)",
+          "source_doi": "10.3390/polym11081306",
+          "citation": "Wang, S.; Wei, C.; Ding, W. et al. 'High-Voltage Sulfolane Plasticized UV-Curable Gel Polymer Electrolyte.' Polymers 2019, 11(8), 1306. Oxidation potentials GPE-40/60/80 = 6.01/5.96/5.86 V vs Li/Li+ (80 wt% sulfolane = 5.86 V). NOTE: this is a sulfolane-plasticized gel polymer electrolyte, NOT neat sulfolane; value is an anodic-only number for a composite, so applicability to the solvent ESW is indirect. Cathodic limit not reported.",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": 5.9,
+          "cathodic_limit_orig_V": 5.5,
+          "reference_electrode": "Li/Li+",
+          "supporting_electrolyte": "Li salts in sulfolane (LiBF4, LiClO4, LiN(CF3SO2)2, LiCF3SO3); stability order LiBF4 > LiClO4 ~ LiN(CF3SO2)2 > LiCF3SO3",
+          "working_electrode": "not stated in accessible text",
+          "cutoff_criterion": "not stated",
+          "source_doi": "10.1134/S1070427218090045",
+          "citation": "FLAG: the two 'limit' fields here are NOT a true anodic/cathodic pair - the source reports a single overall electrochemical-stability range of 5.5 to 5.9 V vs Li/Li+ for the family of sulfolane-based Li-salt electrolytes (i.e. total-window magnitude, salt-dependent), not separate positive and negative cutoffs. Sheina, L.V.; Kuz'mina, E.V.; Karaseva, E.V.; Gallyamov, A.G.; Prosochkina, T.R.; Kolosnitsyn, V.S. 'Thermochemical and Electrochemical Stability of Electrolyte Systems based on Sulfolane.' Russian Journal of Applied Chemistry 2018, 91(9), 1427-1433. Working electrode and current cutoff criterion not specified in accessible text; values recorded only to capture the reported 5.5-5.9 V range and are not usable as a hard anodic/cathodic gate.",
+          "confidence": "low"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1016/j.electacta.2014.03.190 confirmed via CrossRef: Xing et al., 'On anodic stability and decomposition mechanism of sulfolane in high-voltage lithium ion battery', Electrochimica Acta 2014 — title/authors/journal/year match the citation exactly. Web search confirms reported oxidation potential ~5.0 V vs Li/Li+ for 1 M LiPF6/SL on Pt and the anodic-stability order LiPF6/SL > LiBF4/SL > LiClO4/SL. Anodic limit of 5.0 V vs Li/Li+ is physically plausible for sulfolane (high anodic stability). Working electrode (Pt, also LiNi0.5Mn1.5O4), reference (Li/Li+), and electrolyte (1 M LiPF6) all present. Cathodic limit honestly left null (battery-context anodic-only study); cutoff criterion not explicitly stated (minor incompleteness, does not undermine the anodic value)."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "med",
+          "verify_note": "DOI 10.3390/polym11081306 confirmed via CrossRef: Wang, Wei, Ding et al., 'High-Voltage Sulfolane Plasticized UV-Curable Gel Polymer Electrolyte', Polymers 2019, 11(8), 1306 — matches citation exactly. Web search (PMC/MDPI) confirms GPE-80 electrochemical window / oxidation = 5.86 V. Value is physically plausible. Key caveat (correctly flagged by the candidate): this is a sulfolane-PLASTICIZED gel polymer composite (LiDFOB, 80 wt% sulfolane), NOT neat sulfolane, so the 5.86 V anodic number applies to the composite electrolyte, not the pure-solvent ESW — applicability is indirect. Anodic-only; cathodic null. Reference (Li/Li+), electrolyte, working electrode (SS) present; cutoff criterion not stated. med confidence is appropriate given indirect solvent applicability."
+        },
+        {
+          "index": 2,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "DOI 10.1134/S1070427218090045 confirmed via CrossRef: Sheina, Kuz'mina, Karaseva, Gallyamov, Prosochkina, Kolosnitsyn, 'Thermochemical and Electrochemical Stability of Electrolyte Systems based on Sulfolane', Russ. J. Appl. Chem. 2018, 91(9) — matches citation exactly. Web search confirms the reported 'electrochemical stability ... in the range from 5.5 to 5.9 V (relative to Li/Li+)' and the salt order. The candidate's own FLAG is correct and important: 5.5/5.9 are NOT a true cathodic/anodic pair — they are the salt-dependent total-window MAGNITUDE for the electrolyte family, mislabeled here as cathodic=5.5/anodic=5.9. A cathodic limit of +5.5 V vs Li/Li+ is physically nonsensical (cathodic side of a Li/Li+-referenced window should sit near 0 V). The underlying source values are real and not physically impossible, so keep=true, but the structured anodic/cathodic fields are not usable as a hard gate. Working electrode and cutoff criterion not stated in accessible text. low confidence is correct."
+        }
+      ],
+      "no_source_found": false
+    },
+    {
+      "solvent": "N-methyl-2-pyrrolidone",
+      "candidates": [],
+      "verdicts": [],
+      "no_source_found": true
+    },
+    {
+      "solvent": "nitrobenzene",
+      "candidates": [],
+      "verdicts": [],
+      "no_source_found": true
+    },
+    {
+      "solvent": "benzonitrile",
+      "candidates": [
+        {
+          "anodic_limit_orig_V": 1.8,
+          "cathodic_limit_orig_V": -1.95,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "tetrabutylammonium perchlorate (TBAP)",
+          "working_electrode": "Pt",
+          "cutoff_criterion": "not stated (the report states the solvent 'has a large cathodic and anodic potential range which ... extends between -1.95 V and +1.8 V vs SCE'; no current-density/current threshold given) -- confidence lowered accordingly",
+          "source_doi": "10.1351/pac198759050703",
+          "citation": "K. M. Kadish and J. E. Anderson (IUPAC Commission on Electroanalytical Chemistry), 'Purification of Solvents for Electroanalysis: Benzonitrile, Dichloromethane, 1,1-Dichloroethane and 1,2-Dichloroethane', Pure and Applied Chemistry, 1987, Vol. 59, No. 5, pp. 703-714 (benzonitrile section, p. 704). Window stated as -1.95 V to +1.8 V vs SCE (total ~3.75 V, physically plausible). The report attributes this potential range to ref. 4 therein: D. Lancon and K. M. Kadish, J. Am. Chem. Soc. 1983, 105, 5610.",
+          "confidence": "med"
+        },
+        {
+          "anodic_limit_orig_V": null,
+          "cathodic_limit_orig_V": -2.2,
+          "reference_electrode": "SCE",
+          "supporting_electrolyte": "0.2 M TBA(PF6) (tetrabutylammonium hexafluorophosphate)",
+          "working_electrode": "not stated",
+          "cutoff_criterion": "not stated ('the cathodic potential of the solvent is reported to be -2.2 V vs SCE'; no current-density/current threshold or working-electrode material given in this sentence) -- confidence lowered accordingly",
+          "source_doi": "10.1351/pac198759050703",
+          "citation": "K. M. Kadish and J. E. Anderson (IUPAC Commission on Electroanalytical Chemistry), 'Purification of Solvents for Electroanalysis: Benzonitrile, Dichloromethane, 1,1-Dichloroethane and 1,2-Dichloroethane', Pure and Applied Chemistry, 1987, Vol. 59, No. 5, pp. 703-714 (benzonitrile purification section, p. 706). Cathodic limit only (-2.2 V vs SCE) for purified benzonitrile with 0.2 M TBA(PF6); associated with ref. 21 therein: Y. Le Mest, M. L'Her and J. Courtot-Coupez, J. Electroanal. Chem. 1985, 184, 331. Anodic limit not reported for this electrolyte.",
+          "confidence": "low"
+        }
+      ],
+      "verdicts": [
+        {
+          "index": 0,
+          "keep": true,
+          "confidence_final": "high",
+          "verify_note": "DOI 10.1351/pac198759050703 confirmed real and on-topic: Kadish & Anderson, 'Purification of Solvents for Electroanalysis: Benzonitrile...', Pure Appl. Chem. 1987, 59(5), 703-714. Pulled the actual IUPAC PAC PDF; p.704 states verbatim: benzonitrile 'using a Pt electrode and tetrabutylammonium perchlorate (TBAP) as supporting electrolyte, extends between -1.95 V and +1.8 V vs SCE.' So anodic +1.8 V, cathodic -1.95 V, SCE, TBAP, Pt all present and exactly as cited. Window = 3.75 V, anodic positive / cathodic negative, physically plausible for benzonitrile. Cited primary ref. 4 (Lancon & Kadish, JACS 1983, 105, 5610) is a real benzonitrile porphyrin-electrochemistry paper. Only weakness: report gives no explicit current-density/current cutoff criterion (candidate already discloses this). High confidence: DOI confirmed, values exact-match the source, conditions complete except cutoff."
+        },
+        {
+          "index": 1,
+          "keep": true,
+          "confidence_final": "low",
+          "verify_note": "Same DOI confirmed real/on-topic (verified via downloaded IUPAC PAC PDF). p.706 states verbatim: 'With 0.2 M ... TBA(PF6) as supporting electrolyte, the cathodic potential of the solvent is reported to be -2.2 V vs SCE.' Cathodic -2.2 V, SCE, and 0.2 M TBA(PF6) all confirmed as cited; anodic limit genuinely absent here (correctly null) and working electrode genuinely NOT stated in this sentence (candidate correctly flags this). -2.2 V cathodic is physically plausible. Cited primary ref. 21 (Le Mest, L'Her & Courtot-Coupez, J. Electroanal. Chem. 1985, 184, 331) is a real benzonitrile electrochemistry paper. Keep, but confidence low: incomplete conditions (no working electrode, no cutoff criterion, single-ended window). Note source PDF misprints the author as 'Courton-Coupez' but the correct name is Courtot-Coupez as the candidate has it."
+        }
+      ],
+      "no_source_found": false
+    }
+  ],
+  "polymerization": [
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Does NOT give good films under normal oxidative conditions: furan electropolymerizes only at very high potential (~1.8 V vs SCE; irreversible oxidation peak ~1.75 V vs Ag0/Ag+ in MeCN), where ring-opening and irreversible over-oxidation give non-conjugated, low-quality, poorly conducting polyfuran. Quality free-standing films require special low-water Lewis-acid media: e.g. BF3-diethyl etherate (BFEE) + ethyl ether allowing polymerization at ~1.2 V vs Ag/AgCl with conductivity ~10^-2 S/cm and much less ring-opening; alternatively polymerization of oligofurans (terfuran and higher) at <1.0 V.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "D. Sheberla, S. Patra, Y. H. Wijsboom, S. Sharma, Y. Sheynin, A.-E. Haj-Yahia, A. Hayoun Barak, O. Gidron, M. Bendikov, 'Conducting polyfurans by electropolymerization of oligofurans', Chemical Science, 2015, 6, 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Furan monomer shows an irreversible oxidation peak at 1.75 V vs Ag0/Ag+ in acetonitrile; anodic coupling gives conducting polyfuran films, but the high oxidation potential causes over-oxidation and poorly defined structure (blocking the alpha position with a methyl group, as in 2-methylfuran at 1.50 V, lowers Ep but decreases conductivity). Confirms furan is intrinsically hard to electropolymerize cleanly under standard conditions.",
+      "source_doi": "10.1016/S0379-6779(98)01509-4",
+      "citation": "B. Demirboga, A. M. Onal, 'Electrochemical polymerization of furan and 2-methylfuran', Synthetic Metals, 1999, 99, 237-242.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Free-standing polyfuran film obtained by electropolymerization of furan at low potential (~1.2 V vs Ag/AgCl) in a binary solvent of boron trifluoride-ethyl ether (BFEE) plus added ethyl ether (EE); film contains much less ring-opened component and higher conductivity (~10^-2 S/cm, electrochemically or I2 doped) than chemically prepared or other electrochemical polyfurans. BFEE Lewis acid lowers the monomer oxidation potential; this special low-water medium is required for a quality film.",
+      "source_doi": "10.1021/cm9900453",
+      "citation": "J. Zhou, G. Zhao, J. Xu (Li et al.), 'Low Potential Electrochemical Synthesis of Polyfuran and Characterization of the Obtained Free-Standing Film', Chemistry of Materials, 1999, 11, 2371-2374 (DOI 10.1021/cm9900453).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Review: polyfuran has received less attention than polythiophene/polypyrrole because of less well-defined structures, poor stability, low conductivities and ill-defined electrochemical behaviour, mainly resulting from furan's high oxidation potential; conductivity values are not fixed and depend strongly on synthesis conditions. Corroborates that furan does not reliably give good films under normal oxidative conditions.",
+      "source_doi": "10.1016/j.synthmet.2007.12.009",
+      "citation": "M. J. Gonzalez-Tejera, E. Sanchez de la Blanca, I. Carrillo, 'Polyfuran conducting polymers: Synthesis, properties, and applications', Synthetic Metals, 2008, 158, 165-189.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "terfuran",
+      "smiles": "c1ccc(-c2ccc(-c3ccco3)o2)o1",
+      "outcome": "yes",
+      "conditions": "Terfuran (Fu3) is the smallest oligofuran that electropolymerizes to a film: onset oxidation 0.62 V vs Ag/AgCl-wire (well below furan's ~1.8 V vs SCE). Conditions: 0.1-1 mM oligomer in acetonitrile with 0.1 M TBACF3SO3, potentiodynamic (50 mV/s, -0.2 to 0.8 V) or potentiostatic (0.75 V). Alkyl substitution lowers the onset further (Fu3-C8 0.51 V). The low oxidation potential of oligofurans vs furan is the key to obtaining stable, conducting (~1 S/cm), smooth polyfuran films.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "D. Sheberla, S. Patra, Y. H. Wijsboom, S. Sharma, Y. Sheynin, A.-E. Haj-Yahia, A. Hayoun Barak, O. Gidron, M. Bendikov, 'Conducting polyfurans by electropolymerization of oligofurans', Chemical Science, 2015, 6, 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "bifuran",
+      "smiles": "c1ccc(-c2ccco2)o1",
+      "outcome": "conditional",
+      "conditions": "In the oligofuran study, useful electropolymerization to good polyfuran films begins at terfuran (Fu3); the smaller oligomers (furan, and bifuran) require higher potentials and do not give the improved films, so bifuran is at best marginal/conditional under these acetonitrile/TBACF3SO3 conditions. (Reported as the lower oligomer boundary; no clean stand-alone bifuran film conductivity reported.)",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "D. Sheberla, S. Patra, Y. H. Wijsboom, S. Sharma, Y. Sheynin, A.-E. Haj-Yahia, A. Hayoun Barak, O. Gidron, M. Bendikov, 'Conducting polyfurans by electropolymerization of oligofurans', Chemical Science, 2015, 6, 360-371.",
+      "confidence": "low"
+    },
+    {
+      "monomer": "selenophene",
+      "smiles": "c1cc[se]c1",
+      "outcome": "conditional",
+      "conditions": "Selenophene has a high oxidation onset (~1.83 V vs SCE in MeCN + 0.1 M Bu4NBF4) and is hard to polymerize cleanly (unstable monomer, over-oxidation damages the conjugated backbone). High-quality free-standing conducting polyselenophene films (conductivity up to 2.8x10^-1 S/cm) require distilled BFEE as the medium (20 mM selenophene), where anodic current onset drops to 1.23 V vs SCE. Conditional: needs special BFEE medium.",
+      "source_doi": "10.1016/j.matlet.2004.11.054",
+      "citation": "S. Pu, J. Hou, J. Xu, G. Nie, S. Zhang, L. Shen, Q. Xiao, 'Electrosyntheses of freestanding and conducting polyselenophene films', Materials Letters, 2005, 59, 1061-1065.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "thiophene",
+      "smiles": "c1ccsc1",
+      "outcome": "yes",
+      "conditions": "Thiophene electropolymerizes anodically to polythiophene films in aprotic media (e.g. acetonitrile with TBA salts); monomer oxidation requires fairly high potential (~1.6-2.0 V vs SCE) so the polymer can suffer some over-oxidation, but film formation is well established. In pure BFEE the anodic onset is ~1.33 V vs SCE (lower than in MeCN), used to obtain higher-quality films.",
+      "source_doi": "10.1016/j.matlet.2004.11.054",
+      "citation": "Comparative value cited in S. Pu, J. Hou, J. Xu, G. Nie, S. Zhang, L. Shen, Q. Xiao, 'Electrosyntheses of freestanding and conducting polyselenophene films', Materials Letters, 2005, 59, 1061-1065 (thiophene onset in pure BFEE 1.33 V vs SCE).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "EDOT",
+      "smiles": "C1COc2cscc2O1",
+      "outcome": "yes",
+      "conditions": "EDOT readily electropolymerizes to PEDOT films; the electron-rich dioxy substitution lowers the monomer oxidation potential (Ep ~1.2-1.25 V vs SCE; rapid current rise at ~1.0 V vs Ag/Ag+ with peak ~1.2 V). PEDOT films grown by anodic oxidation at ~0.8-1.5 V vs SCE; conductivity/properties depend on polymerization potential (over-oxidation only at much higher potentials), making EDOT one of the easiest monomers to film-form.",
+      "source_doi": "10.1016/S0013-4686(03)00143-9",
+      "citation": "X. Du, Z. Wang, 'Effects of polymerization potential on the properties of electrosynthesized PEDOT films', Electrochimica Acta, 2003, 48, 1713-1717.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "carbazole",
+      "smiles": "c1ccc2c(c1)[nH]c3ccccc23",
+      "outcome": "yes",
+      "conditions": "Carbazole electro-oxidizes (onset ~0.96-1.05 V vs SCE in TBA/Li perchlorate or BF4 in MeCN) and deposits polycarbazole films on Pt, with polyCz redox peaks at ~+0.8/+0.7 V vs SCE growing with repeated scans; coupling occurs mainly at the 3,6-positions. Acetonitrile is a better electropolymerization solvent than propylene carbonate or DCM. (Note: 3,6-blocked carbazoles with very stable radical cations, e.g. 3-tert-butylcarbazole, fail to polymerize.)",
+      "source_doi": "10.3389/fmats.2019.00131",
+      "citation": "Investigation of Polycarbazoles Thin Films Prepared by Electrochemical Oxidation of Synthesized Carbazole Derivatives, Frontiers in Materials, 2019, 6, 131.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "aniline",
+      "smiles": "Nc1ccccc1",
+      "outcome": "yes",
+      "conditions": "Aniline electropolymerizes to polyaniline films in acidic aqueous media (e.g. 1 M HCl or H2SO4 with 0.1 M aniline) by cyclic voltammetry; monomer oxidation at high positive potential (~0.9 V vs Ag), continuous PANI film growth in a window of ~ -0.3 to 1 V. Acidic medium is required for the conducting emeraldine form; well-established film former.",
+      "source_doi": "10.1016/j.electacta.2006.10.054",
+      "citation": "Electropolymerization of aniline in acid media on bare and chemically pre-treated aluminum electrodes, Electrochimica Acta, 2007, 52, 3486-3492.",
+      "confidence": "low"
+    },
+    {
+      "monomer": "pyrrole",
+      "smiles": "c1cc[nH]c1",
+      "outcome": "yes",
+      "conditions": "Pyrrole electropolymerizes readily to polypyrrole films at relatively low/accessible potentials in both acetonitrile (with small added water) and aqueous media; film-forming electropolymerization mechanism characterized in acetonitrile/water (oxidation requires ~1 e-/mol anhydrous, (2+x) e-/mol with 1% water due to proton scavenging). One of the easiest heterocycles to electropolymerize.",
+      "source_doi": "10.1016/0013-4686(90)87088-J",
+      "citation": "On the mechanism of the film-forming electropolymerization of pyrrole in acetonitrile with water, Electrochimica Acta, 1990, 35, 1533-1540.",
+      "confidence": "low"
+    },
+    {
+      "monomer": "selenophene",
+      "smiles": "c1cc[se]c1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to freestanding/flexible polyselenophene films, but readily only in a special electrolyte: direct anodic oxidation of 20 mM selenophene in pure (distilled) boron trifluoride diethyl etherate (BFEE) on stainless steel; anodic current onset 1.23 V (lower than thiophene's 1.33 V in BFEE). In conventional acetonitrile + 0.1 M Bu4NBF4 the oxidation onset is much higher, 1.83 V vs SCE, making film growth difficult. Film conductivity up to 2.8x10^-1 S/cm.",
+      "source_doi": "10.1016/j.matlet.2004.12.005",
+      "citation": "S. Pu, J. Hou, J. Xu, G. Nie, S. Zhang, L. Shen, Q. Xiao, Electrosyntheses of freestanding and conducting polyselenophene films, Materials Letters 2005, 59 (8-9), 1061-1065.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "EDOS",
+      "smiles": "C1COc2c[se]cc2O1",
+      "outcome": "yes",
+      "conditions": "Electron-rich, electropolymerizes readily at low potential. Monomer anodic onset ~1.06-1.13 V vs Ag/Ag+ across solvent/electrolyte combinations; PEDOS films form in all six MeCN/PC with TBAClO4, TBAPF6, or TBABF4. Best medium: MeCN + TBAClO4. (A separate report electropolymerizes EDOS at ~0.9 V to give PEDOS, specific capacitance 208 F/g.)",
+      "source_doi": "10.1039/d0ra01436b",
+      "citation": "P. Yadav, S. Naqvi, A. Patra, Poly(3,4-ethylenedioxyselenophene): effect of solvent and electrolyte on electrodeposition, optoelectronic and electrochromic properties, RSC Advances 2020, 10 (21), 12395-12406.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "3-fluorothiophene",
+      "smiles": "Fc1ccsc1",
+      "outcome": "conditional",
+      "conditions": "Electron-poor; poly(3-fluorothiophene) is reported as an insoluble electrochemically synthesized material with a higher oxidation potential than polythiophene (Fei et al., JACS 2015, 137, 6866, DOI 10.1021/jacs.5b02785). Free-standing poly(3-fluorothiophene) (PFT) films are obtained by one-step electrosynthesis (BFEE-type electrolytic system cited as method), not under routine MeCN/tetraalkylammonium conditions.",
+      "source_doi": "10.1007/s10118-024-3175-8",
+      "citation": "C.-H. Du, Y.-H. Xu, H. Li, et al., Tough Hydrogen Bonding Crosslinked Poly(3-fluorothiophene) Network via Electrosynthesis for High-performance Electrochromic Supercapacitors, Chinese Journal of Polymer Science 2024, 42, 1749-1757.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3,4-difluorothiophene",
+      "smiles": "Fc1cscc1F",
+      "outcome": "conditional",
+      "conditions": "Strongly electron-poor; oxidative electropolymerization with traditional electrolytes (tetraalkylammonium tetrafluoroborate in acetonitrile or propylene carbonate) was COMPLETELY UNSUCCESSFUL - monomer oxidation potential exceeds the solvent's, so the solvent degrades before the monomer oxidizes and no film deposits even after extended cycling. 3 M AlCl3/MeCN and 10 mM in neat BF3.Et2O also failed. Only at high monomer concentration (50 mM) in neat BF3.Et2O did slow film growth occur, giving a red film; slow rate ascribed to extreme electron-deficiency. (Reported via the bis-TMS precursor BTMSDFT.)",
+      "source_doi": "",
+      "citation": "D. J. Irvin, D. L. Witker, J. D. Stenger-Smith, J. A. Irvin, Process for preparing n-doping conjugated electroactive polymer using poly(3,4-difluorothiophene), US Patent 7,399,433 B1, assignee US Department of the Navy, granted July 15, 2008.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3-methoxythiophene",
+      "smiles": "COc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Electron-rich, lower oxidation potential (~1.1 V/SCE). Electropolymerizes to electroactive films by cyclic potential sweep; e.g. water/1-butanol (96:4) with 0.1 M 3-methoxythiophene, 0.1 M SDS, 0.1 M LiClO4, sweeping -0.5 to 1.3 V vs SCE (polymerization onset above ~1 V) gives PMOT films on ITO. PMOT films are electroactive (oligomeric, soluble in some organics).",
+      "source_doi": "10.1038/pj.2016.86",
+      "citation": "T. Tokuda, K. Hoshino, Electropolymerized films of 3-methoxythiophene with a potential sweep-induced gold-like luster, Polymer Journal 2016, 48, 1141-1149.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "3-methylthiophene",
+      "smiles": "Cc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Electron-donating methyl lowers oxidation potential; polymerizes readily in acetonitrile with tetrabutylammonium tetrafluoroborate at ~1.5 V vs SCE (about 0.2 V lower than unsubstituted thiophene). Forms environmentally stable, conductive poly(3-methylthiophene) films well-suited to CV/potentiostatic deposition (e.g. 0.1 M LiClO4/CH3CN). Widely used standard film former.",
+      "source_doi": "10.1016/s0379-6779(98)01248-x",
+      "citation": "R. H. J. Schmitz, A. S. Hudson, K. Juttner, A new correlation between the polymerisation charge, film thickness and degree of oxidation of poly(3-methylthiophene), Synthetic Metals 1999, 101, 102-103 (oxidation-potential comparison ~1.5 V vs SCE per Polythiophene review/Roncali).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "thiophene",
+      "smiles": "c1ccsc1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to polythiophene films but only at high anodic potential, ca. 1.6-1.7 V vs SCE in acetonitrile, which approaches/exceeds the overoxidation threshold of the formed polymer (the 'polythiophene paradox': film-forming potentials begin to degrade the conjugated backbone). Routinely deposited on Pt in MeCN with tetraalkylammonium salts; BFEE lowers the required potential (~1.33 V onset) and reduces defects.",
+      "source_doi": "10.1016/j.matlet.2004.12.005",
+      "citation": "Comparison values reported in S. Pu et al., Materials Letters 2005, 59, 1061-1065 (thiophene onset 1.33 V in BFEE) and discussed in the Polythiophene literature (thiophene electrooxidation >1.6 V vs SCE in acetonitrile; overoxidation 1.45-1.55 V).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "EDOT",
+      "smiles": "C1COc2cscc2O1",
+      "outcome": "yes",
+      "conditions": "Electron-rich; electropolymerizes very easily even at low monomer concentration and low potential. Oxidation/film growth around +1.2 to +1.25 V vs SCE (or ~1.2 V vs Ag/AgCl) in acetonitrile with 0.1 M TBAPF6; fast adsorption gives smooth, flexible PEDOT films.",
+      "source_doi": "10.1016/S0013-4686(98)00405-8",
+      "citation": "Electropolymerization of EDOT in MeCN/0.1 M TBAPF6, oxidation ~+1.25 V vs SCE; in situ spectroelectrochemical characterization of poly(3,4-ethylenedioxythiophene), Electrochimica Acta 1999 (pii S0013-4686(98)00405-8).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "High oxidation potential makes oxidative electropolymerization problematic: in conventional media furan oxidizes only at ca. 1.8 V vs SCE, where ring-opening and irreversible overoxidation give non-conjugated, low-quality polyfuran. Good free-standing polyfuran films require special electrolyte: electropolymerization at low potential 1.2 V vs Ag/AgCl in BFEE + ethyl ether (EE) binary solvent, giving fewer ring-opened defects and conductivity up to 10^-2 S/cm.",
+      "source_doi": "10.1021/cm9900453",
+      "citation": "X. Wan, F. Yan, S. Jin, X. Liu, G. Xue, Low Potential Electrochemical Synthesis of Polyfuran and Characterization of the Obtained Free-Standing Film, Chemistry of Materials 1999, 11 (9), 2400-2407.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "aniline",
+      "smiles": "Nc1ccccc1",
+      "outcome": "yes",
+      "conditions": "Acidic aqueous (e.g. H2SO4 or HCl); anodic oxidation by potential cycling/galvanostatic on Pt or carbon. Forms conductive polyaniline (PANI) film. Polymerization possible over pH 2-12 if proper counter-ion present, but rate decreases with rising pH and redox activity of PANI retained only at pH < ~3.",
+      "source_doi": "10.1007/s10853-005-0854-x",
+      "citation": "X.-X. Liu, L. Zhang, Y.-B. Li, L.-J. Bian, Z. Su, L.-J. Zhang, \"Electropolymerization of aniline in aqueous solutions at pH 2 to 12\", Journal of Materials Science, 2005, 40(17), 4511-4515.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "o-methoxyaniline",
+      "smiles": "COc1ccccc1N",
+      "outcome": "yes",
+      "conditions": "Anodic electropolymerization on Pt in acidic aqueous medium (e.g. 1 M H2SO4 / sulfonic acids) gives poly(o-anisidine, POMA) film. The ortho-methoxy group lowers doping level and conductivity vs PANI; film electroactivity/structure depends on anion.",
+      "source_doi": "10.1016/0379-6779(92)90305-3",
+      "citation": "L.H.C. Mattoso, L.O.S. Bulhões, \"Synthesis and characterization of poly(o-anisidine) films\", Synthetic Metals, 1992, 52(2), 171-181.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "o-toluidine",
+      "smiles": "Cc1ccccc1N",
+      "outcome": "yes",
+      "conditions": "Anodic electropolymerization in acidic aqueous medium (H2SO4) on Pt/ITO; potential cycling ~ -0.2 to 1.0 V vs Ag/AgCl. Forms conducting poly(o-toluidine). The ortho-methyl group sterically hinders long-chain growth, giving lower doping level and conductivity than PANI.",
+      "source_doi": "10.1016/S0014-3057(98)00178-5",
+      "citation": "D. Kumar, \"Electrochemical and optical behaviour of conducting polymer: poly(o-toluidine)\", European Polymer Journal, 1999, 35(10), 1919-1923.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "diphenylamine",
+      "smiles": "c1ccc(Nc2ccccc2)cc1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to poly(diphenylamine) film mainly in nonaqueous/acidic media; mechanism proceeds via initial radical cation then tail-to-tail para C-C coupling to N,N'-diphenylbenzidine intermediate before oligomer/film growth (not the head-to-tail polyaniline coupling). Requires specific media; reported electrochemically synthesized in nonaqueous media.",
+      "source_doi": "10.1016/S0254-0584(98)00258-2",
+      "citation": "A.A. Athawale, B.A. Deore, V.V. Chabukswar, \"Studies on poly(diphenylamine) synthesized electrochemically in nonaqueous media\", Materials Chemistry and Physics, 1999, 58(1), 94-100.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "carbazole",
+      "smiles": "c1ccc2c(c1)[nH]c3ccccc23",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation (~1.3 V) on Pt/Au/glassy carbon/ITO in organic electrolyte (acetonitrile or dichloromethane with TBAP); oxidative coupling selectively at the 3,6-positions to give polycarbazole film (1,8-positions blocked by rigid heterocycle).",
+      "source_doi": "10.3390/polym12102227",
+      "citation": "F. Bekkar, A. Bettahar, I. Moreno, R. Meghabar, M. Hamadi, S. Bonardd, D. Diaz Diaz, \"Polycarbazole and Its Derivatives: Synthesis and Applications. A Review of the Last 10 Years\", Polymers, 2020, 12(10), 2227.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "N-vinylcarbazole",
+      "smiles": "C=Cn1c2ccccc2c2ccccc21",
+      "outcome": "yes",
+      "conditions": "Oxidative electropolymerization on Pt in acetonitrile; monomer oxidized to cation radical (~1.2 V vs SCE), fast dimerization at the carbazole 3-position; protons released attack vinyl groups causing crosslinking. Film growth depends on supporting-electrolyte anion (smaller anion = faster growth).",
+      "source_doi": "10.1016/0368-1874(85)85625-2",
+      "citation": "A. Desbene-Monvernay, J.-E. Dubois, P.-C. Lacaze, \"Oxidative electropolymerization of N-vinylcarbazole: Growth and electrochemical behavior of poly-N-vinylcarbazole films on Pt\", Journal of Electroanalytical Chemistry and Interfacial Electrochemistry, 1985, 189(1), 51-63.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "fluorene 9,9-dioctyl",
+      "smiles": "CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21",
+      "outcome": "conditional",
+      "conditions": "Anodic coupling of fluorene and 9,9-disubstituted fluorenes occurs at the 2,7-positions, but the dimer radical cation is NOT reactive enough to repeat coupling as in classical electropolymerization; chain growth requires reaching a higher oxidation state. Films form by direct anodic oxidation in organic media; BF3.Et2O (BFEE) is a better medium than acetonitrile (lower oxidation potential) for film electrosynthesis.",
+      "source_doi": "10.1021/cm048331o",
+      "citation": "P. Hapiot, C. Lagrost, F. Le Floch, E. Raoult, J. Rault-Berthelot, \"Comparative Study of the Oxidation of Fluorene and 9,9-Disubstituted Fluorenes and Their Related 2,7'-Dimers and Trimer\", Chemistry of Materials, 2005, 17(8), 2003-2012.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "9,9-dimethylfluorene",
+      "smiles": "CC1(C)c2ccccc2-c2ccccc21",
+      "outcome": "conditional",
+      "conditions": "9,9-disubstituted fluorenes undergo anodic 2,7-coupling, but the produced dimer radical cation is not reactive enough to continue classical chain coupling, so propagation requires a higher oxidation state; electroactive poly(2,7-fluorene) films are obtained by anodic oxidation in organic media. Original anodic-oxidation conditions for fluorene-derived conducting polymer reported by Rault-Berthelot & Simonet.",
+      "source_doi": "10.1021/cm048331o",
+      "citation": "P. Hapiot, C. Lagrost, F. Le Floch, E. Raoult, J. Rault-Berthelot, \"Comparative Study of the Oxidation of Fluorene and 9,9-Disubstituted Fluorenes and Their Related 2,7'-Dimers and Trimer\", Chemistry of Materials, 2005, 17(8), 2003-2012.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Direct electropolymerization of furan monomer can be achieved only at high potentials (ca. 1.8 V vs SCE), at which ring opening and irreversible degradation give non-conjugated, low-quality polyfurans. Furan has attracted less attention than pyrrole/thiophene/aniline because of this high oxidation potential. Acetonitrile-based.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "Sheberla D, Patra S, Wijsboom YH, Sharma S, Sheynin Y, Haj-Yahia A-E, Barak AH, Gidron O, Bendikov M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science, 2015, 6, 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "terfuran",
+      "smiles": "c1ccc(-c2ccc(-c3ccco3)o2)o1",
+      "outcome": "yes",
+      "conditions": "Starting from terfuran the oxidation potential of oligofurans drastically decreases and polymerization proceeds below 1.0 V vs SCE; terfuran (Fu3) oxidation onset 0.62 V vs Ag/AgCl-wire in acetonitrile / 0.1 M TBACF3SO3 (vs 0.95 V for terthiophene). Yields higher-quality conducting polyfuran films than direct furan polymerization.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "Sheberla D, Patra S, Wijsboom YH, Sharma S, Sheynin Y, Haj-Yahia A-E, Barak AH, Gidron O, Bendikov M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science, 2015, 6, 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "selenophene",
+      "smiles": "c1cc[se]c1",
+      "outcome": "conditional",
+      "conditions": "High oxidation onset of selenophene ~1.83 V vs SCE in acetonitrile + 0.1 M Bu4NBF4 makes film deposition difficult there; in pure BF3.Et2O (BFEE) the onset drops to ~1.23 V and conducting/freestanding polyselenophene films (~10^-1 S/cm) are obtained. Requires special low-nucleophilicity medium (BFEE) for good films.",
+      "source_doi": "10.1016/j.matlet.2004.11.013",
+      "citation": "Li X-G, Li J, Meng Q-K, Huang M-R. Electrosyntheses of freestanding and conducting polyselenophene films (selenophene oxidation onset ~1.83 V vs SCE in MeCN/Bu4NBF4; ~1.23 V in BFEE). Materials Letters, 2005, 59, 1140-1146.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "N-methylpyrrole",
+      "smiles": "Cn1cccc1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to films but N-substitution raises the oxidation potential and reduces conductivity to ~10^-3 S/cm (about three orders of magnitude below polypyrrole at 40-100 S/cm) owing to loss of ring planarity; steric interactions dominate. Films are far less electroactive than polypyrrole.",
+      "source_doi": "10.3390/polym13030311",
+      "citation": "Sezer E, et al. (review) Electrochemically Produced Copolymers of Pyrrole and Its Derivatives: A Plentitude of Material Properties Using 'Simple' Heterocyclic Co-Monomers. Polymers, 2021, 13(3), 311. (PMC7826606)",
+      "confidence": "med"
+    },
+    {
+      "monomer": "N-octylpyrrole",
+      "smiles": "CCCCCCCCn1cccc1",
+      "outcome": "conditional",
+      "conditions": "N-alkylpyrroles electropolymerize poorly: electrodeposition rate decreases and copolymer/film conductivity drops sharply as the N-alkyl chain lengthens (steric distortion of the backbone, decreased conjugation and inter-chain interaction). Long N-alkyl chains give very low electrodeposition rates and low-conductivity films.",
+      "source_doi": "10.3390/polym13030311",
+      "citation": "Sezer E, et al. (review) Electrochemically Produced Copolymers of Pyrrole and Its Derivatives. Polymers, 2021, 13(3), 311 (PMC7826606); citing Massoumi B, et al. J. Appl. Polym. Sci., 2012, 124, 3956-3962 (conductivity decreases with N-alkyl chain length).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "carbazole",
+      "smiles": "c1ccc2c(c1)[nH]c3ccccc23",
+      "outcome": "conditional",
+      "conditions": "Unsubstituted carbazole deposits a polymer film on Pt (onset +1.05 V/SCE in 0.1 M LiClO4/acetonitrile) but couples predominantly at the 3,3' positions giving limited (often dimer/oligomer-rich) deposits. By contrast 9-alkyl (N-substituted) carbazoles give NO adherent deposit, only soluble 3,3'-bicarbazyl dimers, because the stable radical-cation dimer does not propagate.",
+      "source_doi": "10.3389/fmats.2019.00131",
+      "citation": "Contal E, Sougueh CM, Lakard S, Et Taouil A, Magnenet C, Lakard B. Investigation of Polycarbazoles Thin Films Prepared by Electrochemical Oxidation of Synthesized Carbazole Derivatives. Frontiers in Materials, 2019, 6, 131.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "N-vinylcarbazole",
+      "smiles": "C=Cn1c2ccccc2c2ccccc21",
+      "outcome": "yes",
+      "conditions": "Oxidative electropolymerization of N-vinylcarbazole on Pt in acetonitrile with tetraalkylammonium salts grows poly(N-vinylcarbazole) films; growth begins via carbazyl dimer cation radicals and depends on the supporting-electrolyte anion size. Film deposition is established.",
+      "source_doi": "10.1016/0368-1874(85)85625-2",
+      "citation": "Desbene-Monvernay A, Lacaze PC, Cherigui A. Oxidative electropolymerization of N-vinylcarbazole: growth and electrochemical behavior of poly-N-vinylcarbazole films on Pt. J. Electroanal. Chem. Interfacial Electrochem., 1985, 192, 51-63.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3,4-difluorothiophene",
+      "smiles": "Fc1cscc1F",
+      "outcome": "conditional",
+      "conditions": "Electron-poor: strongly electron-withdrawing fluorines lower ring electron density and make anodic oxidation of the 3,4-difluorothiophene precursor (BTMSDFT) more difficult than ordinary thiophenes; direct simple anodic electropolymerization is impeded and special precursor/electrolyte routes are used.",
+      "source_doi": "",
+      "citation": "Ohsedo Y, Imae I, et al. (assignee Univ.) US Patent 7,399,433 B2: Process for preparing n-doping conjugated electroactive polymer using poly(3,4-difluorothiophene). USPTO, 2008. (states the electron-poor 3,4-difluorothiophene/BTMSDFT is harder to oxidize/anodically polymerize)",
+      "confidence": "low"
+    },
+    {
+      "monomer": "3-fluorothiophene",
+      "smiles": "Fc1ccsc1",
+      "outcome": "conditional",
+      "conditions": "Electron-withdrawing fluorine raises the oxidation potential; poly(3-fluorothiophene) has been prepared electrochemically as an insoluble material with a higher oxidation potential than polythiophene, so electropolymerization is more difficult than for unsubstituted thiophene.",
+      "source_doi": "",
+      "citation": "Reported in fluorinated-thiophene electrochemistry literature; cf. context in US Patent 7,399,433 B2 (USPTO, 2008) and Influence of Backbone Fluorination in Regioregular Poly(3-alkyl-4-fluoro)thiophenes (Fei Z, et al., J. Am. Chem. Soc., 2015, 137, 6866-6879, DOI 10.1021/jacs.5b02785) on electron-poor fluorothiophene oxidation difficulty.",
+      "confidence": "low"
+    },
+    {
+      "monomer": "thiophene",
+      "smiles": "c1ccsc1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes in organic media (e.g. acetonitrile) but unsubstituted thiophene has a high oxidation potential (~2.05 V vs Ag/AgCl); it cannot be electropolymerized in aqueous media because the required potential exceeds water electrolysis, and the high monomer potential causes partial overoxidation/degradation of the growing film.",
+      "source_doi": "10.1021/acs.chemrev.5c00183",
+      "citation": "Gerasimov JY, Donahue MJ, Gao D, Tu D, Fabiano S. Electropolymerization of Organic Mixed Ionic-Electronic Conductors: Fundamentals and Applications in Bioelectronics. Chemical Reviews, 2025, 126(1), 28-79.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "EDOT",
+      "smiles": "C1COc2cscc2O1",
+      "outcome": "yes",
+      "conditions": "Electron-donating ethylenedioxy bridge lowers the oxidation potential (~1.4 V vs Ag/AgCl); EDOT electropolymerizes readily to PEDOT films, commonly by cyclic voltammetry with NBu4PF6 in acetonitrile.",
+      "source_doi": "10.1021/acs.chemrev.5c00183",
+      "citation": "Gerasimov JY, Donahue MJ, Gao D, Tu D, Fabiano S. Electropolymerization of Organic Mixed Ionic-Electronic Conductors. Chemical Reviews, 2025, 126(1), 28-79.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "EDOS",
+      "smiles": "C1COc2c[se]cc2O1",
+      "outcome": "yes",
+      "conditions": "3,4-Ethylenedioxyselenophene electropolymerizes to films across MeCN and propylene carbonate; oxidation potential ~1.06-1.13 V vs Ag/Ag+ depending on electrolyte; MeCN + TBAClO4 most suitable, multisweep (10-15 cycles, 100 mV/s).",
+      "source_doi": "10.1039/D0RA01436B",
+      "citation": "Yadav P, Naqvi S, Patra A. Poly(3,4-ethylenedioxyselenophene): effect of solvent and electrolyte on electrodeposition, optoelectronic and electrochromic properties. RSC Advances, 2020, 10, 12395-12406.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "pyrrole",
+      "smiles": "c1cc[nH]c1",
+      "outcome": "yes",
+      "conditions": "Polymerizes very readily (rapid electrochemical polymerization, little steric hindrance); oxidation potential ~0.7 V vs SCE in aqueous solution; deposits conductive polypyrrole films (40-100 S/cm).",
+      "source_doi": "10.1021/acs.chemrev.5c00183",
+      "citation": "Gerasimov JY, Donahue MJ, Gao D, Tu D, Fabiano S. Electropolymerization of Organic Mixed Ionic-Electronic Conductors. Chemical Reviews, 2025, 126(1), 28-79.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "3,4-dimethylpyrrole",
+      "smiles": "Cc1c[nH]cc1C",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes to black films (e.g. potentiodynamic synthesis at ~0.55 V vs Ag/AgCl in 0.1 M NaDBS aqueous). Both beta positions are blocked so no branching/crosslinking is possible: gives exclusively linear alpha-alpha-linked homopolymer (chains ~1000 units).",
+      "source_doi": "10.1039/C5RA15587H",
+      "citation": "Melling D, Wilson SA, Jager EWH. Controlling the electro-mechanical performance of polypyrrole through 3- and 3,4-methyl substituted copolymers. RSC Advances, 2015, 5, 84153-84163.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "3-methylthiophene",
+      "smiles": "Cc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes to poly(3-methylthiophene) films on Pt in acetonitrile / tetrabutylammonium tetrafluoroborate at ~1.5 V; well-established conducting film.",
+      "source_doi": "10.1016/S0022-0728(98)00248-X",
+      "citation": "Lapkowski M, et al. A new correlation between the polymerisation charge, film thickness and degree of oxidation of poly(3-methylthiophene). J. Electroanal. Chem., 1998, 449, 89-96 (poly(3-methylthiophene) electrosynthesis in MeCN/Bu4NBF4).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3-methoxythiophene",
+      "smiles": "COc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Electron-donating methoxy lowers monomer oxidation potential to ~1.1 V/SCE (below unsubstituted thiophene); cyclic potential-sweep electropolymerization gives air-stable doped poly(3-methoxythiophene)/oligomer films (perchlorate or dodecyl sulfate doped).",
+      "source_doi": "10.1016/S0379-6779(97)04103-9",
+      "citation": "Roncali J and co-workers / micellar-medium electrosynthesis: Electrochemical and spectroscopic properties of poly(3-methoxythiophene) electrosynthesized in an aqueous micellar medium. Synthetic Metals, 1997 (3-methoxythiophene oxidation ~1.1 V/SCE, air-stable doped films).",
+      "confidence": "low"
+    },
+    {
+      "monomer": "bithiophene",
+      "smiles": "c1cc(sc1)c2ccsc2",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes to polybithiophene films; monomer oxidation potential is lower than that of thiophene or 3-methylthiophene, giving structurally more ordered polythiophene. Acetonitrile commonly used.",
+      "source_doi": "10.1021/acs.chemrev.5c00183",
+      "citation": "Discussed in Gerasimov JY, et al. Electropolymerization of Organic Mixed Ionic-Electronic Conductors. Chemical Reviews, 2025, 126(1), 28-79 (oligomer precursors such as 2,2'-bithiophene reduce the thiophene oxidation potential).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "terthiophene",
+      "smiles": "c1ccc(-c2ccc(-c3cccs3)s2)s1",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes to poly(terthiophene) films; oxidation onset ~0.95 V vs Ag/AgCl-wire (acetonitrile / 0.1 M TBACF3SO3), well below thiophene. Acetonitrile is a suitable solvent; regular alpha,alpha'-linked polymer obtained.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "Sheberla D, et al. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science, 2015, 6, 360-371 (Table 1: terthiophene T3 onset 0.95 V vs Ag/AgCl-wire).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "benzothiadiazole-thiophene D-A",
+      "smiles": "c1cc(sc1)c2ccc3nsnc3c2",
+      "outcome": "yes",
+      "conditions": "The thiophene-flanked benzothiadiazole monomer (4,7-di(thiophen-2-yl)benzo[c][1,2,5]thiadiazole, DTBT) is anodically oxidized at ~1.5 V vs Ag/AgCl in 0.1 M TBAPF6/dichloromethane (100 mV/s) and electrochemically polymerizes to P(TBT) films. The flanking thiophenes provide the oxidizable, polymerizable sites (electron-poor benzothiadiazole core alone is not the coupling site).",
+      "source_doi": "10.55730/1300-0527.3456",
+      "citation": "Celik K, Kivrak A, Bezgin Carbas B. A new electrochromic copolymer composed of 4,7-di(thiophen-2-yl)benzo[c][1,2,5]thiadiazole and 3,4-ethylenedioxythiophene. Turkish Journal of Chemistry, 2022, 46(5), 1516-1523.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3-hexylthiophene",
+      "smiles": "CCCCCCc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes to poly(3-hexylthiophene) (P3HT) films by oxidative/anodic methods (alkyl-substituted thiophene, polymer oxidation ~1.35 V vs Ag/AgNO3). Demonstrated as an alternative to chemical free-radical/oxidative routes.",
+      "source_doi": "10.3390/polym17192656",
+      "citation": "Obtaining Poly(3-Hexylthiophene) (P3HT) by Electropolymerization as an Alternative for the Substitution of Initiators with Free Radicals. Polymers, 2025, 17(19), 2656.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "aniline",
+      "smiles": "Nc1ccccc1",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes readily to conductive polyaniline films from acidic aqueous solution (e.g. 0.5-2 M H2SO4) by cyclic voltammetry / constant potential (~0.6-0.8 V); classic conducting-polymer system. Requires acidic medium for the conducting emeraldine salt.",
+      "source_doi": "10.1016/j.electacta.2006.10.001",
+      "citation": "Electropolymerization of aniline in acid media on bare and chemically pre-treated aluminum electrodes. Electrochimica Acta, 2007 (polyaniline electrodeposition from H2SO4 aqueous; oxidation in 0.1-0.7 V window).",
+      "confidence": "low"
+    },
+    {
+      "monomer": "o-toluidine",
+      "smiles": "Cc1ccccc1N",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to poly(o-toluidine) but the ortho-methyl group imposes steric (and electronic) effects giving a less planar, shorter, less regular chain with lower doping level and lower conductivity than polyaniline. Film forms but is markedly poorer than PANI.",
+      "source_doi": "10.1007/s11696-020-01477-8",
+      "citation": "A comparative study of the effect of organic dopant ions on the electrochemical and chemical synthesis of the conducting polymers polyaniline, poly(o-toluidine) and poly(o-methoxyaniline). Chemical Papers, 2021, 75, 1051-1062.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "o-methoxyaniline",
+      "smiles": "COc1ccccc1N",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to poly(o-methoxyaniline) (poly(o-anisidine)) but the ortho-methoxy substituent gives a less regular structure with lower doping level and lower conductivity than polyaniline; films are more soluble/castable. Film forms but conductivity is reduced.",
+      "source_doi": "10.1007/s11696-020-01477-8",
+      "citation": "A comparative study of the effect of organic dopant ions on the electrochemical and chemical synthesis of polyaniline, poly(o-toluidine) and poly(o-methoxyaniline). Chemical Papers, 2021, 75, 1051-1062.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "diphenylamine",
+      "smiles": "c1ccc(Nc2ccccc2)cc1",
+      "outcome": "yes",
+      "conditions": "Electropolymerizes to poly(diphenylamine) from acidic aqueous medium (e.g. 2 M H2SO4, ~0.80 V constant potential on ITO); proceeds via 4,4' C-C (benzidine-type) coupling of diphenylamine radical cations. Needs acidic medium.",
+      "source_doi": "10.1016/S0254-0584(98)00258-2",
+      "citation": "Studies on poly(diphenylamine) synthesized electrochemically in nonaqueous media. Materials Chemistry and Physics, 1999, 57, 211 (poly(diphenylamine) electrosynthesis; benzidine-type 4,4' coupling).",
+      "confidence": "low"
+    },
+    {
+      "monomer": "CPDT",
+      "smiles": "C1c2ccsc2-c2sccc21",
+      "outcome": "yes",
+      "conditions": "Parent 4H-cyclopenta[2,1-b;3,4-b']dithiophene electropolymerizes potentiodynamically to an electroactive film on ITO from 0.1 M LiClO4 in dichloromethane/acetonitrile (1:1 v/v); first-anodic-scan monomer oxidation maximum ~0.85 V; oxidation peak shifts to lower potential on repeated cycling indicating film growth.",
+      "source_doi": "10.1016/j.synthmet.2020.116370",
+      "citation": "E. Tutuncu, B. Varlik, B. Kesimal, A. Cihaner, M. Icli Ozkut, 'An electrochromic polymer based on cyclopenta[2,1-b;3,4-b']dithiophene: Effect of a single atom alteration on the electrochemical and optical properties of the polymer backbone', Synthetic Metals 2020, 265, 116370.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "dithieno[3,2-b:2',3'-d]pyrrole",
+      "smiles": "C1=CC2=C(S1)C3=C(N2)C=CS3",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes when N-substituted; parent N-H DTP is not the form demonstrated here. N-alkynylated DTP (AlkyneDTP) electropolymerizes to thick adherent dark-blue insoluble films held at +1000 mV vs Ag/AgCl for 150 s in 0.1 M TBAPF6/acetonitrile on ITO or Pt; the click-modified DTPNap analogue likewise films in 0.1 M TBAPF6/CH2Cl2. Studies use N-functionalized DTP rather than the parent N-H heterocycle.",
+      "source_doi": "10.1039/D2RA03265A",
+      "citation": "Y. Bandera, H.W. Jones, B. Grant, S. Mell, S.H. Foulger, 'Synthesis, electropolymerization and functionalization via click chemistry of N-alkynylated dithieno[3,2-b:2',3'-d]pyrrole', RSC Advances 2022, 12(45), 29187-29196.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "thieno[3,4-b]pyrazine",
+      "smiles": "c1cnc2cscc2n1",
+      "outcome": "conditional",
+      "conditions": "Thieno[3,4-b]pyrazine (TP) is incorporated as a TP-based terthienyl (flanked by 3-/2-thienyl units) rather than as the bare heterocycle; the terthienyls T1-T5 electropolymerize to films by repeated potential cycling through the anodic peak (100 mV/s) in 0.10 M TBAPF6 in anhydrous CH3CN or CH2Cl2 on Pt disc / ITO (Ag/Ag+ ref). The irreversible terthiophene-backbone oxidation drives radical-cation coupling; bare TP requires the flanking thiophenes to electropolymerize.",
+      "source_doi": "10.3390/ma9060404",
+      "citation": "K.L. Konkol, R.L. Schwiderski, S.C. Rasmussen, 'Synthesis, Characterization, and Electropolymerization of Extended Fused-Ring Thieno[3,4-b]pyrazine-Based Terthienyls', Materials 2016, 9(6), 404.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "benzothiadiazole-thiophene D-A",
+      "smiles": "c1cc(sc1)c2ccc3nsnc3c2",
+      "outcome": "conditional",
+      "conditions": "The D-A monomer electropolymerizes only when the 2,1,3-benzothiadiazole acceptor is flanked by thiophene donors. 4,7-Di(thiophen-2-yl)-2,1,3-benzothiadiazole forms a stable low-band-gap film poly(4,7-dithien-2-yl-2,1,3-benzothiadiazole) by oxidative electropolymerization. Bare benzothiadiazole (an electron acceptor) does not homopolymerize oxidatively; the thienyl flank as in the library SMILES is the minimal donor required.",
+      "source_doi": "10.1016/j.synthmet.2007.12.013",
+      "citation": "O. Atwani, C. Baristiran, A. Erden, G. Sonmez, 'A stable, low band gap electroactive polymer: Poly(4,7-dithien-2-yl-2,1,3-benzothiadiazole)', Synthetic Metals 2008, 158(3-4), 83-89.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "benzothiadiazole-thiophene D-A",
+      "smiles": "c1cc(sc1)c2ccc3nsnc3c2",
+      "outcome": "conditional",
+      "conditions": "Corroborating primary source: 4,7-di(thiophen-2-yl)benzo[c][1,2,5]thiadiazole electropolymerizes by cyclic voltammetry (10 cycles, initial oxidation ~1.5 V) in dichloromethane with 0.1 M TBAPF6 on a Pt disc working electrode, Pt wire counter, Ag/AgCl reference; homopolymer band gap 1.32 eV. Requires the flanking thiophenes (acceptor core alone is not oxidatively polymerizable).",
+      "source_doi": "10.55730/1300-0527.3456",
+      "citation": "K. Celik, A. Kivrak, B. Bezgin Carbas, 'A new electrochromic copolymer composed of 4,7-di(thiophen-2-yl)benzo[c][1,2,5]thiadiazole and 3,4-ethylenedioxythiophene', Turkish Journal of Chemistry 2022, 46(5), 1516-1523.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Parent furan electropolymerizes only at high potential (ca. 1.8 V vs SCE), where ring opening and irreversible over-oxidation give non-conjugated, low-quality polyfuran. Good conducting films instead require oligofuran precursors (terfuran Fu3 onset 0.62 V; longer oligomers 0.40-0.51 V vs Ag/AgCl wire), which polymerize below ~1.0 V to films of ~1 S/cm.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "D. Sheberla, S. Patra, Y.H. Wijsboom, et al., 'Conducting polyfurans by electropolymerization of oligofurans', Chemical Science 2015, 6(1), 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "terfuran",
+      "smiles": "c1ccc(-c2ccc(-c3ccco3)o2)o1",
+      "outcome": "yes",
+      "conditions": "Terfuran (Fu3) electropolymerizes at much lower potential than furan monomer (oxidation onset 0.62 V vs Ag/AgCl wire; alkylated/longer oligofurans 0.40-0.51 V), forming stable, smooth (1-5 nm roughness) conducting polyfuran films (~1 S/cm) in acetonitrile-based electrolyte, avoiding the ring-opening/over-oxidation that plagues monomeric furan.",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "D. Sheberla, S. Patra, Y.H. Wijsboom, et al., 'Conducting polyfurans by electropolymerization of oligofurans', Chemical Science 2015, 6(1), 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "selenophene",
+      "smiles": "c1cc[se]c1",
+      "outcome": "yes",
+      "conditions": "Freestanding, flexible, homogeneous poly(selenophene) films (conductivity ~1e-1 S/cm) electrosynthesized by direct anodic oxidation of selenophene on a stainless-steel electrode. Note selenophene's oxidation onset is high (~1.83 V vs SCE in acetonitrile/0.1 M Bu4NBF4 per related work); BFEE-type media lower the polymerization potential.",
+      "source_doi": "10.1016/j.matlet.2004.12.005",
+      "citation": "S. Pu, J. Hou, J. Xu, G. Nie, S. Zhang, L. Shen, Q. Xiao, 'Electrosyntheses of freestanding and conducting polyselenophene films', Materials Letters 2005, 59(8-9), 1061-1065.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "EDOT",
+      "smiles": "C1COc2cscc2O1",
+      "outcome": "yes",
+      "conditions": "EDOT electropolymerizes to PEDOT films; reported at 1.0 V vs Ag/AgNO3 from 0.3 mmol/L EDOT in acetonitrile with 0.1 mol/L TBAP, 5 min deposition. EDOT has a relatively low oxidation potential among thiophenes, enabling mild conditions.",
+      "source_doi": "10.3390/molecules28020883",
+      "citation": "I. Rendon-Enriquez, A. Palma-Cando, F. Korber, et al., 'Thin Polymer Films by Oxidative or Reductive Electropolymerization and Their Application in Electrochromic Windows and Thin-Film Sensors', Molecules 2023, 28(2), 883.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "bithiophene",
+      "smiles": "c1cc(sc1)c2ccsc2",
+      "outcome": "yes",
+      "conditions": "Bithiophene electropolymerizes to polythiophene-type films from 10 mmol/L in acetonitrile with TBAP, deposited at 0.85 V vs Ag/AgNO3 for 5 min. Lower oxidation potential than thiophene monomer (no high-potential over-oxidation), so commonly used to grow polythiophene films.",
+      "source_doi": "10.3390/molecules28020883",
+      "citation": "I. Rendon-Enriquez, A. Palma-Cando, F. Korber, et al., 'Thin Polymer Films by Oxidative or Reductive Electropolymerization and Their Application in Electrochromic Windows and Thin-Film Sensors', Molecules 2023, 28(2), 883.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "pyrrole",
+      "smiles": "c1cc[nH]c1",
+      "outcome": "yes",
+      "conditions": "Pyrrole electropolymerizes to polypyrrole films under mild conditions; reported at 0.6 V vs Ag/AgCl from 50 mmol/L pyrrole in aqueous buffer (pH 3, NaNO3/HNO3), 5 min. Low monomer oxidation potential allows aqueous and organic deposition.",
+      "source_doi": "10.3390/molecules28020883",
+      "citation": "I. Rendon-Enriquez, A. Palma-Cando, F. Korber, et al., 'Thin Polymer Films by Oxidative or Reductive Electropolymerization and Their Application in Electrochromic Windows and Thin-Film Sensors', Molecules 2023, 28(2), 883.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "aniline",
+      "smiles": "Nc1ccccc1",
+      "outcome": "yes",
+      "conditions": "Aniline electropolymerizes to polyaniline (emeraldine) films, but conditionally on acidic medium: reported at 0.7 V vs Ag/AgCl from 400 mmol/L aniline in water with H2SO4, 5 min. Conductive emeraldine salt forms only in strongly acidic media (e.g., HCl/H2SO4).",
+      "source_doi": "10.3390/molecules28020883",
+      "citation": "I. Rendon-Enriquez, A. Palma-Cando, F. Korber, et al., 'Thin Polymer Films by Oxidative or Reductive Electropolymerization and Their Application in Electrochromic Windows and Thin-Film Sensors', Molecules 2023, 28(2), 883.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "carbazole",
+      "smiles": "c1ccc2c(c1)[nH]c3ccccc23",
+      "outcome": "conditional",
+      "conditions": "Carbazole oxidizes to a reactive radical cation that couples at the 3,6-positions; with both 3,6-positions free the coupling can terminate at the 3,3'-bicarbazyl dimer rather than a film, whereas designs that keep reactive 3,6-coupling sites available (e.g., 3,6-bis(N-carbazolyl) carbazoles) readily electropolymerize to polycarbazole films via oxidative coupling, the dimer/oligomer having lower oxidation potential than monomer to sustain film growth.",
+      "source_doi": "10.1039/C5PY01407G",
+      "citation": "'Electrochemical synthesis of electrochromic polycarbazole films from N-phenyl-3,6-bis(N-carbazolyl)carbazoles', Polymer Chemistry (RSC) 2016, DOI 10.1039/C5PY01407G.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "EDOT",
+      "smiles": "C1COc2cscc2O1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile or aqueous media with R4NPF6/R4NBF4 or LiClO4; EDOT oxidizes at low potential (Eox ~1.4 V vs SCE/Ag) giving the very stable, conductive electrochromic film PEDOT. Benchmark 'easy' electropolymerizing monomer.",
+      "source_doi": "10.1002/1521-4095(200004)12:7<481::AID-ADMA481>3.0.CO;2-C",
+      "citation": "Groenendaal, L.; Jonas, F.; Freitag, D.; Pielartzik, H.; Reynolds, J. R. Poly(3,4-ethylenedioxythiophene) and Its Derivatives: Past, Present, and Future. Advanced Materials 2000, 12 (7), 481-494.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "thiophene",
+      "smiles": "c1ccsc1",
+      "outcome": "conditional",
+      "conditions": "Forms polythiophene by anodic oxidation but only at high potential (monomer onset ~1.8-2.0 V vs SCE in neutral ACN), where overoxidation/degradation degrades film quality; lower potentials give only oligomers. Practical films favored in BFEE or from oligomers. Classified conditional because plain-ACN films are poor unless potential is carefully controlled.",
+      "source_doi": "10.1039/c4sc02664k",
+      "citation": "Sheberla, D.; Patra, S.; Wijsboom, Y. H.; Sharma, S.; Sheynin, Y.; Haj-Yahia, A.-E.; Barak, A. H.; Gidron, O.; Bendikov, M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science 2015, 6 (1), 360-371.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3-methylthiophene",
+      "smiles": "Cc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile / Bu4NBF4; electron-donating methyl lowers monomer oxidation to ~1.5 V vs SCE (about 0.2 V below unsubstituted thiophene), giving good poly(3-methylthiophene) films.",
+      "source_doi": "10.1021/j100301a023",
+      "citation": "Roncali, J.; Garreau, R.; Yassar, A.; Marque, P.; Garnier, F.; Lemaire, M. Effects of Steric Factors on the Electrosynthesis and Properties of Conducting Poly(3-alkylthiophenes). J. Phys. Chem. 1987, 91 (27), 6706-6714.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "3-hexylthiophene",
+      "smiles": "CCCCCCc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile with TBAPF6 or LiClO4 (e.g., cycling ITO to ~1.8 V vs Ag/Ag+) gives electroactive P3HT films; 3-alkyl substitution lowers oxidation potential and improves film homogeneity vs unsubstituted thiophene.",
+      "source_doi": "10.3390/polym17192656",
+      "citation": "Obtaining Poly(3-Hexylthiophene) (P3HT) by Electropolymerization as an Alternative for the Substitution of Initiators with Free Radicals. Polymers 2025, 17 (19), 2656.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "bithiophene",
+      "smiles": "c1cc(sc1)c2ccsc2",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile; 2,2'-bithiophene oxidizes at lower potential than thiophene (monomer oxidation onset ~0.81 V), giving polythiophene films with less overoxidation than from the monomer.",
+      "source_doi": "10.1016/0379-6779(89)90472-4",
+      "citation": "Krische, B.; Zagorska, M. Polythiophene synthesis by electropolymerization of thiophene and bithiophene. Synthetic Metals 1989, 33 (3), 257-267.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "terthiophene",
+      "smiles": "c1ccc(-c2ccc(-c3cccs3)s2)s1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in ACN (TBA salt); low monomer onset (~0.95 V vs SCE; oxidation peak ~0.65-1.07 V), giving regular alpha,alpha'-linked polyterthiophene films with better cyclability than poly(thiophene)/poly(bithiophene). Potential >0.8 V introduces mislinkage; <0.7 V gives only oligomers.",
+      "source_doi": "10.1039/c4sc02664k",
+      "citation": "Sheberla, D.; et al. (incl. Gidron, O.; Bendikov, M.). Conducting polyfurans by electropolymerization of oligofurans. Chemical Science 2015, 6 (1), 360-371 (Table 1: terthiophene onset 0.95 V vs SCE).",
+      "confidence": "high"
+    },
+    {
+      "monomer": "furan",
+      "smiles": "c1ccoc1",
+      "outcome": "conditional",
+      "conditions": "Furan monomer requires very high potential (~1.8 V vs SCE) where ring opening and irreversible degradation dominate, so plain-solvent films are poor. Good free-standing polyfuran films require either a Lewis-acid (BFEE) medium or starting from oligofurans (bi-/terfuran), which oxidize <1.0 V.",
+      "source_doi": "10.1039/c4sc02664k",
+      "citation": "Sheberla, D.; Patra, S.; Wijsboom, Y. H.; Sharma, S.; Sheynin, Y.; Haj-Yahia, A.-E.; Barak, A. H.; Gidron, O.; Bendikov, M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science 2015, 6 (1), 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "bifuran",
+      "smiles": "c1ccc(-c2ccco2)o1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile / 0.1 M TBACF3SO3; 2,2'-bifuran onset oxidation ~0.8 V (vs ~1.25/1.8 V for furan), polymerizing below 1.0 V to give good conducting polyfuran films, avoiding the ring-opening degradation seen with furan.",
+      "source_doi": "10.1039/c4sc02664k",
+      "citation": "Sheberla, D.; Patra, S.; Wijsboom, Y. H.; Sharma, S.; Sheynin, Y.; Haj-Yahia, A.-E.; Barak, A. H.; Gidron, O.; Bendikov, M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science 2015, 6 (1), 360-371.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "terfuran",
+      "smiles": "c1ccc(-c2ccc(-c3ccco3)o2)o1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile / 0.1 M TBACF3SO3; terfuran onset oxidation 0.62 V vs SCE (below terthiophene 0.95 V), polymerizing readily below 1.0 V to give smooth, stable conducting polyfuran films (conductivity ~1 S/cm).",
+      "source_doi": "10.1039/c4sc02664k",
+      "citation": "Sheberla, D.; Patra, S.; Wijsboom, Y. H.; Sharma, S.; Sheynin, Y.; Haj-Yahia, A.-E.; Barak, A. H.; Gidron, O.; Bendikov, M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science 2015, 6 (1), 360-371.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "selenophene",
+      "smiles": "c1cc[se]c1",
+      "outcome": "conditional",
+      "conditions": "High-quality freestanding polyselenophene films deposited from neat boron trifluoride diethyl etherate (BFEE) + 20 mM selenophene, where oxidation potential is much lower than in ACN/Bu4NBF4 and below thiophene in BFEE; conductivity up to 0.28 S/cm. In plain ACN the oxidation potential is high and films are poorer, so the BFEE/Lewis-acid medium is the enabling condition.",
+      "source_doi": "10.1016/j.matlet.2004.11.020",
+      "citation": "Li, C.; Shi, G.; Liang, Y.; et al. Electrosyntheses of freestanding and conducting polyselenophene films. Materials Letters 2005, 59 (8-9), 1163-1166.",
+      "confidence": "med"
+    },
+    {
+      "monomer": "pyrrole",
+      "smiles": "c1cc[nH]c1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in aqueous or organic media; low onset (~0.9 V vs NHE in water), readily forms adherent conducting polypyrrole films. Benchmark 'easy' monomer; Diaz mechanism (alpha-coupling of radical cations).",
+      "source_doi": "10.1016/0379-6779(87)90853-8",
+      "citation": "Asavapiriyanont, S.; Chandler, G. K.; Gunawardena, G. A.; Pletcher, D. The electrodeposition of polypyrrole films from aqueous solutions. J. Electroanal. Chem. (related Pletcher series); see also Diaz, A. F. et al. Electrochemical polymerization of pyrrole in aqueous solutions, Synthetic Metals 1987, 21, 247-253.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "N-methylpyrrole",
+      "smiles": "Cn1cccc1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile (also aqueous); forms poly(N-methylpyrrole) films, but conductivity is markedly lower than polypyrrole because N-methylation blocks N-coupling and twists the backbone. Film forms but is more resistive/lower quality.",
+      "source_doi": "10.1016/j.matlet.2005.10.067",
+      "citation": "Influence of electrochemical process parameters on the conductivity of poly(N-methylpyrrole) films by galvanostatic method. Materials Letters 2006 (and refs therein on poly-N-methylpyrrole, ScienceDirect S0167577X05011614).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3,4-dimethylpyrrole",
+      "smiles": "Cc1c[nH]cc1C",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in 0.1 M aqueous NaDBS at 0.55 V vs Ag/AgCl gives black conducting poly(3,4-dimethylpyrrole) films. 3,4-Dimethyl blocks beta-positions so only alpha-coupling occurs, reducing crosslinking/branching and improving order vs polypyrrole.",
+      "source_doi": "10.1039/C5RA15587H",
+      "citation": "Melling, D.; Wilson, S. A.; Jager, E. W. H. Controlling the electro-mechanical performance of polypyrrole through 3- and 3,4-methyl substituted copolymers. RSC Advances 2015, 5, 84153-84163.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "EDOP",
+      "smiles": "C1COc2c[nH]cc2O1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in ACN (e.g., LiClO4 or TBA salt); very low oxidation potential due to dialkoxy donor on pyrrole, giving the highly stable electrochromic conducting polymer PEDOP. Pyrrole analogue of PEDOT.",
+      "source_doi": "10.1021/ma000490f",
+      "citation": "Schottland, P.; Zong, K.; Gaupp, C. L.; Thompson, B. C.; Thomas, C. A.; Giurgiu, I.; Hickman, R.; Abboud, K. A.; Reynolds, J. R. Poly(3,4-alkylenedioxypyrrole)s: Highly Stable Electronically Conducting and Electrochromic Polymers. Macromolecules 2000, 33 (19), 7051-7061.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "carbazole",
+      "smiles": "c1ccc2c(c1)[nH]c3ccccc23",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile / 0.1 M LiClO4 (~1e-2 M monomer, chronoamperometry) gives thick green polycarbazole films; coupling at 3,6-positions. Unsubstituted carbazole deposits well.",
+      "source_doi": "10.3389/fmats.2019.00131",
+      "citation": "Contal, E.; Sougueh, C. M.; Lakard, S.; Et Taouil, A.; Magnenet, C.; Lakard, B. Investigation of Polycarbazoles Thin Films Prepared by Electrochemical Oxidation of Synthesized Carbazole Derivatives. Frontiers in Materials 2019, 6, 131.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "N-vinylcarbazole",
+      "smiles": "C=Cn1c2ccccc2c2ccccc21",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation on Pt in acetonitrile with various supporting salts; forms poly(N-vinylcarbazole) films via carbazole 3,3'(/3,6) coupling plus H+-initiated crosslinking through the vinyl groups; thick uniform green films.",
+      "source_doi": "10.3389/fmats.2019.00131",
+      "citation": "Contal, E.; Sougueh, C. M.; Lakard, S.; Et Taouil, A.; Magnenet, C.; Lakard, B. Investigation of Polycarbazoles Thin Films Prepared by Electrochemical Oxidation of Synthesized Carbazole Derivatives. Frontiers in Materials 2019, 6, 131 (CzV forms thick uniform green films).",
+      "confidence": "high"
+    },
+    {
+      "monomer": "fluorene 9,9-dioctyl",
+      "smiles": "CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21",
+      "outcome": "conditional",
+      "conditions": "Fluorene and 9,9-dialkylfluorenes electropolymerize by 2,7-coupling, but in ACN the oxidation potential is high and coupling is sluggish (dimer radical cation poorly reactive); good polyfluorene films obtained in BFEE (fluorene Eox ~1.1 V vs SCE, conductivity ~0.25 S/cm). Film forms readily only under the activating BFEE/Lewis-acid medium.",
+      "source_doi": "10.1016/j.electacta.2006.01.018",
+      "citation": "Low-potential electrochemical polymerization of fluorene and its alkyl-polymer precursor. Electrochimica Acta 2006 (ScienceDirect S0013468606000508).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "9,9-dimethylfluorene",
+      "smiles": "CC1(C)c2ccccc2-c2ccccc21",
+      "outcome": "conditional",
+      "conditions": "As for 9,9-dialkylfluorenes: oxidative 2,7-coupling gives polyfluorene films, but the dimer radical cation is weakly reactive in ACN; reliable films require BFEE/Lewis-acid medium or pre-formed dimer/trimer precursors. 9,9-disubstitution prevents 9-position side reactions.",
+      "source_doi": "10.1021/cm048331o",
+      "citation": "Comparative Study of the Oxidation of Fluorene and 9,9-Disubstituted Fluorenes and Their Related 2,7'-Dimers and Trimer. Chemistry of Materials 2005 (ACS, doi 10.1021/cm048331o).",
+      "confidence": "low"
+    },
+    {
+      "monomer": "aniline",
+      "smiles": "Nc1ccccc1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to conducting/electroactive polyaniline only from acidic aqueous media (pH < 3); the redox-active conducting emeraldine salt requires acid. Films grown at pH > 3 are essentially non-conducting/degraded. Acidic medium is the required condition.",
+      "source_doi": "10.1007/s10853-005-0854-x",
+      "citation": "Sazou, D.; et al. Electropolymerization of aniline in aqueous solutions at pH 2 to 12. Journal of Materials Science 2005, 40, ... (Springer, doi 10.1007/s10853-005-0854-x); polyaniline conducting only for pH < 3.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "o-methoxyaniline",
+      "smiles": "COc1ccccc1N",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acidic aqueous media (e.g., H2SO4 or sulfonic acids); forms electroactive poly(o-anisidine/o-methoxyaniline) films (e.g., 90% yield, ~0.1 S/cm with p-TSA). Like aniline, requires acidic medium for conducting film.",
+      "source_doi": "10.1016/0379-6779(92)90305-3",
+      "citation": "Synthesis and characterization of poly(o-anisidine) films. Synthetic Metals 1992 (ScienceDirect 0379677992903053).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "o-toluidine",
+      "smiles": "Cc1ccccc1N",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acidic aqueous media (e.g., 1 M H2SO4, potential cycling -0.2 to 1.0 V vs Ag/AgCl); forms poly(o-toluidine) films, but lower conductivity than polyaniline due to steric/electronic effect of the ortho-methyl. Acidic medium required.",
+      "source_doi": "10.1016/S0014-3057(98)00178-5",
+      "citation": "Electrochemical and optical behaviour of conducting polymer: poly(o-toluidine). European Polymer Journal 1999 (ScienceDirect S0014305798001785).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "diphenylamine",
+      "smiles": "c1ccc(Nc2ccccc2)cc1",
+      "outcome": "conditional",
+      "conditions": "Electropolymerizes to poly(diphenylamine) films in acidic aqueous or organic media; proceeds by 4,4'-C-C (phenyl-phenyl) coupling of radical cations (not N-coupling), giving a PANI/poly(p-phenylene)-hybrid structure. Acidic/organic medium and the para coupling pathway are the special conditions.",
+      "source_doi": "10.1016/0022-0728(89)87035-4",
+      "citation": "Comninellis, C.; et al. Formation of poly(4-phenylaniline) by electropolymerization of 4-aminobiphenyl or diphenylamine. J. Electroanal. Chem. 1989 (ScienceDirect 0022072889870354).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "dithieno[3,2-b:2',3'-d]pyrrole",
+      "smiles": "C1=CC2=C(S1)C3=C(N2)C=CS3",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation in acetonitrile / 0.1 M TBAPF6; DTP has a very low oxidation onset (~0.52-0.77 V vs Ag/AgCl). Electropolymerizing at ~+1.0 V gives thick adherent dark-blue, insoluble, electroactive/electrochromic films.",
+      "source_doi": "10.1039/d2ra03265a",
+      "citation": "Bandera, Y.; Jones, H. W.; Grant, B.; Mell, S.; Foulger, S. H. Synthesis, electropolymerization and functionalization via click chemistry of N-alkynylated dithieno[3,2-b:2',3'-d]pyrrole. RSC Advances 2022, 12 (45), 29187-29196.",
+      "confidence": "high"
+    },
+    {
+      "monomer": "CPDT",
+      "smiles": "C1c2ccsc2-c2sccc21",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation (potentiodynamic) on glassy carbon or ITO in ACN; the fused, electron-rich cyclopentadithiophene oxidizes readily and forms electroactive/electrochromic poly(CPDT) films (alpha-coupling of the terminal thiophenes).",
+      "source_doi": "10.1016/j.synthmet.2020.116476",
+      "citation": "An electrochromic polymer based on cyclopenta[2,1-b;3,4-b']dithiophene... Synthetic Metals 2020 (ScienceDirect S0379677920301284).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3-methoxythiophene",
+      "smiles": "COc1ccsc1",
+      "outcome": "yes",
+      "conditions": "Anodic oxidation; the methoxy donor lowers monomer oxidation potential below thiophene, giving poly(3-methoxythiophene) films. Electrosynthesized in aqueous micellar medium and in ionic liquids (oxidized at lower potential than EDOT in hydrophilic IL).",
+      "source_doi": "10.1016/S0379-6779(97)04103-9",
+      "citation": "Electrochemical and spectroscopic properties of poly(3-methoxythiophene) electrosynthesized in an aqueous micellar medium. Synthetic Metals 1997 (ScienceDirect S0379677997041039).",
+      "confidence": "med"
+    },
+    {
+      "monomer": "3,4-difluorothiophene",
+      "smiles": "Fc1cscc1F",
+      "outcome": "conditional",
+      "conditions": "Strongly electron-withdrawing fluorines make the 3,4-difluorothiophene ring electron-poor, raising the oxidation potential and making direct anodic electropolymerization difficult; practical polymerization uses the activated 2,5-bis(trimethylsilyl)-3,4-difluorothiophene (TMS as cationic leaving group) rather than the parent monomer.",
+      "source_doi": "US7399433",
+      "citation": "Process for preparing n-doping conjugated electroactive polymer using poly(3,4-difluorothiophene). US Patent 7,399,433 (BTMSDFT monomer; difluorothiophene is electron-poor and harder to oxidize than typical thiophenes).",
+      "confidence": "low"
+    }
+  ],
+  "solubility": [
+    {
+      "monomer": "EDOT",
+      "solvent": "water",
+      "solubility_value": "2.1",
+      "units": "g/L",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "ISBN 978-1-4200-6911-2",
+      "citation": "Elschner A, Kirchmeyer S, Lovenich W, Merker U, Reuter K. PEDOT: Principles and Applications of an Intrinsically Conductive Polymer. CRC Press, Boca Raton, 2010, p. 51. EDOT water solubility reported as 2.1 g/L at 20 C. (Value also given as 2.1 g/L water at 20 C in Seo KI, Chung IJ, Polymer 2000, 41, 4491-4499.)"
+    },
+    {
+      "monomer": "EDOT",
+      "solvent": "water",
+      "solubility_value": "2.1",
+      "units": "g/L",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "10.1016/S0032-3861(99)00670-9",
+      "citation": "Seo KI, Chung IJ. Reaction analysis of 3,4-ethylenedioxythiophene with potassium persulfate in aqueous solution by using a calorimeter. Polymer 2000, 41(12), 4491-4499. Reports EDOT solubility in water of 2.1 g/L at 20 C."
+    },
+    {
+      "monomer": "thiophene",
+      "solvent": "water",
+      "solubility_value": 3020,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "PubChem CID 8030",
+      "citation": "Yalkowsky SH, Dannenfelser RM. AQUASOL Database of Aqueous Solubility, Version 5, College of Pharmacy, University of Arizona, Tucson, AZ, 1992. Thiophene water solubility 3020 mg/L at 25 C, as cited in NIH PubChem Compound record CID 8030 (Experimental Properties: Solubility)."
+    },
+    {
+      "monomer": "thiophene",
+      "solvent": "water",
+      "solubility_value": "miscible/soluble in common organic solvents",
+      "units": "qualitative",
+      "temperature_C": null,
+      "value_type": "qualitative",
+      "source_doi": "CRC Handbook of Chemistry and Physics 76th ed. (1995-1996)",
+      "citation": "CRC Handbook of Chemistry and Physics, 76th ed. (1995-1996): thiophene miscible in ethanol, ether, acetone, benzene (no library-solvent quantitative value); as cited in NIH PubChem CID 8030. NOTE: organic solvents listed are not in the target library solvent set; row retained only as qualitative context."
+    },
+    {
+      "monomer": "terthiophene",
+      "solvent": "DMSO",
+      "solubility_value": "49",
+      "units": "mg/mL",
+      "temperature_C": null,
+      "value_type": "threshold",
+      "source_doi": "Selleck Chemicals catalog no. S4982",
+      "citation": "Selleck Chemicals, product 2,2':5',2''-Terthiophene (alpha-Terthiophene), catalog no. S4982 (CAS 1081-34-1): solubility in DMSO 49 mg/mL (197.27 mM); insoluble in water. Supplier technical data sheet. Temperature not stated."
+    },
+    {
+      "monomer": "furan",
+      "solvent": "water",
+      "solubility_value": 10000,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "10.1002/jps.2600700508",
+      "citation": "Valvani SC, Yalkowsky SH, Roseman TJ. Solubility and partitioning IV: Aqueous solubility and octanol-water partition coefficients of liquid nonelectrolytes. J Pharm Sci 1981, 70(5), 502-507. Furan water solubility 1x10^4 mg/L (10 g/L) at 25 C, as cited in NIH PubChem Compound record CID 8029."
+    },
+    {
+      "monomer": "pyrrole",
+      "solvent": "water",
+      "solubility_value": 45000,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "Riddick JA, Bunger WB, Sakano TK. Organic Solvents: Physical Properties and Methods of Purification, 4th ed., Wiley, NY 1985, p. 631",
+      "citation": "Riddick JA, Bunger WB, Sakano TK. Techniques of Chemistry, 4th ed., Vol II. Organic Solvents. Wiley-Interscience, New York, 1985, p. 631. Pyrrole water solubility 4.5x10^4 mg/L (45 g/L) at 25 C, as cited in NIH PubChem Compound record CID 8027."
+    },
+    {
+      "monomer": "pyrrole",
+      "solvent": "water",
+      "solubility_value": "4.5X10+4",
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Riddick, J.A., Bunger, W.B., Sakano, T.K. Organic Solvents: Physical Properties and Methods of Purification (Techniques of Chemistry, 4th ed.), Volume II (1985), p. 631: water solubility of pyrrole = 4.5X10+4 mg/L at 25 C. Compiled verbatim in NLM PubChem/HSDB record (CID 8027)."
+    },
+    {
+      "monomer": "pyrrole",
+      "solvent": "water",
+      "solubility_value": 45,
+      "units": "mg/mL",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Human Metabolome Database (HMDB), pyrrole record: '45 mg/mL at 25 C'. Compiled in NLM PubChem record (CID 8027). Numerically equivalent to the Riddick (1985) value of 4.5X10+4 mg/L."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": 36000,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Yalkowsky, S.H.; He, Y.; Jain, P. Handbook of Aqueous Solubility Data, 2nd ed. (2010): 'In water, 36,000 mg/L at 25 C.' (Also Yalkowsky & Dannenfelser, 1992.) Compiled verbatim in NLM PubChem record (CID 6115)."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": "3.5 parts/100 parts water at 25 C; 6.4 parts/100 parts water at 90 C",
+      "units": "g/100 g water (parts per 100 parts)",
+      "temperature_C": "25; 90",
+      "value_type": "quantitative",
+      "source_doi": "10.1002/0471238961",
+      "citation": "Amini, B.; Lowenkron, S. 'Aniline and Its Derivatives,' Kirk-Othmer Encyclopedia of Chemical Technology (2003): '3.5 parts/100 parts water at 25 C; 6.4 parts/100 parts water at 90 C.' Compiled verbatim in NLM PubChem record (CID 6115)."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": "One gram dissolves in 28.6 mL water, 15.7 mL boiling water",
+      "units": "g per mL water (dissolution ratio)",
+      "temperature_C": "ambient; boiling",
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "O'Neil, M.J. (ed.). The Merck Index, 15th ed. (2013): aniline 'One gram dissolves in 28.6 mL water, 15.7 mL boiling water.' Compiled verbatim in NLM PubChem record (CID 6115)."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": 3.4,
+      "units": "g/100 mL",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "ILO-WHO International Chemical Safety Card ICSC 0011 (aniline): 'Solubility in water, g/100 ml at 20 C: 3.4.' Compiled verbatim in NLM PubChem record (CID 6115)."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": "4",
+      "units": "% (w/v)",
+      "temperature_C": null,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "NIOSH Pocket Guide to Chemical Hazards, aniline (npgd0033): water solubility '4%'. Compiled verbatim in NLM PubChem record (CID 6115)."
+    },
+    {
+      "monomer": "furan",
+      "solvent": "water",
+      "solubility_value": "1X10+4",
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "10.1002/jps.2600700510",
+      "citation": "Valvani, S.C.; Yalkowsky, S.H.; Roseman, T.J. 'Solubility and partitioning IV: Aqueous solubility and octanol-water partition coefficients of liquid nonelectrolytes.' J. Pharm. Sci. 70(5): 502-507 (1981): furan 'In water, 1X10+4 mg/L at 25 C.' Compiled verbatim in NLM PubChem record (CID 8029)."
+    },
+    {
+      "monomer": "furan",
+      "solvent": "water",
+      "solubility_value": 10,
+      "units": "g/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "ILO-WHO International Chemical Safety Card ICSC 1257 (furan): 'Solubility in water, g/l at 25 C: 10.' Compiled verbatim in NLM PubChem record (CID 8029). Numerically equivalent to the Valvani et al. (1981) value of 1X10+4 mg/L."
+    },
+    {
+      "monomer": "o-toluidine",
+      "solvent": "water",
+      "solubility_value": "1.66X10+4",
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "10.1002/bscb.19750840310",
+      "citation": "Huyskens, P. et al. Bull. Soc. Chim. Belg. 84: 253-262 (1975): o-toluidine 'In water, 1.66X10+4 mg/L at 25 C.' Compiled verbatim in NLM PubChem record (CID 7242)."
+    },
+    {
+      "monomer": "o-toluidine",
+      "solvent": "water",
+      "solubility_value": 1.62,
+      "units": "g/100 mL",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "ILO-WHO International Chemical Safety Card ICSC 0341 (o-toluidine): 'Solubility in water, g/100 ml at 20 C: 1.62 (poor).' Compiled verbatim in NLM PubChem record (CID 7242)."
+    },
+    {
+      "monomer": "o-toluidine",
+      "solvent": "water",
+      "solubility_value": "2",
+      "units": "% (w/v)",
+      "temperature_C": null,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "NIOSH Pocket Guide to Chemical Hazards, o-toluidine (npgd0622): water solubility '2%'. Compiled verbatim in NLM PubChem record (CID 7242)."
+    },
+    {
+      "monomer": "o-methoxyaniline",
+      "solvent": "water",
+      "solubility_value": "1.3X10+4",
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Yalkowsky, S.H.; He, Y. Handbook of Aqueous Solubility Data (2003): o-anisidine (2-methoxyaniline) 'In water, 1.3X10+4 mg/L at 25 C.' Compiled verbatim in NLM PubChem record (CID 7000)."
+    },
+    {
+      "monomer": "o-methoxyaniline",
+      "solvent": "water",
+      "solubility_value": 1.5,
+      "units": "g/100 mL",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "ILO-WHO International Chemical Safety Card ICSC 0970 (o-anisidine / 2-methoxyaniline): 'Solubility in water, g/100 ml at 20 C: 1.5 (moderate).' Compiled verbatim in NLM PubChem record (CID 7000)."
+    },
+    {
+      "monomer": "o-methoxyaniline",
+      "solvent": "water",
+      "solubility_value": "1",
+      "units": "% (w/v)",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "NIOSH Pocket Guide to Chemical Hazards, o-anisidine: water solubility '(77 F): 1%'. Compiled verbatim in NLM PubChem record (CID 7000)."
+    },
+    {
+      "monomer": "carbazole",
+      "solvent": "water",
+      "solubility_value": 1.8,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "10.2136/sssaj1989.03615995005300050013x",
+      "citation": "Ainsworth CC, Frederickson JK, Smith SC, et al. (cited via NLM HSDB). Soil Science Society of America Journal 53: 1391-1401 (1989). Carbazole aqueous solubility 1.80 mg/L at 25 C, as reported in PubChem CID 6854 (HSDB)."
+    },
+    {
+      "monomer": "carbazole",
+      "solvent": "water",
+      "solubility_value": 1.2,
+      "units": "mg/L",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Yalkowsky SH, He Yan, Jain P. Handbook of Aqueous Solubility Data, 2nd Edition. CRC Press, Boca Raton, FL (2010). Carbazole 1.20 mg/L at 20 C; via PubChem CID 6854 (HSDB)."
+    },
+    {
+      "monomer": "carbazole",
+      "solvent": "water",
+      "solubility_value": "insoluble (<1 mg/mL)",
+      "units": "mg/mL",
+      "temperature_C": 19,
+      "value_type": "qualitative",
+      "source_doi": "",
+      "citation": "National Toxicology Program (NTP), NIEHS/NIH. NTP Chemical Repository Database, Research Triangle Park, NC (1992). Carbazole 'less than 1 mg/mL at 66 F (19 C)'; via PubChem CID 6854."
+    },
+    {
+      "monomer": "pyrrole",
+      "solvent": "water",
+      "solubility_value": 45000,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Riddick JA, Bunger WB, Sakano TK. Techniques of Chemistry, 4th ed., Vol. II: Organic Solvents. John Wiley & Sons, New York (1985), p. 631. Pyrrole water solubility 4.5x10^4 mg/L at 25 C; via NLM HSDB / PubChem CID 8027."
+    },
+    {
+      "monomer": "thiophene",
+      "solvent": "water",
+      "solubility_value": 3020,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Yalkowsky SH, Dannenfelser RM. The AQUASOL Database of Aqueous Solubility, 5th ed. Univ. of Arizona, College of Pharmacy, Tucson AZ (1992). Thiophene water solubility 3,020 mg/L at 25 C; via NLM HSDB / PubChem CID 8030."
+    },
+    {
+      "monomer": "thiophene",
+      "solvent": "water",
+      "solubility_value": "insoluble (<1 mg/mL)",
+      "units": "mg/mL",
+      "temperature_C": 24,
+      "value_type": "qualitative",
+      "source_doi": "",
+      "citation": "National Toxicology Program (NTP), NIEHS/NIH. NTP Chemical Repository Database (1992). Thiophene 'less than 1 mg/mL at 75 F (24 C)'; via PubChem CID 8030."
+    },
+    {
+      "monomer": "furan",
+      "solvent": "water",
+      "solubility_value": 10000,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "10.1002/jps.2600700510",
+      "citation": "Valvani SC, Yalkowsky SH, Roseman TJ. Solubility and partitioning IV: Aqueous solubility and octanol-water partition coefficients of liquid nonelectrolytes. J. Pharm. Sci. 70(5): 502-507 (1981). Furan water solubility 1x10^4 mg/L at 25 C; via PubChem CID 8029 (PMID 7241352)."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": 36000,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Yalkowsky SH, He Yan, Jain P. Handbook of Aqueous Solubility Data, 2nd Edition. CRC Press, Boca Raton, FL (2010), p. 259. Aniline water solubility 36,000 mg/L at 25 C; via NLM HSDB / PubChem CID 6115."
+    },
+    {
+      "monomer": "aniline",
+      "solvent": "water",
+      "solubility_value": "1 g dissolves in 28.6 mL water (approx. 35 g/L)",
+      "units": "g per 28.6 mL water",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "O'Neil MJ (ed.). The Merck Index, An Encyclopedia of Chemicals, Drugs, and Biologicals. Royal Society of Chemistry, Cambridge UK (2013), p. 113. Aniline: one gram dissolves in 28.6 mL water; via PubChem CID 6115."
+    },
+    {
+      "monomer": "diphenylamine",
+      "solvent": "water",
+      "solubility_value": 53,
+      "units": "mg/L",
+      "temperature_C": 20,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Yalkowsky SH, He Yan. Handbook of Aqueous Solubility Data: An Extensive Compilation of Aqueous Solubility Data for Organic Compounds Extracted from the AQUASOL Database. CRC Press LLC, Boca Raton FL (2003), p. 835. Diphenylamine 53 mg/L at 20 C; via NLM HSDB / PubChem CID 11487."
+    },
+    {
+      "monomer": "diphenylamine",
+      "solvent": "water",
+      "solubility_value": 50,
+      "units": "mg/L",
+      "temperature_C": 25,
+      "value_type": "quantitative",
+      "source_doi": "",
+      "citation": "Institut fuer Arbeitsschutz der DGUV (IFA), GESTIS substance database (2021), as cited in IARC/NCBI Bookshelf monograph 'Diphenylamine - 1,1,1-Trichloroethane and Four Other Industrial Chemicals' (NBK595851). Diphenylamine water solubility 50 mg/L at 25 C."
+    }
+  ],
+  "optical": [
+    {
+      "polymer": "PEDOT (poly(3,4-ethylenedioxythiophene))",
+      "monomer_smiles": "C1COc2cscc2O1",
+      "optical_gap_eV": 1.6,
+      "gap_method": "Onset of pi-pi* absorption (UV-vis); review reports the electronic bandgap as 1.6-1.7 eV with lambda_max ca. 610 nm for PEDT film",
+      "doping_onset_orig_V": null,
+      "reference_electrode": "",
+      "source_doi": "10.1002/(SICI)1521-4095(200004)12:7<481::AID-ADMA481>3.0.CO;2-C",
+      "citation": "Groenendaal, L.; Jonas, F.; Freitag, D.; Pielartzik, H.; Reynolds, J. R. Poly(3,4-ethylenedioxythiophene) and Its Derivatives: Past, Present, and Future. Adv. Mater. 2000, 12 (7), 481-494. Exact wording: 'PEDT exhibits an electronic bandgap, defined as the onset of the p-p* absorption, of 1.6-1.7 eV and a lmax of ca. 610 nm.' Value recorded is the lower bound of the stated 1.6-1.7 eV range. No film p-doping onset potential with a reference electrode is reported in this source for parent PEDOT."
+    },
+    {
+      "polymer": "PProDOT (poly(3,4-propylenedioxythiophene))",
+      "monomer_smiles": "C1CCOc2cscc2O1",
+      "optical_gap_eV": 1.6,
+      "gap_method": "Onset of pi-pi* transition (UV-vis); source groups PEDOT and PProDOT as thiophene counterparts with band gaps of 1.6-1.7 eV",
+      "doping_onset_orig_V": null,
+      "reference_electrode": "",
+      "source_doi": "US6791738B2",
+      "citation": "Reynolds, J. R. et al. (University of Florida). Electrochromic polymers and polymer electrochromic devices. US Patent 6,791,738 B2 (2004). Patent text states the band gaps for PEDOP (2.0 eV) and PProDOP (2.2 eV) 'are higher than their thiophene counterparts ... which have band gaps of 1.6-1.7 eV', defining the band gap as the onset of the pi-pi* transition; PProDOT is grouped with these thiophene counterparts. Value recorded is the lower bound of the stated 1.6-1.7 eV range. No single parent-PProDOT film doping/oxidation onset potential with a verbatim reference electrode could be sourced to a locatable primary reference."
+    },
+    {
+      "polymer": "PEDOP (poly(3,4-ethylenedioxypyrrole))",
+      "monomer_smiles": "C1COc2c[nH]cc2O1",
+      "optical_gap_eV": 2,
+      "gap_method": "Onset of pi-pi* transition (UV-vis)",
+      "doping_onset_orig_V": -0.6,
+      "reference_electrode": "Fc/Fc+",
+      "source_doi": "10.1021/ma000490f",
+      "citation": "Schottland, P.; Zong, K.; Gaupp, C. L.; Thompson, B. C.; Thomas, C. A.; Giurgiu, I.; Hickman, R.; Abboud, K. A.; Reynolds, J. R. Poly(3,4-alkylenedioxypyrrole)s: Highly Stable Electronically Conducting and Electrochromic Polymers. Macromolecules 2000, 33 (19), 7051-7061. Band gap for PEDOP reported as 2.0 eV (onset of pi-pi* transition). Abstract: this class of polymers exhibits 'especially low oxidation potentials from ca. -0.6 to -0.4 V vs Fc/Fc+ (equivalent to -0.15 to +0.05 V vs SCE) as desired for ambient stability of the doped and conducting states.' The doping_onset value recorded (-0.6 V vs Fc/Fc+) is the onset (low-potential bound) of the reported oxidation-potential range stated for the poly(3,4-alkylenedioxypyrrole) family that includes PEDOP; reported verbatim, not converted."
+    },
+    {
+      "polymer": "PProDOP (poly(3,4-propylenedioxypyrrole))",
+      "monomer_smiles": "C1CCOc2c[nH]cc2O1",
+      "optical_gap_eV": 2.2,
+      "gap_method": "Onset of pi-pi* transition (UV-vis)",
+      "doping_onset_orig_V": -0.6,
+      "reference_electrode": "Fc/Fc+",
+      "source_doi": "10.1021/ma000490f",
+      "citation": "Schottland, P.; Zong, K.; Gaupp, C. L.; Thompson, B. C.; Thomas, C. A.; Giurgiu, I.; Hickman, R.; Abboud, K. A.; Reynolds, J. R. Poly(3,4-alkylenedioxypyrrole)s: Highly Stable Electronically Conducting and Electrochromic Polymers. Macromolecules 2000, 33 (19), 7051-7061. Band gap for the propylene-bridged analog PProDOP reported as 2.2 eV (onset of pi-pi* transition). Abstract reports the family exhibits 'especially low oxidation potentials from ca. -0.6 to -0.4 V vs Fc/Fc+ (equivalent to -0.15 to +0.05 V vs SCE).' The doping_onset value recorded (-0.6 V vs Fc/Fc+) is the onset (low-potential bound) of the reported oxidation-potential range for the poly(3,4-alkylenedioxypyrrole) family that includes PProDOP; reported verbatim, not converted. Note: PProDOP monomer (ProDOP) is not in the supplied library list; included because it is co-reported with PEDOP and is a focus-adjacent dioxypyrrole."
+    },
+    {
+      "polymer": "Poly(3-hexylthiophene) (P3HT), regioregular thin film on ITO",
+      "monomer_smiles": "CCCCCCc1ccsc1",
+      "optical_gap_eV": null,
+      "gap_method": "Not reported as an absorption-onset optical gap; the paper computes an 'optical band gap' (2.46 eV for P3HT-6) by converting the absorption MAXIMUM wavelength (505 nm) to energy, not the absorption onset/edge, so it is omitted per the absorption-onset requirement.",
+      "doping_onset_orig_V": 0.85,
+      "reference_electrode": "Ag/AgCl",
+      "source_doi": "10.1039/C8RA00555A",
+      "citation": "M. A. Ansari, S. Mohiuddin, F. Kandemirli, M. I. Malik, 'Synthesis and characterization of poly(3-hexylthiophene): improvement of regioregularity and energy band gap', RSC Advances, 2018, 8, 8319-8328. DOI: 10.1039/C8RA00555A. Quote: 'The onset potentials (blue lines) of oxidation and reduction are 0.85 V and -1.11 V versus Ag/AgCl, respectively.'"
+    },
+    {
+      "polymer": "Poly(3-hexylthiophene) (P3HT), linear regioregular, highest-Mn sample L43 (in CHCl3 for UV-vis; CH2Cl2/0.1 M TBAPF6 for CV)",
+      "monomer_smiles": "CCCCCCc1ccsc1",
+      "optical_gap_eV": 2.31,
+      "gap_method": "UV-vis absorption onset (Eg_opt = 1240/lambda_onset; lambda_onset = 537 nm; solution in CHCl3, 10 ug/mL); from the S0->S2 transition onset, Table 2.",
+      "doping_onset_orig_V": 0.07,
+      "reference_electrode": "Fc/Fc+",
+      "source_doi": "10.3390/polym15030666",
+      "citation": "R. Sato, A. Utagawa, K. Fushimi, F. Li, T. Isono, K. Tajima, T. Satoh, S. Sato, H. Hirata, Y. Kikkawa, T. Yamamoto, 'Molecular Weight-Dependent Oxidation and Optoelectronic Properties of Defect-Free Macrocyclic Poly(3-hexylthiophene)', Polymers, 2023, 15(3), 666. DOI: 10.3390/polym15030666. Table 2, linear sample L43: Abs lambda_onset = 537 nm, Eg_opt = 2.31 eV, oxidation onset = 0.07 V; footnote: 'potential versus ferrocene/ferrocenium (Fc/Fc+) couple', CH2Cl2/0.1 M TBAPF6, 298 K, 20 mV/s."
+    },
+    {
+      "polymer": "Polyterthiophene (PT3), electropolymerized film from terthiophene",
+      "monomer_smiles": "c1ccc(-c2ccc(-c3cccs3)s2)s1",
+      "optical_gap_eV": 2.02,
+      "gap_method": "Optical band gap from extrapolation of the linear part of the (alpha*h*nu)^2 vs h*nu plot to (alpha*h*nu)^2 = 0 (Tauc-type extrapolation); polymer film; lambda_max = 475 nm (Table 2).",
+      "doping_onset_orig_V": null,
+      "reference_electrode": "Ag/AgCl-wire",
+      "source_doi": "10.1039/C4SC02664K",
+      "citation": "D. Sheberla, S. Patra, Y. H. Wijsboom, S. Sharma, Y. Sheynin, A.-E. Haj-Yahia, A. H. Barak, O. Gidron, M. Bendikov, 'Conducting polyfurans by electropolymerization of oligofurans', Chemical Science, 2015, 6, 360-371. DOI: 10.1039/C4SC02664K. Polymer optical band gap (Table 2) for PT3 = 2.02 eV. Note: the paper reports polymer p-doping behavior via the half-maximal-conductance potential Ehc (PT3 = 0.87 V vs Ag/AgCl-wire), which is NOT an oxidation-onset potential; the 0.95 V vs Ag/AgCl-wire value in Table 1 is the MONOMER (terthiophene oligomer) oxidation onset, not the polymer doping onset. Hence no polymer doping-onset value is reported here."
+    },
+    {
+      "polymer": "Polyfuran (electropolymerized from terfuran, P1/PFu3)",
+      "monomer_smiles": "c1ccoc1",
+      "optical_gap_eV": 2.31,
+      "gap_method": "Tauc plot: extrapolation of linear part of (alpha*h*nu)^2 vs h*nu to (alpha*h*nu)^2 = 0; lambda_max 466 nm",
+      "doping_onset_orig_V": 0.69,
+      "reference_electrode": "Ag/AgCl-wire",
+      "source_doi": "10.1039/c4sc02664k",
+      "citation": "Sheberla, D.; Patra, S.; Wijsboom, Y. H.; Sharma, S.; Sheynin, Y.; Haj-Yahia, A.-E.; Barak, A. H.; Gidron, O.; Bendikov, M. Conducting polyfurans by electropolymerization of oligofurans. Chemical Science 2015, 6 (1), 360-371. Optical band gap of unsubstituted polyfuran P1 = 2.31 eV (Tauc plot, Table 2); p-doping onset (half-maximal conductance) Ehc = 0.69 V vs Ag/AgCl-wire (Table 3)."
+    },
+    {
+      "polymer": "Polyselenophene (electropolymerized from selenophene in BFEE, freestanding film)",
+      "monomer_smiles": "c1cc[se]c1",
+      "optical_gap_eV": 1.9,
+      "gap_method": "UV-vis absorption edge (~652 nm), direct interband transition (zero-order approximation)",
+      "doping_onset_orig_V": null,
+      "reference_electrode": "",
+      "source_doi": "10.1016/j.matlet.2004.12.005",
+      "citation": "Pu, S.; Hou, J.; Xu, J.; Nie, G.; Zhang, S.; Shen, L.; Xiao, Q. Electrosyntheses of freestanding and conducting polyselenophene films. Materials Letters 2005, 59 (8-9), 1061-1065. Optical band gap of polyselenophene estimated from absorption edge (~652 nm) = ~1.90 eV. No p-doping onset potential reported for the parent polymer in this work, so doping_onset is null."
+    },
+    {
+      "polymer": "PEDOS - poly(3,4-ethylenedioxyselenophene) (electrodeposited in TBAClO4/MeCN)",
+      "monomer_smiles": "C1COc2c[se]cc2O1",
+      "optical_gap_eV": 1.38,
+      "gap_method": "UV-vis absorption onset of neutral polymer (lambda_onset = 893 nm); Eg = 1240/lambda_onset",
+      "doping_onset_orig_V": -0.68,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.1039/D0RA01436B",
+      "citation": "Yadav, P.; Naqvi, S.; Patra, A. Poly(3,4-ethylenedioxyselenophene): effect of solvent and electrolyte on electrodeposition, optoelectronic and electrochromic properties. RSC Advances 2020, 10 (21), 12395-12406. For PEDOS deposited in TBAClO4/MeCN: optical band gap 1.38 eV from absorption onset (lambda_onset 893 nm, Table 3); polymer oxidation onset Eox,poly,onset = -0.68 V vs Ag/Ag+ (Table 2). Across the six solvent/electrolyte systems Eg = 1.38-1.40 eV and Eox,onset ranged -0.52 to -0.77 V vs Ag/Ag+."
+    },
+    {
+      "polymer": "Polypyrrole (electrodeposited in H2SO4, potentiostatic at +0.7 V vs SCE)",
+      "monomer_smiles": "c1cc[nH]c1",
+      "optical_gap_eV": 1.95,
+      "gap_method": "UV-vis absorption spectroscopy of electrodeposited film (band gap from absorption analysis; method not specified as Tauc in source)",
+      "doping_onset_orig_V": null,
+      "reference_electrode": "",
+      "source_doi": "10.1088/1674-4926/35/6/063001",
+      "citation": "Thombare, J. V.; Shinde, S. K.; Lohar, G. M.; Chougale, U. M.; Dhasade, S. S.; Dhaygude, H. D.; Relekar, B. P.; Fulari, V. J. Optical properties of electrochemically synthesized polypyrrole thin films: the electrolyte effect. Journal of Semiconductors 2014, 35 (6), 063001. Band gap of electrodeposited polypyrrole films = 1.95 eV (H2SO4), 1.92 eV (oxalic acid), 1.79 eV (p-toluenesulfonic acid) from UV-vis. Films deposited potentiostatically at +0.7 V vs SCE; no oxidation/doping onset potential reported, so doping_onset is null. Value reported is for the as-deposited (p-doped) film, not a strictly neutral-state onset."
+    },
+    {
+      "polymer": "Poly(9,9-dioctylfluorene) (PFO)",
+      "monomer_smiles": "CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21",
+      "optical_gap_eV": 2.95,
+      "gap_method": "UV-vis absorption onset (thin film); onset of absorption band at 425 nm",
+      "doping_onset_orig_V": null,
+      "reference_electrode": "",
+      "source_doi": "10.1063/1.122479",
+      "citation": "S. Janietz, D. D. C. Bradley, M. Grell, C. Giebeler, M. Inbasekaran, E. P. Woo, \"Electrochemical determination of the ionization potential and electron affinity of poly(9,9-dioctylfluorene),\" Applied Physics Letters, 1998, 73(17), 2453-2455. Optical band gap = 2.95 eV (425 nm) from onset of the absorption band in thin films; Ip = 5.80 eV, Ea = 2.12 eV. Oxidation onset potential / reference electrode not extractable from accessible text; reported here only the optical gap."
+    },
+    {
+      "polymer": "Polycarbazole (electropolymerized from carbazole)",
+      "monomer_smiles": "c1ccc2c(c1)[nH]c3ccccc23",
+      "optical_gap_eV": null,
+      "gap_method": "",
+      "doping_onset_orig_V": 1.05,
+      "reference_electrode": "SCE",
+      "source_doi": "10.3389/fmats.2019.00131",
+      "citation": "E. Contal, C. M. Sougueh, S. Lakard, A. Et Taouil, C. Magnenet, B. Lakard, \"Investigation of Polycarbazoles Thin Films Prepared by Electrochemical Oxidation of Synthesized Carbazole Derivatives,\" Frontiers in Materials, 2019, 6, 131. Verbatim: \"The onset oxidation potentials of carbazole, leading to Cz radical cations, in LiClO4/ACN and LiClO4/DMF, appears at 1.05 and 0.95 V/SCE, respectively.\" (Value reported = 1.05 V/SCE in LiClO4/acetonitrile.) No optical band gap reported in this paper."
+    },
+    {
+      "polymer": "Poly(N-vinylcarbazole) (electropolymerized, PVK/polyCzV)",
+      "monomer_smiles": "C=Cn1c2ccccc2c2ccccc21",
+      "optical_gap_eV": null,
+      "gap_method": "",
+      "doping_onset_orig_V": 1,
+      "reference_electrode": "SCE",
+      "source_doi": "10.3389/fmats.2019.00131",
+      "citation": "E. Contal, C. M. Sougueh, S. Lakard, A. Et Taouil, C. Magnenet, B. Lakard, \"Investigation of Polycarbazoles Thin Films Prepared by Electrochemical Oxidation of Synthesized Carbazole Derivatives,\" Frontiers in Materials, 2019, 6, 131. Verbatim: \"Concerning CzV, the potentiodynamic electrodeposition on platinum displays an oxidation onset at +1.0 V/SCE.\" No optical band gap reported in this paper."
+    },
+    {
+      "polymer": "Poly(thieno[3,4-b]pyrazine-based terthienyl) P[T1] (parent TP-terthienyl, electropolymerized film)",
+      "monomer_smiles": "c1cnc2cscc2n1",
+      "optical_gap_eV": 1.46,
+      "gap_method": "UV-vis-NIR absorption onset (thin film on ITO); lambda_onset = 850 nm",
+      "doping_onset_orig_V": 0.32,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/ma9060404",
+      "citation": "Konkol K.L., Schwiderski R.L., Rasmussen S.C. Synthesis, Characterization, and Electropolymerization of Extended Fused-Ring Thieno[3,4-b]pyrazine-Based Terthienyls. Materials 2016, 9(6), 404. doi:10.3390/ma9060404 (polymer E_onset,ox and E_g,opt from Tables 3 and 4; all potentials vs Ag/Ag+ in CH2Cl2/0.10 M TBAPF6)."
+    },
+    {
+      "polymer": "Poly(thieno[3,4-b]pyrazine-based terthienyl) P[T2] (acenaphtho-fused TP-terthienyl, electropolymerized film)",
+      "monomer_smiles": "c1cnc2cscc2n1",
+      "optical_gap_eV": 1.01,
+      "gap_method": "UV-vis-NIR absorption onset (thin film on ITO); lambda_onset = 1230 nm",
+      "doping_onset_orig_V": 0.33,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/ma9060404",
+      "citation": "Konkol K.L., Schwiderski R.L., Rasmussen S.C. Synthesis, Characterization, and Electropolymerization of Extended Fused-Ring Thieno[3,4-b]pyrazine-Based Terthienyls. Materials 2016, 9(6), 404. doi:10.3390/ma9060404 (P[T2] E_onset,ox 0.33 V and E_g,opt 1.01 eV; potentials vs Ag/Ag+)."
+    },
+    {
+      "polymer": "Poly(thieno[3,4-b]pyrazine-based terthienyl) P[T3] (extended fused TP-terthienyl, electropolymerized film)",
+      "monomer_smiles": "c1cnc2cscc2n1",
+      "optical_gap_eV": 0.99,
+      "gap_method": "UV-vis-NIR absorption onset (thin film on ITO); lambda_onset = 1250 nm",
+      "doping_onset_orig_V": -0.25,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/ma9060404",
+      "citation": "Konkol K.L., Schwiderski R.L., Rasmussen S.C. Synthesis, Characterization, and Electropolymerization of Extended Fused-Ring Thieno[3,4-b]pyrazine-Based Terthienyls. Materials 2016, 9(6), 404. doi:10.3390/ma9060404 (P[T3] E_onset,ox -0.25 V and E_g,opt 0.99 eV; potentials vs Ag/Ag+)."
+    },
+    {
+      "polymer": "Poly(thieno[3,4-b]pyrazine-based terthienyl) P[T4] (extended fused TP-terthienyl, electropolymerized film)",
+      "monomer_smiles": "c1cnc2cscc2n1",
+      "optical_gap_eV": 0.89,
+      "gap_method": "UV-vis-NIR absorption onset (thin film on ITO); lambda_onset = 1400 nm",
+      "doping_onset_orig_V": -0.07,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/ma9060404",
+      "citation": "Konkol K.L., Schwiderski R.L., Rasmussen S.C. Synthesis, Characterization, and Electropolymerization of Extended Fused-Ring Thieno[3,4-b]pyrazine-Based Terthienyls. Materials 2016, 9(6), 404. doi:10.3390/ma9060404 (P[T4] E_onset,ox -0.07 V and E_g,opt 0.89 eV; potentials vs Ag/Ag+)."
+    },
+    {
+      "polymer": "Poly(thieno[3,4-b]pyrazine-based terthienyl) P[T5] (phenanthroline-fused TP-terthienyl, electropolymerized film)",
+      "monomer_smiles": "c1cnc2cscc2n1",
+      "optical_gap_eV": 0.82,
+      "gap_method": "UV-vis-NIR absorption onset (thin film on ITO); lambda_onset = 1510 nm",
+      "doping_onset_orig_V": 0,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/ma9060404",
+      "citation": "Konkol K.L., Schwiderski R.L., Rasmussen S.C. Synthesis, Characterization, and Electropolymerization of Extended Fused-Ring Thieno[3,4-b]pyrazine-Based Terthienyls. Materials 2016, 9(6), 404. doi:10.3390/ma9060404 (P[T5] E_onset,ox 0.00 V and E_g,opt 0.82 eV; potentials vs Ag/Ag+)."
+    },
+    {
+      "polymer": "p-AlkyneDTP (electropolymerized poly(N-(but-3-yn-1-yl) dithieno[3,2-b:2',3'-d]pyrrole))",
+      "monomer_smiles": "C1=CC2=C(S1)C3=C(N2)C=CS3",
+      "optical_gap_eV": 1.76,
+      "gap_method": "UV-vis absorption onset of neutral polymer film (onset 703 nm); reported as Delta E_uv",
+      "doping_onset_orig_V": 0.06,
+      "reference_electrode": "Ag/AgCl",
+      "source_doi": "10.1039/d2ra03265a",
+      "citation": "Bandera Y., Jones H.W., Grant B., Mell S., Foulger S.H. Synthesis, electropolymerization and functionalization via click chemistry of N-alkynylated dithieno[3,2-b:2',3'-d]pyrrole. RSC Adv. 2022, 12(45), 29187-29196. doi:10.1039/d2ra03265a (oxidation onset E0 = 60 mV vs Ag/AgCl; Delta E_uv = 1.76 eV, onset 703 nm)."
+    },
+    {
+      "polymer": "p-DTPNap (electropolymerized poly(N-naphthalimide-functionalized dithieno[3,2-b:2',3'-d]pyrrole))",
+      "monomer_smiles": "C1=CC2=C(S1)C3=C(N2)C=CS3",
+      "optical_gap_eV": 1.82,
+      "gap_method": "UV-vis absorption onset of neutral polymer film (onset 680 nm); reported as Delta E_uv",
+      "doping_onset_orig_V": 0.16,
+      "reference_electrode": "Ag/AgCl",
+      "source_doi": "10.1039/d2ra03265a",
+      "citation": "Bandera Y., Jones H.W., Grant B., Mell S., Foulger S.H. Synthesis, electropolymerization and functionalization via click chemistry of N-alkynylated dithieno[3,2-b:2',3'-d]pyrrole. RSC Adv. 2022, 12(45), 29187-29196. doi:10.1039/d2ra03265a (oxidation onset E0 = 160 mV vs Ag/AgCl; Delta E_uv = 1.82 eV, onset 680 nm)."
+    },
+    {
+      "polymer": "PCPDTDTBTDI-EH,DMO (cyclopentadithiophene-bithiophene-benzothiadiazole-dicarboxylic-imide D-A copolymer)",
+      "monomer_smiles": "C1c2ccsc2-c2sccc21",
+      "optical_gap_eV": 1.43,
+      "gap_method": "UV-vis absorption onset (thin film on quartz)",
+      "doping_onset_orig_V": 0.44,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/polym13010063",
+      "citation": "Murad A.R., Iraqi A., Aziz S.B., Abdullah S.N., Brza M.A., Saeed S.R., Abdulwahid R.T. Fabrication of Alternating Copolymers Based on Cyclopentadithiophene-Benzothiadiazole Dicarboxylic Imide with Reduced Optical Band Gap. Polymers 2021, 13(1), 63. doi:10.3390/polym13010063 (E_ox onset 0.44 V vs Ag/Ag+ (Ag wire in 0.01 M AgNO3/MeCN); E_g,opt 1.43 eV from film absorption onset)."
+    },
+    {
+      "polymer": "PCPDTDTBTDI-8,DMO (cyclopentadithiophene-bithiophene-benzothiadiazole-dicarboxylic-imide D-A copolymer)",
+      "monomer_smiles": "C1c2ccsc2-c2sccc21",
+      "optical_gap_eV": 1.32,
+      "gap_method": "UV-vis absorption onset (thin film on quartz)",
+      "doping_onset_orig_V": 0.49,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/polym13010063",
+      "citation": "Murad A.R., Iraqi A., Aziz S.B., Abdullah S.N., Brza M.A., Saeed S.R., Abdulwahid R.T. Fabrication of Alternating Copolymers Based on Cyclopentadithiophene-Benzothiadiazole Dicarboxylic Imide with Reduced Optical Band Gap. Polymers 2021, 13(1), 63. doi:10.3390/polym13010063 (E_ox onset 0.49 V vs Ag/Ag+; E_g,opt 1.32 eV from film absorption onset)."
+    },
+    {
+      "polymer": "PCPDTDTBTDI-8,8 (cyclopentadithiophene-bithiophene-benzothiadiazole-dicarboxylic-imide D-A copolymer)",
+      "monomer_smiles": "C1c2ccsc2-c2sccc21",
+      "optical_gap_eV": 1.34,
+      "gap_method": "UV-vis absorption onset (thin film on quartz)",
+      "doping_onset_orig_V": 0.39,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/polym13010063",
+      "citation": "Murad A.R., Iraqi A., Aziz S.B., Abdullah S.N., Brza M.A., Saeed S.R., Abdulwahid R.T. Fabrication of Alternating Copolymers Based on Cyclopentadithiophene-Benzothiadiazole Dicarboxylic Imide with Reduced Optical Band Gap. Polymers 2021, 13(1), 63. doi:10.3390/polym13010063 (E_ox onset 0.39 V vs Ag/Ag+; E_g,opt 1.34 eV from film absorption onset)."
+    },
+    {
+      "polymer": "PCPDTDTBTDI-EH,8 (cyclopentadithiophene-bithiophene-benzothiadiazole-dicarboxylic-imide D-A copolymer)",
+      "monomer_smiles": "C1c2ccsc2-c2sccc21",
+      "optical_gap_eV": 1.42,
+      "gap_method": "UV-vis absorption onset (thin film on quartz)",
+      "doping_onset_orig_V": 0.51,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.3390/polym13010063",
+      "citation": "Murad A.R., Iraqi A., Aziz S.B., Abdullah S.N., Brza M.A., Saeed S.R., Abdulwahid R.T. Fabrication of Alternating Copolymers Based on Cyclopentadithiophene-Benzothiadiazole Dicarboxylic Imide with Reduced Optical Band Gap. Polymers 2021, 13(1), 63. doi:10.3390/polym13010063 (E_ox onset 0.51 V vs Ag/Ag+; E_g,opt 1.42 eV from film absorption onset)."
+    },
+    {
+      "polymer": "P1 = poly(5-fluoro-4,7-di(thiophen-2-yl)-2,1,3-benzothiadiazole) (fluorinated benzothiadiazole-thiophene D-A homopolymer, electropolymerized)",
+      "monomer_smiles": "c1cc(sc1)c2ccc3nsnc3c2",
+      "optical_gap_eV": 1.64,
+      "gap_method": "Optical band gap from onset of absorption spectrum in neutral state (spectroelectrochemistry); lambda_onset = 756 nm",
+      "doping_onset_orig_V": 0.52,
+      "reference_electrode": "Ag/Ag+",
+      "source_doi": "10.1021/acsomega.8b02811",
+      "citation": "Singhal S., Yadav P., Naqvi S., Gupta S., Patra A. Donor-Acceptor-Donor Copolymers with 3,4-Ethylenedioxythiophene Moiety: Electropolymerization and Effect on Optoelectronic and Electrochromic Properties. ACS Omega 2019, 4(2), 3484-3494. doi:10.1021/acsomega.8b02811 (polymer P1 E_onset 0.52 V vs Ag/Ag+, E_g,opt 1.64 eV, lambda_onset 756 nm; Table 1)."
+    },
+    {
+      "polymer": "Copolymer of 4,7-di(thiophen-2-yl)benzo[c][1,2,5]thiadiazole with EDOT (electropolymerized D-A electrochromic copolymer)",
+      "monomer_smiles": "c1cc(sc1)c2ccc3nsnc3c2",
+      "optical_gap_eV": 1.32,
+      "gap_method": "Optical band gap from onset of low-energy pi-pi* band in UV-vis (spectroelectrochemistry)",
+      "doping_onset_orig_V": 0.6,
+      "reference_electrode": "Ag/AgCl",
+      "source_doi": "10.55730/1300-0527.3456",
+      "citation": "Celik K., Kivrak A., Carbas B.B. A new electrochromic copolymer composed of 4,7-di(thiophen-2-yl)benzo[c][1,2,5]thiadiazole and 3,4-ethylenedioxythiophene. Turk. J. Chem. 2022, 46(5), 1516-1523. doi:10.55730/1300-0527.3456 (copolymer doping (oxidation) potential 0.6 V vs Ag/AgCl; optical band gap 1.32 eV from pi-pi* band onset)."
+    }
+  ]
+}
