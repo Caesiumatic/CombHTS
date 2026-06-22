@@ -45,6 +45,11 @@ constants, or monomer-Eox calibration coefficients changed.
   formulation window exceeded both existing priors. Revised the hard gate to the minimum across
   measurement, curated CSV, and computed prior; raw measurement/cap/source/cap-applied fields remain
   audited. Added a regression proving a wide GBL measurement cannot relax the gate.
+- Capped re-score 417562 produced 2,938 survivors: a strict subset of the old 4,078 (1,140 dropped,
+  zero gained), with 4,196 window-pass rows and unchanged anion/solvation filters. Analysis 417563
+  removed the all-GBL dominance. It also exposed a CSV interoperability bug: the leading `#`
+  disclaimer makes `comment='#'` readers truncate MeCN's `CC#N` SMILES. Removed the nonstandard
+  preamble, retained caution per row in `diagnostic_note`, and added a hash-containing-SMILES test.
 - Corrected-optical rerun 417556 failed before computation because a relative persistent ORCA
   work root was reused after changing cwd. Resolved the root to an absolute path and added a fake-
   ORCA regression test; the copied three-point TDA cache remained intact and no value was replaced.

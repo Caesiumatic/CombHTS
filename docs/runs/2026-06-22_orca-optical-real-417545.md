@@ -11,4 +11,4 @@
 - output artifacts (paths, NOT committed): Lop `$HOME/CombHTS_pilot_work/outputs/orca_optical_pilot/` (SQLite cache plus retained raw ORCA files); `$HOME/combhts_orca_opt.o417545`
 - provenance: git commit `c325cc6` + dirty pilot implementation; `configs/orca_pilots.yaml`; serial fallback; ORCA module `6.1.0-418`
 - caveats: route-validation dimer set only, not a production/per-class calibration. Two nearly identical sTDA values map to TDA values differing by 0.291 eV, so the three-point fit is poorly conditioned and must not replace the Tier-1 gap axis. Serial execution avoids the Lop OpenMPI/hwloc crash. The corrected parser still needs one cluster rerun (the TDA cache can be reused; only invalid sTDA rows should be recomputed) before the standard CSV/JSON artifacts are authoritative.
-- supersedes / superseded_by: supersedes 417541 and 417543; superseded_by —
+- supersedes / superseded_by: supersedes 417541 and 417543; superseded_by corrected standard-artifact run 417557
