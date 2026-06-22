@@ -4,6 +4,9 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-22 | analyze salt-role-fixed ranking | none (read-only) | 7,488 / 2,143 per-salt survivors / 1,127 score-classes | completed | SGE 417571; distinct top-30 = 19 PC / 6 MeCN / 3 nitromethane / 2 NMP; no AgClO4/HClO4 | [link](2026-06-22_analyze-salt-fixed-417571.md) |
+| 2026-06-22 | Tier-1 salt-role gate re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417569; 2,938 -> 2,143 survivors; -795/0 gained; ranked 1,127 score-classes | [link](2026-06-22_tier1-rescore-salt-fixed-417569.md) |
+| 2026-06-22 | Tier-1 salt-role re-score first submission | none (pre-exec) | intended real xTB 7,488 triads | failed before execution | SGE 417568; relative scheduler log path missing; 0 s, no output | [link](2026-06-22_tier1-rescore-salt-fixed-417568.md) |
 | 2026-06-22 | 417564 shortlist audit (per-row) | none (docs/analysis) | 30-row shortlist, read-only cross-ref | merged bee31d3 | KEEP 2 / CAVEAT 12 / PARK 10 / REMOVE 6; salt-permutation score degeneracy is top artifact (raw 80% PC -> ~57% over 14 distinct chemistries); analysis only, no scoring change | [link](../audits/shortlist_audit_417564.md) |
 | 2026-06-22 | optical anchors + calibration plan | none (docs/lit-curation) | 9 anchors (6 high + 3 medium), n=6 primary cal target | merged bee31d3 | replaces n=3 sTDA/TDA pilot; 15% optical axis stays DIAGNOSTIC until calibration is run + reviewed | [link](../lit_curation/optical_calibration_plan.md) |
 | 2026-06-22 | library-expansion proposal | none (docs/research) | +76 monomers / +27 solvents / +25 salts, RDKit-verified | merged bee31d3 | PROPOSAL ONLY, not wired; gated on stable ESW/solubility/optical gates before any wiring | [link](../research/library_expansion_proposal.md) |

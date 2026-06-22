@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-22 (417564 salt-role guard and cation-degenerate presentation fix implemented; deposition physics remains open)_
+_Last updated: 2026-06-22 (salt-role/de-dup decision verified on real harvest; deposition and compatibility physics remain open)_
 
 ## How to read this
 
@@ -215,6 +215,17 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debt #12](STATUS.md#open-debts); [src/eps/workflow/dft_calibration.py](src/eps/workflow/dft_calibration.py); [configs/tier2.yaml](configs/tier2.yaml).
 
 ## Decision log
+
+- 2026-06-22 (real-harvest verification, SGE 417569/417571) — the salt-role guard and exact-tie
+  presentation collapse behaved exactly as intended on all 7,488 real-xTB triads: 2,938 -> 2,143
+  per-salt survivors (795 removed, zero gained), 1,127 ranked score-classes, zero acid/reference-only
+  passes, and max score change 0 for all retained rows. The new distinct top-30 is 19 PC / 6 MeCN /
+  3 nitromethane / 2 NMP (63.3% PC versus the old raw 80%). The audit's ~57% PC prediction is also
+  confirmed for the old shortlist's 14 distinct classes (8 PC / 6 MeCN), all of which remain at the
+  head of the expanded list. **Conclusion:** the gate/presentation decision is empirically closed;
+  residual PC preference is not a salt-permutation artifact. Do not promote deterministic Li/TBA
+  representatives into cation recommendations: deposition, solubility, conductivity, and ion-pair
+  physics remain open.
 
 - 2026-06-22 (417564 gate decision implemented on review branch) — added versioned
   electrolyte-role metadata and a reversible hard gate excluding reference-only/acid entries, plus
