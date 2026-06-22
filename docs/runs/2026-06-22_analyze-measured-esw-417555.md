@@ -11,4 +11,4 @@
 - output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_measured_esw/analysis/`
 - provenance: git commit `96281c5`; source re-score SGE 417553; uncapped measured-first policy
 - caveats: do not use this shortlist for experiments. The analysis triggered the stricter `min(measurement, curated CSV, computed prior)` hard cap; rerun analysis only after the capped re-score.
-- supersedes / superseded_by: superseded_by capped-policy analysis pending
+- supersedes / superseded_by: superseded by capped-policy standard-CSV analysis 417564

@@ -31,7 +31,7 @@ constants, or monomer-Eox calibration coefficients changed.
   computed-only ESW gate, and zero failures in all seven core/scored stages. Report-only failures are
   recorded in its manifest. Its cache must be re-scored under the new measured-first gate; 4,078 is
   not the new-gate survivor count.
-- Verification: `205 passed, 5 skipped`; ruff and `git diff --check` clean. Updated STATUS, THINK,
+- Final verification: `210 passed, 5 skipped`; ruff and `git diff --check` clean. Updated STATUS, THINK,
   scripts documentation, provenance inputs, and the run-manifest index.
 - Added `eps rescore-tier1` plus an SGE template for strict no-engine re-scoring of an existing
   all-triads harvest. It restores the pre-policy window, applies the conditioned ESW join, rebuilds
@@ -50,6 +50,10 @@ constants, or monomer-Eox calibration coefficients changed.
   removed the all-GBL dominance. It also exposed a CSV interoperability bug: the leading `#`
   disclaimer makes `comment='#'` readers truncate MeCN's `CC#N` SMILES. Removed the nonstandard
   preamble, retained caution per row in `diagnostic_note`, and added a hash-containing-SMILES test.
+- Final read-only analysis 417564 (43 s, exit 0) verified the repaired standard CSV: 30/30 rows
+  have complete salt/score/Pareto fields. The diagnostic shortlist is 24 propylene-carbonate +
+  6 acetonitrile triads, led by terfuran, terthiophene, and fluorene 9,9-dioctyl. It is explicitly
+  not an order list: PC dominance plus acids/AgClO4 and unvalidated compatibility remain open.
 - Corrected-optical rerun 417556 failed before computation because a relative persistent ORCA
   work root was reused after changing cwd. Resolved the root to an absolute path and added a fake-
   ORCA regression test; the copied three-point TDA cache remained intact and no value was replaced.
