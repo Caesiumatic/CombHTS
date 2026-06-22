@@ -57,7 +57,16 @@ def load_electrolytes(path: str | Path | None = None) -> list[Electrolyte]:
     csv_path = Path(path) if path is not None else DATA_DIR / "electrolytes.csv"
     rows = _read_csv(
         csv_path,
-        {"salt", "cation_smiles", "anion_smiles", "salt_class", "notes"},
+        {
+            "salt",
+            "cation_smiles",
+            "anion_smiles",
+            "salt_class",
+            "notes",
+            "electrolyte_role",
+            "supporting_electrolyte_ok",
+            "electrolyte_role_justification",
+        },
     )
     return _records_from_rows(rows, Electrolyte, ("cation_smiles", "anion_smiles"))
 

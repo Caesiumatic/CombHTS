@@ -2,6 +2,11 @@ filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
   max_solvation_dG_kcal_mol: -3.0
+supporting_electrolyte_gate:
+  # Exclude library entries whose versioned role metadata says they are not bulk supporting
+  # electrolytes. This is a role guard, not a metal-deposition model; disable only for an
+  # explicitly documented sensitivity analysis. Per-salt rows remain in tier1_all.csv.
+  enabled: true
 solvent_window_gate:
   # Practical ESW is condition-dependent. Select after the cheap solvent+salt join:
   # exact (solvent,salt) measured rows first, otherwise the conservative measured solvent

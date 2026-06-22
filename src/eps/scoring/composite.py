@@ -10,6 +10,19 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SCORING_CONFIG = PROJECT_ROOT / "configs" / "scoring.yaml"
 
+# These are the five physical inputs to the composite. None contains a cation term: window is
+# solvent/monomer, anion stability is anion/monomer, and the remaining three are monomer-only.
+# Exact duplicates over these columns may therefore be collapsed in presentation views, but the
+# full salt rows must remain available for audit. This is deliberately not a cation physics model.
+CATION_INDEPENDENT_SCORE_CLASS_COLUMNS = (
+    "window_margin_V",
+    "anion_stability_margin_V",
+    "solvation_dG_kcal_mol",
+    "dimerization_dG_kcal_mol",
+    "optical_gap_eV",
+    "composite_score",
+)
+
 
 def load_scoring_config(path: str | Path = DEFAULT_SCORING_CONFIG) -> dict:
     """Load scoring weights and target optical gap from YAML."""
@@ -59,6 +72,57 @@ def add_composite_score(frame: pd.DataFrame, config: dict) -> pd.DataFrame:
     return scored.sort_values("composite_score", ascending=False).reset_index(drop=True)
 
 
+def collapse_cation_degenerate_rows(frame: pd.DataFrame) -> pd.DataFrame:
+    """Collapse exact cation-only score permutations for a ranked/presentation view.
+
+    A class must share monomer, solvent, anion, and every available cation-independent scoring
+    input exactly. The representative rule is deterministic and intentionally non-physical:
+    prefer a row explicitly allowed as a supporting electrolyte, then choose the alphabetically
+    first salt. ``salts_tied`` preserves every class member. No score or weight is changed.
+    """
+
+    collapsed = frame.copy()
+    if collapsed.empty:
+        collapsed["salts_tied"] = pd.Series(dtype=str)
+        collapsed["n_tied"] = pd.Series(dtype=int)
+        return collapsed
+    if "salt" not in collapsed.columns:
+        collapsed["salts_tied"] = ""
+        collapsed["n_tied"] = 1
+        return collapsed
+
+    monomer_key = _first_present(collapsed, "monomer_canonical_smiles", "monomer_name")
+    anion_key = _first_present(collapsed, "anion_canonical_smiles", "anion_smiles")
+    if monomer_key is None or anion_key is None or "solvent_name" not in collapsed.columns:
+        collapsed["salts_tied"] = collapsed["salt"].astype(str)
+        collapsed["n_tied"] = 1
+        return collapsed
+
+    group_columns = [monomer_key, "solvent_name", anion_key]
+    group_columns.extend(
+        column for column in CATION_INDEPENDENT_SCORE_CLASS_COLUMNS if column in collapsed.columns
+    )
+    representatives: list[pd.Series] = []
+    for _, group in collapsed.groupby(group_columns, sort=False, dropna=False):
+        candidates = group
+        if "supporting_electrolyte_ok" in group.columns:
+            supporting = group.loc[group["supporting_electrolyte_ok"].map(_is_true)]
+            if not supporting.empty:
+                candidates = supporting
+        representative = candidates.sort_values("salt", kind="mergesort").iloc[0].copy()
+        salts = sorted({str(salt) for salt in group["salt"]})
+        representative["salts_tied"] = ";".join(salts)
+        representative["n_tied"] = len(group)
+        representatives.append(representative)
+
+    result = pd.DataFrame(representatives)
+    sort_columns = [column for column in ("composite_score", monomer_key, "solvent_name", "salt") if column in result]
+    ascending = [False if column == "composite_score" else True for column in sort_columns]
+    if sort_columns:
+        result = result.sort_values(sort_columns, ascending=ascending, kind="mergesort")
+    return result.reset_index(drop=True)
+
+
 def is_pareto_front(
     frame: pd.DataFrame,
     columns: tuple[str, ...],
@@ -105,3 +169,11 @@ def _component_columns() -> tuple[str, ...]:
         "norm_dimerization",
         "norm_band_gap",
     )
+
+
+def _first_present(frame: pd.DataFrame, *columns: str) -> str | None:
+    return next((column for column in columns if column in frame.columns), None)
+
+
+def _is_true(value: object) -> bool:
+    return value is True or str(value).strip().lower() == "true"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from eps.engines import MockEngine
@@ -59,3 +60,44 @@ def test_rescore_is_idempotent(source_harvest: Path, tmp_path: Path) -> None:
     assert second.all_triads["solvent_anodic_limit_V"].to_numpy() == pytest.approx(
         first.all_triads["solvent_anodic_limit_V"].to_numpy()
     )
+
+
+def test_rescore_hydrates_roles_and_keeps_full_salt_audit(source_harvest: Path, tmp_path: Path) -> None:
+    # Simulate the pre-role harvest that the human will re-score on Lop.
+    legacy = pd.read_csv(source_harvest, low_memory=False).drop(
+        columns=[
+            "electrolyte_role",
+            "supporting_electrolyte_ok",
+            "electrolyte_role_justification",
+        ]
+    )
+    legacy_path = tmp_path / "legacy_all.csv"
+    legacy.to_csv(legacy_path, index=False)
+
+    result = rescore_tier1_harvest(
+        legacy_path,
+        output_path=tmp_path / "ranked.csv",
+        all_output_path=tmp_path / "all.csv",
+    )
+    audit = pd.read_csv(result.all_output_path, low_memory=False)
+
+    assert len(audit) == len(legacy)
+    for salt, role in (("AgClO4", "reference_only"), ("HClO4", "acid")):
+        rows = audit[audit["salt"] == salt]
+        assert not rows.empty
+        assert rows["electrolyte_role"].eq(role).all()
+        assert (~rows["pass_supporting_electrolyte_role"].astype(bool)).all()
+        assert rows["supporting_electrolyte_reason"].eq(
+            f"salt not a supporting electrolyte: {role}"
+        ).all()
+        assert (~rows["passes_all_tier1_filters"].astype(bool)).all()
+
+    supporting = audit[audit["salt"] == "TBABF4"]
+    assert supporting["pass_supporting_electrolyte_role"].astype(bool).all()
+    assert supporting["supporting_electrolyte_calc_status"].eq("ok").all()
+
+    # Ranked is collapsed, but its tied-salt membership reconciles exactly to every scored audit row.
+    assert result.ranked["n_tied"].max() > 1
+    assert int(result.ranked["n_tied"].sum()) == result.surviving_triads
+    assert result.surviving_triads == int(audit["composite_score"].notna().sum())
+    assert len(result.ranked) < result.surviving_triads
