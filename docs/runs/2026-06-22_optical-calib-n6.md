@@ -1,11 +1,11 @@
-# Run: 2026-06-22 — six-anchor optical calibration (prepared)
+# Run: 2026-06-22 — six-anchor optical calibration (submitted)
 - run_id: 2026-06-22_optical-calib-n6
 - date: 2026-06-22 CDT
 - command: `qsub -v OPTICAL_N6_OUTDIR=outputs/optical_calibration_n6,OPTICAL_N6_CACHE=outputs/optical_calibration_n6/cache.sqlite,OPTICAL_PILOT_CACHE=outputs/orca_optical_pilot_corrected/cache.sqlite scripts/run_optical_calibration_n6.sge`
 - engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), built-in sTDA + conventional TDA; **real engine requested, not yet run**
 - scope: six HIGH-confidence neutral-polymer anchors from `data/lit_curation/optical_anchors_selected.csv`; neutral dimers (n=2) matching the corrected pilot: PEDOP/EDOP, PProDOP, P3HT/3-hexylthiophene, PEDOS/EDOS, PFO/9,9-dioctylfluorene, and p-AlkyneDTP/DTP
-- cluster job: not submitted; SGE serial request (`-pe smp 1`, 72 h)
-- status: **prepared — awaiting submission**
+- cluster job: SGE **417587**, submitted 2026-06-22 15:37:51 CDT; serial request (`-pe smp 1`, 72 h)
+- status: **submitted — queued (`qw`)**
 - headline results: no real n=6 result exists yet. Local deterministic mock pre-flight completed 6/6 paired anchors and proved cache idempotency; mock values are non-physical and are not reported as results.
 - per-property failures: none known; real sTDA 0/6 attempted, real TDA 0/6 attempted
 - output artifacts (paths, NOT committed): Lop `$HOME/CombHTS/outputs/optical_calibration_n6/` including `optical_n6_points.csv`, `optical_n6_fit.json`, `optical_n6_fit.md`, provenance, and retained raw ORCA files
