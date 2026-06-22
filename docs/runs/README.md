@@ -4,6 +4,9 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-22 | corrected sTDA/TDA optical pilot | ORCA 6.1 real | 3 dimers x 2 methods | completed | SGE 417557; 3 corrected sTDA + 3 TDA hits; R2=.770/MAE=.097 eV | [link](2026-06-22_orca-optical-corrected-417557.md) |
+| 2026-06-22 | Tier-1 capped ESW re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417562; 2,938 survivors; -1,140/0 gained; strict old-set subset | [link](2026-06-22_tier1-rescore-capped-esw-417562.md) |
+| 2026-06-22 | analyze capped ESW re-score | none (read-only) | 7,488 / 2,938 survivors | completed; CSV rerun pending | SGE 417563; PC/MeCN shortlist; leading-comment parser hazard found | [link](2026-06-22_analyze-capped-esw-417563.md) |
 | 2026-06-22 | analyze uncapped measured-first re-score | none (read-only) | 7,488 / 2,961 survivors | completed diagnostic | SGE 417555; all top-20 GBL; triggered conservative cap refinement | [link](2026-06-22_analyze-measured-esw-417555.md) |
 | 2026-06-22 | corrected sTDA path diagnostic | ORCA 6.1 real | 3 sTDA + 3 TDA cache hits | failed before compute | SGE 417556; relative scratch path bug; no value overwritten | [link](2026-06-22_orca-optical-corrected-417556.md) |
 | 2026-06-22 | Tier-1 measured-first ESW re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417553 exit 0; 4,078->2,961 survivors; top-50 overlap 0/50 | [link](2026-06-22_tier1-rescore-measured-esw-417553.md) |

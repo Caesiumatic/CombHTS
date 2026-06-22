@@ -102,9 +102,21 @@ def test_shortlist_carries_diagnostic_note(tmp_path: Path) -> None:
 
     assert "SCREENING-GRADE" in text
     assert "NOT a validated experimental recommendation" in text
-    parsed = pd.read_csv(result.shortlist_path, comment="#")
+    parsed = pd.read_csv(result.shortlist_path)
     assert "diagnostic_note" in parsed.columns
     assert (parsed["pareto_front"]).all()
+
+
+def test_shortlist_is_standard_csv_when_smiles_contains_hash(tmp_path: Path) -> None:
+    frame = _synthetic_harvest()
+    frame["solvent_smiles"] = "CC#N"
+    harvest = _write_harvest(tmp_path / "harvest.csv", frame)
+
+    result = run_analyze(harvest, tmp_path / "analysis")
+    parsed = pd.read_csv(result.shortlist_path)
+
+    assert parsed["solvent_smiles"].eq("CC#N").all()
+    assert parsed["salt"].notna().all()
 
 
 def test_shortlist_skipped_when_scoring_columns_absent(tmp_path: Path) -> None:

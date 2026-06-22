@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — corrected sTDA/TDA optical pilot (real ORCA)
+- run_id: 2026-06-22_orca-optical-corrected-417557
+- date: 2026-06-22 11:03:18 CDT
+- command: `qsub -v ORCA_OPTICAL_OUTDIR=outputs/orca_optical_pilot_corrected,ORCA_OPTICAL_CACHE=outputs/orca_optical_pilot_corrected/cache.sqlite scripts/run_orca_optical_pilot.sge`
+- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), sTDA + TDA
+- scope: recompute three invalid sTDA cache rows; reuse three valid TDA rows from 417545
+- cluster job: SGE 417557, `compute-0-14.local`, 1 slot, 978 s wall, maxvmem 295.652 MB, exit 0
+- status: completed
+- headline results: 3/3 corrected sTDA + 3/3 TDA cache hits; pairs (eV) thiophene 4.870360/4.396, EDOT 4.869517/4.687, pyrrole 5.488049/5.004. Standard artifact fit `TDA = 0.747765*sTDA + 0.900030`, R2=0.7701, MAE=0.0973 eV.
+- per-property failures: 0/6; parser output matches retained raw spectra
+- output artifacts (paths, NOT committed): Lop `outputs/orca_optical_pilot_corrected/` (points CSV, report, calibration JSON, SQLite, provenance, raw ORCA)
+- provenance: git commit `2ec3d87`; ORCA 6.1.0-418; three TDA cache rows copied unchanged from 417545
+- caveats: three-dimer route validation only; the fit is small and ill-conditioned and must not change Tier-1 scoring. Larger experimental-anchor/per-class calibration remains required.
+- supersedes / superseded_by: supersedes 417545's invalid postprocess and path diagnostic 417556; superseded_by —

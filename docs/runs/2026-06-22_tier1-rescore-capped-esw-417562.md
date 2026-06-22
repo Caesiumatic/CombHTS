@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — Tier-1 conservatively capped ESW re-score (no engine)
+- run_id: 2026-06-22_tier1-rescore-capped-esw-417562
+- date: 2026-06-22 11:21:33 CDT
+- command: `python -m eps.cli rescore-tier1 --input outputs/tier1_real_7488/tier1_all.csv --output outputs/tier1_real_7488_capped_esw/tier1_ranked.csv --all-output outputs/tier1_real_7488_capped_esw/tier1_all.csv`
+- engine / method: **none** / CSV-only `min(measurement, curated CSV, computed prior)` ESW gate + filters + arithmetic score
+- scope: completed real-GFN2-xTB 36x13x16 = 7,488-triad audit from SGE 417538
+- cluster job: SGE 417562, `compute-0-7.local`, 1 slot, 21 s wall, maxvmem 155.758 MB, exit 0
+- status: completed
+- headline results: 2,938 survivors (39.2%), exactly 1,140 fewer than old gate and zero gained; survivor set is a strict subset of old 4,078. Window-pass 6,352 -> 4,196; anion/solvation pass counts unchanged. Top-50 overlap old/new 2/50; Pareto rows 129. Water and DMSO have zero survivors.
+- per-property failures: no calculations executed; existing source audit statuses preserved
+- output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_capped_esw/tier1_ranked.csv`, `tier1_all.csv`, provenance
+- provenance: git commit `8856b14`; source real-xTB SGE 417538; 1,728 rows capped (water, PC, GBL); mandatory raw measurements retained in audit
+- caveats: physically conservative hard-gate correction, but downstream composite remains screening-grade because optical/dimerization/solubility validation is incomplete.
+- supersedes / superseded_by: supersedes old-gate 417538 ranking and uncapped diagnostic 417553; superseded_by —

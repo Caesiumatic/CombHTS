@@ -143,9 +143,10 @@ def _write_shortlist(frame: pd.DataFrame, out: Path, notes: list[str]) -> Path |
         )
         return None
     shortlist_path = out / "shortlist.csv"
-    with shortlist_path.open("w", encoding="utf-8", newline="") as handle:
-        handle.write(f"# {DIAGNOSTIC_NOTE}\n")
-        shortlist.to_csv(handle, index=False)
+    # Keep this a standard CSV. A leading ``#`` disclaimer is unsafe because valid SMILES such
+    # as acetonitrile (``CC#N``) are truncated by readers using ``comment='#'``. The same caution
+    # is already carried losslessly in the ``diagnostic_note`` column on every row.
+    shortlist.to_csv(shortlist_path, index=False)
     return shortlist_path
 
 

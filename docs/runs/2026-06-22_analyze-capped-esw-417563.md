@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — analyze capped measured-first re-score (read-only)
+- run_id: 2026-06-22_analyze-capped-esw-417563
+- date: 2026-06-22 11:23:48 CDT
+- command: `python -m eps.cli analyze --harvest outputs/tier1_real_7488_capped_esw/tier1_all.csv --outdir outputs/tier1_real_7488_capped_esw/analysis`
+- engine / method: none / read-only pandas + plotting analysis
+- scope: 7,488 triads; 2,938 survivors from capped-policy re-score 417562
+- cluster job: SGE 417563, `compute-0-16.local`, 4 slots, 55 s wall, maxvmem 330.867 MB, exit 0
+- status: completed; shortlist CSV serialization will be regenerated after standard-CSV fix
+- headline results: summary, 30-row shortlist, six figures, and provenance written. Shortlist is led by terfuran / propylene carbonate combinations and contains propylene carbonate plus acetonitrile, rather than the uncapped all-GBL failure. Reading the legacy leading-comment CSV with `comment='#'` truncates MeCN rows at `CC#N`; underlying triad rows are complete.
+- per-property failures: read-only; source audit core stages 0; report-only statuses unchanged
+- output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_capped_esw/analysis/`
+- provenance: git commit `8856b14`; source capped re-score SGE 417562
+- caveats: composite remains diagnostic because optical gap/dimerization are not production-calibrated. Regenerate the shortlist after removing the unsafe leading `#` disclaimer; caution remains in `diagnostic_note`.
+- supersedes / superseded_by: supersedes uncapped analysis 417555 scientifically; superseded_by standard-CSV rerun pending
