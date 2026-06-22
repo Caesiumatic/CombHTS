@@ -5,7 +5,9 @@ filters:
 solvent_window_gate:
   # Practical ESW is condition-dependent. Select after the cheap solvent+salt join:
   # exact (solvent,salt) measured rows first, otherwise the conservative measured solvent
-  # lower bound, and only then min(curated CSV, computed descriptor) as a flagged fallback.
+  # lower bound. Hard-cap either measurement by min(curated CSV, computed descriptor), so a
+  # wider generic formulation can never relax the existing hard gate; use that cap directly
+  # when no measurement exists.
   # The computed molecular oxidation descriptor remains in the audit but is no longer allowed
   # to override a conditioned measurement (e.g. water's pathological computed 3.77 V value).
   enabled: true

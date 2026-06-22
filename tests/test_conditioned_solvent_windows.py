@@ -80,8 +80,34 @@ def test_no_measurement_uses_conservative_minimum_of_csv_and_computed() -> None:
     assert thf["solvent_anodic_limit_prior_V"] == pytest.approx(3.4)
 
 
+def test_wide_generic_measurement_cannot_relax_the_conservative_prior() -> None:
+    triad = pd.DataFrame(
+        [
+            {
+                "solvent_name": "GBL",
+                "salt": "TBAPF6",
+                "solvent_anodic_limit_V": 2.69,
+                "solvent_anodic_limit_csv_V": 3.0,
+                "solvent_anodic_limit_calibrated_V": 2.69,
+                "solvent_anodic_limit_source": "computed",
+                "solvent_cathodic_limit_V": -2.5,
+            }
+        ]
+    )
+    selected = apply_condition_aware_solvent_windows(
+        triad, load_solvent_window_measurements()
+    ).iloc[0]
+    assert selected["solvent_window_measurement_anodic_V"] == pytest.approx(5.2)
+    assert selected["solvent_window_conservative_cap_V"] == pytest.approx(2.69)
+    assert bool(selected["solvent_window_cap_applied"])
+    assert selected["solvent_anodic_limit_V"] == pytest.approx(2.69)
+    assert selected["solvent_anodic_limit_source"] == (
+        "measured_conditioned_capped_by_fallback"
+    )
+
+
 @pytest.mark.parametrize(
-    ("solvent", "salt", "expected"),
+    ("solvent", "salt", "measured_limit"),
     [
         ("water", "KCl", 1.145),
         ("acetonitrile", "TBABF4", 3.245),
@@ -91,24 +117,32 @@ def test_no_measurement_uses_conservative_minimum_of_csv_and_computed() -> None:
     ],
 )
 def test_mandatory_control_formulations_are_measured_and_conservative(
-    mock_harvest, solvent: str, salt: str, expected: float
+    mock_harvest, solvent: str, salt: str, measured_limit: float
 ) -> None:
     rows = mock_harvest.all_triads[
         (mock_harvest.all_triads["solvent_name"] == solvent)
         & (mock_harvest.all_triads["salt"] == salt)
     ]
     assert not rows.empty
-    assert set(rows["solvent_anodic_limit_source"]) == {"measured_conditioned"}
-    assert rows["solvent_anodic_limit_V"].to_numpy() == pytest.approx(expected)
+    expected = rows[
+        ["solvent_anodic_limit_csv_V", "solvent_anodic_limit_calibrated_V"]
+    ].min(axis=1).clip(upper=measured_limit)
+    assert set(rows["solvent_window_measurement_anodic_V"]) == {measured_limit}
+    assert rows["solvent_anodic_limit_V"].to_numpy() == pytest.approx(expected.to_numpy())
     assert rows["window_margin_V"].to_numpy() == pytest.approx(
-        expected - rows["monomer_Eox_filter_V_vs_AgAgCl"].to_numpy()
+        expected.to_numpy() - rows["monomer_Eox_filter_V_vs_AgAgCl"].to_numpy()
     )
 
 
-def test_water_computed_descriptor_is_audited_but_never_used_as_gate(mock_harvest) -> None:
+def test_water_gate_never_exceeds_measured_or_prior_evidence(mock_harvest) -> None:
     water = mock_harvest.all_triads[
         (mock_harvest.all_triads["solvent_name"] == "water")
         & (mock_harvest.all_triads["salt"] == "KCl")
     ]
-    assert water["solvent_anodic_limit_V"].to_numpy() == pytest.approx(1.145)
-    assert (water["solvent_anodic_limit_prior_V"] != water["solvent_anodic_limit_V"]).all()
+    expected = water[
+        ["solvent_anodic_limit_csv_V", "solvent_anodic_limit_calibrated_V"]
+    ].min(axis=1).clip(upper=1.145)
+    assert water["solvent_anodic_limit_V"].to_numpy() == pytest.approx(expected.to_numpy())
+    assert set(water["solvent_window_measurement_anodic_V"]) == {1.145}
+    assert (water["solvent_anodic_limit_V"] <= water["solvent_anodic_limit_prior_V"]).all()
+    assert (water["solvent_anodic_limit_V"] <= water["solvent_anodic_limit_csv_V"]).all()

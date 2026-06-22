@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — analyze uncapped measured-first re-score (diagnostic)
+- run_id: 2026-06-22_analyze-measured-esw-417555
+- date: 2026-06-22 11:01:18 CDT
+- command: `python -m eps.cli analyze --harvest outputs/tier1_real_7488_measured_esw/tier1_all.csv --outdir outputs/tier1_real_7488_measured_esw/analysis`
+- engine / method: none / read-only pandas + plotting analysis
+- scope: 7,488 triads; 2,961 survivors from re-score 417553
+- cluster job: SGE 417555, `compute-0-4.local`, 4 slots, 59 s wall, maxvmem 348.383 MB, exit 0
+- status: completed; result is diagnostic and scientifically superseded pending capped-policy re-score
+- headline results: summary, 30-row shortlist, six figures, and provenance written. All top-20 shortlist rows used GBL; old/new top-50 overlap was already 0/50. This exposed the uncapped generic 5.2 V GBL measurement as a ranking-dominance failure.
+- per-property failures: read-only; source audit reports core stages 0, report-only ionpair 3,744, secondary_monomer 7,488, water secondary/cathodic 576 each
+- output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_measured_esw/analysis/`
+- provenance: git commit `96281c5`; source re-score SGE 417553; uncapped measured-first policy
+- caveats: do not use this shortlist for experiments. The analysis triggered the stricter `min(measurement, curated CSV, computed prior)` hard cap; rerun analysis only after the capped re-score.
+- supersedes / superseded_by: superseded_by capped-policy analysis pending

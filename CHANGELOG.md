@@ -7,9 +7,10 @@ constants, or monomer-Eox calibration coefficients changed.
 
 - Replaced computed-only solvent-window gating with a post-join, condition-aware
   `measured_first_conservative` policy. Added versioned `data/solvent_windows.csv` records with
-  salt/electrolyte/electrode/reference/cutoff/source/tier metadata. Exact `(solvent,salt)` rows win;
-  otherwise the lowest eligible solvent measurement is used; only true gaps fall back to
-  `min(curated CSV, computed/calibrated descriptor)`. The computed value remains audited.
+  salt/electrolyte/electrode/reference/cutoff/source/tier metadata. Exact `(solvent,salt)` rows
+  provide preferred conditioned evidence; otherwise the lowest eligible solvent measurement is
+  used. The hard gate is capped by `min(curated CSV, computed/calibrated descriptor)`, preventing a
+  wider generic formulation from relaxing the existing conservative bound.
 - Added water/MeCN/DCM/DMF/DMSO control tests plus replicate and fallback tests. Water/KCl now gates
   at 1.145 V vs Ag/AgCl instead of the pathological computed ~3.77 V prior. THINK T14 is decided and
   implemented; sparse exact-formulation coverage remains data debt.
@@ -40,6 +41,10 @@ constants, or monomer-Eox calibration coefficients changed.
   changed 4,078 -> 2,961; 1,140 old survivors dropped and 23 PC/GBL triads entered. Window-pass
   rows fell 6,352 -> 4,244 while other hard-filter pass counts were unchanged; water and DMSO now
   have zero survivors, and old/new top-50 overlap is 0/50. The old shortlist is superseded.
+- Analysis 417555 showed all top-20 diagnostic shortlist rows were GBL because its generic 5.2 V
+  formulation window exceeded both existing priors. Revised the hard gate to the minimum across
+  measurement, curated CSV, and computed prior; raw measurement/cap/source/cap-applied fields remain
+  audited. Added a regression proving a wide GBL measurement cannot relax the gate.
 - Corrected-optical rerun 417556 failed before computation because a relative persistent ORCA
   work root was reused after changing cwd. Resolved the root to an absolute path and added a fake-
   ORCA regression test; the copied three-point TDA cache remained intact and no value was replaced.

@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-22 | analyze uncapped measured-first re-score | none (read-only) | 7,488 / 2,961 survivors | completed diagnostic | SGE 417555; all top-20 GBL; triggered conservative cap refinement | [link](2026-06-22_analyze-measured-esw-417555.md) |
 | 2026-06-22 | corrected sTDA path diagnostic | ORCA 6.1 real | 3 sTDA + 3 TDA cache hits | failed before compute | SGE 417556; relative scratch path bug; no value overwritten | [link](2026-06-22_orca-optical-corrected-417556.md) |
 | 2026-06-22 | Tier-1 measured-first ESW re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417553 exit 0; 4,078->2,961 survivors; top-50 overlap 0/50 | [link](2026-06-22_tier1-rescore-measured-esw-417553.md) |
 | 2026-06-22 | sTDA/TDA serial pilot | ORCA 6.1 real | 3 dimers x 2 methods | completed ORCA / invalid initial sTDA postprocess | SGE 417545 exit 0; corrected raw fit R2=.770/MAE=.097 eV; parser fixed locally, cluster rerun pending | [link](2026-06-22_orca-optical-real-417545.md) |

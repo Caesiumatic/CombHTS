@@ -7,7 +7,8 @@ Directive items 2 and 3 have reached the pilot/implementation milestone.
 
 - Tier-1 now uses a **condition-aware, measured-first/conservative solvent-window gate** after
   the cheap solvent+electrolyte join. Water, MeCN, DCM, DMF, and DMSO controls are tested; the
-  computed solvent oxidation descriptor remains in the audit but cannot override a measurement.
+  hard gate is the minimum across selected conditioned measurement, curated CSV, and computed
+  prior, so a wider generic formulation can never relax an existing conservative bound.
 - A mock-first ORCA 6.1 Engine, CLI workflows, SQLite caching, raw-output retention, and SGE
   templates now cover openCOSMO-RS solvation and paired sTDA/TDA optical pilots.
 - Real openCOSMO-RS job 417544 completed 3/3 points. Real optical job 417545 completed all six
@@ -15,9 +16,10 @@ Directive items 2 and 3 have reached the pilot/implementation milestone.
   misread an unrelated numeric table. The parser is fixed and regression-tested locally; the
   cluster CSV/cache is explicitly invalid until a corrected sTDA-only rerun.
 - The expanded real GFN2-xTB Tier-1 job 417538 completed with zero failures in all seven core/
-  scored stages. CSV-only job 417553 has now superseded its old gate: **2,961/7,488 survivors
-  (39.5%)**, down from 4,078/7,488. The new and old top-50 lists overlap 0/50, so the old shortlist
-  must not be used. Directive-§8 analysis of the corrected harvest is next.
+  scored stages. CSV-only job 417553 produced 2,961/7,488 survivors, but its shortlist exposed that
+  uncapped generic GBL evidence (5.2 V) dominated all top-20 rows. It is retained as a diagnostic,
+  not the final corrected ranking. The policy is now hard-capped by existing conservative priors;
+  a fresh CSV-only re-score is pending.
 
 Local verification is green: **205 passed, 5 skipped**; `ruff check .` and `git diff --check`
 pass. This remains a screening/route-validation milestone, not an experimental recommendation.
@@ -31,8 +33,9 @@ pass. This remains a screening/route-validation milestone, not an experimental r
   electrolyte, electrode, reference, cutoff, source, tier, and electrolyte-limited metadata.
   Selection order is exact `(solvent,salt)` conservative measurement, conservative solvent-only
   measurement, then `min(curated CSV, computed descriptor)` as a flagged fallback.
-- The mandatory ESW controls select measured values: water/KCl 1.145 V, MeCN/TBABF4 3.245 V,
-  DCM/TBAClO4 1.845 V, DMF/TBAClO4 1.745 V, and DMSO/TBAPF6 1.045 V vs Ag/AgCl.
+- The mandatory ESW controls retain their conditioned measurements as auditable evidence
+  (water/KCl 1.145 V, MeCN/TBABF4 3.245 V, DCM/TBAClO4 1.845 V, DMF/TBAClO4 1.745 V, and
+  DMSO/TBAPF6 1.045 V vs Ag/AgCl) while using the minimum of measurement/CSV/computed as the gate.
 - Real ORCA/openCOSMO-RS dGsolv in MeCN (kcal/mol): thiophene -4.132112, EDOT -7.908007,
   pyrrole -6.982100. These validate the route only; dGsolv is not solubility.
 - Real ORCA corrected dimer pairs `(sTDA, TDA)` in eV: thiophene (4.870360, 4.396), EDOT
@@ -43,16 +46,16 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 - Real Tier-1 job 417538 completed in 10 h 54 m 54 s. Core stages had zero failed triad rows.
   Report-only failures remain fully audited: spin-density secondary monomer rows 7,488; water
   cathodic/secondary-solvent rows 576 each; ion-pair rows 3,744.
-- Measured-first re-score 417553 used no Engine and completed in 31 s. It removed 1,140 old
-  survivors and admitted 23 (net -1,117); window-pass rows fell 6,352 -> 4,244 while anion and
-  solvation pass counts were unchanged. DMSO and water now have zero survivors.
+- Diagnostic re-score 417553 used no Engine and completed in 31 s. It removed 1,140 old survivors
+  and admitted 23, but its top-20 were all GBL because the first policy did not cap a wide generic
+  measurement. That evidence directly motivated the stricter minimum-of-all-evidence hard gate.
 
 ## Open scientific and engineering debt
 
 1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
    analysis must expand; a conditioned formulation limit is not a universal solvent constant.
-2. The 23 newly admitted PC/GBL triads come from generic measured formulation windows that exceed
-   the old prior; audit them and the zero-overlap top-50 before any experimental recommendation.
+2. Re-run the CSV-only gate with the new conservative cap and confirm there are no evidence-
+   relaxing gains or generic-GBL domination before accepting the shortlist.
 3. Job 417545's ORCA calculations are valid, but its generated sTDA CSV/cache values are not.
    Sync the fixed absorption-block parser, delete only the three invalid sTDA cache rows, and rerun;
    the three valid TDA cache rows should be reused.
@@ -71,8 +74,8 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 
 ## Immediate next actions
 
-1. Run `eps analyze` on `outputs/tier1_real_7488_measured_esw/tier1_all.csv`; inspect the corrected
-   shortlist/Pareto set and explicitly audit the 23 PC/GBL gains.
+1. Re-score the real harvest with the capped measured-first policy, then run `eps analyze` on that
+   output and inspect shortlist/Pareto composition before recommendation.
 2. Re-run only the invalid ORCA sTDA cache entries with the fixed parser; verify the standard
    CSV/JSON reproduce the raw-output values and diagnostic fit recorded above.
 3. Expand exact-formulation ESW and solubility anchors, then run the six-anchor/per-class optical
