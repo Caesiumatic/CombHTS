@@ -19,7 +19,9 @@ conda activate combhts
 cd "${COMBHTS_ROOT:-$HOME/CombHTS}"
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 
+RESCORE_INPUT="${RESCORE_INPUT:-outputs/tier1_real_7488/tier1_all.csv}"
+RESCORE_OUTDIR="${RESCORE_OUTDIR:-outputs/tier1_real_7488_measured_esw}"
 python -m eps.cli rescore-tier1 \
-    --input outputs/tier1_real_7488/tier1_all.csv \
-    --output outputs/tier1_real_7488_measured_esw/tier1_ranked.csv \
-    --all-output outputs/tier1_real_7488_measured_esw/tier1_all.csv
+    --input "$RESCORE_INPUT" \
+    --output "$RESCORE_OUTDIR/tier1_ranked.csv" \
+    --all-output "$RESCORE_OUTDIR/tier1_all.csv"
