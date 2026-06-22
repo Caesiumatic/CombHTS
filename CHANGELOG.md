@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-06-22 — directive gap audit; Lop verification; ESW risk and ORCA routes
+
+Documentation/research-state update after reviewing both directive PDFs, the implementation,
+tests, historical real-xTB artifacts, and Lop directly. No code, config, CSV data, redox constant,
+or score weight changed.
+
+- Verified SGE 417538 running on Lop (ib2, 4 slots) at 08:18 CDT. Its real-GFN2-xTB cache held
+  856 successful per-species entries (~39% of the 2,223-call no-failure mock analogue); final
+  ranked/all-triads CSVs and survivor/failure counts do not exist yet. Updated its manifest/index.
+- Re-ran local gates: `191 passed, 4 skipped`; ruff clean; doctor has no failures.
+- Corrected the scientific status of constraint (i): an old real-xTB shortlist used a computed/
+  calibrated water anodic limit of ~3.77 V vs Ag/AgCl (library fallback 0.77 V), putting EDOP/water
+  on the apparent Pareto front. Same-scale calibration (T11) is necessary algebraically but does
+  not validate a molecular solvent IP as an experimental ESW. Opened THINK T14 and prioritized a
+  condition-aware measured-first/conservative hybrid gate before experimental recommendations.
+- Reframed directive completion: library coverage is 36x13x16 versus the requested ~80-150 x
+  25-35 x 20-30; Tier 2 is still monomer-Eox calibration/dry-run rather than a solvent-specific
+  production refinement; polymer doping onset is not calibrated/delivered; optical gap,
+  dimerization, solubility, solvent ESW, and feasibility remain below validation targets.
+- Corrected the Lop software inventory. Standalone `stda/std2` and a separate COSMO-RS module are
+  absent, but ORCA 6.1 is installed with an executable `openCOSMORS`, and official ORCA 6.1 supports
+  built-in sTDA/sTD-DFT. Small Engine-backed solvation/optical pilots can therefore begin without
+  waiting for the external-module request; method identity and validation remain required.
+- Recorded the user's standing version-control authorization in `AGENTS.md`: after a major work
+  unit is complete, verification passes, and all applicable records are synchronized, commit and
+  push the current branch without another approval; new branches still require explicit approval.
+
 ## 2026-06-20 — docs sync to true state (DFT calibration 417442 running; all-5-axes-real; §8 analyze; sklearn/cluster facts)
 Documentation-only pass: STATUS.md overwritten to the 2026-06-20 snapshot, this CHANGELOG entry
 prepended, THINK.md statuses + Decision log updated. No code, config, data CSV, pinned redox

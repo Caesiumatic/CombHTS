@@ -1,57 +1,102 @@
 # Project Status
-_Last updated: 2026-06-21_
+_Last updated: 2026-06-22 08:18 CDT_
 
 ## Current phase
-First real-xTB Tier-1 full harvest (job 417538) RUNNING on Lop (ib2, 7,488-triad library, validated pinned calibration); results pending. DFT calibration 417442 is COMPLETE — the two-stage xTB→DFT→experiment ladder closed and the composed line VALIDATES the pinned screening calibration within the ~0.1 V reference floor (a flip to composed is an optional free re-score, not required).
 
-Step-1 (Tier-1 xTB screen) is complete and clean (all five composite axes are real GFN2-xTB physics with zero per-property failures). Step-2 (DFT calibration, job 417442) is COMPLETE (exit 0, ru_wallclock ~49.3 h, end 2026-06-21 21:25 local; 22/22 monomers ok): the directive's two-stage ladder closed and the composed xTB→DFT→experiment line (slope 0.656696, intercept −2.719630) agrees with the pinned screening default (0.725837 / −3.145372) to max |Δ| = 0.087 V over the cal-set descriptor range 5.45–7.41 — within the ~0.1 V reference floor — so the principled DFT-anchored route VALIDATES the pinned calibration. Adopting the composed anchor is therefore an OPTIONAL post-hoc free re-score (a linear map on cached descriptors), NOT a required flip. On that validated pinned calibration, the first full **real-xTB** Tier-1 harvest on the 7,488-triad library is now RUNNING (job 417538, Lop ib2; reported — the repo cannot confirm cluster state); results pending. The empirical strict-vs-relaxed LOO-CV tiebreaker (THINK T1) is the one remaining open calibration sub-question and does not block the harvest.
+The first expanded-library **REAL GFN2-xTB Tier-1 harvest** is running on Lop as SGE job
+**417538** (36 monomers x 13 solvents x 16 salts = 7,488 triads; ib2; 4 slots; 72 h wall).
+Direct SSH verification at 08:18 CDT found the job active and the resumable SQLite cache at
+**856 successful per-species results** (~39% of the 2,223 no-failure calls in the equivalent
+mock run). No final `tier1_ranked.csv` or `tier1_all.csv` exists yet, so survivor and failure
+counts are still unknown.
 
-## What works and is verified
-- **Library scaled to directive §2 (verified count): 36 monomers × 13 solvents × 16 salts = 7,488 triads** (was 15×11×10 = 1,650). Every new SMILES is RDKit-parsed + formula-checked; every new monomer has a verified coupling site (auto-α for 5-membered heteroaromatics; explicit otherwise; D-A/fused-ring flagged approximate). Validated seed rows byte-identical (purely additive). Uncertain species parked in `data/needs_review.md`, not guessed in.
-- **All five composite axes are real GFN2-xTB physics with ZERO per-property failures.** The first fully-clean real-xTB Tier-1 harvest (1,650 triads on the 15×11×10 library, EDOS/Se geometry fix in place) ran with 0 failures across all seven per-property stages (`monomer_Eox`, `solvation`, `optical_gap`, `dimerization`, `solvent_anodic_limit`, `solvent_cathodic_limit`, `anion_Eox`) and 1,007 survivors; the current mock harvest on the expanded 7,488-triad library likewise reports 0 failures across all per-property stages (`outputs/tier1_ranked.csv`, engine=mock). The earlier 152-triad EDOS/PF6 smoke failures are RESOLVED (THINK T10). A fresh full **real-xTB** harvest on the expanded 7,488-triad library is now RUNNING (job 417538, Lop ib2) on the validated pinned calibration; results pending (manifest [docs/runs/2026-06-21_tier1-harvest-real-7488.md](docs/runs/2026-06-21_tier1-harvest-real-7488.md)).
-- Tier-1 axes computed from real GFN2-xTB physics: monomer Eox (calibrated), solvation ΔG, solvent anodic + cathodic limits (computed), anion Eox (computed), optical gap (real n=6 hexamer HOMO-LUMO / sTDA-xTB fallback, uncalibrated vs TD-DFT), dimerization ΔG (real xTB radical-radical coupling free energy; absolute value carries a proton-constant offset).
-- **The window and anion-stability filters are LIVE on one calibrated oxidation scale (T11):** the single `configs/tier1.yaml` calibration is applied to monomer Eox, the solvent ANODIC limit, AND anion Eox, so every oxidation potential sits on one V-vs-Ag/AgCl scale (intercept cancels in every margin). The solvent CATHODIC limit (a reduction potential) stays raw/informational and feeds no Tier-1 filter.
-- `eps analyze` (directive §8, read-only) is wired and test-covered: it turns a scored Tier-1 harvest into `summary.csv` (retention overall + by monomer/solvent/salt_class + per-property failure counts), real-axis distribution PNGs (window margin, anion stability, solubility), a Pareto PNG (window vs solubility), a Morgan-fingerprint chemical-space map (PCA→t-SNE), and a SCREENING-GRADE `shortlist.csv` with a provenance sidecar. (The `outputs/analysis/` artifacts are regenerated on demand from a scored harvest and are not committed.)
-- scikit-learn installed via conda-forge (sklearn 1.9.0, numpy<2 preserved), unblocking the t-SNE chemical-space map; pip-building numpy 2.4.x had failed under Lop's system GCC 4.8.5. The `eps analyze` Pareto/shortlist test `pytest.importorskip`s both matplotlib and sklearn (skips, never fails, when absent).
-- Redox→V vs Ag/AgCl is a single tested function with pinned constants. T1/T2/T3 resolved on physical/literature grounds (research partD): T1 anchor TYPE = peak-for-calibration / onset-for-screening (only strict-vs-relaxed pending, DATA-gated); T2 Ag/AgCl master scale (SCE→Ag/AgCl +0.045 V, Fc/Fc⁺→Ag/AgCl +0.445 V MeCN, SHE→Ag/AgCl −0.197 V; Pavlishchuk & Addison 2000, DOI 10.1016/S0020-1693(99)00407-7); T3 honest MAE band 0.20–0.35 V, hard floor 0.15 V, peak/onset reported separately.
-- Benchmark: 39 calibration-eligible rows / 39 collapsed groups (23 peak, 16 onset; all nonaqueous Ag/AgCl). Profile counts (mock `eps validate --all-profiles`): `agagcl_peak_strict` = **9 (FROZEN, tier-A only)**, `agagcl_peak_relaxed` = **23**, `agagcl_onset_relaxed` = **16**, `fc_*` = 0/skipped. The 3 SCE-converted tier-B rows (diphenylamine, 3-ethylcarbazole peaks; N-vinylcarbazole onset) entered the RELAXED track only (decide-and-report; native SCE→Ag/AgCl +0.045 V; ~0.05–0.15 V junction floor). The pinned strict anchor and `default_screening_profile` are unchanged.
-- `configs/tier1.yaml` monomer-Eox calibration is a real GFN2-xTB `agagcl_peak_strict` fit: slope 0.725837, intercept −3.145372, R²=0.889, in-sample MAE 0.144 V, LOO-CV MAE 0.197 V.
-- Tier-2 Gaussian engine is CONFIG-DRIVEN (`configs/tier2.yaml`; gas-phase v1 = B3LYP/6-31G(d,p), ΔE_SCF, opt-only). `smd_solvent: null` + `use_freq: false` is the pinned v1; setting `smd_solvent` + `use_freq: true` is the DOCUMENTED FUTURE RIGOR TOGGLE (solvated ΔG). The config-blind DFT cache key was fixed (T13): `Tier2Config.cache_method_label()` (functional/basis/SMD/Freq) is now the cache key, so a config change forces a recompute.
-- `eps calibrate-dft` (directive §7) builds the two-stage calibration mock-first and emits the screen-ready DFT-anchored composed `composed_xtb_to_AgAgCl_V` (a drop-in for the `tier1.yaml` slope/intercept, adopted only after a live batch + review). `eps doctor` reports Tier-2 readiness (g16 on PATH; config method string) without running g16.
-- Version-controlled SGE templates live in `scripts/` (`run_tier1`/`run_validate`/`run_memo`/`run_analyze`/`run_dft_calibration`) with the known-good module/conda/OMP preamble; submit via `qsub`. `XTBEngine._run_xtb` checks the subprocess return code before parsing (regression-tested). Provenance sidecars + CI (`pytest`+`ruff`) are in place.
+The codebase is healthy: local `.venv/bin/pytest -q` reports **191 passed, 4 skipped** and
+`.venv/bin/ruff check .` passes. This is an engineering milestone, not yet a validated
+scientific ranking.
 
-## Cluster facts on Lop (reported — repo cannot confirm cluster state)
-- DFT calibration batch **417442 COMPLETE** (exit 0): `eps calibrate-dft`, ~22 representative monomers, gas-phase B3LYP/6-31G(d,p) adiabatic IP (neutral opt + cation opt; bare ΔE_SCF), intel24 (256 GB), submitted 2026-06-19 20:05, ru_wallclock ~49.3 h, maxvmem 1.49 GB, end 2026-06-21 21:25 local, 22/22 ok. Two-stage ladder closed: composed xTB→DFT→exp (0.656696 / −2.719630) validates the pinned default (0.725837 / −3.145372) to max |Δ| = 0.087 V over xTB 5.45–7.41 (within the ~0.1 V reference floor). Actual script config = committed `scripts/run_dft_calibration.sge` (d6f986d: 72h wall + unbuffered log) + `configs/tier2.yaml` gas-phase v1 (no uncommitted stash delta existed).
-- First REAL GFN2-xTB Tier-1 full harvest **417538 RUNNING**: `eps run-tier1 --engine xtb` on the 7,488-triad library, Lop queue **ib2**, 4 slots, started 2026-06-21 22:44, on the validated pinned calibration `agagcl_peak_strict_2026_06_17_xtb_v3`, writing `outputs/tier1_real_7488/{tier1_ranked,tier1_all,tier1_cache}`; results pending (inspect the failure audit before `eps analyze`).
-- Prior attempt **417297** used SMD(acetonitrile)+Freq and was KILLED at the 24h h_rt wall (exit 137) after ~10 DFT points. Method was reverted to gas-phase opt-only v1 (the SMD+Freq path retained as the documented rigor toggle); the DFT cache was wiped on the method change (different cache key) and resubmitted as 417442 with a 72h wall + unbuffered log.
-- Software inventory: ORCA 4.2.1–6.1.0 and Gaussian g16 available; gcc 8.4.0/9.3.0/11.3.0 modules (system cc is 4.8.5); SGE scheduler; intel24 used for DFT. **NO sTDA/std2/COSMOtherm/openCOSMO-RS modules** — an SCS Help Desk install request is pending.
+## What works
 
-## Scientific caution
-- This is an engineering/pipeline milestone, not a final scientific ranking.
-- The composite ranking is now SCREENING-GRADE (all five axes real physics), NOT placeholder-contaminated and NOT validated. A produced value is not a validated value.
-- Honest accuracy: report a calibrated MAE of 0.20–0.35 V; **never claim < 0.15 V** (irreducible floor from potential-type mismatch + liquid-junction error). Report peak- and onset-anchored subsets separately.
-- The default screening profile remains provisional pending the DATA-gated strict-vs-relaxed LOO-CV tiebreaker (the anchor TYPE is decided per THINK T1; this is not a PI gate).
-- Keep label ontology strict: monomer oxidation potential, electropolymerization onset, polymer doping onset, irreversible film redox, and ambiguous reference-electrode values must not be mixed.
+- Architecture invariants are implemented: per-species computation followed by cheap triad
+  joins; deterministic MockEngine; SQLite caching; CSV libraries; YAML thresholds/weights;
+  one tested redox-reference conversion function.
+- Tier 1 computes all five composite axes with real GFN2-xTB routes: calibrated monomer Eox,
+  monomer-solvent solvation free energy, solvent/anion oxidation descriptors, n=6 oligomer gap,
+  and oxidative-coupling energy. Failures are audited without aborting the harvest.
+- The interim library is valid and parseable at **36 x 13 x 16 = 7,488 triads**. It is still
+  well below the directive target of roughly 80-150 x 25-35 x 20-30.
+- The real gas-phase B3LYP/6-31G(d,p) calibration batch 417442 completed 22/22 monomers. Its
+  composed xTB->DFT->experiment line agrees with the pinned Tier-1 line within 0.087 V over
+  the calibration range, but this does not validate solvent windows, solubility, optical gaps,
+  or polymerization outcomes.
+- `eps analyze` can produce retention summaries, failure counts, distributions, Pareto plots,
+  chemical-space maps, and a diagnostic shortlist. `eps validate` supports separate peak/onset
+  profiles, a solvent-window benchmark, and a balanced-accuracy feasibility diagnostic.
+- Tier-2/Tier-3 Gaussian input generation is config-driven and cache-safe. The completed Tier-2
+  batch is only a monomer gas-phase calibration; the production refinement workflow remains a
+  dry-run/scaffold.
 
-## Placeholders / not yet validated
-- `optical_gap` is REAL (sTDA-xTB lowest singlet of the assembled n=6 oligomer, or the oligomer GFN2-xTB HOMO-LUMO gap as a flagged proxy `optical_gap_method = homo_lumo_hexamer_fallback`), but **UNCALIBRATED vs TD-DFT** (Step-2 hook). Open: confirm `stda` availability on Lop (currently absent; SCS install pending); calibrate vs a TD-DFT reference.
-- `dimerization_dG` is REAL (xTB oxidative coupling ΔG `2 M+. → M-M(neutral) + 2 H+`), but its **ABSOLUTE value carries a fixed proton-constant offset** (relative ordering is sound). DFT-grade thermochemistry is Step-2. Not a hard filter.
-- Calibrated absolute solvent-anodic / anion values are screening-grade extrapolations (the calibration was fit on monomer data); the intercept cancels in every margin, so filter decisions are robust. A measured solvent/anion benchmark is the eventual refinement.
-- Monomer-Eox calibration in `configs/tier1.yaml` is provisional/screening-grade (real xTB on strict v3, `agagcl_peak_strict`).
-- Two coupling regiochemistries remain approximate (aniline N-para; the D-A simplification). Fc/Fc⁺ profiles are empty placeholders, auto-skipped until clean native-Fc rows exist.
+## Verified Lop facts
 
-## Open debts
-1. **[417442 COMPLETE; harvest 417538 RUNNING]** DFT batch 417442 closed the two-stage ladder: the composed xTB→DFT→exp line VALIDATES the pinned default within the ~0.1 V reference floor, so the real-xTB 7,488-triad harvest (job 417538) is now RUNNING on the validated pinned calibration — no flip was required to proceed. REMAINING (optional, none blocking the harvest): the empirical strict-vs-relaxed Fit-2 LOO-CV tiebreaker; an OPTIONAL post-hoc free re-score onto the composed anchor (0.656696 / −2.719630), a linear map on cached descriptors; the stale gas-phase thiophene leverage point (drop/recompute); and reconciling `configs/tier1.yaml` with `configs/calibration_profiles.yaml` onto the chosen anchor. The keep-pinned-vs-adopt-composed call is presented to the PI (decide-and-report), not a correctness gate.
-2. Reconcile the calibration-anchor mismatch between `configs/tier1.yaml` (`agagcl_peak_strict`) and `configs/calibration_profiles.yaml` (`default_screening_profile: agagcl_peak_relaxed`) — deliberately left for the DATA-gated g16 LOO-CV tiebreaker (THINK T1).
-3. `optical_gap` calibration vs TD-DFT and `dimerization` absolute-reference (T6): both axes are REAL but UNCALIBRATED; real sTDA / openCOSMO-RS methods are gated on the pending SCS install.
-4. Solvent-ESW benchmark (`data/solvent_benchmark.csv`, seeded with 6 measured Ag/AgCl rows) to firm up the directive §7 solvent-window MAE; several anchors are electrolyte-anion-limited, so the §7 anodic MAE carries a systematic offset for oxidation-resistant solvents.
-5. Directive §7 yes/no feasibility metric (>85%): binary labels curated (18 YES / 16 NO, `data/polymerizability_labels.csv`); the metric is reported HONESTLY (balanced accuracy + confusion matrix on the matched in-scope subset, never a single accuracy or a >85% PASS) and stays PRELIMINARY (need ≥20–25 baseline-medium negatives).
-6. Get PI sign-off on the 4 ALPB proxy solvents (a curation note, not a convergence blocker — T10 closed with 0 anion failures).
-7. T8 full-scale ~100×30×25 production (heavy Tier-2 + optional Tier-3) — a PI/group RESOURCE-PLANNING decision; the 7,488-triad library is an interim expansion, not the full scale.
-8. DONE: 152 real-xTB smoke failures resolved (EDOS/Se geometry fix + SCF-robustness flags; 0 failures in the clean harvest — T10). DONE: version-controlled SGE templates. DONE: `eps analyze` (§8) wired and test-covered. DONE: config-blind DFT cache key fixed (T13). DONE: return-code-before-parse in `XTBEngine`.
+- Job 417538: running since 2026-06-21 22:44:48 CDT on `ib2@compute-2-16.local`, 4 slots.
+- Cache snapshot: 325 `adiabatic_ip`, 167 `solvation_free_energy`, 184 `optical_gap`, 72
+  `gas_energy`, and 36 each of `homo`, `lumo`, and `vertical_ip` (856 total). Final CSVs pending.
+- Modules: xtb 6.4.1, Gaussian g16, and ORCA 4.2.1-6.1.0 are available.
+- Standalone `stda`/`std2` and a standalone COSMO-RS module are absent. However, the installed
+  ORCA 6.1 tree **does contain an executable `openCOSMORS`**, and ORCA 6.1 supports openCOSMO-RS
+  and built-in sTDA/sTD-DFT. The solvation/optical calibration routes are therefore no longer
+  wholly blocked on a Help Desk installation; they need a small verified pilot and backend code.
 
-## Immediate next action
-Monitor the real-xTB harvest **417538** (7,488 triads, Lop ib2); on completion, inspect the per-species failure audit in `outputs/tier1_real_7488/tier1_all.csv` BEFORE running `eps analyze` (the new Se-monomers + salts may add per-species failures, captured auditably and never aborting the run). The strict-vs-relaxed Fit-2 LOO-CV tiebreaker and the OPTIONAL composed-anchor re-score (a free post-hoc linear map; the pinned anchor is already validated) are non-blocking. In parallel (non-blocking): the full-scale Tier-2 production screen (~100×30×25) is the one genuine PI/group RESOURCE-PLANNING escalation, not a correctness gate.
+## Scientific gaps that block an experimental recommendation
+
+1. **Solvent ESW is not validated and is presently the highest-risk axis.** The primary value is
+   an isolated-solvent xTB oxidation descriptor passed through a monomer calibration. The old
+   real-xTB shortlist consequently ranked EDOP/water highly while assigning water an anodic
+   limit of ~3.77 V vs Ag/AgCl; the library's own experimental fallback is 0.77 V. Matching
+   numerical scales does not make a molecular IP an experimental, electrode/electrolyte-specific
+   electrochemical window. Until fixed, constraint (i) is not trustworthy.
+2. **Solubility is a solvation proxy, not solubility.** `DeltaG_solv < -3 kcal/mol` ignores the
+   solute lattice/fusion term, concentration, temperature, aggregation, protonation, surfactants,
+   and salt compatibility. Constraint (iii) is therefore only a weak ranking proxy.
+3. **Electrolyte compatibility is partial.** Anion oxidation is computed, but its calibration is
+   extrapolated from monomers; salt solubility/conductivity, ion pairing, acid/base speciation,
+   and condition-specific anion limits are unvalidated. Cation reduction and ion-pair descriptors
+   are reported-only.
+4. **Optical gap is real but uncalibrated.** The active run uses an n=6 GFN2-xTB HOMO-LUMO
+   fallback because external sTDA-xTB is absent. The target is an optical excitation, so this
+   cannot yet support the 15% band-gap score or a material-quality claim.
+5. **Dimerization is relative-only.** The xTB coupling energy carries an unknown proton reference
+   offset; absolute exothermicity and the directive's `DeltaG < -10 kcal/mol` interpretation are
+   not available.
+6. **Polymer doping onset is not delivered.** Oligomer Eox-vs-length and a 1/n extrapolation are
+   reported, but they are not calibrated to polymer-film doping onset and do not enter ranking.
+7. **Tier 2 is incomplete.** Production Tier 2 currently writes neutral/cation monomer inputs and
+   can merge a per-monomer Eox CSV. It does not yet execute solvent-specific DFT for monomers,
+   solvents, anions/cations, spin density, dimerization, reorganization, or TD-DFT convergence.
+8. **Validation coverage is below directive gates.** The frozen clean peak calibration has 9
+   points (relaxed peak 23, onset 16); the solvent benchmark has 6 rows and several are
+   electrolyte-limited; the binary feasibility set is 18 YES/16 NO but only a small in-library
+   subset matches. The >=30 clean-group, solvent-MAE, and >85% feasibility goals are not met.
+9. **No expanded real shortlist exists yet.** The running harvest must finish, pass its per-species
+   failure audit, and be re-analyzed before any 20-50 candidate list can be generated.
+
+## Immediate next actions
+
+1. Let 417538 finish (or resume from the same cache after a wall kill), then update the run
+   manifest with final survivor/failure counts before running `eps analyze`.
+2. Treat the coming composite ranking as a diagnostic only. First replace the solvent-window
+   gate with a condition-aware measured-first/conservative hybrid and test the water/MeCN/DCM/
+   DMF/DMSO controls.
+3. Run two small ORCA pilots now: openCOSMO-RS on a representative monomer-solvent matrix, and
+   sTDA/TD-DFT on the existing six polymer optical-gap anchors. Add them through Engine interfaces
+   and cache them per species; do not launch the full production matrix first.
+4. Expand experimental anchors: solvent windows with electrode/electrolyte/reference metadata;
+   quantitative or threshold monomer solubilities; baseline-condition polymerization negatives;
+   and polymer optical/doping-onset data.
+5. Complete Tier-2 execution per species for a stratified 10-20 monomer pilot, then use the error
+   analysis to decide which axes deserve full-scale DFT. The full ~100 x 30 x 25 production spend
+   remains the genuine PI/group resource-planning decision.
 
 ## Architecture invariants
-See AGENTS.md: compute per-species, not per-triad; mock-first; data in CSV and thresholds/profiles in YAML; SQLite cache; one pinned redox function.
+
+See `AGENTS.md`: compute per species, never per triad; mock-first; CSV/YAML configuration;
+SQLite cache; explicit units; run manifests for every run; mock results are never scientific data.

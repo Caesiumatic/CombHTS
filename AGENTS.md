@@ -44,3 +44,10 @@ and add a row to docs/runs/README.md. Manifests record the FACTS of a run (engin
 job, status, headline numbers, output paths, provenance, caveats) because run artifacts live
 in gitignored outputs/ and never enter the repo. ALWAYS state the engine explicitly (mock vs
 real); never present a mock smoke as a scientific result.
+
+VERSION CONTROL:
+Creating or switching to a new branch still requires explicit user approval or mention.
+After a major work unit is genuinely complete, proportionate verification has passed, and
+STATUS.md / CHANGELOG.md / THINK.md / run manifests have been synchronized as applicable,
+you are authorized to commit the completed work and push the current branch without asking
+for additional approval. Do not commit or push partial, unverified, or stale-record work.
