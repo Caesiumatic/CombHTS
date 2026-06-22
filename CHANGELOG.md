@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-06-22 — real-harvest verification of the salt-role gate and distinct ranking
+
+Applied the merged gate/presentation fix to the existing 7,488-triad real-GFN2-xTB harvest on Lop.
+No quantum engine or SQLite cache was opened; weights, calibration, redox conversion, and retained
+row scores were unchanged.
+
+- Initial SGE submission 417568 failed before execution because its relative scheduler log path
+  resolved outside the checkout; wall 0 s, no result written. Re-submitted with an absolute path.
+- CSV-only SGE 417569 completed on `compute-1-12.local` in 21 s (exit 0): capped-ESW survivors
+  changed 2,938 -> 2,143, exactly 795 dropped and zero gained. The removed prior survivors were
+  HClO4 262, AgClO4 262, H2SO4 255, and pTSA 16; CSA already had zero. All retained composite
+  values were identical to the prior capped harvest.
+- The ranked presentation contains 1,127 exact score-classes whose `n_tied` values reconcile to
+  all 2,143 per-salt survivors. The full `tier1_all.csv` remains per-salt and auditable.
+- Read-only SGE 417571 completed on `compute-0-11.local` in 44 s (exit 0). Its distinct top-30 is
+  19 PC / 6 MeCN / 3 nitromethane / 2 NMP: PC fell from the old raw 80% to 63.3%. AgClO4 and HClO4
+  are absent from both representative and tied-salt fields. All 14 old distinct classes remain;
+  their leading subset is 8 PC / 6 MeCN (~57%), and 16 lower-ranked classes fill out the new 30.
+- Recorded all three SGE attempts in run manifests. Outputs remain gitignored on Lop; the
+  shortlist remains diagnostic and representative salt names are deterministic labels only.
+
 ## 2026-06-22 — supporting-electrolyte role gate and cation-degenerate ranked-view collapse
 
 Implemented the gate fix identified by the 417564 shortlist audit. No composite weight, score

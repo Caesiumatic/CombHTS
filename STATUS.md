@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 (salt-role hard gate + cation-degenerate presentation fix implemented on review branch)_
+_Last updated: 2026-06-22 (salt-role gate verified on the real 7,488-triad harvest; SGE 417569/417571)_
 
 ## Current phase
 
@@ -30,13 +30,20 @@ score. Collapsing that degeneracy and removing artifact salts reduces the list t
 chemistries (8 PC / 6 MeCN, ~57% PC)** — the raw 80% PC headline is largely a permutation artifact,
 **not** ESW inflation (the measured-first min-of-evidence cap held: PC 3.6 V -> 2.947 V). Audit
 verdicts: **KEEP 2 / CAVEAT 12 / PARK 10 / REMOVE 6** (REMOVE = all AgClO4 reference-salt rows + all
-HClO4 acid rows). The audit's gate fix is now implemented on
-`fix/salt-degeneracy-and-electrolyte-role`: versioned role metadata excludes every acid and
+HClO4 acid rows). The audit's gate fix is now merged on `main`: versioned role metadata excludes every acid and
 reference-only salt behind a reversible YAML toggle, while ranked/shortlist views collapse exact
 cation-only score permutations and retain `salts_tied`/`n_tied`. `tier1_all.csv` still retains and
 scores every passing per-salt row for audit. This is a presentation correction for a known model
-limitation, not invented cation physics. The production no-engine Lop re-score remains for the
-human review step; no cluster or chemistry-engine job was submitted for this gate change.
+limitation, not invented cation physics.
+
+The fix has now been applied to the existing real-xTB harvest without rerunning xTB. CSV-only SGE
+417569 completed in 21 s: capped-ESW survivors changed **2,938 -> 2,143** (795 dropped, zero gained),
+all common-row scores were unchanged, and zero acid/reference-only row passed. The full survivor
+audit collapses to **1,127 exact score-classes** in the ranked view. Read-only analysis 417571
+completed in 44 s; its distinct diagnostic top-30 is **19 PC / 6 MeCN / 3 nitromethane / 2 NMP**
+(PC 63.3%, down from the raw 80%). AgClO4 and HClO4 are absent both as representatives and inside
+`salts_tied`. The old shortlist's 14 distinct classes all remain: its 8 PC / 6 MeCN (~57%) estimate
+is reproduced in the leading 14, while the expanded distinct top-30 adds 16 lower-ranked classes.
 
 Three analysis/proposal artifacts are now merged to main (bee31d3), all **analysis/proposal ONLY** —
 none changed scoring, config, or production data: the 417564 shortlist audit
@@ -49,7 +56,7 @@ the library-expansion proposal ([docs/research/library_expansion_proposal.md](do
 +76 monomers / +27 solvents / +25 salts, RDKit-verified, proposal only, gated on stable
 ESW/solubility/optical gates before any wiring).
 
-Branch verification is green: **214 passed, 5 skipped**; `ruff check .` and `git diff --check`
+Code verification is green: **214 passed, 5 skipped**; `ruff check .` and `git diff --check`
 pass. This remains a screening/route-validation milestone, not an experimental recommendation.
 
 ## What works
@@ -87,6 +94,9 @@ pass. This remains a screening/route-validation milestone, not an experimental r
   Exact cation-degenerate score classes are represented once in ranked/shortlist outputs with
   deterministic tied-salt metadata; the unchanged full per-salt score table remains in
   `tier1_all.csv`.
+- Real-harvest verification 417569/417571 proves the gate behaves as designed: 2,143 per-salt
+  survivors, 1,127 ranked score-classes, zero non-supporting passes, and no score change among the
+  2,143 retained rows. The representative salt is only a deterministic label, not a cation claim.
 
 ## Open scientific and engineering debt
 
@@ -121,8 +131,8 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 
 ## Immediate next actions
 
-1. Review the salt-role/de-dup branch, then run the documented no-engine re-score on Lop and audit
-   the new survivor/shortlist counts. Do not interpret the role guard as a deposition model.
+1. Audit salt solubility/conductivity/ion pairing for the 30 distinct classes, prioritizing the
+   19 PC rows and remembering that alphabetic Li representatives are not cation recommendations.
 2. Expand exact-formulation ESW and solubility anchors, then run the six-anchor/per-class optical
    calibration before considering any production score change.
 3. Use those error analyses to choose the next 10-20 monomer Tier-2 pilot. Full-scale Tier-2 and
