@@ -11,4 +11,4 @@
 - output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_capped_esw/analysis/`
 - provenance: git commit `8856b14`; source capped re-score SGE 417562
 - caveats: composite remains diagnostic because optical gap/dimerization are not production-calibrated. Regenerate the shortlist after removing the unsafe leading `#` disclaimer; caution remains in `diagnostic_note`.
-- supersedes / superseded_by: supersedes uncapped analysis 417555 scientifically; superseded_by standard-CSV rerun pending
+- supersedes / superseded_by: supersedes uncapped analysis 417555 scientifically; superseded by standard-CSV run 417564

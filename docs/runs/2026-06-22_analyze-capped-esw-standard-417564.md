@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — final capped-ESW analysis, standard CSV (read-only)
+- run_id: 2026-06-22_analyze-capped-esw-standard-417564
+- date: 2026-06-22 11:31:48 CDT
+- command: `python -m eps.cli analyze --harvest outputs/tier1_real_7488_capped_esw/tier1_all.csv --outdir outputs/tier1_real_7488_capped_esw/analysis_standard_csv`
+- engine / method: none / read-only pandas + plotting analysis
+- scope: 7,488 triads; 2,938 survivors from capped-policy re-score 417562
+- cluster job: SGE 417564, `compute-1-7.local`, 4 slots, 43 s wall, maxvmem 332.566 MB, exit 0
+- status: completed
+- headline results: standard 30-row shortlist has 30/30 complete salt/score/Pareto fields; 24 propylene-carbonate and 6 acetonitrile triads. Leading monomers: terfuran (10), terthiophene (8), fluorene 9,9-dioctyl (8), bifuran (2), o-methoxyaniline (1), diphenylamine (1). TBABF4 appears in 9/30. Six figures, summary, shortlist, and provenance written.
+- per-property failures: read-only; core source stages 0 failures; report-only statuses unchanged
+- output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_capped_esw/analysis_standard_csv/`
+- provenance: git commit `46abaa5`; source capped re-score SGE 417562
+- caveats: DIAGNOSTIC ONLY. PC dominates 24/30 even under the conservative cap; acids and AgClO4 appear despite unvalidated ion-pair/salt-compatibility descriptors. Optical gap, dimerization absolute scale, and solubility remain incompletely calibrated. Do not treat as an experimental order list.
+- supersedes / superseded_by: supersedes 417563's nonstandard CSV artifact and 417555's uncapped analysis; superseded_by —

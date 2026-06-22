@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-22 | final capped-ESW analysis | none (read-only) | 7,488 / 2,938 survivors | completed | SGE 417564; standard 30-row CSV; 24 PC + 6 MeCN; diagnostic only | [link](2026-06-22_analyze-capped-esw-standard-417564.md) |
 | 2026-06-22 | corrected sTDA/TDA optical pilot | ORCA 6.1 real | 3 dimers x 2 methods | completed | SGE 417557; 3 corrected sTDA + 3 TDA hits; R2=.770/MAE=.097 eV | [link](2026-06-22_orca-optical-corrected-417557.md) |
 | 2026-06-22 | Tier-1 capped ESW re-score | none (CSV-only) | real xTB 7,488 triads | completed | SGE 417562; 2,938 survivors; -1,140/0 gained; strict old-set subset | [link](2026-06-22_tier1-rescore-capped-esw-417562.md) |
 | 2026-06-22 | analyze capped ESW re-score | none (read-only) | 7,488 / 2,938 survivors | completed; CSV rerun pending | SGE 417563; PC/MeCN shortlist; leading-comment parser hazard found | [link](2026-06-22_analyze-capped-esw-417563.md) |

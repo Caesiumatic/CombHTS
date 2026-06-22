@@ -189,6 +189,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Real-harvest effect (2026-06-22, SGE 417553)**: CSV-only application to the completed 7,488-triad real-xTB harvest changed survivors 4,078 -> 2,961 (1,140 dropped, 23 gained). Water and DMSO fell to zero survivors, and the old/new top-50 overlap is 0/50, confirming that the computed-only shortlist was not robust. The 23 gains are confined to propylene carbonate/GBL, where generic measured formulation windows exceed the old prior. They remain diagnostic pending source/condition audit; this does not reopen the measured-first policy, but it makes exact-formulation coverage the next T14 validation priority.
 - **Policy refinement from 417553/417555**: the 23 PC/GBL gains and an all-GBL top-20 showed that “measurement always replaces prior” was not conservative when generic/electrolyte-limited windows were wider. The gate is therefore revised to `min(measurement, curated CSV, computed prior)`. This preserves condition-aware evidence while enforcing the one-way safety property: new literature can reject additional triads but cannot admit a triad solely by widening a sparse generic window. A new real-harvest re-score must supersede 417553 before shortlist use.
 - **Final capped result (2026-06-22, SGE 417562)**: 2,938 survivors, exactly 1,140 dropped and zero gained relative to the old 4,078; the new survivor set is a strict subset. Window-pass rows fell 6,352 -> 4,196 while anion/solvation counts stayed fixed. Water and DMSO have zero survivors; 1,728 rows (water/PC/GBL) carry an explicit cap-applied flag. This verifies the intended one-way conservative invariant and supersedes 417553.
+- **Final analysis (2026-06-22, SGE 417564)**: the standards-compliant 30-row diagnostic shortlist contains 24 PC and 6 MeCN triads; GBL domination is gone. This supports the capped T14 semantics but exposes the next validation layer rather than a new gate-policy problem: PC formulation coverage is concentrated, and acids/AgClO4 appear while salt/ion-pair compatibility is not validated. Keep the list diagnostic until those rows are audited.
 - **Resolved**: 2026-06-22 — code, versioned condition table, audit provenance, config, and tests implemented. Report this choice; do not revert to computed-only gating.
 - **Links**: [T11](#t11--should-the-computed-solvent-anodic-limit-share-the-monomer-calibration--live-on-the-same-scale); [data/solvent_benchmark.csv](data/solvent_benchmark.csv); [src/eps/workflow/tier1.py](src/eps/workflow/tier1.py).
 
@@ -214,6 +215,8 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debt #12](STATUS.md#open-debts); [src/eps/workflow/dft_calibration.py](src/eps/workflow/dft_calibration.py); [configs/tier2.yaml](configs/tier2.yaml).
 
 ## Decision log
+
+- 2026-06-22 — Final capped analysis 417564 closed T14 implementation verification: standard 30-row CSV, no GBL domination, 24 PC + 6 MeCN. Gate semantics remain decided; next work is formulation/salt compatibility validation, not another ESW-policy change.
 
 - 2026-06-22 — Closed the T6 parser/artifact engineering loop with corrected real ORCA run 417557 (3 sTDA recomputed, 3 TDA cache hits, standard fit reproduced). No scoring change; proceed to six-anchor/per-class calibration.
 

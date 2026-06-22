@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 11:27 CDT_
+_Last updated: 2026-06-22 11:36 CDT_
 
 ## Current phase
 
@@ -19,7 +19,12 @@ Directive items 2 and 3 have reached the pilot/implementation milestone.
   not the final corrected ranking. Final capped job 417562 produced **2,938/7,488 survivors** with
   zero gains relative to the old gate; its survivor set is a strict subset of the old set.
 
-Local verification is green: **205 passed, 5 skipped**; `ruff check .` and `git diff --check`
+The corrected Tier-1 descriptor/ranking pipeline is now in the **validation and shortlist-audit
+phase**. Final read-only analysis 417564 produced a standards-compliant 30-row diagnostic shortlist
+(24 PC, 6 MeCN). It is not an experimental order list: salt/ion-pair compatibility and three score
+axes remain incompletely validated.
+
+Local verification is green: **210 passed, 5 skipped**; `ruff check .` and `git diff --check`
 pass. This remains a screening/route-validation milestone, not an experimental recommendation.
 
 ## What works
@@ -29,8 +34,9 @@ pass. This remains a screening/route-validation milestone, not an experimental r
   libraries/configuration are versioned CSV/YAML.
 - `data/solvent_windows.csv` records anodic/cathodic limits in V vs Ag/AgCl with salt,
   electrolyte, electrode, reference, cutoff, source, tier, and electrolyte-limited metadata.
-  Selection order is exact `(solvent,salt)` conservative measurement, conservative solvent-only
-  measurement, then `min(curated CSV, computed descriptor)` as a flagged fallback.
+  Evidence selection is exact `(solvent,salt)` measurement then conservative solvent-only evidence;
+  the hard gate is capped by `min(measurement, curated CSV, computed descriptor)` and every raw
+  measurement/cap/source/cap-applied decision remains audited.
 - The mandatory ESW controls retain their conditioned measurements as auditable evidence
   (water/KCl 1.145 V, MeCN/TBABF4 3.245 V, DCM/TBAClO4 1.845 V, DMF/TBAClO4 1.745 V, and
   DMSO/TBAPF6 1.045 V vs Ag/AgCl) while using the minimum of measurement/CSV/computed as the gate.
@@ -49,15 +55,15 @@ pass. This remains a screening/route-validation milestone, not an experimental r
   measurement. That evidence directly motivated the stricter minimum-of-all-evidence hard gate.
 - Final capped re-score 417562 completed with 2,938 survivors, exactly 1,140 fewer than the old gate
   and **zero newly admitted triads**. Its survivor set is a strict subset of the old set; water and
-  DMSO remain at zero. Analysis 417563 removed GBL domination and produced PC/MeCN-led candidates;
-  a standard-CSV serialization fix is pending one read-only rerun.
+  DMSO remain at zero. Final analysis 417564 removed GBL domination and produced a complete
+  standards-compliant 30-row PC/MeCN-led diagnostic shortlist.
 
 ## Open scientific and engineering debt
 
 1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
    analysis must expand; a conditioned formulation limit is not a universal solvent constant.
-2. Regenerate analysis once with the standard-CSV shortlist fix; then inspect the 30 complete
-   PC/MeCN-led triads without using an unsafe `comment='#'` parser.
+2. Audit the 24/30 propylene-carbonate concentration and remove/park acids or AgClO4 until
+   salt solubility, conductivity, ion-pairing, and formulation compatibility are supported.
 3. The corrected three-dimer optical fit is route evidence only; it remains too small and
    ill-conditioned for scoring and needs the six experimental anchors/per-class expansion.
 4. Solubility remains a dGsolv proxy without lattice/fusion, concentration, aggregation,
@@ -73,8 +79,8 @@ pass. This remains a screening/route-validation milestone, not an experimental r
 
 ## Immediate next actions
 
-1. Re-run `eps analyze` on capped output with the standard-CSV fix and inspect shortlist/Pareto
-   composition before recommendation.
+1. Audit the final 30-row diagnostic shortlist by salt/formulation, prioritizing PC dominance,
+   acids, AgClO4, and every row with failed/missing report-only compatibility descriptors.
 2. Expand exact-formulation ESW and solubility anchors, then run the six-anchor/per-class optical
    calibration before considering any production score change.
 3. Use those error analyses to choose the next 10-20 monomer Tier-2 pilot. Full-scale Tier-2 and
