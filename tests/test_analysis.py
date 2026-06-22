@@ -119,6 +119,37 @@ def test_shortlist_is_standard_csv_when_smiles_contains_hash(tmp_path: Path) -> 
     assert parsed["salt"].notna().all()
 
 
+def test_shortlist_collapses_exact_cation_degenerate_score_class() -> None:
+    frame = pd.DataFrame(
+        [
+            {
+                "monomer_name": "terfuran",
+                "monomer_canonical_smiles": "c1ccoc1-c1ccoc1-c1ccoc1",
+                "solvent_name": "propylene carbonate",
+                "anion_canonical_smiles": "O=Cl(=O)(=O)[O-]",
+                "salt": salt,
+                "supporting_electrolyte_ok": True,
+                "window_margin_V": 1.0,
+                "anion_stability_margin_V": 0.8,
+                "solvation_dG_kcal_mol": -5.0,
+                "dimerization_dG_kcal_mol": -3.0,
+                "optical_gap_eV": 2.0,
+                "composite_score": 0.7,
+                "pareto_front": True,
+            }
+            for salt in ("TBAClO4", "LiClO4", "NaClO4")
+        ]
+    )
+
+    shortlist = build_shortlist(frame)
+
+    assert shortlist is not None
+    assert len(shortlist) == 1
+    assert shortlist.loc[0, "salt"] == "LiClO4"  # documented alphabetical representative rule
+    assert shortlist.loc[0, "salts_tied"] == "LiClO4;NaClO4;TBAClO4"
+    assert shortlist.loc[0, "n_tied"] == 3
+
+
 def test_shortlist_skipped_when_scoring_columns_absent(tmp_path: Path) -> None:
     frame = _synthetic_harvest().drop(columns=["composite_score", "pareto_front"])
     harvest = _write_harvest(tmp_path / "harvest.csv", frame)

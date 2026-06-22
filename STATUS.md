@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 (post-merge sync — bee31d3; 417564 shortlist-audit findings)_
+_Last updated: 2026-06-22 (salt-role hard gate + cation-degenerate presentation fix implemented on review branch)_
 
 ## Current phase
 
@@ -30,10 +30,13 @@ score. Collapsing that degeneracy and removing artifact salts reduces the list t
 chemistries (8 PC / 6 MeCN, ~57% PC)** — the raw 80% PC headline is largely a permutation artifact,
 **not** ESW inflation (the measured-first min-of-evidence cap held: PC 3.6 V -> 2.947 V). Audit
 verdicts: **KEEP 2 / CAVEAT 12 / PARK 10 / REMOVE 6** (REMOVE = all AgClO4 reference-salt rows + all
-HClO4 acid rows). The **next gate-fix target** is de-duplicating salt permutations and excluding
-reference-only (AgClO4) and acidic (HClO4) salts from the supporting-electrolyte role. It remains a
-diagnostic list, not an experimental order list: salt/ion-pair compatibility and the three
-uncalibrated score axes remain incompletely validated.
+HClO4 acid rows). The audit's gate fix is now implemented on
+`fix/salt-degeneracy-and-electrolyte-role`: versioned role metadata excludes every acid and
+reference-only salt behind a reversible YAML toggle, while ranked/shortlist views collapse exact
+cation-only score permutations and retain `salts_tied`/`n_tied`. `tier1_all.csv` still retains and
+scores every passing per-salt row for audit. This is a presentation correction for a known model
+limitation, not invented cation physics. The production no-engine Lop re-score remains for the
+human review step; no cluster or chemistry-engine job was submitted for this gate change.
 
 Three analysis/proposal artifacts are now merged to main (bee31d3), all **analysis/proposal ONLY** —
 none changed scoring, config, or production data: the 417564 shortlist audit
@@ -46,7 +49,7 @@ the library-expansion proposal ([docs/research/library_expansion_proposal.md](do
 +76 monomers / +27 solvents / +25 salts, RDKit-verified, proposal only, gated on stable
 ESW/solubility/optical gates before any wiring).
 
-Local verification is green: **210 passed, 5 skipped**; `ruff check .` and `git diff --check`
+Branch verification is green: **214 passed, 5 skipped**; `ruff check .` and `git diff --check`
 pass. This remains a screening/route-validation milestone, not an experimental recommendation.
 
 ## What works
@@ -79,21 +82,24 @@ pass. This remains a screening/route-validation milestone, not an experimental r
   and **zero newly admitted triads**. Its survivor set is a strict subset of the old set; water and
   DMSO remain at zero. Final analysis 417564 removed GBL domination and produced a complete
   standards-compliant 30-row PC/MeCN-led diagnostic shortlist.
+- `data/electrolytes.csv` now classifies supporting/reference-only/acid roles additively. The live
+  role gate excludes AgClO4 and all four acid entries without aborting or deleting audit rows.
+  Exact cation-degenerate score classes are represented once in ranked/shortlist outputs with
+  deterministic tied-salt metadata; the unchanged full per-salt score table remains in
+  `tier1_all.csv`.
 
 ## Open scientific and engineering debt
 
 1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
    analysis must expand; a conditioned formulation limit is not a universal solvent constant.
-2. **Salt-permutation score degeneracy (417564 audit, top artifact — audit COMPLETE, gate fix NOT
-   yet implemented).** The composite ignores the cation — `window_margin` is solvent-only,
+2. **Salt-permutation score degeneracy (417564 audit — presentation/gate guard IMPLEMENTED; cation
+   physics still absent).** The composite ignores the cation — `window_margin` is solvent-only,
    `anion_stability` anion-only, and solubility/dimerization/band_gap monomer-only — so each
    (monomer, solvent, anion) chemistry appears up to 5x at a byte-identical score. This inflates the
-   apparent PC dominance (raw 80% -> ~57% over 14 distinct chemistries: 8 PC / 6 MeCN) and smuggles
-   reference-only AgClO4 and protic-acid HClO4 into the top-30 as zero-information duplicates. NEXT
-   GATE-FIX TARGET: de-duplicate salt permutations in the score and exclude reference-only (AgClO4)
-   and acid (HClO4) salts from the supporting-electrolyte role, pending salt solubility, conductivity,
-   ion-pairing, and formulation-compatibility evidence. The audit is merged (bee31d3) as an analysis
-   artifact only; no scoring/config/data change has been made.
+   apparent PC dominance (raw 80% -> ~57% over 14 distinct chemistries: 8 PC / 6 MeCN). Ranked and
+   shortlist views now collapse only exact score classes and expose every tied salt; the full audit
+   remains per-salt. A separate config-driven role gate excludes reference-only and acid rows.
+   Remaining debt is a validated cation/salt-compatibility model, not further tie-breaking.
 3. The corrected three-dimer optical fit is route evidence only; it remains too small and
    ill-conditioned for scoring and needs the six experimental anchors/per-class expansion.
 4. Solubility remains a dGsolv proxy without lattice/fusion, concentration, aggregation,
@@ -108,18 +114,15 @@ pass. This remains a screening/route-validation milestone, not an experimental r
    requested roughly 80-150 x 25-35 x 20-30. The vetted +76/+27/+25 library-expansion proposal
    (`docs/research/library_expansion_proposal.md`, merged bee31d3) is PROPOSAL ONLY and stays gated
    on stable ESW/solubility/optical gates before any wiring.
-9. **`cation_reduction_below_solvent_cathodic` does not model metal deposition (417564 audit).** The
-   live filter passed all AgClO4 rows on an uncalibrated computed reduction axis but does not model
-   Ag+ plating as metal, so it gave no protection against the reference-only silver salt. A passing
-   `cation_reduction` flag must not be read as plating/compatibility protection. Flagged, not yet
-   fixed.
+9. **`cation_reduction_below_solvent_cathodic` does not model metal deposition (417564 audit).** It
+   does not model Ag+ plating as metal, so a passing flag must not be read as plating/compatibility
+   protection. The role gate now blocks the known reference-only/acid misuse, but it is only a
+   guard: a calibrated cation/deposition model remains open scientific debt.
 
 ## Immediate next actions
 
-1. The per-row 417564 shortlist audit is COMPLETE (merged bee31d3). Next: implement its gate-fix
-   targets — de-duplicate cation-blind salt permutations in the composite, exclude reference-only
-   (AgClO4) and acidic (HClO4) salts from the supporting-electrolyte role, and teach
-   `cation_reduction` to flag metal-depositing cations (debt #2, #9).
+1. Review the salt-role/de-dup branch, then run the documented no-engine re-score on Lop and audit
+   the new survivor/shortlist counts. Do not interpret the role guard as a deposition model.
 2. Expand exact-formulation ESW and solubility anchors, then run the six-anchor/per-class optical
    calibration before considering any production score change.
 3. Use those error analyses to choose the next 10-20 monomer Tier-2 pilot. Full-scale Tier-2 and

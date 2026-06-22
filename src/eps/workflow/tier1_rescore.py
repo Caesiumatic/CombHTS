@@ -12,11 +12,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from eps.chemspace import load_electrolytes
 from eps.properties.solvent_windows import (
     apply_condition_aware_solvent_windows,
     load_solvent_window_measurements,
 )
-from eps.scoring import add_composite_score, load_scoring_config
+from eps.scoring import add_composite_score, collapse_cation_degenerate_rows, load_scoring_config
 from eps.workflow.tier1 import (
     DEFAULT_SCORING_CONFIG,
     DEFAULT_TIER1_CONFIG,
@@ -34,6 +35,9 @@ _FILTER_COLUMNS = (
     "pass_window_margin",
     "pass_anion_stability",
     "pass_solvation",
+    "pass_supporting_electrolyte_role",
+    "supporting_electrolyte_calc_status",
+    "supporting_electrolyte_reason",
     "has_calculation_failure",
     "passes_all_tier1_filters",
     "failed_filter_reasons",
@@ -85,6 +89,7 @@ def rescore_tier1_harvest(
     source = Path(input_path)
     triads = pd.read_csv(source, low_memory=False)
     triads = _restore_window_prior(triads)
+    triads = _refresh_electrolyte_role_metadata(triads)
     triads = triads.drop(
         columns=[
             *[column for column in _FILTER_COLUMNS if column in triads.columns],
@@ -119,8 +124,9 @@ def rescore_tier1_harvest(
 
     all_triads = annotate_tier1_filters(triads, tier1_config)
     filtered = apply_tier1_filters(all_triads, tier1_config)
-    ranked = add_composite_score(filtered, load_scoring_config(scoring_config_path))
-    all_triads = attach_scoring_columns(all_triads, ranked)
+    scored_survivors = add_composite_score(filtered, load_scoring_config(scoring_config_path))
+    all_triads = attach_scoring_columns(all_triads, scored_survivors)
+    ranked = collapse_cation_degenerate_rows(scored_survivors)
 
     output = Path(output_path)
     all_output = Path(all_output_path)
@@ -130,7 +136,7 @@ def rescore_tier1_harvest(
     all_triads.to_csv(all_output, index=False)
 
     total = int(len(all_triads))
-    survived = int(len(ranked))
+    survived = int(len(scored_survivors))
     return Tier1RescoreResult(
         ranked=ranked,
         all_triads=all_triads,
@@ -154,3 +160,26 @@ def _restore_window_prior(triads: pd.DataFrame) -> pd.DataFrame:
             "solvent_anodic_limit_prior_source"
         ]
     return restored
+
+
+def _refresh_electrolyte_role_metadata(triads: pd.DataFrame) -> pd.DataFrame:
+    """Join current versioned role metadata onto an old harvest by salt, without engine work."""
+
+    columns = (
+        "electrolyte_role",
+        "supporting_electrolyte_ok",
+        "electrolyte_role_justification",
+    )
+    refreshed = triads.drop(columns=[column for column in columns if column in triads], errors="ignore")
+    metadata = pd.DataFrame(
+        [
+            {
+                "salt": electrolyte.salt,
+                "electrolyte_role": electrolyte.electrolyte_role,
+                "supporting_electrolyte_ok": electrolyte.supporting_electrolyte_ok,
+                "electrolyte_role_justification": electrolyte.electrolyte_role_justification,
+            }
+            for electrolyte in load_electrolytes()
+        ]
+    )
+    return refreshed.merge(metadata, on="salt", how="left", validate="many_to_one")

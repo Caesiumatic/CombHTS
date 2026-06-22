@@ -194,6 +194,8 @@ def test_oligomer_eox_columns_do_not_affect_tier1_filters() -> None:
             "window_margin_V": [0.5, 0.5],
             "anion_stability_margin_V": [0.5, 0.5],
             "solvation_dG_kcal_mol": [-5.0, -5.0],
+            "electrolyte_role": ["supporting", "supporting"],
+            "supporting_electrolyte_ok": [True, True],
             "monomer_Eox_calc_status": ["ok", "ok"],
             "solvation_calc_status": ["ok", "ok"],
             "anion_Eox_calc_status": ["ok", "ok"],

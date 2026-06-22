@@ -76,6 +76,57 @@ def test_failed_filter_reasons_include_all_failed_hard_filters() -> None:
     assert annotated.loc[0, "failed_filter_reasons"] == "window_margin;solvation"
 
 
+def test_supporting_electrolyte_role_gate_excludes_reference_and_acid_rows() -> None:
+    triads = pd.DataFrame(
+        [
+            {
+                "salt": "TBABF4",
+                "electrolyte_role": "supporting",
+                "supporting_electrolyte_ok": True,
+                "window_margin_V": 1.0,
+                "anion_stability_margin_V": 1.0,
+                "solvation_dG_kcal_mol": -5.0,
+            },
+            {
+                "salt": "AgClO4",
+                "electrolyte_role": "reference_only",
+                "supporting_electrolyte_ok": False,
+                "window_margin_V": 1.0,
+                "anion_stability_margin_V": 1.0,
+                "solvation_dG_kcal_mol": -5.0,
+            },
+            {
+                "salt": "HClO4",
+                "electrolyte_role": "acid",
+                "supporting_electrolyte_ok": False,
+                "window_margin_V": 1.0,
+                "anion_stability_margin_V": 1.0,
+                "solvation_dG_kcal_mol": -5.0,
+            },
+        ]
+    )
+    config = {
+        "filters": {
+            "min_window_margin_V": 0.3,
+            "min_anion_stability_margin_V": 0.2,
+            "max_solvation_dG_kcal_mol": -3.0,
+        },
+        "supporting_electrolyte_gate": {"enabled": True},
+    }
+
+    annotated = annotate_tier1_filters(triads, config).set_index("salt")
+
+    assert bool(annotated.loc["TBABF4", "passes_all_tier1_filters"])
+    assert annotated.loc["TBABF4", "supporting_electrolyte_calc_status"] == "ok"
+    for salt, role in (("AgClO4", "reference_only"), ("HClO4", "acid")):
+        assert not bool(annotated.loc[salt, "passes_all_tier1_filters"])
+        assert annotated.loc[salt, "supporting_electrolyte_calc_status"] == "excluded"
+        assert annotated.loc[salt, "supporting_electrolyte_reason"] == (
+            f"salt not a supporting electrolyte: {role}"
+        )
+        assert "supporting_electrolyte" in annotated.loc[salt, "failed_filter_reasons"]
+
+
 def test_zero_survivor_behavior_writes_full_audit_with_reasons(tmp_path: Path) -> None:
     ranked_path = tmp_path / "tier1_ranked.csv"
     all_path = tmp_path / "tier1_all.csv"
@@ -173,8 +224,14 @@ def test_all_triads_carries_scoring_columns_matching_ranked(tmp_path: Path) -> N
     assert (~non_survivors["pareto_front"]).all()
     # Total row count is unchanged (the join is one-to-one over triad identity).
     assert len(all_df) == result.total_triads
-    # The Pareto flag in the all CSV matches the ranked CSV exactly.
-    assert int(all_df["pareto_front"].sum()) == int(result.ranked["pareto_front"].sum())
+    # The audit retains every per-salt survivor; ranked is only a deterministic presentation view.
+    scored_audit = all_df[all_df["composite_score"].notna()]
+    assert len(scored_audit) == result.surviving_triads
+    assert int(result.ranked["n_tied"].sum()) == result.surviving_triads
+    assert len(result.ranked) <= result.surviving_triads
+    # Pareto duplicates are collapsed in ranked but remain fully auditable in tier1_all.
+    ranked_pareto_rows = int(result.ranked.loc[result.ranked["pareto_front"], "n_tied"].sum())
+    assert int(all_df["pareto_front"].sum()) == ranked_pareto_rows
 
 
 def test_eps_analyze_on_all_csv_emits_pareto_and_shortlist(tmp_path: Path) -> None:

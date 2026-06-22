@@ -174,3 +174,16 @@ def test_directive_2_3_salt_additions_present_and_parse() -> None:
     # Polymeric / surfactant salts the per-ion model cannot handle stayed OUT of the live CSV.
     assert "NaPSS" not in electrolytes
     assert "NaDBSA" not in electrolytes
+
+
+def test_electrolyte_roles_exclude_reference_salt_and_all_acids() -> None:
+    electrolytes = {electrolyte.salt: electrolyte for electrolyte in load_electrolytes()}
+
+    assert electrolytes["AgClO4"].electrolyte_role == "reference_only"
+    assert electrolytes["AgClO4"].supporting_electrolyte_ok is False
+    for salt in ("H2SO4", "pTSA", "CSA", "HClO4"):
+        assert electrolytes[salt].electrolyte_role == "acid"
+        assert electrolytes[salt].supporting_electrolyte_ok is False
+    for salt in ("TBAPF6", "TBABF4", "TBAClO4", "LiClO4", "KCl"):
+        assert electrolytes[salt].electrolyte_role == "supporting"
+        assert electrolytes[salt].supporting_electrolyte_ok is True

@@ -1,17 +1,17 @@
-salt,cation_smiles,anion_smiles,salt_class,notes
-TBAPF6,CCCC[N+](CCCC)(CCCC)CCCC,F[P-](F)(F)(F)(F)F,tetraalkylammonium,common nonaqueous electrolyte
-TBABF4,CCCC[N+](CCCC)(CCCC)CCCC,F[B-](F)(F)F,tetraalkylammonium,common nonaqueous electrolyte
-TBAClO4,CCCC[N+](CCCC)(CCCC)CCCC,[O-]Cl(=O)(=O)=O,tetraalkylammonium,perchlorate oxidizer caution
-TBAOTf,CCCC[N+](CCCC)(CCCC)CCCC,FC(F)(F)S(=O)(=O)[O-],tetraalkylammonium,triflate
-TBATFSI,CCCC[N+](CCCC)(CCCC)CCCC,FC(F)(F)S(=O)(=O)[N-]S(=O)(=O)C(F)(F)F,tetraalkylammonium,TFSI
-LiClO4,[Li+],[O-]Cl(=O)(=O)=O,lithium salt,perchlorate oxidizer caution
-LiTFSI,[Li+],FC(F)(F)S(=O)(=O)[N-]S(=O)(=O)C(F)(F)F,lithium salt,TFSI
-NaClO4,[Na+],[O-]Cl(=O)(=O)=O,sodium salt,perchlorate oxidizer caution
-H2SO4,[OH3+],O=S(=O)(O)[O-],acid,bisulfate representation for acid electrolyte
-pTSA,[OH3+],Cc1ccc(S(=O)(=O)[O-])cc1,acid,p-toluenesulfonic acid representation
-TEAPF6,CC[N+](CC)(CC)CC,F[P-](F)(F)(F)(F)F,tetraalkylammonium,tetraethylammonium hexafluorophosphate; added per directive 2.3
-LiBF4,[Li+],F[B-](F)(F)F,lithium salt,added per directive 2.3
-KCl,[K+],[Cl-],metal halide,aqueous electrolyte; added per directive 2.3
-CSA,[OH3+],CC1(C)C2CCC1(CS(=O)(=O)[O-])C(=O)C2,acid,camphorsulfonic acid (anion = camphorsulfonate); acid uses hydronium-cation representation; added per directive 2.3
-HClO4,[OH3+],[O-]Cl(=O)(=O)=O,acid,perchloric acid; perchlorate oxidizer caution; acid uses hydronium-cation representation; added per directive 2.3
-AgClO4,[Ag+],[O-]Cl(=O)(=O)=O,silver,Ag/AgClO4; reference-electrode use; perchlorate dopant; added per directive 2.3
+salt,cation_smiles,anion_smiles,salt_class,notes,electrolyte_role,supporting_electrolyte_ok,electrolyte_role_justification
+TBAPF6,CCCC[N+](CCCC)(CCCC)CCCC,F[P-](F)(F)(F)(F)F,tetraalkylammonium,common nonaqueous electrolyte,supporting,true,Library notes identify a common nonaqueous supporting electrolyte
+TBABF4,CCCC[N+](CCCC)(CCCC)CCCC,F[B-](F)(F)F,tetraalkylammonium,common nonaqueous electrolyte,supporting,true,Library notes identify a common nonaqueous supporting electrolyte
+TBAClO4,CCCC[N+](CCCC)(CCCC)CCCC,[O-]Cl(=O)(=O)=O,tetraalkylammonium,perchlorate oxidizer caution,supporting,true,Tetraalkylammonium salt retained as a supporting-electrolyte candidate with existing perchlorate caution
+TBAOTf,CCCC[N+](CCCC)(CCCC)CCCC,FC(F)(F)S(=O)(=O)[O-],tetraalkylammonium,triflate,supporting,true,Tetraalkylammonium triflate supporting-electrolyte candidate
+TBATFSI,CCCC[N+](CCCC)(CCCC)CCCC,FC(F)(F)S(=O)(=O)[N-]S(=O)(=O)C(F)(F)F,tetraalkylammonium,TFSI,supporting,true,Tetraalkylammonium TFSI supporting-electrolyte candidate
+LiClO4,[Li+],[O-]Cl(=O)(=O)=O,lithium salt,perchlorate oxidizer caution,supporting,true,Standard salt candidate; formulation compatibility remains a separate validation need
+LiTFSI,[Li+],FC(F)(F)S(=O)(=O)[N-]S(=O)(=O)C(F)(F)F,lithium salt,TFSI,supporting,true,Standard salt candidate; formulation compatibility remains a separate validation need
+NaClO4,[Na+],[O-]Cl(=O)(=O)=O,sodium salt,perchlorate oxidizer caution,supporting,true,Standard salt candidate; formulation compatibility remains a separate validation need
+H2SO4,[OH3+],O=S(=O)(O)[O-],acid,bisulfate representation for acid electrolyte,acid,false,Protic acid reagent rather than a general supporting-electrolyte salt
+pTSA,[OH3+],Cc1ccc(S(=O)(=O)[O-])cc1,acid,p-toluenesulfonic acid representation,acid,false,Protic acid reagent rather than a general supporting-electrolyte salt
+TEAPF6,CC[N+](CC)(CC)CC,F[P-](F)(F)(F)(F)F,tetraalkylammonium,tetraethylammonium hexafluorophosphate; added per directive 2.3,supporting,true,Tetraalkylammonium nonaqueous supporting-electrolyte candidate
+LiBF4,[Li+],F[B-](F)(F)F,lithium salt,added per directive 2.3,supporting,true,Standard salt candidate; formulation compatibility remains a separate validation need
+KCl,[K+],[Cl-],metal halide,aqueous electrolyte; added per directive 2.3,supporting,true,Standard aqueous supporting-electrolyte candidate
+CSA,[OH3+],CC1(C)C2CCC1(CS(=O)(=O)[O-])C(=O)C2,acid,camphorsulfonic acid (anion = camphorsulfonate); acid uses hydronium-cation representation; added per directive 2.3,acid,false,Protic acid reagent rather than a general supporting-electrolyte salt
+HClO4,[OH3+],[O-]Cl(=O)(=O)=O,acid,perchloric acid; perchlorate oxidizer caution; acid uses hydronium-cation representation; added per directive 2.3,acid,false,417564 audit: protic acid is not a bulk supporting electrolyte in the screened nonaqueous formulation
+AgClO4,[Ag+],[O-]Cl(=O)(=O)=O,silver,Ag/AgClO4; reference-electrode use; perchlorate dopant; added per directive 2.3,reference_only,false,417564 audit: reference-electrode salt and Ag+ metal deposition is outside the current cation model

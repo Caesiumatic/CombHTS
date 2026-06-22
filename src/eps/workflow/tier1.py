@@ -52,7 +52,7 @@ from eps.properties.solvent_windows import (
     apply_condition_aware_solvent_windows,
     load_solvent_window_measurements,
 )
-from eps.scoring import add_composite_score, load_scoring_config
+from eps.scoring import add_composite_score, collapse_cation_degenerate_rows, load_scoring_config
 from eps.storage import SQLiteCache
 from eps.structures.geometry import (
     ConformerSearchConfig,
@@ -186,8 +186,9 @@ def run_tier1(
     )
     all_triads = annotate_tier1_filters(triads, tier1_config)
     filtered = apply_tier1_filters(all_triads, tier1_config)
-    ranked = add_composite_score(filtered, load_scoring_config(scoring_config_path))
-    all_triads = attach_scoring_columns(all_triads, ranked)
+    scored_survivors = add_composite_score(filtered, load_scoring_config(scoring_config_path))
+    all_triads = attach_scoring_columns(all_triads, scored_survivors)
+    ranked = collapse_cation_degenerate_rows(scored_survivors)
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -223,7 +224,8 @@ def run_tier1(
             pass
 
     total = len(all_triads)
-    survived = len(ranked)
+    # Survival is a hard-filter count over full per-salt rows; ranked is a de-duplicated view.
+    survived = len(scored_survivors)
     retention = survived / total if total else 0.0
     return Tier1Result(
         ranked=ranked,
@@ -605,6 +607,9 @@ def build_triad_table(
                 "anion_smiles": electrolyte.anion_smiles,
                 "anion_canonical_smiles": electrolyte.canonical_anion_smiles,
                 "cation_canonical_smiles": electrolyte.canonical_cation_smiles,
+                "electrolyte_role": electrolyte.electrolyte_role,
+                "supporting_electrolyte_ok": electrolyte.supporting_electrolyte_ok,
+                "electrolyte_role_justification": electrolyte.electrolyte_role_justification,
             }
             for electrolyte in electrolytes
         ]
@@ -655,6 +660,9 @@ def build_triad_table(
     triads["solubility_score"] = -triads["solvation_dG_kcal_mol"]
     # Reported-only §3.3 flag: the cation reduces at a less-negative potential than the solvent
     # cathodic edge (i.e. the cation may be reduced inside the solvent window). NOT a filter.
+    # IMPORTANT: this molecular reduction descriptor does not model metal deposition/plating.
+    # Role metadata currently guards reference-only and acid entries while a calibrated cation /
+    # deposition model remains scientific debt; never interpret this flag as plating protection.
     if {"cation_reduction_raw_V_vs_AgAgCl", "solvent_cathodic_limit_V"}.issubset(triads.columns):
         triads["cation_reduction_below_solvent_cathodic"] = (
             triads["cation_reduction_raw_V_vs_AgAgCl"] > triads["solvent_cathodic_limit_V"]
@@ -712,11 +720,25 @@ def annotate_tier1_filters(triads: pd.DataFrame, config: dict) -> pd.DataFrame:
     annotated["pass_solvation"] = annotated["solvation_dG_kcal_mol"] < float(
         filters["max_solvation_dG_kcal_mol"]
     )
+    role_gate = config.get("supporting_electrolyte_gate", {}) or {}
+    role_enabled = bool(role_gate.get("enabled", False))
+    role_results = annotated.apply(
+        lambda row: _supporting_electrolyte_gate_result(row, enabled=role_enabled),
+        axis=1,
+        result_type="expand",
+    )
+    role_results.columns = [
+        "pass_supporting_electrolyte_role",
+        "supporting_electrolyte_calc_status",
+        "supporting_electrolyte_reason",
+    ]
+    annotated[role_results.columns] = role_results
     annotated["has_calculation_failure"] = annotated.apply(_has_calculation_failure, axis=1)
     annotated["passes_all_tier1_filters"] = (
         annotated["pass_window_margin"]
         & annotated["pass_anion_stability"]
         & annotated["pass_solvation"]
+        & annotated["pass_supporting_electrolyte_role"]
         & ~annotated["has_calculation_failure"]
     )
     annotated["failed_filter_reasons"] = annotated.apply(_failed_filter_reasons, axis=1)
@@ -867,7 +889,25 @@ def _failed_filter_reasons(row: pd.Series) -> str:
         reasons.append("anion_stability")
     if not bool(row["pass_solvation"]):
         reasons.append("solvation")
+    if not bool(row.get("pass_supporting_electrolyte_role", True)):
+        reasons.append("supporting_electrolyte")
     return ";".join(reasons)
+
+
+def _supporting_electrolyte_gate_result(
+    row: pd.Series, *, enabled: bool
+) -> tuple[bool, str, str]:
+    """Return auditable role-gate pass/status/reason without aborting on bad metadata."""
+
+    if not enabled:
+        return True, "disabled", ""
+    role = str(row.get("electrolyte_role", "")).strip()
+    raw_ok = row.get("supporting_electrolyte_ok")
+    if not role or pd.isna(raw_ok) or str(raw_ok).strip().lower() not in {"true", "false"}:
+        return False, "failed", "supporting-electrolyte role metadata missing or invalid"
+    if raw_ok is True or str(raw_ok).strip().lower() == "true":
+        return True, "ok", ""
+    return False, "excluded", f"salt not a supporting electrolyte: {role}"
 
 
 @dataclass(frozen=True)

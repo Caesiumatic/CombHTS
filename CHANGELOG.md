@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-06-22 — supporting-electrolyte role gate and cation-degenerate ranked-view collapse
+
+Implemented the gate fix identified by the 417564 shortlist audit. No composite weight, score
+formula, calibration profile, pinned redox conversion, or chemistry-engine result changed.
+
+- Added additive role metadata to all existing electrolyte rows: `supporting`, `reference_only`,
+  or `acid`, an explicit eligibility boolean, and a versioned justification. AgClO4 is
+  reference-only; H2SO4, pTSA, CSA, and HClO4 are acids; all standard salt candidates remain
+  supporting. No salt row was removed or retyped.
+- Added a reversible `supporting_electrolyte_gate.enabled` YAML gate. Excluded rows remain in
+  `tier1_all.csv` with pass/status/reason fields; missing/invalid metadata fails auditably rather
+  than aborting. The CSV-only re-score refreshes role metadata by salt so old harvests need no
+  engine rerun.
+- Left the five-axis composite and weights untouched. Ranked and shortlist presentation views now
+  collapse exact `(monomer, solvent, anion, score-inputs)` cation permutations, select a
+  deterministic representative (eligible supporting row, then alphabetic salt), and report
+  `salts_tied` plus `n_tied`. Full scored per-salt survivors remain in `tier1_all.csv`.
+- Documented that `cation_reduction_below_solvent_cathodic` does not model metal deposition. The
+  role exclusion is the present guard, not a fabricated or calibrated cation-physics term.
+- Added loader, hard-filter, old-harvest re-score, full-audit reconciliation, ranked de-dup, and
+  shortlist de-dup regressions. Final verification: `214 passed, 5 skipped`; ruff and
+  `git diff --check` clean. No cluster, xTB, Gaussian, or ORCA job was run.
+
 ## 2026-06-22 — condition-aware ESW gate; real ORCA solvation/optical pilots; real Tier-1 harvest completed
 
 Completed directive items 2 and 3 at implementation/pilot scope. No scoring weights, pinned redox

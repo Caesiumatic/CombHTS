@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-22 (parallel-branch merge landed at bee31d3; 417564 audit found salt-permutation score degeneracy as the next gate-fix target; optical axis stays diagnostic pending n=6 calibration; library expansion stays gated)_
+_Last updated: 2026-06-22 (417564 salt-role guard and cation-degenerate presentation fix implemented; deposition physics remains open)_
 
 ## How to read this
 
@@ -215,6 +215,18 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debt #12](STATUS.md#open-debts); [src/eps/workflow/dft_calibration.py](src/eps/workflow/dft_calibration.py); [configs/tier2.yaml](configs/tier2.yaml).
 
 ## Decision log
+
+- 2026-06-22 (417564 gate decision implemented on review branch) — added versioned
+  electrolyte-role metadata and a reversible hard gate excluding reference-only/acid entries, plus
+  exact-tie collapse only in ranked/shortlist presentation views. The full per-salt audit and every
+  underlying score remain intact; weights/formula/calibration/redox conversion are unchanged.
+  Representative selection is explicitly deterministic rather than physical
+  (`supporting_electrolyte_ok`, then alphabetic salt), with `salts_tied`/`n_tied` exposing the
+  collapsed class. This resolves the known shortlist permutation artifact without pretending to
+  model cations. The scientific question is narrowed, not closed:
+  `cation_reduction_below_solvent_cathodic` still does not model metal deposition, salt solubility,
+  conductivity, or ion pairing. Role exclusion is the current guard pending a calibrated
+  deposition/compatibility model. No cluster or chemistry-engine run.
 
 - 2026-06-22 (parallel-branch merge landed; 417564 audit → salt-permutation degeneracy is the next gate-fix target) — the three parallel deliverables merged to main as **bee31d3** (shortlist audit, optical anchors + calibration plan, library-expansion proposal); all are ANALYSIS/PROPOSAL artifacts and none changed scoring/config/production-data. The completed per-row audit of the 417564 30-row shortlist ([docs/audits/shortlist_audit_417564.md](docs/audits/shortlist_audit_417564.md)) found a **salt-permutation SCORE DEGENERACY** as the top driver of apparent PC over-representation and of the AgClO4/HClO4 intrusion: the composite ignores the cation (`window_margin` solvent-only, `anion_stability` anion-only, solubility/dimerization/band_gap monomer-only), so each (monomer, solvent, anion) chemistry appears up to 5× at a byte-identical score. Collapsing the degeneracy and removing artifact salts takes the raw 24 PC / 6 MeCN (80% PC) to **14 distinct chemistries = 8 PC / 6 MeCN (~57%)**; verdicts KEEP 2 / CAVEAT 12 / PARK 10 / REMOVE 6 (REMOVE = all AgClO4 + all HClO4 rows). Crucially this is **not** ESW inflation — the capped [T14](#t14--what-is-a-valid-solvent-window-gate) min-of-evidence gate held (PC 3.6 V → 2.947 V). The live `cation_reduction_below_solvent_cathodic` filter also does **not** model metal deposition, so it gave no protection against AgClO4 (Ag plates as metal). **DECISION:** the next Tier-1 gate fix (a) de-duplicates cation-blind salt permutations in the composite and (b) excludes reference-only salts (AgClO4) and acids (HClO4) from the supporting-electrolyte role; the audit is recorded but the fix is not yet implemented (no scoring/config/data change). The 15% optical axis stays DIAGNOSTIC pending the merged **n=6** neutral-polymer calibration ([T6](#t6--band-gap-oligomer--stda-xtb-directive-route-vs-an-ml-model); 6 high + 3 medium anchors replace the n=3 sTDA/TDA pilot), and the +76/+27/+25 library expansion stays GATED on stable ESW/solubility/optical gates before any wiring ([T8](#t8--chemical-space-coverage-vs-weight-tuning)). Docs-only; `pytest -q` green (210 passed, 5 skipped); no code/config/data/weights changed.
 

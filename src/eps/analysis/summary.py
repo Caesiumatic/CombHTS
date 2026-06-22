@@ -15,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 
 from eps.analysis import plots
+from eps.scoring import collapse_cation_degenerate_rows
 
 SURVIVOR_COLUMN = "passes_all_tier1_filters"
 SHORTLIST_REQUIRED_COLUMNS = ("composite_score", "pareto_front")
@@ -129,6 +130,10 @@ def build_shortlist(frame: pd.DataFrame, top_n: int = 30) -> pd.DataFrame | None
     front = frame[frame["pareto_front"].astype(bool)].copy()
     if front.empty:
         return front.assign(diagnostic_note=DIAGNOSTIC_NOTE)
+    # ``tier1_all.csv`` intentionally retains every per-salt survivor for audit. The current
+    # composite has no cation-dependent axis, so collapse only exact cation-only score classes in
+    # this presentation view; do not fabricate a cation contribution to break ties.
+    front = collapse_cation_degenerate_rows(front)
     front = front.sort_values("composite_score", ascending=False).head(top_n)
     front["diagnostic_note"] = DIAGNOSTIC_NOTE
     return front.reset_index(drop=True)

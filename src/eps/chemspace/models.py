@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -48,4 +48,7 @@ class Electrolyte(BaseModel):
     anion_smiles: str
     canonical_anion_smiles: str
     salt_class: str
+    electrolyte_role: Literal["supporting", "reference_only", "acid", "other"]
+    supporting_electrolyte_ok: bool
+    electrolyte_role_justification: str
     notes: str = ""
