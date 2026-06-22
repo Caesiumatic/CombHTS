@@ -1,0 +1,43 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_opt_n6
+#$ -j y
+#$ -pe smp 1
+#$ -l h_rt=72:00:00
+
+set -euo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export OMP_NUM_THREADS=1
+
+cd "${COMBHTS_ROOT:-$HOME/CombHTS}"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+OPTICAL_N6_OUTDIR="${OPTICAL_N6_OUTDIR:-outputs/optical_calibration_n6}"
+OPTICAL_N6_CACHE="${OPTICAL_N6_CACHE:-$OPTICAL_N6_OUTDIR/cache.sqlite}"
+OPTICAL_PILOT_CACHE="${OPTICAL_PILOT_CACHE:-outputs/orca_optical_pilot_corrected/cache.sqlite}"
+export EPS_ORCA_WORK_ROOT="${EPS_ORCA_WORK_ROOT:-$OPTICAL_N6_OUTDIR/raw}"
+
+python scripts/run_optical_calibration_n6.py \
+    --engine orca \
+    --outdir "$OPTICAL_N6_OUTDIR" \
+    --cache "$OPTICAL_N6_CACHE" \
+    --pilot-cache "$OPTICAL_PILOT_CACHE" \
+    --preflight-only
+
+python scripts/run_optical_calibration_n6.py \
+    --engine orca \
+    --outdir "$OPTICAL_N6_OUTDIR" \
+    --cache "$OPTICAL_N6_CACHE" \
+    --pilot-cache "$OPTICAL_PILOT_CACHE"
+
+python scripts/analyze_optical_calibration_n6.py \
+    --points "$OPTICAL_N6_OUTDIR/optical_n6_points.csv" \
+    --outdir "$OPTICAL_N6_OUTDIR"
