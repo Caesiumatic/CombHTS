@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-22 evening (soft-axis review complete; §7 validation is next)_
+_Last updated: 2026-06-23 (417587 complete; optical result diagnostic only)_
 
 ## How to read this
 
@@ -17,7 +17,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T3 | Potential-type mismatch sets the accuracy ceiling | open | self (rigor) | lit-curation (no compute) |
 | T4 | What ">=30 clean groups" actually validates | open | self / report (directive's own two-stage design; surface as info) | scope/policy |
 | T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
-| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (417587 running; diagnostic baseline only) | group-meeting | compute-heavy |
+| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (417587 complete; weak diagnostic dimer baseline only) | group-meeting | compute-heavy |
 | T7 | What is the real deliverable? | open | self / report (directive §8 lists both; produce both) | scope/policy |
 | T8 | Chemical-space coverage vs weight tuning | open | PI/group (RESOURCE planning: full-scale Tier-2 spend/sequencing) | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
@@ -99,7 +99,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/polymerization.csv](data/polymerization.csv); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
 
 ## T6 — Band gap: oligomer + sTDA-xTB (directive route) vs an ML model
-- **Status**: exploring (417587 running as diagnostic dimer baseline; ML alternative parked)
+- **Status**: exploring (417587 complete; diagnostic neutral-dimer baseline rejected for production scoring)
 - **Forum**: group-meeting
 - **Cost**: compute-heavy
 - **Question**: Reach the polymer band gap via real oligomer assembly -> sTDA-xTB, or via a trained ML/GNN predictor?
@@ -113,7 +113,9 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Update (2026-06-22, real ORCA pilot)**: ORCA 6.1 route execution is now verified on Lop. Serial job 417545 completed 3/3 CAM-B3LYP/def2-SVP/CPCM(MeCN) sTDA and 3/3 conventional TDA calculations on thiophene/EDOT/pyrrole dimers. Corrected raw pairs (sTDA/TDA, eV) are 4.870/4.396, 4.870/4.687, and 5.488/5.004; the diagnostic three-point fit is slope 0.748, intercept 0.900 eV, R2 0.770, MAE 0.097 eV. This proves the route, but does not validate a score change: thiophene and EDOT have nearly identical sTDA gaps yet differ by 0.291 eV in TDA, making the tiny fit ill-conditioned. An initial broad regex misparsed an unrelated 2 cm-1 row as every sTDA value; the parser is now restricted to the electric-dipole absorption block and regression-tested. The generated cluster CSV/cache remains invalid until that fix is synced and the cheap sTDA-only rerun is made. Next scientific step remains the six experimental anchors plus per-class/geometry sensitivity, not production rollout.
 - **Corrected artifact closure (2026-06-22, SGE 417557)**: the fixed parser recomputed all three sTDA rows while reusing all three TDA cache rows. Standard CSV/JSON now reproduce the raw pairs and fit above exactly; route engineering is closed. The scientific conclusion is unchanged: three dimers are insufficient to calibrate the production optical axis.
 - **Update (2026-06-22, n=6 calibration prepared)**: the six HIGH staging anchors now have a serial ORCA sTDA+TDA execution path and a ready post-run computed-to-experiment analysis (slope/intercept/R2, LOO-CV MAE, per-class residuals, leverage flags). Exact-key inspection of the corrected pilot cache found 0/12 reusable anchor requests: its thiophene/EDOT/pyrrole dimers are not the PEDOP/PProDOP/P3HT/PEDOS/PFO/DTP anchor dimers. This run is intentionally a pilot-matched **dimer baseline**, not the plan's polymer-limit extrapolation; it will quantify whether the six-anchor line is even coherent before paying for length/geometry sweeps. That sequencing advances T6 but does not resolve it, and no scoring change is authorized.
-- **Update (2026-06-22 evening, SGE 417587 reported running)**: the six-anchor ORCA sTDA+TDA job has been submitted and is RUNNING on Lop as job 417587 (reported/unverified; no output inspected here). The scientific gate is unchanged: even a completed fit is only a diagnostic dimer-vs-polymer baseline until per-class residuals, leverage, chain-length/geometry effects, and literature-anchor review are complete. Do not wire the optical result into the composite before human review.
+- **Historical update (2026-06-22 evening, superseded by 2026-06-23 completion)**: the six-anchor ORCA sTDA+TDA job had been submitted and was RUNNING on Lop as job 417587 (reported/unverified; no output inspected here). The scientific gate was unchanged: even a completed fit would be only a diagnostic dimer-vs-polymer baseline until per-class residuals, leverage, chain-length/geometry effects, and literature-anchor review were complete. Do not wire the optical result into the composite before human review.
+- **Historical update (2026-06-22 late, superseded by 2026-06-23 completion)**: read-only Lop access verified 417587 was still RUNNING by `qstat` (state `r`, queue `amd16smt@compute-1-8.local`, started 2026-06-22 15:38:03; `qacct -j 417587` had no completed record). Operational cache metadata showed 9/12 requests cached (5 sTDA, 4 TDA), no final points/fit/provenance files, and one active raw ORCA directory with temp files. No excitation values were inspected or treated as scientific results. The run is six experimental anchors evaluated as neutral dimers, not six-unit oligomers. The recoverable working checkout is `/home/shic4/CombHTS` on branch `calib/solubility-cosmors` at `06b7e1d`, correcting the earlier manifest branch label.
+- **Update (2026-06-23, SGE 417587 completed)**: 417587 completed successfully on Lop (exit 0, failed 0; compute-1-8.local; 2026-06-22 15:38:03 -> 2026-06-23 01:16:14 CDT). All 12 real ORCA requests completed (6 sTDA + 6 TDA) and final points/fit/report files exist. The diagnostic conclusion is negative/weak for production scoring: sTDA -> experiment gives slope 0.244967, intercept 0.972671 eV, R2 0.1509, in-sample MAE 0.3195 eV, LOO-CV MAE 0.4564 eV; TDA -> experiment gives slope 0.274225, intercept 0.902461 eV, R2 0.1712, in-sample MAE 0.3105 eV, LOO-CV MAE 0.4489 eV. Alkylenedioxyselenophene and fluorene are above the global MAE; no high-leverage flags. This confirms the neutral-dimer baseline is not a production optical calibration and the 15% optical axis remains diagnostic/unchanged.
 - **Resolves when**: The group accepts the oligomer/sTDA route (with range-separated TD-DFT calibration as Step-2, validated per class) or explicitly chooses to pivot to an ML/GNN predictor.
 - **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
 
@@ -233,6 +235,18 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
   affinity = 0.50) is reference-only. **Strategic decision:** pivot next to §7 validation
   (Eox MAE, ESW MAE, polymerization yes/no accuracy), because continuing to chase data-gated
   soft-axis absolute calibration has lower ROI right now.
+
+- 2026-06-22 late (417587 state reconciliation only; superseded 2026-06-23) — verified by
+  read-only Lop inspection that optical job 417587 was still running, not complete. `qacct` had no
+  completed record, final optical fit artifacts were absent, and cache/raw-file evidence was
+  operational progress only. No scientific optical result was known at that time, and the T6 gate
+  remained open.
+
+- 2026-06-23 (417587 completed) — the six-anchor neutral-dimer ORCA baseline completed cleanly but
+  does not support production optical calibration. The sTDA/TDA computed-to-experiment fits have
+  low R2 (~0.15-0.17) and LOO-CV MAE around 0.45 eV, so the optical axis remains diagnostic and
+  unchanged. This advances T6 by closing the dimer-baseline experiment as a weak/negative result;
+  it does not resolve the broader oligomer/sTDA-vs-ML route question.
 
 - 2026-06-22 (n=6 optical calibration prepared; superseded by later 417587 submission) — chose a pilot-matched neutral
   dimer baseline for the six HIGH experimental anchors before the more expensive polymer-limit and
