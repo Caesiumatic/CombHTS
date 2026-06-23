@@ -13,6 +13,7 @@ from eps.engines.orca import (
     parse_orca_cosmors_dg_kcal_mol,
     parse_orca_lowest_excitation_eV,
 )
+from eps.storage import SQLiteCache
 from eps.workflow.orca_pilots import (
     build_mock_orca_pilot_engines,
     load_solvation_grid_config,
@@ -21,7 +22,6 @@ from eps.workflow.orca_pilots import (
     run_orca_solvation_grid_pilot,
     run_orca_solvation_pilot,
 )
-from eps.storage import SQLiteCache
 
 
 def test_orca_cosmors_input_uses_internal_solvent_and_explicit_state() -> None:

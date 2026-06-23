@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-06-23 — record completed 417587 optical diagnostic
+
+Documentation-only sync after read-only Lop inspection of completed SGE job 417587. No source,
+config, scoring, calibration, test, or production data file changed.
+
+- Verified 417587 completed on `compute-1-8.local` with `exit_status 0`, `failed 0`, wallclock
+  34,691 s, and maxvmem 2.434 GB.
+- Recorded that all six neutral-dimer anchors completed both real ORCA methods: 6/6 sTDA and 6/6
+  TDA, with 12/12 cache rows and retained raw ORCA outputs.
+- Recorded final artifacts under Lop `outputs/optical_calibration_n6/`: points CSV, fit JSON,
+  fit markdown, cache, and `run_provenance.json`; a generic `provenance.json` is absent.
+- Captured the diagnostic conclusion: sTDA/TDA dimer-vs-polymer fits are weak (R2 0.1509/0.1712,
+  LOO-CV MAE 0.4564/0.4489 eV), so the 15% optical axis remains diagnostic and unchanged.
+
+## 2026-06-22 — reconcile 417587 as still running
+
+Documentation-only state reconciliation for optical job 417587. No source, config, scoring,
+calibration, test, or production data file changed.
+
+- Verified local `main` and `origin/main` are both at `9387b30595f5ef71c4533dae8d4a146490959b67`.
+- Verified Lop job 417587 is still running by `qstat`; `qacct` has no completed record.
+- Recorded operational progress only: 9/12 optical requests cached, final points/fit/provenance
+  artifacts absent, and one raw ORCA directory still active. No partial excitation values were
+  inspected or reported as scientific results.
+- Corrected the run manifest provenance branch from the stale `calib/optical-n6` label to the
+  observed Lop checkout branch `calib/solubility-cosmors` at `06b7e1d`.
+
 ## 2026-06-22 — sync soft-axis review conclusions and §7 validation pivot
 
 Documentation-only sync to the 2026-06-22 evening state after the soft-axis calibration review.

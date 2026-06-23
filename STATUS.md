@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-22 (soft-axis review complete; §7 validation next)_
+_Last updated: 2026-06-23 (417587 complete; optical result diagnostic only)_
 
 ## Current phase
 
@@ -17,12 +17,15 @@ solvent database contains only acetonitrile, nitromethane, and water. Because th
 distinct top-30 is 63% PC, the axis cannot be properly evaluated for most survivors. The formula,
 weight, and scoring config are unchanged.
 
-Optical calibration has moved from prepared to **submitted and RUNNING** as SGE job **417587** on
-Lop (reported/unverified; no output inspected in this repo). Even when it completes, it is a
-diagnostic baseline only: neutral dimer (n=2) excitations are being compared to neutral-polymer
-experimental gaps, so the chain-length, geometry-sensitivity, phase-matching, per-class residual,
-and leverage gates remain unsatisfied. The 15% optical axis stays diagnostic until the full review is
-complete and accepted by a human.
+Optical calibration job **417587** is **COMPLETE** on Lop (exit 0, failed 0). It produced the six
+requested real ORCA anchor pairs as a diagnostic neutral-dimer baseline: 6/6 sTDA and 6/6 TDA
+requests completed, with no failed anchors. The result is scientifically clear but not production
+usable: sTDA -> experiment has R2 0.1509, in-sample MAE 0.3195 eV, and LOO-CV MAE 0.4564 eV; TDA ->
+experiment has R2 0.1712, in-sample MAE 0.3105 eV, and LOO-CV MAE 0.4489 eV. These are six
+experimental anchors evaluated as neutral dimers (n=2), not six-unit oligomers, compared to
+neutral-polymer experimental gaps. The chain-length, geometry-sensitivity, phase-matching,
+per-class residual, and human-review gates remain unsatisfied. The 15% optical axis stays
+diagnostic and unchanged.
 
 Composite interpretation is now explicit. The reliable half, weight **0.50**, is
 `window_margin` (0.30) plus `anion_stability` (0.20), backed by calibrated/two-stage-validated Eox,
@@ -64,9 +67,13 @@ in this docs-only work unit.
 - Real ORCA/openCOSMO-RS dGsolv in MeCN (kcal/mol): thiophene -4.132112, EDOT -7.908007,
   pyrrole -6.982100. These validate the route only; the 20% axis is solvation affinity
   (dGsolv proxy), not measured solubility.
-- Real ORCA corrected dimer pairs `(sTDA, TDA)` in eV: thiophene (4.870360, 4.396), EDOT
+- Real ORCA corrected three-dimer pilot pairs `(sTDA, TDA)` in eV: thiophene (4.870360, 4.396), EDOT
   (4.869517, 4.687), pyrrole (5.488049, 5.004). The three-point diagnostic fit is slope 0.747765,
   intercept 0.900028 eV, R2 0.7701, MAE 0.0973 eV; it is too small and ill-conditioned for scoring.
+- Real ORCA six-anchor optical baseline 417587 completed all six neutral-dimer sTDA/TDA pairs.
+  Computed-to-experimental neutral-polymer fits are weak: sTDA R2 0.1509 / MAE 0.3195 eV /
+  LOO-CV MAE 0.4564 eV; TDA R2 0.1712 / MAE 0.3105 eV / LOO-CV MAE 0.4489 eV. This is diagnostic
+  evidence against adopting the dimer baseline as the production optical calibration.
 - Lop ORCA 6.1/openCOSMO-RS and built-in sTDA/TDA work serially. Four-core attempts 417540-543
   exposed an OpenMPI 4.1.8/hwloc topology segfault on older nodes; no failed value was cached.
 - Real Tier-1 job 417538 completed in 10 h 54 m 54 s. Core stages had zero failed triad rows.
@@ -101,16 +108,17 @@ in this docs-only work unit.
    remains per-salt. A separate config-driven role gate excludes reference-only and acid rows.
    Remaining debt is a validated cation/salt-compatibility model, not further tie-breaking.
 3. The corrected three-dimer optical fit is route evidence only. The six-anchor/per-class
-   expansion is now submitted as SGE **417587** and RUNNING on Lop (reported/unverified); no real
-   n=6 regression result is known yet.
+   expansion SGE **417587** completed successfully, but the neutral-dimer baseline has weak
+   computed-to-experimental fits (R2 about 0.15-0.17; LOO-CV MAE about 0.45 eV) and is not accepted
+   for scoring.
 4. The former "solubility" label is a **solvation affinity (dGsolv proxy)** score. It lacks
    lattice/fusion, concentration, aggregation, protonation, and salt-compatibility terms. PC/NMP
    calibration is blocked because quantitative process-solvent solubility data are absent and Lop's
    built-in openCOSMO-RS solvent profiles cover only MeCN, nitromethane, and water.
-5. Optical calibration still needs 417587 completion plus per-class residuals, leverage analysis,
-   comparison to the n=3 pilot, longer-chain/geometry sensitivity, and human review. The submitted
-   baseline deliberately uses pilot-matched dimers and therefore does not satisfy the polymer-limit
-   gate. The 15% axis remains diagnostic.
+5. Optical calibration still needs longer-chain/geometry sensitivity, phase matching, class-expanded
+   anchors, and human review. The completed 417587 baseline deliberately used pilot-matched neutral
+   dimers for six experimental anchors and therefore does not satisfy the polymer-limit gate. The
+   15% axis remains diagnostic.
 6. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
    conductivity, ion pairing, acid/base speciation, and condition-specific anion limits are sparse.
 7. Dimerization's proton-reference ambiguity is resolved for ranking: the offset is one common
@@ -137,8 +145,9 @@ in this docs-only work unit.
 1. Run §7 Tier-1 validation: report Eox calibration MAE (honest 0.20-0.35 V band), ESW MAE vs
    `data/solvent_benchmark.csv`, and polymerization yes/no accuracy using
    `data/polymerizability_labels.csv`.
-2. Await 417587 optical result, then fit n=6, inspect per-class residuals and leverage, and compare
-   to the n=3 pilot. Do **not** wire it into the composite until reviewed.
+2. Treat 417587 as a completed diagnostic negative/weak baseline: summarize it for review, but do
+   **not** wire it into the composite. Any next optical work should be a separate reviewed plan for
+   longer chains, geometry sensitivity, and better phase/class matching.
 3. Fix ruff I001 in `tests/test_orca_pilots.py` on the next src-touching PR.
 4. Tier-2 pilot selection (10-20 stratified monomers from the corrected ranking) and library
    expansion remain PI/resource decisions for the June-30 group meeting.

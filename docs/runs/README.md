@@ -4,7 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-06-22 | optical calibration n=6 | ORCA 6.1 real | 6 HIGH anchors × neutral dimers × sTDA/TDA | submitted — RUNNING (reported/unverified) | SGE 417587; exact pilot-cache overlap 0/12; no real result yet; diagnostic dimer-vs-polymer baseline only | [link](2026-06-22_optical-calib-n6.md) |
+| 2026-06-22 | optical calibration n=6 | ORCA 6.1 real | 6 HIGH anchors × neutral dimers × sTDA/TDA | completed | SGE 417587 exit 0; 6/6 sTDA + 6/6 TDA; weak dimer-vs-polymer fits (R2 .151/.171, LOO MAE .456/.449 eV); diagnostic only | [link](2026-06-22_optical-calib-n6.md) |
 | 2026-06-22 | dimerization proton-offset anchor diagnosis | none (docs/analysis) | existing implementation/tests/harvest distribution | completed | proton offset is a ranking-safe constant; min-max cancels it; absolute calibration deferred | [link](2026-06-22_dimerization-anchor.md) |
 | 2026-06-22 | solvation openCOSMO-RS expansion pilot | ORCA 6.1 real requested | 12 monomers × computable solvents for dGsolv descriptor validation | prepared — awaiting submission | built-in profiles only for MeCN/nitromethane/water; PC/NMP deferred; not a solubility calibration | [link](2026-06-22_solvation-cosmors-pilot.md) |
 | 2026-06-22 | analyze salt-role-fixed ranking | none (read-only) | 7,488 / 2,143 per-salt survivors / 1,127 score-classes | completed | SGE 417571; distinct top-30 = 19 PC / 6 MeCN / 3 nitromethane / 2 NMP; no AgClO4/HClO4 | [link](2026-06-22_analyze-salt-fixed-417571.md) |
