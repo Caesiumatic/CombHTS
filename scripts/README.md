@@ -4,6 +4,10 @@ Version-controlled `qsub` templates for running CombHTS on the SCS Lop cluster. 
 **templates** — review and adjust resources (`-pe smp`, `-l h_rt`) before submitting, and do
 not submit them blindly from CI or an overnight agent.
 
+`audit_lit_curation_staging.py` is a local, no-engine staging-data audit wrapper. Its reusable
+logic lives in `eps.curation.staging_audit`; the script preserves the historical command-line
+defaults and writes review-only audit CSVs under `data/lit_curation/`.
+
 | Script | Command | Engine module |
 | --- | --- | --- |
 | `run_tier1.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
