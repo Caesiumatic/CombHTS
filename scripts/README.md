@@ -13,6 +13,8 @@ not submit them blindly from CI or an overnight agent.
 | `run_analyze.sge` | `eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/` | none (read-only) |
 | `run_oligomer.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
 | `run_dft_calibration.sge` | `eps calibrate-dft --engine gaussian --config configs/tier2.yaml` | xTB + Gaussian 16 |
+| `run_tier2_pilot_array.sge` | `python -m eps.cli tier2-run-task ...` | mock or Gaussian 16 |
+| `run_tier2_pilot_harvest.sge` | `python -m eps.cli tier2-harvest ...` | none (read-only) |
 | `run_orca_solvation_pilot.sge` | `python -m eps.cli orca-pilot-solvation --engine orca` | ORCA 6.1/openCOSMO-RS |
 | `run_orca_optical_pilot.sge` | `python -m eps.cli orca-pilot-optical --engine orca` | ORCA 6.1 sTDA + TDA/TD-DFT |
 | `run_optical_calibration_n6.sge` | `python scripts/run_optical_calibration_n6.py --engine orca` | ORCA 6.1 sTDA + TDA/TD-DFT |
@@ -31,6 +33,14 @@ directory and never present failed calculations or mock values as scientific res
 The n=6 optical template is also serial. It reads the six HIGH experimental anchors directly from
 the staging-derived selection CSV, writes to `outputs/optical_calibration_n6/`, and keeps its cache
 separate from the corrected n=3 pilot. Its analysis is diagnostic and cannot update scoring.
+
+`run_tier2_pilot_array.sge` is the array-safe Tier-2 monomer-Eox pilot template. It requires
+absolute `TIER2_MANIFEST` and `TIER2_OUTPUT_ROOT` values, maps `SGE_TASK_ID` to one manifest
+`task_id`, and writes a task-local SQLite cache plus persistent Gaussian input/log directories.
+It loads Gaussian only when `TIER2_ENGINE=gaussian`; mock mode is plumbing-only and non-scientific.
+
+`run_tier2_pilot_harvest.sge` is the separate no-engine harvest step. It validates per-task
+`result.json` files against the manifest and never fills missing/failed Tier-2 values from Tier-1.
 
 `run_tier1_rescore.sge` is the safe path for a policy/threshold/weight change after a real harvest.
 It reads the existing all-triads CSV and recomputes only conditioned joins, filters, Pareto flags,

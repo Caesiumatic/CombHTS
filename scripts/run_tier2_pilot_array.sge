@@ -1,0 +1,97 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -j y
+#$ -N combhts_tier2_pilot
+#$ -q intel24
+#$ -pe smp 8
+#$ -l h_rt=72:00:00
+#$ -o /home/shic4/combhts_tier2_pilot_array.log
+# TEMPLATE - do NOT submit directly without editing the -t range and exported variables.
+#
+# Required qsub example:
+#   qsub -t 1-N \
+#     -v TIER2_MANIFEST=/home/shic4/CombHTS/outputs/tier2_pilot_plan/task_manifest.csv \
+#     -v TIER2_OUTPUT_ROOT=/home/shic4/CombHTS/outputs/tier2_pilot \
+#     -v TIER2_ENGINE=mock \
+#     scripts/run_tier2_pilot_array.sge
+#
+# Real Gaussian mode is a later reviewed work unit:
+#   -v TIER2_ENGINE=gaussian
+#
+# This script uses SGE_TASK_ID to select one manifest row. It keeps a task-local SQLite cache and
+# persistent work directory per task, avoiding concurrent writes to one cache over NFS. It must be
+# submitted to the scheduler; do not run Gaussian on a login/head node.
+
+set -uo pipefail
+
+if [ -z "${SGE_TASK_ID:-}" ]; then
+    echo "ERROR: SGE_TASK_ID is unset; submit this as a Grid Engine array job with qsub -t." >&2
+    exit 2
+fi
+if [ -z "${TIER2_MANIFEST:-}" ] || [ -z "${TIER2_OUTPUT_ROOT:-}" ]; then
+    echo "ERROR: set TIER2_MANIFEST and TIER2_OUTPUT_ROOT as absolute paths via qsub -v." >&2
+    exit 2
+fi
+
+TIER2_ENGINE="${TIER2_ENGINE:-mock}"
+TIER2_CONFIG="${TIER2_CONFIG:-configs/tier2.yaml}"
+COMBHTS_ROOT="${COMBHTS_ROOT:-$HOME/CombHTS}"
+
+case "$TIER2_MANIFEST" in
+    /*) ;;
+    *) echo "ERROR: TIER2_MANIFEST must be an absolute path." >&2; exit 2 ;;
+esac
+case "$TIER2_OUTPUT_ROOT" in
+    /*) ;;
+    *) echo "ERROR: TIER2_OUTPUT_ROOT must be an absolute path." >&2; exit 2 ;;
+esac
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+if [ "$TIER2_ENGINE" = "gaussian" ]; then
+    module load gaussian/g16
+fi
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+export OMP_NUM_THREADS="${NSLOTS:-8}"
+export OMP_STACKSIZE=4G
+ulimit -s unlimited || true
+export PYTHONUNBUFFERED=1
+
+cd "$COMBHTS_ROOT"
+export COMBHTS_GIT_SHA="$(git rev-parse HEAD)"
+
+TASK_ID="$(python - "$TIER2_MANIFEST" "$SGE_TASK_ID" <<'PY'
+import csv
+import sys
+
+manifest = sys.argv[1]
+index = int(sys.argv[2]) - 1
+with open(manifest, newline="", encoding="utf-8") as handle:
+    rows = list(csv.DictReader(handle))
+if index < 0 or index >= len(rows):
+    raise SystemExit(f"SGE_TASK_ID {index + 1} outside manifest row count {len(rows)}")
+print(rows[index]["task_id"])
+PY
+)"
+
+RESULT_DIR="$TIER2_OUTPUT_ROOT/task_results"
+WORK_ROOT="$TIER2_OUTPUT_ROOT/work"
+CACHE_PATH="$TIER2_OUTPUT_ROOT/task_caches/${TASK_ID}.sqlite"
+mkdir -p "$RESULT_DIR" "$WORK_ROOT" "$TIER2_OUTPUT_ROOT/task_caches"
+
+env | sort > "$RESULT_DIR/${TASK_ID}.environment.txt"
+
+python -m eps.cli tier2-run-task \
+    --manifest "$TIER2_MANIFEST" \
+    --task-id "$TASK_ID" \
+    --engine "$TIER2_ENGINE" \
+    --result-dir "$RESULT_DIR" \
+    --work-root "$WORK_ROOT" \
+    --cache "$CACHE_PATH" \
+    --config "$TIER2_CONFIG"
