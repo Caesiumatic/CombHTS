@@ -1,156 +1,172 @@
 # Project Status
-_Last updated: 2026-06-23 (417587 complete; optical result diagnostic only)_
+_Last updated: 2026-06-23 (codebase map and hygiene review after pre-cleanup integration)_
 
 ## Current phase
 
-Soft-axis calibration review is **COMPLETE** as of 2026-06-22. Dimerization's unknown
-proton-reference offset is confirmed to be one constant across monomers by code inspection,
-test assertions, and harvested value distribution; min-max normalization cancels that constant, so
-the 15% dimerization axis is **ranking-safe** as implemented. It remains diagnostic, not calibrated:
-absolute solution thermochemistry and monomer-dependent chemistry errors are unvalidated.
+Directive Section 7 validation is now a reproducible, machine-readable workflow. The command
+`eps validate-directive --engine xtb --harvest <salt-fixed-tier1-all.csv> --cache <sqlite>
+--outdir <dir>` gathers the existing calculators into one package without changing scoring
+weights, thresholds, calibration coefficients, redox constants, production CSVs, or the optical
+policy. Mock mode remains a deterministic, explicitly NON-PHYSICAL smoke path.
 
-The 20% "solubility" score component is now documented honestly as **solvation affinity
-(dGsolv proxy)**. It is min-max(-dGsolv), not measured solubility. The missing lattice/fusion term is
-primary, and calibration is blocked by two data facts: no quantitative solubility data exist for
-the key process solvents PC and NMP in the current library, and Lop's ORCA/openCOSMO-RS built-in
-solvent database contains only acetonitrile, nitromethane, and water. Because the corrected
-distinct top-30 is 63% PC, the axis cannot be properly evaluated for most survivors. The formula,
-weight, and scoring config are unchanged.
+The authoritative real validation run is SGE **417671** on Lop, executed from isolated clone
+`/home/shic4/CombHTS_section7_e023a1c` at git commit
+`e023a1c6bba0b60f22a6afb3a649f45308234122`. It used real `gfn2-xtb+conf-mmff94-n100`, read the
+salt-role-fixed harvest at `/home/shic4/CombHTS/outputs/tier1_real_7488_salt_fixed/tier1_all.csv`,
+and wrote the validation package under
+`/home/shic4/CombHTS_section7_e023a1c/outputs/directive_section7_validation/`. `qacct` reports
+exit 0, failed 0, `intel24@compute-3-16.local`, 4 slots, and 398 s wall time.
 
-Optical calibration job **417587** is **COMPLETE** on Lop (exit 0, failed 0). It produced the six
-requested real ORCA anchor pairs as a diagnostic neutral-dimer baseline: 6/6 sTDA and 6/6 TDA
-requests completed, with no failed anchors. The result is scientifically clear but not production
-usable: sTDA -> experiment has R2 0.1509, in-sample MAE 0.3195 eV, and LOO-CV MAE 0.4564 eV; TDA ->
-experiment has R2 0.1712, in-sample MAE 0.3105 eV, and LOO-CV MAE 0.4489 eV. These are six
-experimental anchors evaluated as neutral dimers (n=2), not six-unit oligomers, compared to
-neutral-polymer experimental gaps. The chain-length, geometry-sensitivity, phase-matching,
-per-class residual, and human-review gates remain unsatisfied. The 15% optical axis stays
-diagnostic and unchanged.
+Headline Section 7 status:
 
-Composite interpretation is now explicit. The reliable half, weight **0.50**, is
-`window_margin` (0.30) plus `anion_stability` (0.20), backed by calibrated/two-stage-validated Eox,
-measured-first conservative ESW, and the salt-role hard gate. This half drives trustworthy pass/fail
-and coarse ranking. The diagnostic half, weight **0.50**, is optical + dimerization + solvation
-affinity; all three are data-gated and reference-only for now. The shortlist is therefore a
-hard-gate-driven **chemical-feasibility shortlist**, not a full OMIEC performance ranking or an
-experimental recommendation.
+- Tier-1 monomer Eox active production profile `agagcl_peak_strict`: LOO-CV MAE **0.186 V** over
+  **9** collapsed groups, PASS versus the directive `<0.30 V` gate. This is above the hard
+  0.15 V reference/measurement floor; do not claim tighter accuracy.
+- Other configured Ag/AgCl profiles are reported for comparison: `agagcl_peak_relaxed`
+  LOO-CV MAE **0.169 V** over 23 groups, and `agagcl_onset_relaxed` LOO-CV MAE **0.087 V** over
+  16 onset groups. The onset value is not promoted as sub-reference-floor accuracy. Fc profiles
+  skipped because no clean native-Fc calibration rows exist.
+- Eox applicability domain for the active profile spans raw acetonitrile descriptors
+  **5.694-7.412 V**. The 36-monomer library has **3/36** out-of-domain monomers (8.3%):
+  two halothiophenes and one heteroaromatic.
+- Raw solvent molecular DeltaSCF descriptor accuracy fails the practical ESW target:
+  anodic MAE **5.409 V** and cathodic MAE **3.755 V** over 6 matched solvent benchmark rows.
+  This confirms the isolated-solvent descriptor is not a universal electrochemical stability
+  window calibration.
+- Production ESW gate safety passes the correctness invariant: **0 unsafe widenings** across
+  **5,760** comparable measured rows. Exact formulation coverage is **252/7,488** (3.37%),
+  solvent-only measured coverage **5,508/7,488** (73.56%), and computed/CSV fallback coverage
+  **1,728/7,488** (23.08%). Mean conservatism is **0.354 V**, max conservatism **2.508 V**.
+- Qualitative electropolymerization feasibility remains **NOT_YET_TESTABLE**. The current labels
+  are 34 total (18 YES / 16 NO), with 20 in scope and 12 matched to the salt-fixed harvest
+  (6 exact-anion, 6 generic-electrolyte). Confusion matrix: TP=5, FN=3, TN=2, FP=2; balanced
+  accuracy **56.25%** with stratified bootstrap 95% interval **25.0-87.5%**. Do not claim the
+  directive `>85%` target from this small matched set.
 
-The next highest-ROI work is **§7 Tier-1 validation**, not continued soft-axis calibration: report
-Eox calibration MAE in the honest 0.20-0.35 V band, ESW MAE against `data/solvent_benchmark.csv`,
-and polymerization yes/no accuracy using `data/polymerizability_labels.csv`. Soft-axis absolute
-calibration is deferred as future/opportunistic work.
+Section 7 staging-data audit and targeted gap curation is **COMPLETE** at review/staging scope.
+The new audit artifacts under `data/lit_curation/` and
+`docs/research/section7_staging_audit_20260623.md` cover existing solvent ESW, polymerization,
+optical-anchor, solubility, and optical/doping staging rows. All audited staging schemas pass and
+all 127 SMILES-bearing staging rows RDKit-parse; no production CSV, config, scoring code, or optical
+policy changed. The audit produced compact review tables for Eox gapfill candidates, ESW promotion
+candidates, ESW remaining gaps, polymerizability promotion candidates, and Wave-A library readiness.
+The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence, nitromethane
+primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
+rows needing source or reference checks.
 
-The corrected real-harvest state is unchanged: CSV-only SGE 417569 applied the salt-role gate to
-the existing real-xTB harvest without rerunning xTB, changing capped-ESW survivors
-**2,938 -> 2,143** (795 dropped, zero gained), with all retained scores unchanged and zero
-acid/reference-only passes. Read-only analysis 417571 produced **1,127 exact score-classes** and a
-distinct diagnostic top-30 of **19 PC / 6 MeCN / 3 nitromethane / 2 NMP**. AgClO4 and HClO4 are
-absent as representatives and inside `salts_tied`.
+The Tier-2 monomer-Eox pilot workflow is implemented as a **mock-first, array-safe scaffold**.
+`eps tier2-plan` validates a selection CSV and emits one task per unique `(monomer, solvent,
+method config)` identity; repeated salts/cations are deduplicated before any Engine call.
+`eps tier2-run-task` executes one manifest task with a task-local SQLite cache, atomic
+`result.json`, persistent Gaussian input/log retention, Normal-termination checks, SCF/Gibbs energy
+selection metadata, and frequency-quality metadata. `eps tier2-harvest` is a no-engine combiner
+that rejects missing/failed/duplicate/hash-mismatched results and never fills Tier-2 gaps with
+Tier-1 values. SGE templates exist for the array run and the separate harvest step. No real
+Gaussian task was submitted in this work unit, and no scoring/config/production CSV value changed.
 
-Docs-sync verification is green: `.venv/bin/python -m pytest -q` reports **216 passed, 5 skipped**
-with 2 warnings. The known ruff I001 import-ordering debt in `tests/test_orca_pilots.py` is not fixed
-in this docs-only work unit.
+No PI escalation was triggered by these merged work units. They stayed inside Directive_CombHTS,
+used normal project-scale resources, did not change scoring/config policy, and did not create a new
+scope commitment.
+
+A post-integration codebase map and safe-hygiene review now document package layout, workflow
+ownership, data/config boundaries, engine/cache contracts, scientific axes, and no-touch items in
+`docs/code_structure.md` and `docs/maintenance/codebase_review_20260623.md`. This review is
+documentation-only and does not change scoring, filters, calibration, production data, redox
+constants, cache keys, output schemas, or optical policy.
+
+Soft-axis interpretation is unchanged. Optical job **417587** remains a completed diagnostic
+negative/weak baseline: six neutral-dimer ORCA anchors finished, but sTDA/TDA fits to experimental
+neutral-polymer gaps are weak (R2 about 0.15-0.17; LOO-CV MAE about 0.45 eV), so the 15% optical
+axis remains diagnostic. Dimerization is ranking-safe only because its proton-reference offset is
+one common additive constant that min-max normalization cancels. The former solubility axis remains
+documented as solvation affinity (`dGsolv` proxy), not measured solubility.
+
+The corrected real-harvest ranking state is unchanged: CSV-only SGE 417569 applied the salt-role
+gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW survivors
+2,938 -> 2,143 (795 dropped, zero gained), with retained scores unchanged. Read-only analysis
+417571 produced 1,127 exact score classes and a distinct diagnostic top-30 of 19 PC / 6 MeCN /
+3 nitromethane / 2 NMP.
 
 ## What works
 
-- Architecture invariants remain intact: expensive work is per species, triads are cheap joins,
-  all engines share the Engine interface, results are cache-keyed by species/method/solvent, and
-  libraries/configuration are versioned CSV/YAML.
-- `data/solvent_windows.csv` records anodic/cathodic limits in V vs Ag/AgCl with salt,
-  electrolyte, electrode, reference, cutoff, source, tier, and electrolyte-limited metadata.
-  Evidence selection is exact `(solvent,salt)` measurement then conservative solvent-only evidence;
-  the hard gate is capped by `min(measurement, curated CSV, computed descriptor)` and every raw
-  measurement/cap/source/cap-applied decision remains audited.
-- The mandatory ESW controls retain their conditioned measurements as auditable evidence
-  (water/KCl 1.145 V, MeCN/TBABF4 3.245 V, DCM/TBAClO4 1.845 V, DMF/TBAClO4 1.745 V, and
-  DMSO/TBAPF6 1.045 V vs Ag/AgCl) while using the minimum of measurement/CSV/computed as the gate.
-- Real ORCA/openCOSMO-RS dGsolv in MeCN (kcal/mol): thiophene -4.132112, EDOT -7.908007,
-  pyrrole -6.982100. These validate the route only; the 20% axis is solvation affinity
-  (dGsolv proxy), not measured solubility.
-- Real ORCA corrected three-dimer pilot pairs `(sTDA, TDA)` in eV: thiophene (4.870360, 4.396), EDOT
-  (4.869517, 4.687), pyrrole (5.488049, 5.004). The three-point diagnostic fit is slope 0.747765,
-  intercept 0.900028 eV, R2 0.7701, MAE 0.0973 eV; it is too small and ill-conditioned for scoring.
-- Real ORCA six-anchor optical baseline 417587 completed all six neutral-dimer sTDA/TDA pairs.
-  Computed-to-experimental neutral-polymer fits are weak: sTDA R2 0.1509 / MAE 0.3195 eV /
-  LOO-CV MAE 0.4564 eV; TDA R2 0.1712 / MAE 0.3105 eV / LOO-CV MAE 0.4489 eV. This is diagnostic
-  evidence against adopting the dimer baseline as the production optical calibration.
-- Lop ORCA 6.1/openCOSMO-RS and built-in sTDA/TDA work serially. Four-core attempts 417540-543
-  exposed an OpenMPI 4.1.8/hwloc topology segfault on older nodes; no failed value was cached.
-- Real Tier-1 job 417538 completed in 10 h 54 m 54 s. Core stages had zero failed triad rows.
-  Report-only failures remain fully audited: spin-density secondary monomer rows 7,488; water
-  cathodic/secondary-solvent rows 576 each; ion-pair rows 3,744.
-- Diagnostic re-score 417553 used no Engine and completed in 31 s. It removed 1,140 old survivors
-  and admitted 23, but its top-20 were all GBL because the first policy did not cap a wide generic
-  measurement. That evidence directly motivated the stricter minimum-of-all-evidence hard gate.
-- Final capped re-score 417562 completed with 2,938 survivors, exactly 1,140 fewer than the old gate
-  and **zero newly admitted triads**. Its survivor set is a strict subset of the old set; water and
-  DMSO remain at zero. Final analysis 417564 removed GBL domination and produced a complete
-  standards-compliant 30-row PC/MeCN-led diagnostic shortlist.
-- `data/electrolytes.csv` now classifies supporting/reference-only/acid roles additively. The live
-  role gate excludes AgClO4 and all four acid entries without aborting or deleting audit rows.
-  Exact cation-degenerate score classes are represented once in ranked/shortlist outputs with
-  deterministic tied-salt metadata; the unchanged full per-salt score table remains in
-  `tier1_all.csv`.
-- Real-harvest verification 417569/417571 proves the gate behaves as designed: 2,143 per-salt
-  survivors, 1,127 ranked score-classes, zero non-supporting passes, and no score change among the
-  2,143 retained rows. The representative salt is only a deterministic label, not a cation claim.
+- Architecture invariants remain intact: expensive work is per species, triad scoring is a cheap
+  join/arithmetic layer, all engines go through the Engine interface, results are SQLite-cached by
+  species/method/solvent, and library/configuration data remain CSV/YAML.
+- `docs/code_structure.md` is the current maintainer map for source/package layout, public
+  workflows, data/config ownership, scientific axes, run-manifest practice, onboarding, and
+  no-touch boundaries.
+- `eps validate-directive` writes all required artifacts:
+  `validation_summary.json`, `validation_report.md`, `eox_profile_summary.csv`, `eox_points.csv`,
+  `esw_descriptor_points.csv`, `esw_gate_diagnostics.csv`, `feasibility_matches.csv`, and
+  `provenance.json`.
+- `scripts/run_validate_directive.sge` is an xTB-only SGE template with an absolute scheduler log
+  path and `COMBHTS_ROOT` override for isolated cluster clones/worktrees.
+- The Section 7 staging audit validates staging schemas, RDKit-parses known SMILES fields,
+  canonicalizes structures, detects internal and production duplicates, and writes review tables
+  without touching production data.
+- Tier-2 pilot orchestration is split into plan / one-task run / harvest commands. Planning is
+  schema-validated and monomer-solvent aware; task execution is mock-first and cache-separated by
+  default; harvest preserves raw energy fields and emits a standard per-monomer-solvent Eox CSV
+  consumable by `eps tier2-screen`.
+- The measured-first conservative ESW gate is validated as one-way safe on the salt-fixed real
+  harvest: measured literature can tighten the hard gate, not admit rows by widening a sparse
+  generic window.
+- Real Tier-1 job 417538, re-score 417569, analysis 417571, optical diagnostic 417587, and
+  directive validation 417671 all have run manifests or manifest updates in version control.
 
 ## Open scientific and engineering debt
 
-1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
-   analysis must expand; a conditioned formulation limit is not a universal solvent constant.
-2. **Salt-permutation score degeneracy (417564 audit — presentation/gate guard IMPLEMENTED; cation
-   physics still absent).** The composite ignores the cation — `window_margin` is solvent-only,
-   `anion_stability` anion-only, and solvation-affinity/dimerization/band_gap monomer-only — so each
-   (monomer, solvent, anion) chemistry appears up to 5x at a byte-identical score. This inflates the
-   apparent PC dominance (raw 80% -> ~57% over 14 distinct chemistries: 8 PC / 6 MeCN). Ranked and
-   shortlist views now collapse only exact score classes and expose every tied salt; the full audit
-   remains per-salt. A separate config-driven role gate excludes reference-only and acid rows.
-   Remaining debt is a validated cation/salt-compatibility model, not further tie-breaking.
-3. The corrected three-dimer optical fit is route evidence only. The six-anchor/per-class
-   expansion SGE **417587** completed successfully, but the neutral-dimer baseline has weak
-   computed-to-experimental fits (R2 about 0.15-0.17; LOO-CV MAE about 0.45 eV) and is not accepted
-   for scoring.
-4. The former "solubility" label is a **solvation affinity (dGsolv proxy)** score. It lacks
-   lattice/fusion, concentration, aggregation, protonation, and salt-compatibility terms. PC/NMP
-   calibration is blocked because quantitative process-solvent solubility data are absent and Lop's
-   built-in openCOSMO-RS solvent profiles cover only MeCN, nitromethane, and water.
-5. Optical calibration still needs longer-chain/geometry sensitivity, phase matching, class-expanded
-   anchors, and human review. The completed 417587 baseline deliberately used pilot-matched neutral
-   dimers for six experimental anchors and therefore does not satisfy the polymer-limit gate. The
-   15% axis remains diagnostic.
+1. ESW descriptor physics is the largest validated failure. The raw isolated-solvent molecular
+   DeltaSCF descriptors are off by multiple volts versus practical ESW measurements. They should
+   remain audited priors/caps, not standalone solvent-window calibrations.
+2. Exact ESW formulation coverage is sparse. The safety invariant passes, but exact `(solvent,salt)`
+   coverage is only 3.37% of the salt-fixed harvest rows. The staging audit now pinpoints priority
+   review targets: exact PC BF4/PF6/ClO4/TFSI rows, MeCN/TBAPF6, nitromethane primary-source
+   reconciliation, NMP, and nitrobenzene.
+3. Feasibility labels are not yet enough for the directive `>85%` claim. Add condition-relevant
+   negatives and exact-anion labels, especially in baseline nonaqueous media, until at least a
+   defensible matched validation set exists.
+4. Tier-2 held-out DFT validation remains out of scope for the Section 7 package. The old 0.119 V
+   DFT number is in-sample and must not be reported as a held-out Tier-2 pass. The pilot
+   orchestration is ready, but no real Gaussian array has been submitted and no completed Tier-2
+   scientific values exist yet.
+5. The composite's diagnostic half remains data-limited: optical, dimerization absolute scale, and
+   solvation-affinity/true-solubility calibration are reference-only until better anchors exist.
 6. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
-   conductivity, ion pairing, acid/base speciation, and condition-specific anion limits are sparse.
-7. Dimerization's proton-reference ambiguity is resolved for ranking: the offset is one common
-   additive intercept and cancels exactly from the min-max 15% term. Absolute calibration remains
-   deferred until exact-reaction equilibrium/Hess-cycle data exist; kinetics/onsets are not anchors.
-   Optional cosmetic debt: rename output/docs from "dimerization" to "radical-coupling energy" where
-   doing so does not imply a formula, weight, or config change.
-8. §7 validation is the next active item: Eox MAE, ESW MAE, and polymerization yes/no accuracy
-   should be reported before further soft-axis chasing. Use `data/polymerizability_labels.csv` for
-   the yes/no metric and never claim MAE < 0.15 V.
-9. `tests/test_orca_pilots.py` has ruff I001 import-ordering debt. Fix it on the next src-touching
-   PR; it does not affect test results.
-10. Validation coverage remains below directive gates, and the library is 36x13x16 versus the
-   requested roughly 80-150 x 25-35 x 20-30. The vetted +76/+27/+25 library-expansion proposal
-   (`docs/research/library_expansion_proposal.md`, merged bee31d3) is PROPOSAL ONLY and stays gated
-   on stable ESW, solvation-affinity/true-solubility, and optical gates before any wiring.
-11. **`cation_reduction_below_solvent_cathodic` does not model metal deposition (417564 audit).** It
-   does not model Ag+ plating as metal, so a passing flag must not be read as plating/compatibility
-   protection. The role gate now blocks the known reference-only/acid misuse, but it is only a
-   guard: a calibrated cation/deposition model remains open scientific debt.
+   conductivity, ion pairing, acid/base speciation, cation deposition, and condition-specific anion
+   limits are not calibrated.
+7. The library is still 36 x 13 x 16, not the requested roughly 80-150 x 25-35 x 20-30. The vetted
+   expansion proposal remains gated on stable ESW, solvation/solubility, and optical evidence.
 
 ## Immediate next actions
 
-1. Run §7 Tier-1 validation: report Eox calibration MAE (honest 0.20-0.35 V band), ESW MAE vs
-   `data/solvent_benchmark.csv`, and polymerization yes/no accuracy using
-   `data/polymerizability_labels.csv`.
-2. Treat 417587 as a completed diagnostic negative/weak baseline: summarize it for review, but do
-   **not** wire it into the composite. Any next optical work should be a separate reviewed plan for
-   longer chains, geometry sensitivity, and better phase/class matching.
-3. Fix ruff I001 in `tests/test_orca_pilots.py` on the next src-touching PR.
-4. Tier-2 pilot selection (10-20 stratified monomers from the corrected ranking) and library
-   expansion remain PI/resource decisions for the June-30 group meeting.
+1. Review the Section 7 staging-audit outputs, source-check the flagged Eox/ESW/polymerization rows,
+   and promote only approved rows through a separate production-ingest task.
+2. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
+   condition-relevant feasibility labels, then rerun `eps validate-directive` on the same
+   salt-fixed harvest.
+3. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
+   screen. Use the JSON/CSVs in the Lop output directory for group-update tables.
+4. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
+   array smoke, and only then schedule a separate reviewed real-Gaussian cluster work unit.
+
+## Verification
+
+- Section 7 validation branch verification before first code commit: targeted pytest `23 passed`;
+  full pytest `224 passed, 5 skipped, 2 warnings`; `ruff check src tests` passed;
+  `git diff --check` clean; mock `validate-directive` smoke wrote all required artifacts.
+- Staging-audit branch verification: `.venv/bin/python -m pytest -q` reported `238 passed,
+  5 skipped, 2 warnings`; `.venv/bin/ruff check src tests` passed; `git diff --check` passed.
+- Tier-2 branch verification: targeted Tier-2/Gaussian/DFT tests `39 passed, 2 skipped`; tracked
+  tests plus new Tier-2 pilot tests `227 passed, 5 skipped`; tracked-Python ruff passed;
+  `bash -n` passed for new SGE templates; `git diff --check` passed.
+- Integration verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff passed;
+  `git diff --check` passed; SGE `bash -n` passed for the new validation/Tier-2 templates;
+  no-real-engine CLI smoke passed; conflict-marker scan clean. Details are in
+  `docs/maintenance/pre_cleanup_merge_report_20260623.md`.
+- Codebase-map/hygiene verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff passed;
+  `git diff --check` passed; `eps doctor` reported 0 FAIL and the expected four local
+  cluster-binary WARNs; no-real-engine CLI smoke passed, including mock `eps validate`.
 
 ## Architecture invariants
 

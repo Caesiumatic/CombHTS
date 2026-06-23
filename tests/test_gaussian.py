@@ -103,7 +103,16 @@ def test_gaussian_engine_is_config_driven_for_smd_and_freq(monkeypatch) -> None:
     def fake_run(command, cwd, check, capture_output, text):
         captured.append((Path(cwd) / "input.gjf").read_text(encoding="utf-8"))
         (Path(cwd) / "input.log").write_text(
-            " SCF Done:  E(RB3LYP) =  -100.5     A.U. after 8 cycles\n", encoding="utf-8"
+            "\n".join(
+                [
+                    " SCF Done:  E(RB3LYP) =  -100.5     A.U. after 8 cycles",
+                    " Frequencies --     25.1    100.2    155.3",
+                    " Sum of electronic and thermal Free Energies=     -100.456789",
+                    " Normal termination of Gaussian 16",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
         )
         return types.SimpleNamespace(returncode=0, stdout="", stderr="")
 
@@ -142,6 +151,48 @@ def test_parse_gaussian_log_gibbs_optional() -> None:
     assert parsed["scf_energy_Eh"] == pytest.approx(-100.5)
     assert parsed["gibbs_free_energy_Eh"] is None
     assert parsed["gibbs_free_energy_eV"] is None
+    assert parsed["energy_basis"] == "scf_energy_Eh"
+
+
+def test_parse_gaussian_log_requires_normal_termination_when_requested() -> None:
+    text = " SCF Done:  E(RB3LYP) =  -100.5     A.U. after 8 cycles\n"
+    with pytest.raises(ValueError, match="Normal termination"):
+        parse_gaussian_log(text, require_normal_termination=True)
+
+
+def test_parse_gaussian_log_frequency_metadata_and_gibbs_basis() -> None:
+    text = "\n".join(
+        [
+            " SCF Done:  E(RB3LYP) =  -100.5     A.U. after 8 cycles",
+            " Frequencies --     20.0    80.0    120.0",
+            " Sum of electronic and thermal Free Energies=     -100.456789",
+            " Normal termination of Gaussian 16",
+            "",
+        ]
+    )
+    parsed = parse_gaussian_log(text, require_normal_termination=True, frequency_requested=True)
+
+    assert parsed["gibbs_free_energy_Eh"] == pytest.approx(-100.456789)
+    assert parsed["energy_basis"] == "gibbs_free_energy_Eh"
+    assert parsed["has_frequency_data"] is True
+    assert parsed["imaginary_frequency_count"] == 0
+
+
+def test_parse_gaussian_log_records_and_rejects_imaginary_frequency_when_requested() -> None:
+    text = "\n".join(
+        [
+            " SCF Done:  E(RB3LYP) =  -100.5     A.U. after 8 cycles",
+            " Frequencies --    -15.0    80.0    120.0",
+            " Sum of electronic and thermal Free Energies=     -100.456789",
+            " Normal termination of Gaussian 16",
+            "",
+        ]
+    )
+    parsed = parse_gaussian_log(text, require_normal_termination=True)
+    assert parsed["imaginary_frequency_count"] == 1
+
+    with pytest.raises(ValueError, match="imaginary mode"):
+        parse_gaussian_log(text, require_normal_termination=True, frequency_requested=True)
 
 
 def test_parse_gaussian_log_raises_without_scf() -> None:

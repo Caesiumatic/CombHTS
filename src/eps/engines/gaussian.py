@@ -43,6 +43,7 @@ DEFAULT_TIER2_CONFIG = PROJECT_ROOT / "configs" / "tier2.yaml"
 
 _SCF_DONE_RE = re.compile(r"SCF Done:\s+E\([^)]*\)\s*=\s*(-?\d+\.\d+)")
 _GIBBS_RE = re.compile(r"Sum of electronic and thermal Free Energies=\s*(-?\d+\.\d+)")
+_FREQUENCIES_RE = re.compile(r"Frequencies --\s+([^\n]+)")
 
 
 @dataclass(frozen=True)
@@ -121,10 +122,16 @@ class GaussianEngine(Engine):
     - EA reduces  (q, m) -> (q-1, m+1); ΔG = G(neutral) − G(anion).
     """
 
-    def __init__(self, binary: str = "g16", config: Tier2Config | None = None) -> None:
+    def __init__(
+        self,
+        binary: str = "g16",
+        config: Tier2Config | None = None,
+        work_root: str | Path | None = None,
+    ) -> None:
         self.binary = binary
         # Config-driven SMD/Freq/Link0; defaults to configs/tier2.yaml (v1 gas-phase ΔSCF).
         self.config = config if config is not None else load_tier2_config()
+        self.work_root = Path(work_root) if work_root is not None else None
 
     def run(self, req: CalcRequest) -> CalcResult:
         """Run one Gaussian request and return a scalar result. Never fakes a value."""
@@ -159,11 +166,11 @@ class GaussianEngine(Engine):
 
         initial_parsed = self._run_gaussian(
             req, charge=initial.charge, multiplicity=initial.multiplicity,
-            optimize=True, solvent_smd=self.config.smd_solvent,
+            optimize=True, solvent_smd=self.config.smd_solvent, label="neutral",
         )
         final_parsed = self._run_gaussian(
             req, charge=final_charge, multiplicity=final_multiplicity,
-            optimize=True, solvent_smd=self.config.smd_solvent,
+            optimize=True, solvent_smd=self.config.smd_solvent, label="cation" if charge_delta == 1 else "anion",
         )
         initial_energy = _redox_energy_Eh(initial_parsed)
         final_energy = _redox_energy_Eh(final_parsed)
@@ -182,6 +189,8 @@ class GaussianEngine(Engine):
             "final_multiplicity": final_multiplicity,
             "initial_parsed": initial_parsed,
             "final_parsed": final_parsed,
+            "initial_energy_basis": _energy_basis(initial_parsed),
+            "final_energy_basis": _energy_basis(final_parsed),
         }
 
     def _run_gaussian(
@@ -192,6 +201,7 @@ class GaussianEngine(Engine):
         multiplicity: int,
         optimize: bool,
         solvent_smd: str | None,
+        label: str = "species",
     ) -> dict[str, float | None]:
         gjf = build_gaussian_input(
             req.species,
@@ -205,8 +215,16 @@ class GaussianEngine(Engine):
             mem=self.config.mem,
             nprocshared=self.config.nprocshared,
         )
-        with tempfile.TemporaryDirectory(prefix="eps-g16-") as tmpdir:
-            input_path = Path(tmpdir) / "input.gjf"
+        if self.work_root is None:
+            context = tempfile.TemporaryDirectory(prefix="eps-g16-")
+            tmpdir = Path(context.name)
+        else:
+            context = None
+            tmpdir = self.work_root / label
+            tmpdir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            input_path = tmpdir / "input.gjf"
             input_path.write_text(gjf, encoding="utf-8")
             completed = subprocess.run(
                 [self.binary, "input.gjf"],
@@ -215,6 +233,10 @@ class GaussianEngine(Engine):
                 capture_output=True,
                 text=True,
             )
+            stdout_path = tmpdir / "stdout.txt"
+            stderr_path = tmpdir / "stderr.txt"
+            stdout_path.write_text(completed.stdout or "", encoding="utf-8")
+            stderr_path.write_text(completed.stderr or "", encoding="utf-8")
             # Check the exit code FIRST (Task-1a lesson): a nonzero exit means Gaussian failed,
             # and a truncated/garbage log must not mask that with a parse error.
             if completed.returncode != 0:
@@ -222,9 +244,26 @@ class GaussianEngine(Engine):
                     "Gaussian failed with exit code "
                     f"{completed.returncode}.\nSTDOUT:\n{completed.stdout}\nSTDERR:\n{completed.stderr}"
                 )
-            log_path = Path(tmpdir) / "input.log"
+            log_path = tmpdir / "input.log"
             log_text = log_path.read_text(encoding="utf-8") if log_path.exists() else completed.stdout
-        return parse_gaussian_log(log_text)
+            parsed = parse_gaussian_log(
+                log_text,
+                require_normal_termination=True,
+                frequency_requested=self.config.use_freq,
+            )
+            parsed.update(
+                {
+                    "input_path": str(input_path),
+                    "log_path": str(log_path),
+                    "stdout_path": str(stdout_path),
+                    "stderr_path": str(stderr_path),
+                    "returncode": completed.returncode,
+                }
+            )
+            return parsed
+        finally:
+            if context is not None:
+                context.cleanup()
 
 
 def build_gaussian_input(
@@ -272,11 +311,20 @@ def build_gaussian_input(
     return "\n".join(lines) + "\n"
 
 
-def parse_gaussian_log(text: str) -> dict[str, float | None]:
+def parse_gaussian_log(
+    text: str,
+    *,
+    require_normal_termination: bool = False,
+    frequency_requested: bool = False,
+) -> dict[str, float | int | bool | None]:
     """Parse final SCF energy and (if present) thermally corrected Gibbs free energy.
 
     Returns energies in both Hartree and eV. Raises ValueError if no SCF energy is found.
     """
+
+    normal_termination = "Normal termination" in text
+    if require_normal_termination and not normal_termination:
+        raise ValueError("Gaussian log lacks Normal termination")
 
     scf_matches = _SCF_DONE_RE.findall(text)
     if not scf_matches:
@@ -286,11 +334,27 @@ def parse_gaussian_log(text: str) -> dict[str, float | None]:
     gibbs_matches = _GIBBS_RE.findall(text)
     gibbs_energy_Eh = float(gibbs_matches[-1]) if gibbs_matches else None
 
+    frequency_values = _parse_frequency_values(text)
+    imaginary_count = None
+    if frequency_values:
+        imaginary_count = sum(1 for value in frequency_values if value < 0.0)
+    if frequency_requested and gibbs_energy_Eh is None:
+        raise ValueError("Gaussian Freq was requested but no thermal Gibbs free energy was parsed")
+    if frequency_requested and imaginary_count is None:
+        raise ValueError("Gaussian Freq was requested but no frequency block was parsed")
+    if frequency_requested and imaginary_count > 0:
+        raise ValueError(f"Gaussian frequency calculation found {imaginary_count} imaginary mode(s)")
+
     return {
         "scf_energy_Eh": scf_energy_Eh,
         "scf_energy_eV": scf_energy_Eh * HARTREE_TO_EV,
         "gibbs_free_energy_Eh": gibbs_energy_Eh,
         "gibbs_free_energy_eV": None if gibbs_energy_Eh is None else gibbs_energy_Eh * HARTREE_TO_EV,
+        "normal_termination": normal_termination,
+        "frequency_requested": frequency_requested,
+        "has_frequency_data": bool(frequency_values),
+        "imaginary_frequency_count": imaginary_count,
+        "energy_basis": "gibbs_free_energy_Eh" if gibbs_energy_Eh is not None else "scf_energy_Eh",
     }
 
 
@@ -301,3 +365,19 @@ def _redox_energy_Eh(parsed: dict[str, float | None]) -> float:
     if gibbs is not None:
         return float(gibbs)
     return float(parsed["scf_energy_Eh"])
+
+
+def _energy_basis(parsed: dict[str, float | str | None]) -> str:
+    basis = parsed.get("energy_basis")
+    return str(basis) if basis else "scf_energy_Eh"
+
+
+def _parse_frequency_values(text: str) -> list[float]:
+    values: list[float] = []
+    for match in _FREQUENCIES_RE.findall(text):
+        for token in match.split():
+            try:
+                values.append(float(token))
+            except ValueError:
+                continue
+    return values

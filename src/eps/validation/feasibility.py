@@ -331,10 +331,23 @@ def compute_feasibility_metric(
         matched_detail.append(
             {
                 "monomer_name": row["monomer_name"],
+                "monomer_smiles": row["monomer_smiles"],
+                "solvent": row["solvent"],
+                "electrolyte": row["electrolyte"],
+                "electrode": row["electrode"],
                 "triad": (canonical, solvent, anion if anion is not None else "ANY"),
                 "match_basis": match_basis,
+                "matched_triad_count": len(survivors),
                 "outcome": "YES" if outcome_yes else "NO",
                 "predicted": "YES" if predicted_yes else "NO",
+                "negative_type": row["negative_type"],
+                "experimental_basis": row["experimental_basis"],
+                "reference_electrode": row["reference_electrode"],
+                "source_doi": row["source_doi"],
+                "source_locator": row["source_locator"],
+                "reliability_tier": row["reliability_tier"],
+                "medium_class": row["medium_class"],
+                "flags": row["flags"],
             }
         )
 

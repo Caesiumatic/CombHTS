@@ -11,6 +11,12 @@ solvent’s electrochemical stability window; (ii) the electrolyte anion must be
 potential; and (iii) the monomer must be sufficiently soluble in the chosen solvent. A secondary
 objective is to predict the resulting polymer’s doping-onset potential and band gap to assess
 material quality.
+
+## Maintainer map
+
+For the current package/workflow/data ownership map, see
+[`docs/code_structure.md`](docs/code_structure.md).
+
 ## References
 - HTS: J. Chem. Inf. Model. 2018, 58, 12, 2450–2459
-- OMIECs: Chem. Rev. 2026, 126, 28−79 
+- OMIECs: Chem. Rev. 2026, 126, 28−79
