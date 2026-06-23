@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -46,6 +47,35 @@ def test_audit_real_staging_writes_summary_and_issues(tmp_path: Path) -> None:
     written_issues = pd.read_csv(issues_path)
     assert len(written_summary) == len(summary)
     assert len(written_issues) == len(issues)
+
+
+def test_audit_script_entrypoint_writes_expected_outputs(tmp_path: Path) -> None:
+    summary_path = tmp_path / "script_summary.csv"
+    issues_path = tmp_path / "script_issues.csv"
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "scripts/audit_lit_curation_staging.py",
+            "--repo-root",
+            ".",
+            "--summary",
+            str(summary_path),
+            "--issues",
+            str(issues_path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.stdout == ""
+    assert completed.stderr == ""
+    summary = pd.read_csv(summary_path)
+    issues = pd.read_csv(issues_path)
+    assert len(summary) == 5
+    assert set(issues["classification"]).issubset(set(_load_audit_module().CLASSIFICATIONS))
+    assert (issues["issue_type"] == "production_duplicate").any()
 
 
 def test_section7_review_tables_are_parseable_and_smiles_are_valid() -> None:
