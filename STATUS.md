@@ -1,7 +1,28 @@
 # Project Status
-_Last updated: 2026-06-23 (417587 complete; optical result diagnostic only)_
+_Last updated: 2026-06-23 (Section 7 staging audit + Tier-2 pilot orchestration complete; production unchanged)_
 
 ## Current phase
+
+Section 7 staging-data audit and targeted gap curation is **COMPLETE** at review/staging scope.
+The new audit artifacts under `data/lit_curation/` and
+`docs/research/section7_staging_audit_20260623.md` cover existing solvent ESW, polymerization,
+optical-anchor, solubility, and optical/doping staging rows. All audited staging schemas pass and
+all 127 SMILES-bearing staging rows RDKit-parse; no production CSV, config, scoring code, or optical
+policy changed. The audit produced compact review tables for Eox gapfill candidates, ESW promotion
+candidates, ESW remaining gaps, polymerizability promotion candidates, and Wave-A library readiness.
+The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence, nitromethane
+primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
+rows needing source or reference checks.
+
+The Tier-2 monomer-Eox pilot workflow is now implemented as a **mock-first, array-safe scaffold**.
+`eps tier2-plan` validates a selection CSV and emits one task per unique `(monomer, solvent,
+method config)` identity; repeated salts/cations are deduplicated before any Engine call.
+`eps tier2-run-task` executes one manifest task with a task-local SQLite cache, atomic
+`result.json`, persistent Gaussian input/log retention, Normal-termination checks, SCF/Gibbs energy
+selection metadata, and frequency-quality metadata. `eps tier2-harvest` is a no-engine combiner
+that rejects missing/failed/duplicate/hash-mismatched results and never fills Tier-2 gaps with
+Tier-1 values. SGE templates exist for the array run and the separate harvest step. No real
+Gaussian task was submitted in this work unit, and no scoring/config/production CSV value changed.
 
 Soft-axis calibration review is **COMPLETE** as of 2026-06-22. Dimerization's unknown
 proton-reference offset is confirmed to be one constant across monomers by code inspection,
@@ -47,15 +68,18 @@ acid/reference-only passes. Read-only analysis 417571 produced **1,127 exact sco
 distinct diagnostic top-30 of **19 PC / 6 MeCN / 3 nitromethane / 2 NMP**. AgClO4 and HClO4 are
 absent as representatives and inside `salts_tied`.
 
-Docs-sync verification is green: `.venv/bin/python -m pytest -q` reports **216 passed, 5 skipped**
-with 2 warnings. The known ruff I001 import-ordering debt in `tests/test_orca_pilots.py` is not fixed
-in this docs-only work unit.
+Section 7 audit verification is green: `.venv/bin/python -m pytest -q` reports **238 passed,
+5 skipped** with 2 warnings; `.venv/bin/ruff check src tests` passes; `git diff --check` passes.
 
 ## What works
 
 - Architecture invariants remain intact: expensive work is per species, triads are cheap joins,
   all engines share the Engine interface, results are cache-keyed by species/method/solvent, and
   libraries/configuration are versioned CSV/YAML.
+- Tier-2 pilot orchestration is split into plan / one-task run / harvest commands. Planning is
+  schema-validated and monomer-solvent aware; task execution is mock-first and cache-separated by
+  default; harvest preserves raw energy fields and emits a standard per-monomer-solvent Eox CSV
+  consumable by `eps tier2-screen`.
 - `data/solvent_windows.csv` records anodic/cathodic limits in V vs Ag/AgCl with salt,
   electrolyte, electrode, reference, cutoff, source, tier, and electrolyte-limited metadata.
   Evidence selection is exact `(solvent,salt)` measurement then conservative solvent-only evidence;
@@ -97,8 +121,10 @@ in this docs-only work unit.
 
 ## Open scientific and engineering debt
 
-1. The condition table is still sparse. Exact-salt/electrode coverage and quantitative ESW error
-   analysis must expand; a conditioned formulation limit is not a universal solvent constant.
+1. The condition table is still sparse, but a Section 7 staging audit now pinpoints the review
+   targets. Exact PC BF4/PF6/ClO4/TFSI rows, MeCN/TBAPF6, nitromethane primary-source reconciliation,
+   NMP, and nitrobenzene are the main ESW blockers before production ingest or quantitative ESW
+   error analysis. A conditioned formulation limit is not a universal solvent constant.
 2. **Salt-permutation score degeneracy (417564 audit — presentation/gate guard IMPLEMENTED; cation
    physics still absent).** The composite ignores the cation — `window_margin` is solvent-only,
    `anion_stability` anion-only, and solvation-affinity/dimerization/band_gap monomer-only — so each
@@ -129,8 +155,9 @@ in this docs-only work unit.
 8. §7 validation is the next active item: Eox MAE, ESW MAE, and polymerization yes/no accuracy
    should be reported before further soft-axis chasing. Use `data/polymerizability_labels.csv` for
    the yes/no metric and never claim MAE < 0.15 V.
-9. `tests/test_orca_pilots.py` has ruff I001 import-ordering debt. Fix it on the next src-touching
-   PR; it does not affect test results.
+9. Tier-2 pilot orchestration is ready for review and mock smoke use, but no real Gaussian array has
+   been submitted and no completed Tier-2 scientific values exist yet. The pilot still needs a
+   concrete reviewed selection CSV and a later cluster execution work unit.
 10. Validation coverage remains below directive gates, and the library is 36x13x16 versus the
    requested roughly 80-150 x 25-35 x 20-30. The vetted +76/+27/+25 library-expansion proposal
    (`docs/research/library_expansion_proposal.md`, merged bee31d3) is PROPOSAL ONLY and stays gated
@@ -142,15 +169,17 @@ in this docs-only work unit.
 
 ## Immediate next actions
 
-1. Run §7 Tier-1 validation: report Eox calibration MAE (honest 0.20-0.35 V band), ESW MAE vs
+1. Review the Section 7 staging-audit outputs, source-check the flagged Eox/ESW/polymerization rows,
+   and promote only approved rows through a separate production-ingest task.
+2. Run §7 Tier-1 validation: report Eox calibration MAE (honest 0.20-0.35 V band), ESW MAE vs
    `data/solvent_benchmark.csv`, and polymerization yes/no accuracy using
    `data/polymerizability_labels.csv`.
-2. Treat 417587 as a completed diagnostic negative/weak baseline: summarize it for review, but do
+3. Treat 417587 as a completed diagnostic negative/weak baseline: summarize it for review, but do
    **not** wire it into the composite. Any next optical work should be a separate reviewed plan for
    longer chains, geometry sensitivity, and better phase/class matching.
-3. Fix ruff I001 in `tests/test_orca_pilots.py` on the next src-touching PR.
-4. Tier-2 pilot selection (10-20 stratified monomers from the corrected ranking) and library
-   expansion remain PI/resource decisions for the June-30 group meeting.
+4. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
+   array smoke, and only then schedule a separate reviewed real-Gaussian cluster work unit.
+5. Library expansion remains a resource decision for the June-30 group meeting.
 
 ## Architecture invariants
 

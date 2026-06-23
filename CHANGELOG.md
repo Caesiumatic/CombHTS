@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-06-23 — add mock-first Tier-2 pilot orchestration
+
+Implemented the Tier-2 monomer-Eox pilot as an array-safe, mock-first workflow without changing
+production scoring, Tier-1 thresholds, calibration coefficients, optical policy, or data CSVs.
+No ORCA/Gaussian cluster job was submitted.
+
+- Added `eps tier2-plan` to validate selection CSVs, canonicalize/deduplicate monomer-solvent
+  tasks across repeated salts/cations, assign stable task IDs, hash the full Tier-2 config, and
+  emit `task_manifest.csv`, `plan_summary.json`, `plan_report.md`, and `provenance.json`.
+- Added `eps tier2-run-task` for one manifest task at a time, with deterministic mock execution,
+  task-local SQLite cache defaults, atomic `result.json`/`status.txt`, persistent Gaussian work
+  dirs, Normal-termination checks, SCF-vs-Gibbs energy-basis metadata, and frequency metadata.
+- Added `eps tier2-harvest` to combine only validated successful results, reject missing/failed/
+  duplicate/hash-mismatched tasks, preserve raw energy fields, and emit a standard
+  per-monomer-solvent Eox CSV for `eps tier2-screen`.
+- Added SGE templates for the array task runner and separate no-engine harvest. The array template
+  uses `SGE_TASK_ID`, requires absolute manifest/output paths, writes task-local caches/work dirs,
+  and loads Gaussian only in real-engine mode.
+- Preserved backward compatibility for existing `eps tier2 --dry-run`, `eps tier2-screen`, and
+  `eps calibrate-dft` paths.
+- Verification: targeted Tier-2/Gaussian/DFT tests `39 passed, 2 skipped`; tracked tests plus the
+  new Tier-2 pilot tests `227 passed, 5 skipped`; tracked-Python ruff clean; `bash -n` clean for
+  the new SGE templates; `git diff --check` clean.
+
+## 2026-06-23 — audit Section 7 staging data and curate targeted review gaps
+
+Staging/review-only Section 7 curation pass. No production CSV, config, scoring code, calibration
+policy, cluster output, or quantum-chemistry result changed.
+
+- Added `scripts/audit_lit_curation_staging.py` plus tests to validate staging schemas, RDKit-parse
+  known SMILES fields, canonicalize structures, detect internal and production duplicates, and write
+  audit CSVs without touching production data.
+- Wrote `staging_audit_summary.csv` and `staging_audit_issues.csv`: 186 rows audited across ESW,
+  polymerization, selected optical anchors, solubility, and optical/doping staging; all schemas pass;
+  all 127 SMILES-bearing rows parse; 1 known ESW extraction reject is preserved.
+- Added targeted review tables for Eox gapfill candidates, ESW promotion candidates, ESW remaining
+  gaps, polymerizability YES/NO candidates, and Wave-A library readiness.
+- Added `docs/research/section7_staging_audit_20260623.md` summarizing counts, blockers, human
+  source-check rows, and the decision that no item meets PI-escalation criteria.
+- Verification: `.venv/bin/python -m pytest -q` passed with 238 passed, 5 skipped, and 2 warnings;
+  `.venv/bin/ruff check src tests` and `git diff --check` passed.
+
 ## 2026-06-23 — record completed 417587 optical diagnostic
 
 Documentation-only sync after read-only Lop inspection of completed SGE job 417587. No source,

@@ -1,0 +1,6 @@
+file,rows,columns_ok,missing_columns,smiles_fields,rdkit_valid_smiles,rdkit_invalid_smiles,internal_duplicate_rows,production_duplicate_rows,PROMOTE_NOW_CANDIDATE,NEEDS_SOURCE_CHECK,NEEDS_REFERENCE_CONVERSION_CHECK,NEEDS_STRUCTURE_CHECK,NEEDS_CONDITION_MATCH_CHECK,PARK,REJECT
+data/lit_curation/solvent_esw_staging.csv,26,True,,,0,0,0,3,8,1,13,0,0,3,1
+data/lit_curation/polymerization_outcomes_staging.csv,91,True,,smiles,91,0,30,3,29,35,0,0,27,0,0
+data/lit_curation/optical_anchors_selected.csv,9,True,,monomer_smiles,9,0,0,0,0,0,6,0,0,3,0
+data/lit_curation/solubility_staging.csv,33,True,,,0,0,2,0,0,2,0,0,31,0,0
+data/lit_curation/optical_doping_staging.csv,27,True,,monomer_smiles,27,0,0,0,0,0,15,0,0,12,0
