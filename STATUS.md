@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-23 (pre-cleanup integration: Section 7 validation, staging audit, Tier-2 pilot orchestration)_
+_Last updated: 2026-06-23 (codebase map and hygiene review after pre-cleanup integration)_
 
 ## Current phase
 
@@ -68,6 +68,12 @@ No PI escalation was triggered by these merged work units. They stayed inside Di
 used normal project-scale resources, did not change scoring/config policy, and did not create a new
 scope commitment.
 
+A post-integration codebase map and safe-hygiene review now document package layout, workflow
+ownership, data/config boundaries, engine/cache contracts, scientific axes, and no-touch items in
+`docs/code_structure.md` and `docs/maintenance/codebase_review_20260623.md`. This review is
+documentation-only and does not change scoring, filters, calibration, production data, redox
+constants, cache keys, output schemas, or optical policy.
+
 Soft-axis interpretation is unchanged. Optical job **417587** remains a completed diagnostic
 negative/weak baseline: six neutral-dimer ORCA anchors finished, but sTDA/TDA fits to experimental
 neutral-polymer gaps are weak (R2 about 0.15-0.17; LOO-CV MAE about 0.45 eV), so the 15% optical
@@ -86,6 +92,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 - Architecture invariants remain intact: expensive work is per species, triad scoring is a cheap
   join/arithmetic layer, all engines go through the Engine interface, results are SQLite-cached by
   species/method/solvent, and library/configuration data remain CSV/YAML.
+- `docs/code_structure.md` is the current maintainer map for source/package layout, public
+  workflows, data/config ownership, scientific axes, run-manifest practice, onboarding, and
+  no-touch boundaries.
 - `eps validate-directive` writes all required artifacts:
   `validation_summary.json`, `validation_report.md`, `eox_profile_summary.csv`, `eox_points.csv`,
   `esw_descriptor_points.csv`, `esw_gate_diagnostics.csv`, `feasibility_matches.csv`, and
@@ -155,6 +164,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   `git diff --check` passed; SGE `bash -n` passed for the new validation/Tier-2 templates;
   no-real-engine CLI smoke passed; conflict-marker scan clean. Details are in
   `docs/maintenance/pre_cleanup_merge_report_20260623.md`.
+- Codebase-map/hygiene verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff passed;
+  `git diff --check` passed; `eps doctor` reported 0 FAIL and the expected four local
+  cluster-binary WARNs; no-real-engine CLI smoke passed, including mock `eps validate`.
 
 ## Architecture invariants
 

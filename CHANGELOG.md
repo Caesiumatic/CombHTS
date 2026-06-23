@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-06-23 — add codebase map and safe hygiene review
+
+Documentation and low-risk hygiene pass after the pre-cleanup integration merge. No scientific
+behavior, scoring weights, thresholds, calibration coefficients, production CSVs, redox constants,
+cache keys, output schemas, or optical policy changed.
+
+- Added `docs/code_structure.md` as a maintainer map for package layout, workflows, data/config
+  ownership, engine/cache contracts, scientific axes, run-manifest conventions, onboarding, and
+  no-touch boundaries.
+- Added `docs/maintenance/codebase_review_20260623.md` with repo-state evidence, findings,
+  deferred refactors, no-touch items, and ranked cleanup follow-ups.
+- Confirmed the previously noted `ruff` I001 import-ordering debt in `tests/test_orca_pilots.py`
+  is already fixed on the integrated branch; no Python cleanup was needed.
+- Added a README pointer to the new code-structure map and synchronized STATUS without changing
+  the 417587 diagnostic-only conclusion.
+- Verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff, `git diff --check`,
+  `eps doctor`, and no-real-engine CLI smoke passed.
+
 ## 2026-06-23 — record completed 417587 optical diagnostic
 
 Documentation-only sync after read-only Lop inspection of completed SGE job 417587. No source,
