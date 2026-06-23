@@ -32,5 +32,5 @@
 - caveats: **descriptor-validation pilot, NOT a solubility calibration.** dGsolv is a solvation
   free energy; it omits lattice/fusion, concentration, aggregation, protonation, and salt
   compatibility (see [solubility_descriptor_status.md](../lit_curation/solubility_descriptor_status.md)).
-  **The Tier-1 20% solubility axis is UNCHANGED** by this work; the docs note recommends only.
+  **The Tier-1 20% solvation-affinity (dGsolv proxy) axis is UNCHANGED** by this work; the docs note recommends only.
 - supersedes / superseded_by: extends `2026-06-22_orca-solvation-real-417544` (does not supersede it)

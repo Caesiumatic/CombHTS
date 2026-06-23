@@ -1,16 +1,16 @@
-# Run: 2026-06-22 — six-anchor optical calibration (prepared)
+# Run: 2026-06-22 — six-anchor optical calibration (submitted)
 - run_id: 2026-06-22_optical-calib-n6
 - date: 2026-06-22 CDT
 - command: `qsub -v OPTICAL_N6_OUTDIR=outputs/optical_calibration_n6,OPTICAL_N6_CACHE=outputs/optical_calibration_n6/cache.sqlite,OPTICAL_PILOT_CACHE=outputs/orca_optical_pilot_corrected/cache.sqlite scripts/run_optical_calibration_n6.sge`
-- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), built-in sTDA + conventional TDA; **real engine requested, not yet run**
+- engine / method: ORCA 6.1 CAM-B3LYP/def2-SVP/CPCM(MeCN), built-in sTDA + conventional TDA; **real engine submitted, no result inspected**
 - scope: six HIGH-confidence neutral-polymer anchors from `data/lit_curation/optical_anchors_selected.csv`; neutral dimers (n=2) matching the corrected pilot: PEDOP/EDOP, PProDOP, P3HT/3-hexylthiophene, PEDOS/EDOS, PFO/9,9-dioctylfluorene, and p-AlkyneDTP/DTP
-- cluster job: not submitted; SGE serial request (`-pe smp 1`, 72 h)
-- status: **prepared — awaiting submission**
+- cluster job: SGE **417587** on Lop (reported/unverified); serial request (`-pe smp 1`, 72 h)
+- status: **submitted — RUNNING** (job 417587, Lop, reported/unverified)
 - headline results: no real n=6 result exists yet. Local deterministic mock pre-flight completed 6/6 paired anchors and proved cache idempotency; mock values are non-physical and are not reported as results.
-- per-property failures: none known; real sTDA 0/6 attempted, real TDA 0/6 attempted
+- per-property failures: none known from repo-visible outputs; real sTDA/TDA progress not inspected
 - output artifacts (paths, NOT committed): Lop `$HOME/CombHTS/outputs/optical_calibration_n6/` including `optical_n6_points.csv`, `optical_n6_fit.json`, `optical_n6_fit.md`, provenance, and retained raw ORCA files
 - cache: fresh/resumable target `$HOME/CombHTS/outputs/optical_calibration_n6/cache.sqlite`; read-only seed `$HOME/CombHTS/outputs/orca_optical_pilot_corrected/cache.sqlite`
 - cache audit: the corrected pilot cache contains six valid rows for thiophene, EDOT, and pyrrole dimers (three sTDA + three TDA). Exact request-key overlap with the six selected anchors is **0/12**, so all six anchor dimers currently need both methods; the seed path remains exact-key-only and never modifies the pilot cache.
 - provenance: branch `calib/optical-n6`; anchor experimental gaps/methods/DOIs are copied per row from the selected staging CSV; ORCA optical settings are from `configs/orca_pilots.yaml`. `configs/tier2.yaml` was inspected but is the separate Gaussian B3LYP/6-31G(d,p) configuration and is not used here.
-- caveats: this prepared run compares neutral **dimer** excitations to neutral-polymer experimental gaps. It is a diagnostic n=6 baseline and does not satisfy the calibration plan's longer-chain extrapolation, geometry sensitivity, or phase-matching gates. The DTP polymerization spec is already marked approximate; PProDOP is staging-only and uses auto-derived 2,5-alpha coupling. No result changes the 15% optical axis: it remains diagnostic until the fit, leverage/per-class residuals, chain-length/geometry effects, and literature anchors are reviewed.
+- caveats: this submitted run compares neutral **dimer** excitations to neutral-polymer experimental gaps. Even on completion, it is a diagnostic baseline and does not satisfy the calibration plan's longer-chain extrapolation, geometry sensitivity, or phase-matching gates. The DTP polymerization spec is already marked approximate; PProDOP is staging-only and uses auto-derived 2,5-alpha coupling. No result changes the 15% optical axis: it remains diagnostic until the fit, leverage/per-class residuals, chain-length/geometry effects, and literature anchors are reviewed by a human.
 - supersedes / superseded_by: expands the n=3 method-to-method pilot 417557 with experimental anchors; superseded_by —

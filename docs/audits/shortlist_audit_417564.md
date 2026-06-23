@@ -21,9 +21,10 @@ _Audit date: 2026-06-22 · Branch: `track/shortlist-audit` · Author task: formu
 | `data/solvent_windows.csv`, `electrolytes.csv`, `polymerizability_labels.csv`, `needs_review.md`, `STATUS.md` | repo (read-only) | formulation / evidence cross-ref |
 
 **Composite weights** (`configs/scoring.yaml`): window_margin **0.30**, anion_stability **0.20**,
-solubility **0.20**, dimerization **0.15**, band_gap_deviation **0.15**.
-The three axes STATUS flags as **uncalibrated** — solubility (dGsolv proxy), dimerization
-(unknown proton-reference offset), band_gap/optical_gap (sTDA-xTB, uncalibrated vs TD-DFT) — sum to
+solvation affinity (dGsolv proxy) **0.20**, dimerization **0.15**, band_gap_deviation **0.15**.
+The three axes STATUS flags as **diagnostic** — solvation affinity (dGsolv proxy), dimerization
+(proton-reference offset ranking-safe but absolute scale uncalibrated), band_gap/optical_gap
+(sTDA-xTB, uncalibrated vs TD-DFT) — sum to
 **0.50 of the score**. The two better-grounded axes (window_margin, anion_stability) sum to the
 other 0.50.
 
@@ -39,7 +40,7 @@ The composite score for a fixed **(monomer, solvent, anion)** is **independent o
 - `window_margin` — on **PC** the solvent window is *solvent-only* (salt-agnostic), so it does not
   change with the salt at all;
 - `anion_stability` — depends only on the **anion**;
-- `solubility`, `dimerization`, `band_gap` — depend only on the **monomer**.
+- `solvation affinity`, `dimerization`, `band_gap` — depend only on the **monomer**.
 The cation enters the pipeline only through the `cation_reduction_below_solvent_cathodic` **pass/fail
 filter** (True for all 30 rows) and the **report-only** ion-pair term. Result: the five ClO₄⁻ salts
 (**AgClO4, HClO4, NaClO4, LiClO4, TBAClO4**) on the same monomer/PC produce **five rows with byte-
@@ -93,7 +94,7 @@ Driving axes = top weighted contributors (weight×norm). Flags use the shorthand
 | 11 | fluorene 9,9-dioctyl | MeCN | TBABF4 (TAA) | 0.6242 | window .232 / anion .163 / solub .140 | 37% | OptTrunc; exact-salt window; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | Polyfluorene via 2,7-coupling is real, but optical gap is computed on a **sidechain-truncated** model (octyl removed) → band_gap axis approximate; exact-salt MeCN window is a plus. |
 | 12 | diphenylamine | MeCN | TBABF4 (TAA) | 0.6109 | **window .284** / anion .191 / bgap .074 | 22% | MedMismatch; ApproxCoupling(opt+dimer); dimer-prone; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | Arylamine; documented route is **aqueous H₂SO₄** (labels); radical-cation chemistry is dimerization-prone; optical/dimer approximate coupling. Window-dominated, but medium and coupling must be re-checked. |
 | 13 | bifuran | MeCN | TBABF4 (TAA) | 0.6091 | window .214 / bgap .150 / anion .153 | 40% | FuranFam; bgap-driven; exact-salt window; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | Oligofuran (furan family flagged difficult; bifuran shorter than terfuran). Rank is **band_gap-driven** (norm 1.0, uncalibrated) — the high rank leans on the uncalibrated optical axis. |
-| 14 | fluorene 9,9-dioctyl | PC | TBABF4 (TAA) | 0.5963 | window .186 / solub .160 / anion .160 | 42% | OptTrunc; PC-SOLV; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | BF4 cluster rep for fluorene/PC; PC solvent-only computed window + sidechain-truncated optical; **solubility (uncalibrated) is the #2 driver**. |
+| 14 | fluorene 9,9-dioctyl | PC | TBABF4 (TAA) | 0.5963 | window .186 / solv-aff .160 / anion .160 | 42% | OptTrunc; PC-SOLV; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | BF4 cluster rep for fluorene/PC; PC solvent-only computed window + sidechain-truncated optical; **solvation affinity (dGsolv proxy, uncalibrated) is the #2 driver**. |
 | 15 | fluorene 9,9-dioctyl | PC | LiBF4 (Li) | 0.5963 | window .186 / solub .160 / anion .160 | 42% | DEGEN(of R14); OptTrunc; PC-SOLV; UNCAL | **PARK** | Score-degenerate BF4 duplicate of R14; Li⁺/PC unproven. |
 | 16 | terthiophene | PC | LiBF4 (Li) | 0.5903 | window .231 / anion .184 / solub .093 | 30% | DEGEN(of R17); PC-SOLV; UNCAL; IonpairFail | **PARK** | Score-degenerate BF4 duplicate of R17; Li⁺/PC unproven. |
 | 17 | terthiophene | PC | TBABF4 (TAA) | 0.5903 | window .231 / anion .184 / solub .093 | 30% | PC-SOLV; PC-untested-for-monomer; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | BF4 cluster rep for terthiophene/PC; terthiophene is lit-supported in **MeCN** but **PC is untested** (labels show a wrong-solvent NO in DMF); PC window solvent-only computed. |
@@ -101,7 +102,7 @@ Driving axes = top weighted contributors (weight×norm). Flags use the shorthand
 | 19 | fluorene 9,9-dioctyl | PC | NaClO4 (Na) | 0.5901 | window .186 / solub .160 / anion .154 | 42% | NaUnproven; DEGEN; OptTrunc; PC-SOLV; UNCAL | **PARK** | Na⁺/PC compatibility unproven; score-degenerate duplicate of R22. |
 | 20 | fluorene 9,9-dioctyl | PC | **HClO4 (acid)** | 0.5901 | window .186 / solub .160 / anion .154 | 42% | **AcidNonaq**; DEGEN; OptTrunc; PC-SOLV; UNCAL; SecMonRO | **REMOVE** | Perchloric acid in aprotic PC with a non-aniline monomer; degenerate duplicate of R22. |
 | 21 | fluorene 9,9-dioctyl | PC | **AgClO4 (silver)** | 0.5901 | window .186 / solub .160 / anion .154 | 42% | **AgRef**; DEGEN; OptTrunc; PC-SOLV; UNCAL; IonpairFail | **REMOVE** | Reference-electrode salt mis-used as supporting electrolyte; Ag plating; degenerate duplicate of R22. |
-| 22 | fluorene 9,9-dioctyl | PC | TBAClO4 (TAA) | 0.5901 | window .186 / solub .160 / anion .154 | 42% | OptTrunc; PC-SOLV; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | ClO4 cluster rep for fluorene/PC; canonical salt; PC solvent-only computed window + truncated optical; solubility (uncalibrated) is #2 driver. |
+| 22 | fluorene 9,9-dioctyl | PC | TBAClO4 (TAA) | 0.5901 | window .186 / solv-aff .160 / anion .154 | 42% | OptTrunc; PC-SOLV; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | ClO4 cluster rep for fluorene/PC; canonical salt; PC solvent-only computed window + truncated optical; solvation affinity (dGsolv proxy, uncalibrated) is #2 driver. |
 | 23 | terthiophene | PC | NaClO4 (Na) | 0.5841 | window .231 / anion .177 / solub .093 | 30% | NaUnproven; DEGEN; PC-SOLV; UNCAL | **PARK** | Na⁺/PC unproven; score-degenerate duplicate of R25. |
 | 24 | terthiophene | PC | LiClO4 (Li) | 0.5841 | window .231 / anion .177 / solub .093 | 30% | DEGEN(of R25); PC-SOLV; UNCAL; IonpairFail | **PARK** | Legitimate salt, score-degenerate duplicate of R25; Li⁺/PC unproven. |
 | 25 | terthiophene | PC | TBAClO4 (TAA) | 0.5841 | window .231 / anion .177 / solub .093 | 30% | PC-SOLV; PC-untested-for-monomer; UNCAL; EoxOOD; IonpairFail | **CAVEAT** | ClO4 cluster rep for terthiophene/PC; PC untested for this monomer; PC window solvent-only computed. |
@@ -113,7 +114,7 @@ Driving axes = top weighted contributors (weight×norm). Flags use the shorthand
 
 **Flag shorthand.** DEGEN = salt-permutation score-degenerate duplicate (cation ignored by score) ·
 PC-SOLV = PC anodic window is solvent-only, computed-capped (weaker tier than exact-salt) ·
-UNCAL = uncalibrated axes (solubility+dimerization+band_gap) carry a large score share ·
+UNCAL = diagnostic axes (solvation affinity+dimerization+band_gap) carry a large score share ·
 AgRef = AgClO4 reference-electrode salt mis-used as supporting electrolyte ·
 AcidNonaq = acid (HClO4) in nonaqueous aprotic system ·
 MedMismatch = monomer's documented electropolymerization medium ≠ the paired medium ·
@@ -182,7 +183,7 @@ dissolution evidence).
    is untested** for this monomer (a wrong-solvent NO is on record for terthiophene/DMF).
 7. **Every row (all 30)** — (a) **salt dissolution/conductivity/ion-pairing is unvalidated** (ion-pair
    term failed for 22/30 and is report-only for all; the computed values are gas-phase-scale, not a
-   solubility proof); (b) **oligomer Eox calibration is out-of-domain**; (c) uncalibrated axes
-   (solubility, dimerization, optical/band_gap = 0.50 weight) remain unvalidated per STATUS debt
+   solubility proof); (b) **oligomer Eox calibration is out-of-domain**; (c) diagnostic axes
+   (solvation affinity, dimerization, optical/band_gap = 0.50 weight) remain unvalidated per STATUS debt
    items 3–6. This shortlist is a **diagnostic, screening-grade** route-validation artifact, **not an
    experimental order list**.

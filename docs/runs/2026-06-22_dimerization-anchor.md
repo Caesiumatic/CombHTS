@@ -1,0 +1,14 @@
+# Run: 2026-06-22 — dimerization proton-offset anchor diagnosis (none)
+- run_id: 2026-06-22_dimerization-anchor
+- date: 2026-06-22
+- command: local read-only code/test/harvest inspection; no `eps` engine command and no cluster submission
+- engine / method: none (docs/analysis only; no mock, xTB, Gaussian, or ORCA calculation)
+- scope: existing dimerization implementation, tests, and completed real-GFN2-xTB 7,488-triad harvest distribution
+- cluster job: local only
+- status: completed
+- headline results: the unknown `2*G(H+)` proton-reference term is one additive constant across all monomers; min-max normalization cancels it, so the 15% dimerization ranking axis is offset-safe. Absolute calibration remains deferred because no exact-reaction equilibrium DeltaG/Hess-cycle anchors are available.
+- per-property failures: n/a
+- output artifacts (paths, NOT committed): none; conclusions recorded in `docs/dimerization_offset_diagnosis.md`
+- provenance: git commit 1cf3d1e baseline; docs-only inspection of existing source, tests, and run manifests
+- caveats: this is not a quantum-chemistry run and not an absolute thermodynamic calibration. The descriptor remains diagnostic because solvation, thermal, conformational, and coupling-site errors may be monomer-dependent.
+- supersedes / superseded_by: —

@@ -10,5 +10,5 @@
 - per-property failures: no calculations executed; source harvest's existing audit statuses were preserved byte-for-value
 - output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_measured_esw/tier1_ranked.csv`, `tier1_all.csv`, and provenance sidecar
 - provenance: git commit `ab80604`; source harvest SGE 417538 / real GFN2-xTB; gate policy `measured_first_conservative`; 5,760 measured-conditioned rows and 1,728 fallback rows
-- caveats: this is the first physically corrected gate result, but still screening-grade. The 23 gained triads are in propylene carbonate/GBL, whose generic measured formulation windows exceed the old priors; audit them before recommendation. Sparse exact-salt coverage and the uncalibrated solubility/optical/dimerization axes remain.
+- caveats: this is the first physically corrected gate result, but still screening-grade. The 23 gained triads are in propylene carbonate/GBL, whose generic measured formulation windows exceed the old priors; audit them before recommendation. Sparse exact-salt coverage and the diagnostic solvation-affinity/optical/dimerization axes remain.
 - supersedes / superseded_by: diagnostic successor to old-gate 417538; superseded by conservatively capped re-score 417562

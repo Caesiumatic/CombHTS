@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-06-22 — sync soft-axis review conclusions and §7 validation pivot
+
+Documentation-only sync to the 2026-06-22 evening state after the soft-axis calibration review.
+No source, config, scoring weight, calibration profile, or production CSV data changed.
+
+- Reframed STATUS around the completed soft-axis review: dimerization's proton offset is a
+  ranking-safe constant; the former solubility label is now documented as solvation affinity
+  (dGsolv proxy); optical job 417587 is running on Lop (reported/unverified) but remains a
+  diagnostic dimer-vs-polymer baseline even on completion.
+- Made the composite interpretation explicit: window_margin + anion_stability (0.50) are the
+  trustworthy hard-gate/coarse-ranking signal; optical + dimerization + solvation affinity (0.50)
+  are diagnostic/reference-only for now.
+- Recorded the strategic pivot to §7 Tier-1 validation: Eox MAE, ESW MAE, and polymerization
+  yes/no accuracy are the next active checks. Soft-axis absolute calibration is deferred as
+  future/opportunistic work.
+- Updated run records for optical-calib-n6 417587 and added a dimerization-anchor manifest; the run
+  index now includes salt-fix rescore 417569, capped-ESW analysis 417571, solvation-cosmors-pilot,
+  dimerization-anchor, and optical-calib-n6.
+- Added explicit debt for ruff I001 in `tests/test_orca_pilots.py` to fix on the next
+  src-touching PR.
+- Verification: `.venv/bin/python -m pytest -q` passed with 216 passed, 5 skipped, and 2 warnings.
+
 ## 2026-06-22 — diagnosed dimerization proton offset and specified absolute anchor
 
 - Traced the implemented neutral-dimer cycle and identified `2*G(H+)` as the only unknown

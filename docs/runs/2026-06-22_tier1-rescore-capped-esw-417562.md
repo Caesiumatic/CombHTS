@@ -10,5 +10,5 @@
 - per-property failures: no calculations executed; existing source audit statuses preserved
 - output artifacts (paths, NOT committed): Lop `outputs/tier1_real_7488_capped_esw/tier1_ranked.csv`, `tier1_all.csv`, provenance
 - provenance: git commit `8856b14`; source real-xTB SGE 417538; 1,728 rows capped (water, PC, GBL); mandatory raw measurements retained in audit
-- caveats: physically conservative hard-gate correction, but downstream composite remains screening-grade because optical/dimerization/solubility validation is incomplete.
+- caveats: physically conservative hard-gate correction, but downstream composite remains screening-grade because optical/dimerization/solvation-affinity validation is incomplete.
 - supersedes / superseded_by: supersedes old-gate 417538 ranking and uncapped diagnostic 417553; superseded_by —
