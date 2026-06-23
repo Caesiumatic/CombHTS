@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-06-23 — refactor staging audit into curation module
+
+Repo-simplification-only refactor. No scoring, config, calibration, production CSV, benchmark CSV,
+redox constant, output schema, optical policy, Tier-1 filter, or Tier-2 route setting changed.
+
+- Moved reusable Section 7 staging-audit logic from `scripts/audit_lit_curation_staging.py` into
+  `src/eps/curation/staging_audit.py`.
+- Kept `scripts/audit_lit_curation_staging.py` as a thin command wrapper with the same defaults and
+  output paths.
+- Updated audit tests to import the package module directly while preserving a subprocess smoke
+  test for the script entrypoint.
+
 ## 2026-06-23 — add codebase map and safe hygiene review
 
 Documentation and low-risk hygiene pass after the pre-cleanup integration merge. No scientific
