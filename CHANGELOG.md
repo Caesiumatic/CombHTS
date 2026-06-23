@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-23 — close directive section-7 validation package
+
+Added a reproducible, machine-readable section-7 validation workflow and ran the real xTB package on
+Lop. No scoring weights, thresholds, calibration coefficients, redox constants, production CSVs,
+optical policy, or 417587 artifacts changed.
+
+- Added `eps validate-directive` plus an xTB-only SGE template that writes
+  `validation_summary.json`, `validation_report.md`, Eox profile/point CSVs, ESW descriptor/gate
+  CSVs, feasibility matches, and provenance.
+- Real SGE 417671 completed from isolated clone `/home/shic4/CombHTS_section7_e023a1c` at commit
+  `e023a1c6bba0b60f22a6afb3a649f45308234122` using `gfn2-xtb+conf-mmff94-n100`; qacct reports
+  exit 0, failed 0, 4 slots, 398 s wall.
+- Recorded the directive status table: active Eox LOO-CV MAE 0.186 V over n=9 PASS; Tier-2 held-out
+  validation OUT_OF_SCOPE; raw solvent ESW descriptor MAE 5.409/3.755 V FAIL; production ESW gate
+  unsafe widening 0/5,760 PASS; feasibility balanced accuracy 56.25% on n=12 NOT_YET_TESTABLE.
+- Synchronized STATUS, THINK, run manifest, and run index to make the result a current-state fact.
+  Mock smoke remains explicitly NON-PHYSICAL.
+- Verification: targeted pytest 23 passed; full pytest 224 passed / 5 skipped; ruff passed;
+  `git diff --check` clean before the first code commit.
+
 ## 2026-06-23 — record completed 417587 optical diagnostic
 
 Documentation-only sync after read-only Lop inspection of completed SGE job 417587. No source,
