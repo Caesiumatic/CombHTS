@@ -19,6 +19,11 @@ from eps.validation.benchmark import (
     run_all_calibration_profiles,
     run_calibration_profile,
 )
+from eps.validation.directive import (
+    DEFAULT_DIRECTIVE_CACHE,
+    DEFAULT_DIRECTIVE_OUTDIR,
+    run_directive_validation,
+)
 from eps.validation.feasibility import compute_feasibility_metric, format_feasibility_report
 from eps.validation.memo import DEFAULT_MEMO_DIR, write_validation_memo
 from eps.validation.sanity import (
@@ -58,7 +63,15 @@ from eps.workflow.tier1_rescore import DEFAULT_OUTDIR as DEFAULT_RESCORE_OUTDIR
 from eps.workflow.tier1_rescore import rescore_tier1_harvest
 from eps.workflow.tier2 import (
     DEFAULT_REFINED_WINDOW_MARGIN_V,
+    DEFAULT_TIER2_HARVEST_OUTPUT,
+    DEFAULT_TIER2_HARVEST_REPORT,
+    DEFAULT_TIER2_PLAN_OUTDIR,
+    DEFAULT_TIER2_TASK_RESULTS_DIR,
+    DEFAULT_TIER2_WORK_ROOT,
+    harvest_tier2_results,
+    plan_tier2_pilot,
     run_tier2_refined_screen,
+    run_tier2_task,
     write_tier2_dry_run_inputs,
 )
 from eps.workflow.tier3 import (
@@ -194,6 +207,35 @@ def main(argv: list[str] | None = None) -> int:
             "yes/no feasibility DIAGNOSTIC (balanced accuracy + confusion matrix on the matched "
             "in-scope subset; never a single accuracy figure)."
         ),
+    )
+
+    validate_directive = subparsers.add_parser(
+        "validate-directive",
+        help="Write the full directive section-7 validation package (JSON/Markdown/CSVs)",
+    )
+    validate_directive.add_argument(
+        "--engine",
+        choices=("mock", "xtb"),
+        default="mock",
+        help="Calculation engine for per-species validation descriptors.",
+    )
+    validate_directive.add_argument(
+        "--harvest",
+        type=Path,
+        required=True,
+        help="Existing salt-fixed Tier-1 all-triads harvest CSV (read-only).",
+    )
+    validate_directive.add_argument(
+        "--cache",
+        type=Path,
+        default=DEFAULT_DIRECTIVE_CACHE,
+        help="Dedicated SQLite validation cache path.",
+    )
+    validate_directive.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_DIRECTIVE_OUTDIR,
+        help="Directory for validation_summary.json, validation_report.md, and CSV artifacts.",
     )
 
     calibrate_dft = subparsers.add_parser(
@@ -408,6 +450,90 @@ def main(argv: list[str] | None = None) -> int:
         help="Directory for the generated .gjf inputs.",
     )
 
+    tier2_plan = subparsers.add_parser(
+        "tier2-plan",
+        help="Plan the mock-first, array-safe Tier-2 monomer-Eox pilot (no Engine calls)",
+    )
+    tier2_plan.add_argument(
+        "--selection",
+        type=Path,
+        required=True,
+        help="Selection CSV with monomer SMILES and solvent_name columns.",
+    )
+    tier2_plan.add_argument(
+        "--config",
+        type=Path,
+        default=Path("configs/tier2.yaml"),
+        help="Tier-2 method config; defaults to configs/tier2.yaml.",
+    )
+    tier2_plan.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_TIER2_PLAN_OUTDIR,
+        help="Directory for task_manifest.csv, plan_summary.json, plan_report.md, provenance.json.",
+    )
+
+    tier2_run_task = subparsers.add_parser(
+        "tier2-run-task",
+        help="Run exactly one Tier-2 manifest task through mock or Gaussian, array-safe.",
+    )
+    tier2_run_task.add_argument("--manifest", type=Path, required=True, help="Tier-2 task_manifest.csv")
+    tier2_run_task.add_argument("--task-id", required=True, help="Task ID from the manifest")
+    tier2_run_task.add_argument(
+        "--engine",
+        choices=("mock", "gaussian"),
+        default="mock",
+        help="Calculation engine for this single task.",
+    )
+    tier2_run_task.add_argument(
+        "--result-dir",
+        type=Path,
+        default=DEFAULT_TIER2_TASK_RESULTS_DIR,
+        help="Root directory for per-task result.json/status.txt and default task-local caches.",
+    )
+    tier2_run_task.add_argument(
+        "--work-root",
+        type=Path,
+        default=DEFAULT_TIER2_WORK_ROOT,
+        help="Persistent per-task Gaussian input/log work root.",
+    )
+    tier2_run_task.add_argument(
+        "--cache",
+        type=Path,
+        default=None,
+        help="Optional per-task SQLite cache. Omit for <result-dir>/task_caches/<task-id>.sqlite.",
+    )
+    tier2_run_task.add_argument(
+        "--config",
+        type=Path,
+        default=Path("configs/tier2.yaml"),
+        help="Tier-2 config used to verify the manifest hash and build Gaussian inputs.",
+    )
+
+    tier2_harvest = subparsers.add_parser(
+        "tier2-harvest",
+        help="No-engine harvest of validated Tier-2 task result.json files.",
+    )
+    tier2_harvest.add_argument("--manifest", type=Path, required=True, help="Tier-2 task_manifest.csv")
+    tier2_harvest.add_argument(
+        "--result-dir",
+        type=Path,
+        default=DEFAULT_TIER2_TASK_RESULTS_DIR,
+        help="Root directory containing <task-id>/result.json files.",
+    )
+    tier2_harvest.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_TIER2_HARVEST_OUTPUT,
+        help="Output per-monomer-solvent Eox CSV.",
+    )
+    tier2_harvest.add_argument(
+        "--report",
+        type=Path,
+        default=DEFAULT_TIER2_HARVEST_REPORT,
+        help="Markdown harvest report path.",
+    )
+
     tier2_screen = subparsers.add_parser(
         "tier2-screen",
         help="Directive §4.2 refined screen: tighter window filter (-0.5 V) on Tier-1 survivors + composite re-rank",
@@ -602,6 +728,35 @@ def main(argv: list[str] | None = None) -> int:
             result.report_path, engine=args.engine, method=method,
             extra={"command": "validate", "profile": result.profile_name},
         )
+        return 0
+
+    if args.command == "validate-directive":
+        engine, method = _engine_from_name(args.engine)
+        result = run_directive_validation(
+            engine=engine,
+            engine_name=args.engine,
+            method=method,
+            cache_path=args.cache,
+            harvest_path=args.harvest,
+            outdir=args.outdir,
+        )
+        print(f"Directive section-7 validation package: {result.outdir}")
+        print("metric | target | observed | n | status")
+        for row in result.metric_table:
+            print(
+                f"{row['metric']} | {row['directive target']} | {row['observed value']} | "
+                f"{row['n']} | {row['status']}"
+            )
+        print(f"Wrote validation summary: {result.summary_path}")
+        print(f"Wrote validation report: {result.report_path}")
+        print(f"Wrote Eox profile summary: {result.eox_profile_summary_path}")
+        print(f"Wrote Eox points: {result.eox_points_path}")
+        print(f"Wrote ESW descriptor points: {result.esw_descriptor_points_path}")
+        print(f"Wrote ESW gate diagnostics: {result.esw_gate_diagnostics_path}")
+        print(f"Wrote feasibility matches: {result.feasibility_matches_path}")
+        print(f"Wrote provenance: {result.provenance_path}")
+        if args.engine == "mock":
+            print("NOTE: mock engine -> NON-PHYSICAL workflow smoke only.")
         return 0
 
     if args.command == "calibrate-dft":
@@ -863,6 +1018,54 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Wrote {len(result.input_paths)} .gjf inputs (neutral + cation per monomer) to {result.outdir}")
         print(f"Rough estimate: ~{result.estimated_cpu_hours:.0f} CPU-hours (very approximate; for planning only)")
         return 0
+
+    if args.command == "tier2-plan":
+        result = plan_tier2_pilot(args.selection, args.config, args.outdir)
+        print("Tier-2 pilot plan: no Engine calls; no triad-level quantum loop.")
+        print(f"Selection rows: {result.n_selection_rows}; unique tasks: {result.n_tasks}")
+        print(f"Unique monomers: {result.n_unique_monomers}; monomer-solvent pairs: {result.n_unique_monomer_solvent_pairs}")
+        print(f"Method: {result.method_label}")
+        print(f"Config hash: {result.config_hash}")
+        print(f"Wrote manifest: {result.manifest_path}")
+        print(f"Wrote summary: {result.summary_path}")
+        print(f"Wrote report: {result.report_path}")
+        print(f"Wrote provenance: {result.provenance_path}")
+        return 0
+
+    if args.command == "tier2-run-task":
+        result = run_tier2_task(
+            args.manifest,
+            args.task_id,
+            engine_name=args.engine,
+            result_dir=args.result_dir,
+            work_root=args.work_root,
+            cache_path=args.cache,
+            config_path=args.config,
+        )
+        print(f"Tier-2 task {result.task_id}: {result.status}")
+        print(f"Wrote result: {result.result_path}")
+        print(f"Wrote status: {result.status_path}")
+        print(f"Task-local cache: {result.cache_path}")
+        print(f"Persistent work dir: {result.work_dir}")
+        if result.error:
+            print(f"ERROR: {result.error}")
+        if args.engine == "mock":
+            print("NOTE: mock engine -> non-physical smoke result; do not use as science.")
+        return 0 if result.status == "success" else 2
+
+    if args.command == "tier2-harvest":
+        result = harvest_tier2_results(args.manifest, args.result_dir, args.output, args.report)
+        print("Tier-2 harvest: no Engine calls and no SQLite writes.")
+        print(f"Manifest tasks: {result.n_manifest_tasks}; validated successes: {result.n_success}")
+        print(
+            f"Missing={result.n_missing}; failed={result.n_failed}; duplicate={result.n_duplicate}; "
+            f"hash_mismatch={result.n_hash_mismatch}; identity_mismatch={result.n_identity_mismatch}"
+        )
+        print(f"Wrote Eox CSV: {result.output_path}")
+        print(f"Wrote report: {result.report_path}")
+        if result.partial:
+            print("WARNING: partial harvest; failed/missing values were not filled from Tier-1.")
+        return 2 if result.partial else 0
 
     if args.command == "tier2-screen":
         if not Path(args.survivors).exists():

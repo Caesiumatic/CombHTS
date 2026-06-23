@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-06-23 — add codebase map and safe hygiene review
+
+Documentation and low-risk hygiene pass after the pre-cleanup integration merge. No scientific
+behavior, scoring weights, thresholds, calibration coefficients, production CSVs, redox constants,
+cache keys, output schemas, or optical policy changed.
+
+- Added `docs/code_structure.md` as a maintainer map for package layout, workflows, data/config
+  ownership, engine/cache contracts, scientific axes, run-manifest conventions, onboarding, and
+  no-touch boundaries.
+- Added `docs/maintenance/codebase_review_20260623.md` with repo-state evidence, findings,
+  deferred refactors, no-touch items, and ranked cleanup follow-ups.
+- Confirmed the previously noted `ruff` I001 import-ordering debt in `tests/test_orca_pilots.py`
+  is already fixed on the integrated branch; no Python cleanup was needed.
+- Added a README pointer to the new code-structure map and synchronized STATUS without changing
+  the 417587 diagnostic-only conclusion.
+- Verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff, `git diff --check`,
+  `eps doctor`, and no-real-engine CLI smoke passed.
+
 ## 2026-06-23 — record completed 417587 optical diagnostic
 
 Documentation-only sync after read-only Lop inspection of completed SGE job 417587. No source,
@@ -13,6 +31,88 @@ config, scoring, calibration, test, or production data file changed.
   fit markdown, cache, and `run_provenance.json`; a generic `provenance.json` is absent.
 - Captured the diagnostic conclusion: sTDA/TDA dimer-vs-polymer fits are weak (R2 0.1509/0.1712,
   LOO-CV MAE 0.4564/0.4489 eV), so the 15% optical axis remains diagnostic and unchanged.
+
+## 2026-06-23 — close directive section-7 validation package
+
+Added a reproducible, machine-readable section-7 validation workflow and ran the real xTB package on
+Lop. No scoring weights, thresholds, calibration coefficients, redox constants, production CSVs,
+optical policy, or 417587 artifacts changed.
+
+- Added `eps validate-directive` plus an xTB-only SGE template that writes
+  `validation_summary.json`, `validation_report.md`, Eox profile/point CSVs, ESW descriptor/gate
+  CSVs, feasibility matches, and provenance.
+- Real SGE 417671 completed from isolated clone `/home/shic4/CombHTS_section7_e023a1c` at commit
+  `e023a1c6bba0b60f22a6afb3a649f45308234122` using `gfn2-xtb+conf-mmff94-n100`; qacct reports
+  exit 0, failed 0, 4 slots, 398 s wall.
+- Recorded the directive status table: active Eox LOO-CV MAE 0.186 V over n=9 PASS; Tier-2 held-out
+  validation OUT_OF_SCOPE; raw solvent ESW descriptor MAE 5.409/3.755 V FAIL; production ESW gate
+  unsafe widening 0/5,760 PASS; feasibility balanced accuracy 56.25% on n=12 NOT_YET_TESTABLE.
+- Synchronized STATUS, THINK, run manifest, and run index to make the result a current-state fact.
+  Mock smoke remains explicitly NON-PHYSICAL.
+- Verification: targeted pytest 23 passed; full pytest 224 passed / 5 skipped; ruff passed;
+  `git diff --check` clean before the first code commit.
+
+## 2026-06-23 — audit Section 7 staging data and curate targeted review gaps
+
+Staging/review-only Section 7 curation pass. No production CSV, config, scoring code, calibration
+policy, cluster output, or quantum-chemistry result changed.
+
+- Added `scripts/audit_lit_curation_staging.py` plus tests to validate staging schemas, RDKit-parse
+  known SMILES fields, canonicalize structures, detect internal and production duplicates, and write
+  audit CSVs without touching production data.
+- Wrote `staging_audit_summary.csv` and `staging_audit_issues.csv`: 186 rows audited across ESW,
+  polymerization, selected optical anchors, solubility, and optical/doping staging; all schemas pass;
+  all 127 SMILES-bearing rows parse; 1 known ESW extraction reject is preserved.
+- Added targeted review tables for Eox gapfill candidates, ESW promotion candidates, ESW remaining
+  gaps, polymerizability YES/NO candidates, and Wave-A library readiness.
+- Added `docs/research/section7_staging_audit_20260623.md` summarizing counts, blockers, human
+  source-check rows, and the decision that no item meets PI-escalation criteria.
+- Verification: `.venv/bin/python -m pytest -q` passed with 238 passed, 5 skipped, and 2 warnings;
+  `.venv/bin/ruff check src tests` and `git diff --check` passed.
+
+## 2026-06-23 — add mock-first Tier-2 pilot orchestration
+
+Implemented the Tier-2 monomer-Eox pilot as an array-safe, mock-first workflow without changing
+production scoring, Tier-1 thresholds, calibration coefficients, optical policy, or data CSVs.
+No ORCA/Gaussian cluster job was submitted.
+
+- Added `eps tier2-plan` to validate selection CSVs, canonicalize/deduplicate monomer-solvent
+  tasks across repeated salts/cations, assign stable task IDs, hash the full Tier-2 config, and
+  emit `task_manifest.csv`, `plan_summary.json`, `plan_report.md`, and `provenance.json`.
+- Added `eps tier2-run-task` for one manifest task at a time, with deterministic mock execution,
+  task-local SQLite cache defaults, atomic `result.json`/`status.txt`, persistent Gaussian work
+  dirs, Normal-termination checks, SCF-vs-Gibbs energy-basis metadata, and frequency metadata.
+- Added `eps tier2-harvest` to combine only validated successful results, reject missing/failed/
+  duplicate/hash-mismatched tasks, preserve raw energy fields, and emit a standard
+  per-monomer-solvent Eox CSV for `eps tier2-screen`.
+- Added SGE templates for the array task runner and separate no-engine harvest. The array template
+  uses `SGE_TASK_ID`, requires absolute manifest/output paths, writes task-local caches/work dirs,
+  and loads Gaussian only in real-engine mode.
+- Preserved backward compatibility for existing `eps tier2 --dry-run`, `eps tier2-screen`, and
+  `eps calibrate-dft` paths.
+- Verification: targeted Tier-2/Gaussian/DFT tests `39 passed, 2 skipped`; tracked tests plus the
+  new Tier-2 pilot tests `227 passed, 5 skipped`; tracked-Python ruff clean; `bash -n` clean for
+  the new SGE templates; `git diff --check` clean.
+
+## 2026-06-23 — integrate completed pre-cleanup agent branches
+
+Merged the completed Section 7 validation, Section 7 staging-audit, and Tier-2 pilot orchestration
+branches into `integration/pre-cleanup-merge-20260623` from `origin/main` for pre-cleanup review.
+No main update, quantum-engine run, Lop submission, scoring/config/calibration/production-data
+change, or optical-policy change was made.
+
+- Resolved documentation conflicts in `CHANGELOG.md`, `STATUS.md`, and `scripts/README.md` while
+  preserving the 417587 diagnostic-only conclusion, the SGE 417671 validation facts, staging rows as
+  review-only data, and Tier-2 as mock-first workflow readiness.
+- Added `docs/maintenance/pre_cleanup_merge_report_20260623.md` with branch classifications,
+  conflict notes, file categories, forbidden-file audit, validation results, and cleanup guidance.
+- Reconciled current governance wording in `THINK.md` so routine correctness decisions remain
+  decide-and-report; only large shared-cluster Tier-2/full-scale work remains a PI/group resource
+  planning item.
+- Verification through the last source-branch merge: full pytest `238 passed, 5 skipped`; ruff,
+  `git diff --check`, SGE `bash -n`, and no-real-engine CLI smoke passed.
+- Final pre-commit verification after report/docs sync: full pytest `238 passed, 5 skipped`;
+  ruff, `git diff --check`, and conflict-marker scan passed.
 
 ## 2026-06-22 — reconcile 417587 as still running
 

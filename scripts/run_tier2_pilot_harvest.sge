@@ -1,0 +1,59 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -j y
+#$ -N combhts_tier2_harvest
+#$ -q intel24
+#$ -pe smp 1
+#$ -l h_rt=01:00:00
+#$ -o /home/shic4/combhts_tier2_harvest.log
+# TEMPLATE - no-engine harvest; do NOT submit without explicit paths.
+#
+# Required qsub example:
+#   qsub \
+#     -v TIER2_MANIFEST=/home/shic4/CombHTS/outputs/tier2_pilot_plan/task_manifest.csv \
+#     -v TIER2_OUTPUT_ROOT=/home/shic4/CombHTS/outputs/tier2_pilot \
+#     scripts/run_tier2_pilot_harvest.sge
+#
+# This script never loads Gaussian, never opens an Engine, and only validates/result-combines
+# existing per-task result.json files.
+
+set -uo pipefail
+
+if [ -z "${TIER2_MANIFEST:-}" ] || [ -z "${TIER2_OUTPUT_ROOT:-}" ]; then
+    echo "ERROR: set TIER2_MANIFEST and TIER2_OUTPUT_ROOT as absolute paths via qsub -v." >&2
+    exit 2
+fi
+
+case "$TIER2_MANIFEST" in
+    /*) ;;
+    *) echo "ERROR: TIER2_MANIFEST must be an absolute path." >&2; exit 2 ;;
+esac
+case "$TIER2_OUTPUT_ROOT" in
+    /*) ;;
+    *) echo "ERROR: TIER2_OUTPUT_ROOT must be an absolute path." >&2; exit 2 ;;
+esac
+
+COMBHTS_ROOT="${COMBHTS_ROOT:-$HOME/CombHTS}"
+RESULT_DIR="$TIER2_OUTPUT_ROOT/task_results"
+OUTPUT_CSV="${TIER2_HARVEST_OUTPUT:-$TIER2_OUTPUT_ROOT/tier2_monomer_eox.csv}"
+REPORT_MD="${TIER2_HARVEST_REPORT:-$TIER2_OUTPUT_ROOT/harvest_report.md}"
+
+if [ -f /etc/profile.d/modules.sh ]; then
+    source /etc/profile.d/modules.sh
+fi
+module load anaconda/3-2023.09
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+export OMP_NUM_THREADS=1
+export PYTHONUNBUFFERED=1
+
+cd "$COMBHTS_ROOT"
+export COMBHTS_GIT_SHA="$(git rev-parse HEAD)"
+
+python -m eps.cli tier2-harvest \
+    --manifest "$TIER2_MANIFEST" \
+    --result-dir "$RESULT_DIR" \
+    --output "$OUTPUT_CSV" \
+    --report "$REPORT_MD"
