@@ -8,7 +8,6 @@ from typing import Any
 import pandas as pd
 from rdkit import Chem
 
-
 CLASSIFICATIONS = (
     "PROMOTE_NOW_CANDIDATE",
     "NEEDS_SOURCE_CHECK",
