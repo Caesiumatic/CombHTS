@@ -19,6 +19,11 @@ from eps.validation.benchmark import (
     run_all_calibration_profiles,
     run_calibration_profile,
 )
+from eps.validation.directive import (
+    DEFAULT_DIRECTIVE_CACHE,
+    DEFAULT_DIRECTIVE_OUTDIR,
+    run_directive_validation,
+)
 from eps.validation.feasibility import compute_feasibility_metric, format_feasibility_report
 from eps.validation.memo import DEFAULT_MEMO_DIR, write_validation_memo
 from eps.validation.sanity import (
@@ -194,6 +199,35 @@ def main(argv: list[str] | None = None) -> int:
             "yes/no feasibility DIAGNOSTIC (balanced accuracy + confusion matrix on the matched "
             "in-scope subset; never a single accuracy figure)."
         ),
+    )
+
+    validate_directive = subparsers.add_parser(
+        "validate-directive",
+        help="Write the full directive section-7 validation package (JSON/Markdown/CSVs)",
+    )
+    validate_directive.add_argument(
+        "--engine",
+        choices=("mock", "xtb"),
+        default="mock",
+        help="Calculation engine for per-species validation descriptors.",
+    )
+    validate_directive.add_argument(
+        "--harvest",
+        type=Path,
+        required=True,
+        help="Existing salt-fixed Tier-1 all-triads harvest CSV (read-only).",
+    )
+    validate_directive.add_argument(
+        "--cache",
+        type=Path,
+        default=DEFAULT_DIRECTIVE_CACHE,
+        help="Dedicated SQLite validation cache path.",
+    )
+    validate_directive.add_argument(
+        "--outdir",
+        type=Path,
+        default=DEFAULT_DIRECTIVE_OUTDIR,
+        help="Directory for validation_summary.json, validation_report.md, and CSV artifacts.",
     )
 
     calibrate_dft = subparsers.add_parser(
@@ -602,6 +636,35 @@ def main(argv: list[str] | None = None) -> int:
             result.report_path, engine=args.engine, method=method,
             extra={"command": "validate", "profile": result.profile_name},
         )
+        return 0
+
+    if args.command == "validate-directive":
+        engine, method = _engine_from_name(args.engine)
+        result = run_directive_validation(
+            engine=engine,
+            engine_name=args.engine,
+            method=method,
+            cache_path=args.cache,
+            harvest_path=args.harvest,
+            outdir=args.outdir,
+        )
+        print(f"Directive section-7 validation package: {result.outdir}")
+        print("metric | target | observed | n | status")
+        for row in result.metric_table:
+            print(
+                f"{row['metric']} | {row['directive target']} | {row['observed value']} | "
+                f"{row['n']} | {row['status']}"
+            )
+        print(f"Wrote validation summary: {result.summary_path}")
+        print(f"Wrote validation report: {result.report_path}")
+        print(f"Wrote Eox profile summary: {result.eox_profile_summary_path}")
+        print(f"Wrote Eox points: {result.eox_points_path}")
+        print(f"Wrote ESW descriptor points: {result.esw_descriptor_points_path}")
+        print(f"Wrote ESW gate diagnostics: {result.esw_gate_diagnostics_path}")
+        print(f"Wrote feasibility matches: {result.feasibility_matches_path}")
+        print(f"Wrote provenance: {result.provenance_path}")
+        if args.engine == "mock":
+            print("NOTE: mock engine -> NON-PHYSICAL workflow smoke only.")
         return 0
 
     if args.command == "calibrate-dft":

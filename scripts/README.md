@@ -9,6 +9,7 @@ not submit them blindly from CI or an overnight agent.
 | `run_tier1.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
 | `run_tier1_rescore.sge` | `python -m eps.cli rescore-tier1 ...` | none (CSV-only) |
 | `run_validate.sge` | `eps validate --engine xtb --all-profiles` | xTB |
+| `run_validate_directive.sge` | `python -m eps.cli validate-directive --engine xtb ...` | xTB |
 | `run_memo.sge` | `eps memo --engine xtb --harvest outputs/tier1_all_xtb.csv` | xTB |
 | `run_analyze.sge` | `eps analyze --harvest outputs/tier1_all_xtb.csv --outdir outputs/analysis/` | none (read-only) |
 | `run_oligomer.sge` | `eps run-tier1 --engine xtb --all-output outputs/tier1_all_xtb.csv` | xTB |
@@ -31,6 +32,13 @@ directory and never present failed calculations or mock values as scientific res
 The n=6 optical template is also serial. It reads the six HIGH experimental anchors directly from
 the staging-derived selection CSV, writes to `outputs/optical_calibration_n6/`, and keeps its cache
 separate from the corrected n=3 pilot. Its analysis is diagnostic and cannot update scoring.
+
+`run_validate_directive.sge` writes the authoritative directive section-7 package:
+`validation_summary.json`, `validation_report.md`, `eox_profile_summary.csv`, `eox_points.csv`,
+`esw_descriptor_points.csv`, `esw_gate_diagnostics.csv`, `feasibility_matches.csv`, and
+`provenance.json`. Run it from a separate cluster clone/worktree and set `VALIDATE_HARVEST` to the
+read-only salt-role-fixed real harvest resolved from the run manifests. It uses xTB only; do not
+submit ORCA/Gaussian work through this template.
 
 `run_tier1_rescore.sge` is the safe path for a policy/threshold/weight change after a real harvest.
 It reads the existing all-triads CSV and recomputes only conditioned joins, filters, Pareto flags,
@@ -70,7 +78,8 @@ qstat -j <job_id>                  # detailed job info
 - Activate the conda env: `conda activate combhts`.
 - `OMP_NUM_THREADS` is tied to the granted slots (four for xTB templates, one for ORCA pilots);
   `OMP_STACKSIZE=4G` and `ulimit -s unlimited` avoid stack-overflow crashes on larger systems.
-- `cd "$HOME/CombHTS"` then run the matching command. The ORCA pilots optionally accept an
-  alternate checkout through `COMBHTS_ROOT` (used for isolated pre-commit cluster snapshots).
+- `cd "$HOME/CombHTS"` then run the matching command. The ORCA pilots and directive validation
+  template optionally accept an alternate checkout through `COMBHTS_ROOT` (used for isolated
+  pre-commit cluster snapshots).
 
 Do **not** run production calculations in an interactive login session — submit via `qsub`.
