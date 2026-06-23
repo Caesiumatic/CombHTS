@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-23 (Directive Section 7 validation + staging audit complete; production unchanged)_
+_Last updated: 2026-06-23 (pre-cleanup integration: Section 7 validation, staging audit, Tier-2 pilot orchestration)_
 
 ## Current phase
 
@@ -54,9 +54,19 @@ The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence,
 primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
 rows needing source or reference checks.
 
-No PI escalation was triggered by either Section 7 validation or the staging audit. Both work units
-stayed inside Directive_CombHTS, used normal project-scale resources, did not change scoring/config
-policy, and did not create a new scope commitment.
+The Tier-2 monomer-Eox pilot workflow is implemented as a **mock-first, array-safe scaffold**.
+`eps tier2-plan` validates a selection CSV and emits one task per unique `(monomer, solvent,
+method config)` identity; repeated salts/cations are deduplicated before any Engine call.
+`eps tier2-run-task` executes one manifest task with a task-local SQLite cache, atomic
+`result.json`, persistent Gaussian input/log retention, Normal-termination checks, SCF/Gibbs energy
+selection metadata, and frequency-quality metadata. `eps tier2-harvest` is a no-engine combiner
+that rejects missing/failed/duplicate/hash-mismatched results and never fills Tier-2 gaps with
+Tier-1 values. SGE templates exist for the array run and the separate harvest step. No real
+Gaussian task was submitted in this work unit, and no scoring/config/production CSV value changed.
+
+No PI escalation was triggered by these merged work units. They stayed inside Directive_CombHTS,
+used normal project-scale resources, did not change scoring/config policy, and did not create a new
+scope commitment.
 
 Soft-axis interpretation is unchanged. Optical job **417587** remains a completed diagnostic
 negative/weak baseline: six neutral-dimer ORCA anchors finished, but sTDA/TDA fits to experimental
@@ -82,13 +92,13 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   `provenance.json`.
 - `scripts/run_validate_directive.sge` is an xTB-only SGE template with an absolute scheduler log
   path and `COMBHTS_ROOT` override for isolated cluster clones/worktrees.
-- The validation package records active-vs-configured Eox profiles, deterministic bootstrap
-  intervals, worst residuals/influence diagnostics, library applicability-domain calls, raw ESW
-  descriptor points, measured-first production-gate safety diagnostics, feasibility matches, and
-  provenance/hashes.
 - The Section 7 staging audit validates staging schemas, RDKit-parses known SMILES fields,
   canonicalizes structures, detects internal and production duplicates, and writes review tables
   without touching production data.
+- Tier-2 pilot orchestration is split into plan / one-task run / harvest commands. Planning is
+  schema-validated and monomer-solvent aware; task execution is mock-first and cache-separated by
+  default; harvest preserves raw energy fields and emits a standard per-monomer-solvent Eox CSV
+  consumable by `eps tier2-screen`.
 - The measured-first conservative ESW gate is validated as one-way safe on the salt-fixed real
   harvest: measured literature can tighten the hard gate, not admit rows by widening a sparse
   generic window.
@@ -108,7 +118,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
    negatives and exact-anion labels, especially in baseline nonaqueous media, until at least a
    defensible matched validation set exists.
 4. Tier-2 held-out DFT validation remains out of scope for the Section 7 package. The old 0.119 V
-   DFT number is in-sample and must not be reported as a held-out Tier-2 pass.
+   DFT number is in-sample and must not be reported as a held-out Tier-2 pass. The pilot
+   orchestration is ready, but no real Gaussian array has been submitted and no completed Tier-2
+   scientific values exist yet.
 5. The composite's diagnostic half remains data-limited: optical, dimerization absolute scale, and
    solvation-affinity/true-solubility calibration are reference-only until better anchors exist.
 6. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
@@ -126,8 +138,8 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
    salt-fixed harvest.
 3. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
    screen. Use the JSON/CSVs in the Lop output directory for group-update tables.
-4. Treat any next Tier-2 DFT validation or full library expansion as a separate resource-planning
-   work unit.
+4. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
+   array smoke, and only then schedule a separate reviewed real-Gaussian cluster work unit.
 
 ## Verification
 
@@ -136,6 +148,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   `git diff --check` clean; mock `validate-directive` smoke wrote all required artifacts.
 - Staging-audit branch verification: `.venv/bin/python -m pytest -q` reported `238 passed,
   5 skipped, 2 warnings`; `.venv/bin/ruff check src tests` passed; `git diff --check` passed.
+- Tier-2 branch verification: targeted Tier-2/Gaussian/DFT tests `39 passed, 2 skipped`; tracked
+  tests plus new Tier-2 pilot tests `227 passed, 5 skipped`; tracked-Python ruff passed;
+  `bash -n` passed for new SGE templates; `git diff --check` passed.
 - Integration verification is tracked in `docs/maintenance/pre_cleanup_merge_report_20260623.md`.
 
 ## Architecture invariants
