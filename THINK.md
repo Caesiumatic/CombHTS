@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-22 (salt-role/de-dup decision verified on real harvest; deposition and compatibility physics remain open)_
+_Last updated: 2026-06-22 evening (soft-axis review complete; §7 validation is next)_
 
 ## How to read this
 
@@ -17,7 +17,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T3 | Potential-type mismatch sets the accuracy ceiling | open | self (rigor) | lit-curation (no compute) |
 | T4 | What ">=30 clean groups" actually validates | open | self / report (directive's own two-stage design; surface as info) | scope/policy |
 | T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
-| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (staging proposed) | group-meeting | compute-heavy |
+| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (417587 running; diagnostic baseline only) | group-meeting | compute-heavy |
 | T7 | What is the real deliverable? | open | self / report (directive §8 lists both; produce both) | scope/policy |
 | T8 | Chemical-space coverage vs weight tuning | open | PI/group (RESOURCE planning: full-scale Tier-2 spend/sequencing) | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
@@ -94,11 +94,12 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Current lean**: All five composite axes are now real physics (screening-grade). The open work is no longer "make axes real" but "calibrate / validate them": optical gap vs TD-DFT (Step-2), dimerization's absolute intercept and monomer-dependent validity, and the approximate coupling regiochemistries (aniline and D-A).
 - **Update (2026-06-20)**: the solvent ANODIC limit and anion Eox are CONFIRMED on the computed + shared monomer calibration scale (T11; verified in `configs/tier1.yaml` notes and the all-axes harvest) — so the remaining placeholder concern is not realism but CALIBRATION, specifically of `optical_gap` (vs TD-DFT) and `dimerization` (absolute proton-constant reference). The real sTDA / openCOSMO-RS methods that would tighten these are GATED on the pending SCS Help Desk install (no sTDA/std2/COSMOtherm/openCOSMO-RS modules currently on Lop). The solvent CATHODIC limit stays raw/informational by design.
 - **Update (2026-06-22, proton-offset diagnosis)**: The exact term is `2*G(H+)` in `2 M+ radical -> D0 + 2 H+`. Because its coefficient is two for every monomer, any proton convention is one common additive intercept (46.1211 kcal/mol per 1 eV change in per-proton reference), and it cancels exactly from the min-max 15% score. **DECISION:** the axis is offset-safe for relative ranking but remains diagnostic because omitted solvation/thermal/speciation and coupling-model errors may be monomer-dependent. Absolute anchoring should use a unit-slope, matched multi-anchor experimental intercept, with a consistent solvent-specific proton convention as thermodynamic support; irreversible CV peaks, kinetic coupling rates, and qualitative polymerization are not DeltaG anchors. See `docs/dimerization_offset_diagnosis.md`.
+- **Update (2026-06-22 evening, soft-axis review)**: the offset-safe conclusion is confirmed by three evidence lines: code inspection, test assertions, and the per-monomer harvest distribution. Because the current score uses min-max normalization, the constant offset is irrelevant to ranking correctness. The axis remains diagnostic because chemical/model errors can still be monomer-dependent, and the raw ordering has anomalies (for example furan more favorable than EDOT). Absolute calibration is deferred until rare exact-reaction equilibrium/Hess-cycle data exist. A future docs-only cosmetic rename to "radical-coupling energy" would be more honest than "dimerization", but does not imply any formula, weight, or config change.
 - **Resolves when**: Treated as the realism milestone being complete; calibration/validation tracked separately (T6 for band gap, T11 for oxidation scale, the monomers.csv dioxy data-curation item).
 - **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/polymerization.csv](data/polymerization.csv); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
 
 ## T6 — Band gap: oligomer + sTDA-xTB (directive route) vs an ML model
-- **Status**: exploring (directive route implemented; ML alternative parked; literature-backed staging PROPOSED 2026-06-18, pending PI confirmation)
+- **Status**: exploring (417587 running as diagnostic dimer baseline; ML alternative parked)
 - **Forum**: group-meeting
 - **Cost**: compute-heavy
 - **Question**: Reach the polymer band gap via real oligomer assembly -> sTDA-xTB, or via a trained ML/GNN predictor?
@@ -112,6 +113,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Update (2026-06-22, real ORCA pilot)**: ORCA 6.1 route execution is now verified on Lop. Serial job 417545 completed 3/3 CAM-B3LYP/def2-SVP/CPCM(MeCN) sTDA and 3/3 conventional TDA calculations on thiophene/EDOT/pyrrole dimers. Corrected raw pairs (sTDA/TDA, eV) are 4.870/4.396, 4.870/4.687, and 5.488/5.004; the diagnostic three-point fit is slope 0.748, intercept 0.900 eV, R2 0.770, MAE 0.097 eV. This proves the route, but does not validate a score change: thiophene and EDOT have nearly identical sTDA gaps yet differ by 0.291 eV in TDA, making the tiny fit ill-conditioned. An initial broad regex misparsed an unrelated 2 cm-1 row as every sTDA value; the parser is now restricted to the electric-dipole absorption block and regression-tested. The generated cluster CSV/cache remains invalid until that fix is synced and the cheap sTDA-only rerun is made. Next scientific step remains the six experimental anchors plus per-class/geometry sensitivity, not production rollout.
 - **Corrected artifact closure (2026-06-22, SGE 417557)**: the fixed parser recomputed all three sTDA rows while reusing all three TDA cache rows. Standard CSV/JSON now reproduce the raw pairs and fit above exactly; route engineering is closed. The scientific conclusion is unchanged: three dimers are insufficient to calibrate the production optical axis.
 - **Update (2026-06-22, n=6 calibration prepared)**: the six HIGH staging anchors now have a serial ORCA sTDA+TDA execution path and a ready post-run computed-to-experiment analysis (slope/intercept/R2, LOO-CV MAE, per-class residuals, leverage flags). Exact-key inspection of the corrected pilot cache found 0/12 reusable anchor requests: its thiophene/EDOT/pyrrole dimers are not the PEDOP/PProDOP/P3HT/PEDOS/PFO/DTP anchor dimers. This run is intentionally a pilot-matched **dimer baseline**, not the plan's polymer-limit extrapolation; it will quantify whether the six-anchor line is even coherent before paying for length/geometry sweeps. That sequencing advances T6 but does not resolve it, and no scoring change is authorized.
+- **Update (2026-06-22 evening, SGE 417587 reported running)**: the six-anchor ORCA sTDA+TDA job has been submitted and is RUNNING on Lop as job 417587 (reported/unverified; no output inspected here). The scientific gate is unchanged: even a completed fit is only a diagnostic dimer-vs-polymer baseline until per-class residuals, leverage, chain-length/geometry effects, and literature-anchor review are complete. Do not wire the optical result into the composite before human review.
 - **Resolves when**: The group accepts the oligomer/sTDA route (with range-separated TD-DFT calibration as Step-2, validated per class) or explicitly chooses to pivot to an ML/GNN predictor.
 - **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
 
@@ -218,7 +220,21 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 ## Decision log
 
-- 2026-06-22 (n=6 optical calibration prepared; no job submitted) — chose a pilot-matched neutral
+- 2026-06-22 evening (soft-axis review complete; pivot to §7 validation) — Dimerization:
+  the proton-reference offset is a ranking-safe constant, so min-max normalization cancels it; the
+  15% axis remains diagnostic and absolute calibration is deferred until rare exact-reaction
+  experimental DeltaG/Hess-cycle anchors exist. Solvation/solubility: relabel the 20% score
+  component as **solvation affinity (dGsolv proxy)** because dGsolv is not solubility and misses
+  lattice/fusion terms; calibration is blocked because PC/NMP lack Lop built-in openCOSMO-RS
+  profiles and quantitative process-solvent solubility data. Optical: job 417587 is running
+  (reported/unverified), but completion would still be only a diagnostic dimer-vs-polymer baseline.
+  Composite: the reliable half (window_margin + anion_stability = 0.50) is the trustworthy
+  hard-gate/coarse-ranking signal, while the diagnostic half (optical + dimerization + solvation
+  affinity = 0.50) is reference-only. **Strategic decision:** pivot next to §7 validation
+  (Eox MAE, ESW MAE, polymerization yes/no accuracy), because continuing to chase data-gated
+  soft-axis absolute calibration has lower ROI right now.
+
+- 2026-06-22 (n=6 optical calibration prepared; superseded by later 417587 submission) — chose a pilot-matched neutral
   dimer baseline for the six HIGH experimental anchors before the more expensive polymer-limit and
   geometry sweeps. The prepared analysis fits sTDA and TDA separately to experiment and makes LOO,
   class residuals, and leverage explicit. This is a sequencing decision, not acceptance of dimers

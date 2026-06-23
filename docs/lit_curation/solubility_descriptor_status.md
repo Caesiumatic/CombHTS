@@ -1,10 +1,10 @@
-# Solubility descriptor status: openCOSMO-RS dGsolv is NOT solubility
+# Solvation affinity descriptor status: openCOSMO-RS dGsolv is NOT solubility
 
 Status: descriptor note. **Recommendation only — this note changes no code, weight, or axis.**
 
-## What the Tier-1 20% "solubility" axis actually is
+## What the Tier-1 20% "solvation affinity (dGsolv proxy)" axis actually is
 
-The composite score's solubility term is computed in
+The composite score's historical "solubility" term is computed in
 [`src/eps/scoring/composite.py`](../../src/eps/scoring/composite.py):
 
 ```python
@@ -55,16 +55,21 @@ solute up to a **saturating concentration**. dGsolv omits every one of these ter
 Net: **dGsolv ≠ solubility.** It is one (cavity+electrostatic+H-bond) contribution to it, with the
 dominant solid-state term absent.
 
-## Recommendation for the 20% axis (recommendation only — not applied)
+## Recommendation for the 20% axis
 
-1. **Keep dGsolv as the axis input for now, but RELABEL it.** Rename the score component from
-   "solubility" to "solvation affinity (dGsolv proxy)" in docs and column headers so no reader
-   mistakes it for measured solubility. This is a labeling/documentation fix, not a weight change.
+1. **Keep dGsolv as the axis input for now, and RELABEL it in docs.** The score component should be
+   called "solvation affinity (dGsolv proxy)" so no reader mistakes it for measured solubility. This
+   is a labeling/documentation fix, not a weight, formula, or config change.
 2. **Do NOT re-weight without an experimental anchor.** Re-weighting (or dropping) the axis should
    wait until the dGsolv ranking is checked against the curated experimental solubilities in
    `data/lit_curation/solubility_staging.csv`. Most of those rows are aqueous; the relevant
    process solvents (PC, MeCN, nitromethane, NMP) have little/no quantitative solubility data, so
    there is currently no basis for a calibrated solubility weight.
+   As of the 2026-06-22 soft-axis review, this is a hard calibration blocker for the corrected
+   shortlist: Lop's ORCA/openCOSMO-RS built-in solvent profiles cover only acetonitrile,
+   nitromethane, and water, while propylene carbonate and NMP require custom sigma profiles. The
+   corrected distinct top-30 is 63% PC, so most survivors cannot be evaluated by the current
+   built-in openCOSMO-RS route.
 3. **If a future calibration is wanted,** the minimal honest upgrade is dGsolv + an estimated
    fusion/sublimation term (e.g. a melting-point-based ΔG_fus estimate) to approximate
    log S, validated against the staged experimental values — a separate, scored work item, not a
