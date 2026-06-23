@@ -151,7 +151,10 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 - Tier-2 branch verification: targeted Tier-2/Gaussian/DFT tests `39 passed, 2 skipped`; tracked
   tests plus new Tier-2 pilot tests `227 passed, 5 skipped`; tracked-Python ruff passed;
   `bash -n` passed for new SGE templates; `git diff --check` passed.
-- Integration verification is tracked in `docs/maintenance/pre_cleanup_merge_report_20260623.md`.
+- Integration verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff passed;
+  `git diff --check` passed; SGE `bash -n` passed for the new validation/Tier-2 templates;
+  no-real-engine CLI smoke passed; conflict-marker scan clean. Details are in
+  `docs/maintenance/pre_cleanup_merge_report_20260623.md`.
 
 ## Architecture invariants
 

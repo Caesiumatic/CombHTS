@@ -76,6 +76,26 @@ No ORCA/Gaussian cluster job was submitted.
   new Tier-2 pilot tests `227 passed, 5 skipped`; tracked-Python ruff clean; `bash -n` clean for
   the new SGE templates; `git diff --check` clean.
 
+## 2026-06-23 — integrate completed pre-cleanup agent branches
+
+Merged the completed Section 7 validation, Section 7 staging-audit, and Tier-2 pilot orchestration
+branches into `integration/pre-cleanup-merge-20260623` from `origin/main` for pre-cleanup review.
+No main update, quantum-engine run, Lop submission, scoring/config/calibration/production-data
+change, or optical-policy change was made.
+
+- Resolved documentation conflicts in `CHANGELOG.md`, `STATUS.md`, and `scripts/README.md` while
+  preserving the 417587 diagnostic-only conclusion, the SGE 417671 validation facts, staging rows as
+  review-only data, and Tier-2 as mock-first workflow readiness.
+- Added `docs/maintenance/pre_cleanup_merge_report_20260623.md` with branch classifications,
+  conflict notes, file categories, forbidden-file audit, validation results, and cleanup guidance.
+- Reconciled current governance wording in `THINK.md` so routine correctness decisions remain
+  decide-and-report; only large shared-cluster Tier-2/full-scale work remains a PI/group resource
+  planning item.
+- Verification through the last source-branch merge: full pytest `238 passed, 5 skipped`; ruff,
+  `git diff --check`, SGE `bash -n`, and no-real-engine CLI smoke passed.
+- Final pre-commit verification after report/docs sync: full pytest `238 passed, 5 skipped`;
+  ruff, `git diff --check`, and conflict-marker scan passed.
+
 ## 2026-06-22 — reconcile 417587 as still running
 
 Documentation-only state reconciliation for optical job 417587. No source, config, scoring,
