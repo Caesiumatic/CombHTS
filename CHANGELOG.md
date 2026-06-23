@@ -20,6 +20,24 @@ optical policy, or 417587 artifacts changed.
 - Verification: targeted pytest 23 passed; full pytest 224 passed / 5 skipped; ruff passed;
   `git diff --check` clean before the first code commit.
 
+## 2026-06-23 — audit Section 7 staging data and curate targeted review gaps
+
+Staging/review-only Section 7 curation pass. No production CSV, config, scoring code, calibration
+policy, cluster output, or quantum-chemistry result changed.
+
+- Added `scripts/audit_lit_curation_staging.py` plus tests to validate staging schemas, RDKit-parse
+  known SMILES fields, canonicalize structures, detect internal and production duplicates, and write
+  audit CSVs without touching production data.
+- Wrote `staging_audit_summary.csv` and `staging_audit_issues.csv`: 186 rows audited across ESW,
+  polymerization, selected optical anchors, solubility, and optical/doping staging; all schemas pass;
+  all 127 SMILES-bearing rows parse; 1 known ESW extraction reject is preserved.
+- Added targeted review tables for Eox gapfill candidates, ESW promotion candidates, ESW remaining
+  gaps, polymerizability YES/NO candidates, and Wave-A library readiness.
+- Added `docs/research/section7_staging_audit_20260623.md` summarizing counts, blockers, human
+  source-check rows, and the decision that no item meets PI-escalation criteria.
+- Verification: `.venv/bin/python -m pytest -q` passed with 238 passed, 5 skipped, and 2 warnings;
+  `.venv/bin/ruff check src tests` and `git diff --check` passed.
+
 ## 2026-06-23 — record completed 417587 optical diagnostic
 
 Documentation-only sync after read-only Lop inspection of completed SGE job 417587. No source,

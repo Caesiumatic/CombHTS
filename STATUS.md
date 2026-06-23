@@ -1,15 +1,15 @@
 # Project Status
-_Last updated: 2026-06-23 (Directive section-7 validation package completed; SGE 417671)_
+_Last updated: 2026-06-23 (Directive Section 7 validation + staging audit complete; production unchanged)_
 
 ## Current phase
 
-Directive section-7 validation is now a reproducible, machine-readable workflow. The command
+Directive Section 7 validation is now a reproducible, machine-readable workflow. The command
 `eps validate-directive --engine xtb --harvest <salt-fixed-tier1-all.csv> --cache <sqlite>
 --outdir <dir>` gathers the existing calculators into one package without changing scoring
 weights, thresholds, calibration coefficients, redox constants, production CSVs, or the optical
 policy. Mock mode remains a deterministic, explicitly NON-PHYSICAL smoke path.
 
-The authoritative real run is SGE **417671** on Lop, executed from the isolated clone
+The authoritative real validation run is SGE **417671** on Lop, executed from isolated clone
 `/home/shic4/CombHTS_section7_e023a1c` at git commit
 `e023a1c6bba0b60f22a6afb3a649f45308234122`. It used real `gfn2-xtb+conf-mmff94-n100`, read the
 salt-role-fixed harvest at `/home/shic4/CombHTS/outputs/tier1_real_7488_salt_fixed/tier1_all.csv`,
@@ -17,7 +17,7 @@ and wrote the validation package under
 `/home/shic4/CombHTS_section7_e023a1c/outputs/directive_section7_validation/`. `qacct` reports
 exit 0, failed 0, `intel24@compute-3-16.local`, 4 slots, and 398 s wall time.
 
-Headline section-7 status:
+Headline Section 7 status:
 
 - Tier-1 monomer Eox active production profile `agagcl_peak_strict`: LOO-CV MAE **0.186 V** over
   **9** collapsed groups, PASS versus the directive `<0.30 V` gate. This is above the hard
@@ -43,8 +43,20 @@ Headline section-7 status:
   accuracy **56.25%** with stratified bootstrap 95% interval **25.0-87.5%**. Do not claim the
   directive `>85%` target from this small matched set.
 
-No PI escalation was triggered. The work stayed inside Directive_CombHTS, used normal project-scale
-CPU resources, did not change scoring/config policy, and did not create a new scope commitment.
+Section 7 staging-data audit and targeted gap curation is **COMPLETE** at review/staging scope.
+The new audit artifacts under `data/lit_curation/` and
+`docs/research/section7_staging_audit_20260623.md` cover existing solvent ESW, polymerization,
+optical-anchor, solubility, and optical/doping staging rows. All audited staging schemas pass and
+all 127 SMILES-bearing staging rows RDKit-parse; no production CSV, config, scoring code, or optical
+policy changed. The audit produced compact review tables for Eox gapfill candidates, ESW promotion
+candidates, ESW remaining gaps, polymerizability promotion candidates, and Wave-A library readiness.
+The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence, nitromethane
+primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
+rows needing source or reference checks.
+
+No PI escalation was triggered by either Section 7 validation or the staging audit. Both work units
+stayed inside Directive_CombHTS, used normal project-scale resources, did not change scoring/config
+policy, and did not create a new scope commitment.
 
 Soft-axis interpretation is unchanged. Optical job **417587** remains a completed diagnostic
 negative/weak baseline: six neutral-dimer ORCA anchors finished, but sTDA/TDA fits to experimental
@@ -74,6 +86,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   intervals, worst residuals/influence diagnostics, library applicability-domain calls, raw ESW
   descriptor points, measured-first production-gate safety diagnostics, feasibility matches, and
   provenance/hashes.
+- The Section 7 staging audit validates staging schemas, RDKit-parses known SMILES fields,
+  canonicalizes structures, detects internal and production duplicates, and writes review tables
+  without touching production data.
 - The measured-first conservative ESW gate is validated as one-way safe on the salt-fixed real
   harvest: measured literature can tighten the hard gate, not admit rows by widening a sparse
   generic window.
@@ -86,12 +101,13 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
    DeltaSCF descriptors are off by multiple volts versus practical ESW measurements. They should
    remain audited priors/caps, not standalone solvent-window calibrations.
 2. Exact ESW formulation coverage is sparse. The safety invariant passes, but exact `(solvent,salt)`
-   coverage is only 3.37% of the salt-fixed harvest rows. PC/NMP/sulfolane and common supporting
-   salts need condition-relevant curation before any experimental recommendation.
+   coverage is only 3.37% of the salt-fixed harvest rows. The staging audit now pinpoints priority
+   review targets: exact PC BF4/PF6/ClO4/TFSI rows, MeCN/TBAPF6, nitromethane primary-source
+   reconciliation, NMP, and nitrobenzene.
 3. Feasibility labels are not yet enough for the directive `>85%` claim. Add condition-relevant
    negatives and exact-anion labels, especially in baseline nonaqueous media, until at least a
    defensible matched validation set exists.
-4. Tier-2 held-out DFT validation remains out of scope for the section-7 package. The old 0.119 V
+4. Tier-2 held-out DFT validation remains out of scope for the Section 7 package. The old 0.119 V
    DFT number is in-sample and must not be reported as a held-out Tier-2 pass.
 5. The composite's diagnostic half remains data-limited: optical, dimerization absolute scale, and
    solvation-affinity/true-solubility calibration are reference-only until better anchors exist.
@@ -103,22 +119,24 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 ## Immediate next actions
 
-1. Expand section-7 evidence coverage, not weights: add exact ESW formulation rows and
+1. Review the Section 7 staging-audit outputs, source-check the flagged Eox/ESW/polymerization rows,
+   and promote only approved rows through a separate production-ingest task.
+2. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
    condition-relevant feasibility labels, then rerun `eps validate-directive` on the same
    salt-fixed harvest.
-2. Keep the section-7 package as the authoritative validation report for the current 7,488-triad
+3. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
    screen. Use the JSON/CSVs in the Lop output directory for group-update tables.
-3. Treat any next Tier-2 DFT validation or full library expansion as a separate resource-planning
+4. Treat any next Tier-2 DFT validation or full library expansion as a separate resource-planning
    work unit.
 
 ## Verification
 
-- Target branch: `feat/section7-validation-closure`, based on
-  `origin/main` `e7e8c3967d9bf5fefb0e191722197ed0af136b41`.
-- Local verification before first commit: targeted pytest `23 passed`; full pytest
-  `224 passed, 5 skipped, 2 warnings`; `ruff check src tests` passed; `git diff --check` clean;
-  mock `validate-directive` smoke wrote all required artifacts.
-- Lop verification: SGE 417671 completed with exit 0 and wrote the real section-7 artifact package.
+- Section 7 validation branch verification before first code commit: targeted pytest `23 passed`;
+  full pytest `224 passed, 5 skipped, 2 warnings`; `ruff check src tests` passed;
+  `git diff --check` clean; mock `validate-directive` smoke wrote all required artifacts.
+- Staging-audit branch verification: `.venv/bin/python -m pytest -q` reported `238 passed,
+  5 skipped, 2 warnings`; `.venv/bin/ruff check src tests` passed; `git diff --check` passed.
+- Integration verification is tracked in `docs/maintenance/pre_cleanup_merge_report_20260623.md`.
 
 ## Architecture invariants
 
