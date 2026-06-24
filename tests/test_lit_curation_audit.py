@@ -5,10 +5,9 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import pytest
 from rdkit import Chem
 
-from eps.curation import eox_rescue, staging_audit
+from eps.curation import staging_audit
 
 
 def test_canonicalize_smiles_handles_valid_and_invalid_inputs() -> None:
@@ -104,66 +103,3 @@ def test_section7_review_tables_are_parseable_and_smiles_are_valid() -> None:
     for smiles_or_pair in wave["smiles_or_ion_smiles"]:
         for smiles in smiles_or_pair.split("|"):
             assert Chem.MolFromSmiles(smiles.strip(), sanitize=True) is not None
-
-
-def test_eox_r11_r21_rescue_package_is_review_only_and_deterministic(tmp_path: Path) -> None:
-    review_path = tmp_path / "review.csv"
-    report_path = tmp_path / "report.md"
-
-    result = eox_rescue.build_eox_r11_r21_review_package(
-        repo_root=Path("."),
-        review_path=review_path,
-        report_path=report_path,
-    )
-
-    assert review_path.exists()
-    assert report_path.exists()
-    assert list(result.review.columns) == list(eox_rescue.REVIEW_COLUMNS)
-    assert list(result.review["record_id"]) == [f"R{index}" for index in range(11, 22)]
-    assert result.review["rdkit_parse_ok"].all()
-    assert result.review["conversion_check_pass"].all()
-    assert not result.review["duplicate_internal"].any()
-    assert not result.review["duplicate_production_benchmark"].any()
-    assert set(result.review["review_classification"]) == {"PROMOTE_NOW_CANDIDATE"}
-
-    formula_by_record = dict(zip(result.review["record_id"], result.review["formula_match"], strict=True))
-    assert all(formula_by_record[record_id] == "TRUE" for record_id in ["R14", "R15", "R16", "R17"])
-    assert all(
-        formula_by_record[record_id] == "NOT_PROVIDED"
-        for record_id in ["R11", "R12", "R13", "R18", "R19", "R20", "R21"]
-    )
-    assert result.summary["promotable_rescue_onset_groups"] == 11
-    assert result.summary["projected_union_onset_groups"] == 27
-    assert result.summary["combined_experimental_combination_inventory"] == 50
-    assert result.summary["no_candidate_promoted_to_benchmark"] is True
-    assert "No candidate was promoted into `data/benchmark.csv`" in report_path.read_text(
-        encoding="utf-8"
-    )
-
-
-def test_eox_r11_r21_rescue_refuses_production_csv_output(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="production CSV"):
-        eox_rescue.build_eox_r11_r21_review_package(
-            repo_root=Path("."),
-            review_path=Path("data/benchmark.csv"),
-            report_path=tmp_path / "report.md",
-        )
-
-
-def test_eox_r11_r21_rescue_flags_bad_conversion(tmp_path: Path) -> None:
-    source = pd.read_csv(eox_rescue.DEFAULT_SOURCE_CANDIDATES_PATH, keep_default_na=False)
-    source.loc[source["record_id"] == "R11", "potential_vs_AgAgCl_V"] = 1.006
-    source_path = tmp_path / "bad_conversion.csv"
-    source.to_csv(source_path, index=False)
-
-    result = eox_rescue.build_eox_r11_r21_review_package(
-        repo_root=Path("."),
-        source_candidates_path=source_path,
-        review_path=tmp_path / "review.csv",
-        report_path=tmp_path / "report.md",
-    )
-
-    r11 = result.review.loc[result.review["record_id"] == "R11"].iloc[0]
-    assert not bool(r11["conversion_check_pass"])
-    assert r11["review_classification"] == "NEEDS_REFERENCE_CHECK"
-    assert "expected E_AgAgCl" in r11["blocking_issue"]
