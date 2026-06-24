@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-06-24 — complete review-only G1.2 Eox master closure audit
+
+Review-only G1.2 Eox master audit across current production, R11-R21 staging rows, and the prepared
+external evidence packet. No production benchmark row, library CSV, scoring weight, threshold,
+calibration coefficient, redox constant, cache key, Tier-1/Tier-2 setting, validation workflow,
+public output schema, optical policy, scientific engine, Lop artifact, or PDF was changed.
+
+- Added `eps.curation.eox_master_audit` plus `scripts/build_eox_g1_2_master_audit.py` to build
+  deterministic source-manifest, master-evidence, combination-summary, and production-change-
+  proposal tables from normalized CSV inputs and the external evidence manifest.
+- Added committed review artifacts under `data/lit_curation/`: 31 source-manifest rows, 86 master
+  evidence rows, 83 directive-combination rows, and 57 proposal rows. The committed source manifest
+  stores canonical filenames, hashes, and status only; raw PDFs/zips/text remain outside the repo.
+- The audit finds 31 directive-eligible combinations (PASS vs `>=30`) while keeping onset and peak
+  model groups separate. It proposes 5 clean external Ag/AgCl onset additions and identifies 10
+  current Camarada production rows as non-CV steady-state polarization evidence needing a future
+  calibration/ontology correction.
+- Added `docs/research/eox_g1_2_master_closure_audit_20260624.md`, a no-engine run manifest, and
+  synchronized STATUS/THINK with the review-only closure boundary.
+- Verification: `tests/test_eox_master_audit.py` reported `23 passed`; full pytest reported
+  `313 passed, 5 skipped, 2 warnings`; `ruff check .` passed; `git diff --check` passed;
+  `eps doctor` reported 0 FAIL and the expected four local cluster-binary WARNs.
+
 ## 2026-06-24 — correct R11-R21 primary-PDF Eox staging package
 
 Primary-PDF correction of the review-only R11-R21 Eox staging package. No production benchmark row,

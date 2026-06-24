@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-24 (R11-R21 primary-PDF staging correction)_
+_Last updated: 2026-06-24 (G1.2 Eox master closure audit)_
 
 ## How to read this
 
@@ -15,7 +15,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T1 | Screening calibration anchor: peak vs onset | exploring (anchor type decided) | self (anchor type decided on physics; strict-vs-relaxed data-gated via LOO-CV) | scope/policy |
 | T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | resolution decided | self / report (directive-sanctioned; PI retains veto) | scope/policy |
 | T3 | Potential-type mismatch sets the accuracy ceiling | decided (validated in section-7 reporting) | self (rigor) | lit-curation (no compute) |
-| T4 | What ">=30 clean groups" actually validates | exploring (Tier-1 package complete; Tier-2 held-out remains out of scope) | self / report (directive's own two-stage design; surface as info) | scope/policy |
+| T4 | What ">=30 clean groups" actually validates | exploring (G1.2 review basis passes; production ingest/correction still separate) | self / report (directive's own two-stage design; surface as info) | scope/policy |
 | T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
 | T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (417587 complete; weak diagnostic dimer baseline only) | group-meeting | compute-heavy |
 | T7 | What is the real deliverable? | open | self / report (directive §8 lists both; produce both) | scope/policy |
@@ -99,6 +99,17 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
   experimental-combination inventory = 42 only when peak and onset are counted together. Decision
   implication: the rescue no longer materially closes the `>=30` onset-coverage gap; it instead
   identifies a source-quality decision gate for R14-R21 before any production benchmark ingest.
+- **Update (2026-06-24, G1.2 master closure audit)**: the broader master audit changes the
+  review-only count basis. It combines current production rows, R11-R21 staging rows, and the
+  prepared external evidence packet into deterministic review tables. The audit finds 31
+  directive-eligible combinations after collapsing onset/peak formulation duplicates and ignoring
+  concentration-only variants, so the review/proposal basis passes the `>=30` raw-count gate. This
+  does **not** mean production ingest happened: 10 current Camarada production rows are now marked
+  non-CV steady-state polarization evidence requiring a future calibration/ontology correction, 5
+  clean external Ag/AgCl onset rows are only proposed additions, R11-R13 are parked as mixed-solvent
+  pseudo-reference rows, and R14-R21 remain source-conflict blocked. Decision implication: `>=30`
+  can be satisfied as a review inventory, but production truth still needs a separate sign-off/edit
+  unit before the benchmark table itself should claim closure.
 - **Current lean**: Treat the current xTB->experimental fit as the explicit interim stand-in; run the live xTB->DFT batch, then revisit whether ">=30" governs calibration purity, validation coverage, or both. Do not auto-promote the xTB->DFT calibration without a recorded validation decision.
 - **Resolves when**: The recorded validation evidence decides whether >=30 governs calibration purity, validation coverage, or both; the live xTB->DFT batch is run; and a decide-and-report calibration-promotion decision is recorded. Large shared-cluster spend remains a T8 resource-planning item.
 - **Governance retag (2026-06-19, decide-and-report)**: Forum moved group-meeting -> self / report. The calibrate-(xTB->DFT)-then-validate-(DFT->experiment) split is the directive's own two-stage design; surfaced as info, not treated as a blocker.
