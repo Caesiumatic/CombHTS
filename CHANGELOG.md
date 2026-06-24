@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-06-24 — build review-only Eox R11-R21 staging rescue
+
+Review-only Eox curation package for records R11-R21. No production benchmark row, chemical
+library, scoring weight, threshold, calibration coefficient, redox constant, cache key,
+Tier-1/Tier-2 setting, public output schema, or optical policy changed.
+
+- Added `eps.curation.eox_rescue` and thin script `scripts/build_eox_r11_r21_staging.py` to load a
+  manually normalized source-candidate CSV, validate schema, RDKit-canonicalize candidate SMILES,
+  compute InChIKey/formula, audit source-formula agreement, check the approved `+0.065 V` and
+  `+0.075 V` conversions, detect duplicate groups, and refuse production CSV output paths.
+- Added `data/lit_curation/eox_r11_r21_source_candidates.csv` and generated
+  `data/lit_curation/eox_r11_r21_rescue_review.csv`: all 11 records parse, all conversions pass,
+  R14-R17 formulae match RDKit formulae, seven rows retain NMR-only/no-formula caveats, and no row
+  duplicates the production benchmark.
+- Added `docs/research/eox_r11_r21_staging_rescue_20260624.md` with external input hashes, one-row
+  dispositions, duplicate/group-count audit, current-library vs benchmark-only counts, and the
+  explicit statement that no candidate was promoted into `data/benchmark.csv`.
+- Recorded the local no-engine curation build in `docs/runs/`.
+- Verification: targeted lit-curation tests `7 passed`; full pytest `242 passed, 5 skipped,
+  2 warnings`; ruff passed for `src`, `tests`, and the new script; `git diff --check` passed.
+
 ## 2026-06-23 — refactor staging audit into curation module
 
 Repo-simplification-only refactor. No scoring, config, calibration, production CSV, benchmark CSV,
