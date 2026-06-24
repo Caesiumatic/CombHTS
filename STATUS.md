@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-23 (codebase map and hygiene review after pre-cleanup integration)_
+_Last updated: 2026-06-24 (review-only Eox R11-R21 staging rescue)_
 
 ## Current phase
 
@@ -54,6 +54,16 @@ The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence,
 primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
 rows needing source or reference checks.
 
+The R11-R21 Eox rescue package is now built as **review-only staging**, not production ingest. The
+normalized source transcription lives at
+`data/lit_curation/eox_r11_r21_source_candidates.csv`, the generated review table at
+`data/lit_curation/eox_r11_r21_rescue_review.csv`, and the report at
+`docs/research/eox_r11_r21_staging_rescue_20260624.md`. All 11 rows RDKit-parse, all approved
+Ag-wire/SCE-to-Ag/AgCl conversions reproduce, R14-R17 formulae match RDKit formulae, and no row
+duplicates the production benchmark. The projected onset-only union is 27 groups, peak remains 23,
+and the combined experimental-combination inventory is 50 only when onset and peak are counted
+together; this does **not** close the Directive `>=30` benchmark question by raw row count.
+
 The Tier-2 monomer-Eox pilot workflow is implemented as a **mock-first, array-safe scaffold**.
 `eps tier2-plan` validates a selection CSV and emits one task per unique `(monomer, solvent,
 method config)` identity; repeated salts/cations are deduplicated before any Engine call.
@@ -104,6 +114,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 - The Section 7 staging audit validates staging schemas, RDKit-parses known SMILES fields,
   canonicalizes structures, detects internal and production duplicates, and writes review tables
   without touching production data.
+- The R11-R21 Eox rescue workflow loads only the manually normalized source-candidate CSV, audits
+  structures/conversions/duplicates, refuses production CSV outputs, and writes deterministic
+  review-only artifacts.
 - Tier-2 pilot orchestration is split into plan / one-task run / harvest commands. Planning is
   schema-validated and monomer-solvent aware; task execution is mock-first and cache-separated by
   default; harvest preserves raw energy fields and emits a standard per-monomer-solvent Eox CSV
@@ -142,12 +155,14 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 1. Review the Section 7 staging-audit outputs, source-check the flagged Eox/ESW/polymerization rows,
    and promote only approved rows through a separate production-ingest task.
-2. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
+2. Human-review the R11-R21 Eox rescue candidates against the primary schemes/figures, especially
+   the seven NMR-only/no-source-formula rows, before any separate benchmark-promotion task.
+3. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
    condition-relevant feasibility labels, then rerun `eps validate-directive` on the same
    salt-fixed harvest.
-3. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
+4. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
    screen. Use the JSON/CSVs in the Lop output directory for group-update tables.
-4. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
+5. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
    array smoke, and only then schedule a separate reviewed real-Gaussian cluster work unit.
 
 ## Verification
@@ -167,6 +182,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 - Codebase-map/hygiene verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff passed;
   `git diff --check` passed; `eps doctor` reported 0 FAIL and the expected four local
   cluster-binary WARNs; no-real-engine CLI smoke passed, including mock `eps validate`.
+- R11-R21 Eox rescue verification: targeted lit-curation tests `7 passed`; ruff passed for `src`,
+  `tests`, and `scripts/build_eox_r11_r21_staging.py`; `git diff --check` passed; full pytest
+  `242 passed, 5 skipped, 2 warnings`.
 
 ## Architecture invariants
 
