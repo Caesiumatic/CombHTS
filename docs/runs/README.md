@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-24 | Eox G1.2 master closure audit | none (no-engine curation) | review-only current production + R11-R21 staging + external evidence manifest | completed | 86 master rows; 31 directive-eligible combinations PASS vs >=30; 5 clean external additions proposed; 10 Camarada production rows flagged for future correction | [link](2026-06-24_eox-g1-2-master-closure-audit.md) |
 | 2026-06-24 | Eox R11-R21 primary-PDF correction | none (no-engine curation) | primary-PDF review-only correction for R11-R21 Eox candidates | completed | 11/11 RDKit parsed; 3 PROMOTE_NOW_CANDIDATE; 8 NEEDS_REFERENCE_CHECK; reference conflicts 8; condition conflicts 4; no benchmark promotion | [link](2026-06-24_eox-r11-r21-primary-pdf-correction.md) |
 | 2026-06-24 | Eox R11-R21 staging rescue | none (no-engine curation) | review-only R11-R21 Eox candidates | completed; superseded by primary-PDF correction | superseded disposition; do not use for ingest readiness | [link](2026-06-24_eox-r11-r21-staging-rescue.md) |
 | 2026-06-23 | directive section-7 validation package | gfn2-xtb real | 7,488 salt-fixed triads + Eox/ESW/feasibility benchmarks | completed | SGE 417671 exit 0; Eox active LOO MAE 0.186 V PASS; raw ESW descriptor FAIL; gate unsafe widening 0/5,760 PASS; feasibility 56.25% on n=12 NOT_YET_TESTABLE | [link](2026-06-23_directive-section7-validation-417671.md) |

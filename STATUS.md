@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-24 (R11-R21 primary-PDF staging correction)_
+_Last updated: 2026-06-24 (G1.2 Eox master closure audit)_
 
 ## Current phase
 
@@ -54,20 +54,31 @@ The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence,
 primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
 rows needing source or reference checks.
 
+The G1.2 Eox master closure audit is now complete at **review-only** scope. External evidence was
+prepared outside the repo under `$HOME/CombHTS_evidence/G1_2/`; committed repo artifacts contain
+only canonical filenames, hashes, statuses, and normalized review tables. The generated package is
+`data/lit_curation/eox_g1_2_source_manifest.csv`,
+`data/lit_curation/eox_g1_2_master_evidence.csv`,
+`data/lit_curation/eox_g1_2_combination_summary.csv`,
+`data/lit_curation/eox_g1_2_production_change_proposal.csv`, and
+`docs/research/eox_g1_2_master_closure_audit_20260624.md`. It reviews 39 production rows,
+11 R11-R21 staging rows, and 36 external evidence/provenance rows. The audit finds **31**
+directive-eligible combinations in the review/proposal basis (PASS versus `>=30`) while keeping
+onset/peak model groups separate. It also identifies **10** current production Camarada rows as
+non-CV steady-state polarization evidence, not clean CV onset; they are proposed only for a future
+calibration/ontology correction, not edited in production.
+
 The R11-R21 Eox rescue package remains **review-only staging**, not production ingest. A primary-PDF
-correction memo now records six thiophene attachment fixes (R12, R13, R14, R15, R16, R21) plus
+correction memo records six thiophene attachment fixes (R12, R13, R14, R15, R16, R21) plus
 source-internal reference/condition conflicts in the R14-R21 papers. The normalized source
 transcription lives at `data/lit_curation/eox_r11_r21_source_candidates.csv`, the generated review
 table at `data/lit_curation/eox_r11_r21_rescue_review.csv`, the regenerated report at
 `docs/research/eox_r11_r21_staging_rescue_20260624.md`, and the correction memo at
 `docs/research/eox_r11_r21_primary_pdf_correction_20260624.md`. All 11 rows RDKit-parse, all
 working Ag-wire/SCE-to-Ag/AgCl transcriptions numerically reproduce, R14-R17 formulae match RDKit
-formulae, and no row duplicates the production benchmark. Only R11-R13 remain
-`PROMOTE_NOW_CANDIDATE`; R14-R21 are fail-closed as `NEEDS_REFERENCE_CHECK` because 8 rows carry
-reference-source conflicts and R18-R21 also carry condition-source conflicts. The projected
-onset-only union is now 19 groups, peak remains 23, and the combined experimental-combination
-inventory is 42 only when onset and peak are counted together; this does **not** close the
-Directive `>=30` benchmark question by raw row count.
+formulae, and no row duplicates the production benchmark. In the master audit, R11-R13 are parked as
+mixed-solvent pseudo-reference rows, and R14-R21 stay fail-closed because their source-internal
+reference/condition conflicts are unresolved.
 
 The Tier-2 monomer-Eox pilot workflow is implemented as a **mock-first, array-safe scaffold**.
 `eps tier2-plan` validates a selection CSV and emits one task per unique `(monomer, solvent,
@@ -123,6 +134,11 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   structures/conversions/source conflicts/duplicates, refuses production CSV outputs, and writes
   deterministic review-only artifacts. Source-conflicted rows cannot be
   `PROMOTE_NOW_CANDIDATE`.
+- The G1.2 Eox master audit builds deterministic source-manifest, master-evidence,
+  combination-summary, and production-change-proposal tables from normalized CSV inputs plus the
+  external manifest. It refuses production CSV/config/scoring/redox/validation destinations,
+  canonicalizes SMILES with RDKit, keeps onset/peak model groups separate, and never parses PDFs at
+  production runtime.
 - Tier-2 pilot orchestration is split into plan / one-task run / harvest commands. Planning is
   schema-validated and monomer-solvent aware; task execution is mock-first and cache-separated by
   default; harvest preserves raw energy fields and emits a standard per-monomer-solvent Eox CSV
@@ -159,17 +175,19 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 ## Immediate next actions
 
-1. Review the Section 7 staging-audit outputs, source-check the flagged Eox/ESW/polymerization rows,
+1. Review the G1.2 master audit proposal table before any production ingest. Treat the 10 Camarada
+   rows as a separate production-correction task, and treat the 5 clean external Ag/AgCl onset rows
+   as separate add-candidate rows that still need human sign-off.
+2. Resolve or exclude the R11-R21 mixed-solvent/source-conflict blockers before any separate
+   benchmark-promotion task.
+3. Review the Section 7 staging-audit outputs, source-check the flagged ESW/polymerization rows,
    and promote only approved rows through a separate production-ingest task.
-2. For R11-R21, source-check only R11-R13 as still-promotable review candidates. Resolve or exclude
-   the R14-R21 source-internal reference/condition conflicts before any separate benchmark-promotion
-   task.
-3. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
+4. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
    condition-relevant feasibility labels, then rerun `eps validate-directive` on the same
    salt-fixed harvest.
-4. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
+5. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
    screen. Use the JSON/CSVs in the Lop output directory for group-update tables.
-5. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
+6. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
    array smoke, and only then schedule a separate reviewed real-Gaussian cluster work unit.
 
 ## Verification
@@ -193,6 +211,10 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   `tests/test_eox_rescue.py` reported `51 passed`; `tests/test_lit_curation_audit.py` reported
   `4 passed`; validation/directive target tests reported `28 passed`; full pytest reported
   `290 passed, 5 skipped, 2 warnings`; `git diff --check` passed; `eps doctor` reported
+  21 checks, 0 FAIL, and the expected four local cluster-binary WARNs.
+- G1.2 Eox master-audit targeted verification: `tests/test_eox_master_audit.py` reported
+  `23 passed`; targeted ruff on the new module, wrapper, exports, and tests passed; full pytest
+  reported `313 passed, 5 skipped, 2 warnings`; `git diff --check` passed; `eps doctor` reported
   21 checks, 0 FAIL, and the expected four local cluster-binary WARNs.
 
 ## Architecture invariants
