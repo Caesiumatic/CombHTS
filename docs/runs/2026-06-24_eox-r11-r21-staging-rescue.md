@@ -1,0 +1,14 @@
+# Run: 2026-06-24 - Eox R11-R21 staging rescue (none / no-engine curation)
+- run_id: 2026-06-24_eox-r11-r21-staging-rescue
+- date: 2026-06-24
+- command: `.venv/bin/python scripts/build_eox_r11_r21_staging.py --external-input '/Users/shichen/Downloads/deep-research-report (4).md' --external-input '/Users/shichen/Downloads/deep-research-report (8).md'`
+- engine / method: none; no chemistry engine, no mock engine, no xTB/DFT
+- scope: review-only Eox literature rescue for records R11-R21
+- cluster job: local
+- status: completed
+- headline results: 11 source rows loaded; 11/11 RDKit parsed; 11/11 conversion checks passed; 11 PROMOTE_NOW_CANDIDATE review classifications; 0 internal duplicates; 0 production benchmark duplicates
+- per-property failures: n/a
+- output artifacts: `data/lit_curation/eox_r11_r21_source_candidates.csv`; `data/lit_curation/eox_r11_r21_rescue_review.csv`; `docs/research/eox_r11_r21_staging_rescue_20260624.md`
+- provenance: git commit `b9a2d26fb2231d37402c6a178b77d3076f4f9a49` at preflight; branch `feat/eox-r11-r21-staging-rescue`; external input hashes recorded in the report
+- caveats: review-only staging package; no row was promoted into `data/benchmark.csv`; no production scoring, thresholds, calibration coefficients, redox constants, production libraries, benchmark rows, cache keys, public schemas, Tier-1/Tier-2 settings, or optical policy changed
+- supersedes / superseded_by: —

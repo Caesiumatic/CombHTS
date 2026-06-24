@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-24 | Eox R11-R21 staging rescue | none (no-engine curation) | review-only R11-R21 Eox candidates | completed | 11/11 RDKit parsed; 11/11 conversion checks passed; 11 PROMOTE_NOW_CANDIDATE; 0 production duplicates; no benchmark promotion | [link](2026-06-24_eox-r11-r21-staging-rescue.md) |
 | 2026-06-23 | directive section-7 validation package | gfn2-xtb real | 7,488 salt-fixed triads + Eox/ESW/feasibility benchmarks | completed | SGE 417671 exit 0; Eox active LOO MAE 0.186 V PASS; raw ESW descriptor FAIL; gate unsafe widening 0/5,760 PASS; feasibility 56.25% on n=12 NOT_YET_TESTABLE | [link](2026-06-23_directive-section7-validation-417671.md) |
 | 2026-06-22 | optical calibration n=6 | ORCA 6.1 real | 6 HIGH anchors × neutral dimers × sTDA/TDA | completed | SGE 417587 exit 0; 6/6 sTDA + 6/6 TDA; weak dimer-vs-polymer fits (R2 .151/.171, LOO MAE .456/.449 eV); diagnostic only | [link](2026-06-22_optical-calib-n6.md) |
 | 2026-06-22 | dimerization proton-offset anchor diagnosis | none (docs/analysis) | existing implementation/tests/harvest distribution | completed | proton offset is a ranking-safe constant; min-max cancels it; absolute calibration deferred | [link](2026-06-22_dimerization-anchor.md) |
