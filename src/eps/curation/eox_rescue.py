@@ -76,6 +76,9 @@ SOURCE_COLUMNS = (
     "electrochemistry_source_locator",
     "research_status",
     "research_notes",
+    "reference_source_conflict",
+    "condition_source_conflict",
+    "source_conflict_details",
 )
 
 REVIEW_COLUMNS = (
@@ -114,10 +117,15 @@ REVIEW_COLUMNS = (
     "duplicate_production_benchmark",
     "independent_group_id",
     "research_status",
+    "reference_source_conflict",
+    "condition_source_conflict",
+    "source_conflict_details",
     "review_classification",
     "blocking_issue",
     "review_notes",
 )
+
+SOURCE_CONFLICT_BOOLEAN_COLUMNS = ("reference_source_conflict", "condition_source_conflict")
 
 _FORMULA_RE = re.compile(r"([A-Z][a-z]?)(\d*)")
 
@@ -211,6 +219,7 @@ def load_source_candidates(path: str | Path) -> pd.DataFrame:
             "R11-R21 source candidates must contain exactly the expected records; "
             f"expected {expected}; observed {observed}"
         )
+    _validate_source_conflict_fields(frame, path)
     return frame.loc[:, SOURCE_COLUMNS].copy()
 
 
@@ -270,6 +279,9 @@ def build_rescue_review(source: pd.DataFrame, benchmark: pd.DataFrame) -> pd.Dat
                 "duplicate_production_benchmark": production_key in production_groups,
                 "independent_group_id": independent_group_id,
                 "research_status": _clean(row["research_status"]),
+                "reference_source_conflict": bool(row["reference_source_conflict"]),
+                "condition_source_conflict": bool(row["condition_source_conflict"]),
+                "source_conflict_details": _clean(row["source_conflict_details"]),
                 "_rdkit_error": rdkit["error"],
                 "_conversion_note": conversion_note,
                 "_analytical_evidence_locator": _clean(row["analytical_evidence_locator"]),
@@ -360,6 +372,8 @@ def summarize_rescue_review(
         "label_counts_all_rows": label_counts,
         "duplicate_internal_rows": int(review["duplicate_internal"].sum()),
         "duplicate_production_benchmark_rows": int(review["duplicate_production_benchmark"].sum()),
+        "reference_source_conflict_rows": int(review["reference_source_conflict"].sum()),
+        "condition_source_conflict_rows": int(review["condition_source_conflict"].sum()),
         "canonical_collapse": {
             "raw_rows": int(len(review)),
             "unique_canonical_structures": int(len(rescue_canonicals)),
@@ -439,19 +453,37 @@ def _classify_review_row(row: dict[str, Any]) -> tuple[str, str, str]:
             reference_issues.append(f"{field} is blank")
     if not row["conversion_check_pass"]:
         reference_issues.append(row["_conversion_note"] or "approved conversion check failed")
+    if row["reference_source_conflict"]:
+        reference_issues.append(
+            f"source reference conflict unresolved: {row['source_conflict_details']}"
+        )
     for field in ("solvent", "supporting_electrolyte"):
         if not row[field]:
             condition_issues.append(f"{field} is blank")
+    if row["condition_source_conflict"]:
+        condition_issues.append(
+            f"source condition conflict unresolved: {row['source_conflict_details']}"
+        )
 
+    all_blockers = _blocking_issue(
+        structure_issues,
+        provenance_issues,
+        reference_issues,
+        condition_issues,
+    )
     if structure_issues:
-        return "NEEDS_STRUCTURE_CHECK", "; ".join(structure_issues), _review_note(row)
+        return "NEEDS_STRUCTURE_CHECK", all_blockers, _review_note(row)
     if provenance_issues:
-        return "NEEDS_PROVENANCE_CHECK", "; ".join(provenance_issues), _review_note(row)
+        return "NEEDS_PROVENANCE_CHECK", all_blockers, _review_note(row)
     if reference_issues:
-        return "NEEDS_REFERENCE_CHECK", "; ".join(reference_issues), _review_note(row)
+        return "NEEDS_REFERENCE_CHECK", all_blockers, _review_note(row)
     if condition_issues:
-        return "NEEDS_CONDITION_CHECK", "; ".join(condition_issues), _review_note(row)
+        return "NEEDS_CONDITION_CHECK", all_blockers, _review_note(row)
     return "PROMOTE_NOW_CANDIDATE", "", _review_note(row)
+
+
+def _blocking_issue(*groups: list[str]) -> str:
+    return "; ".join(issue for group in groups for issue in group)
 
 
 def _review_note(row: dict[str, Any]) -> str:
@@ -468,7 +500,42 @@ def _review_note(row: dict[str, Any]) -> str:
         parts.append("No DOI found, but durable article/PDF provenance is recorded.")
     if row["_conversion_note"] == "":
         parts.append("Approved reference conversion reproduced exactly.")
+    if row["reference_source_conflict"] or row["condition_source_conflict"]:
+        parts.append(
+            "Source-internal conflict is unresolved; numeric values are retained as working "
+            "transcriptions for audit only."
+        )
     return " ".join(parts)
+
+
+def _validate_source_conflict_fields(frame: pd.DataFrame, path: str | Path) -> None:
+    for index, row in frame.iterrows():
+        record_id = _clean(row["record_id"])
+        parsed_flags: dict[str, bool] = {}
+        for column in SOURCE_CONFLICT_BOOLEAN_COLUMNS:
+            parsed = _strict_source_bool(row[column], column=column, record_id=record_id, path=path)
+            frame.at[index, column] = parsed
+            parsed_flags[column] = parsed
+        details = _clean(row["source_conflict_details"])
+        if (parsed_flags["reference_source_conflict"] or parsed_flags["condition_source_conflict"]) and not details:
+            raise ValueError(
+                f"{path} row {record_id} has a source conflict flag set but blank "
+                "source_conflict_details"
+            )
+
+
+def _strict_source_bool(value: object, *, column: str, record_id: str, path: str | Path) -> bool:
+    if pd.api.types.is_bool(value):
+        return bool(value)
+    text = _clean(value)
+    if text == "true":
+        return True
+    if text == "false":
+        return False
+    raise ValueError(
+        f"{path} row {record_id} column {column} must be a strict boolean true/false; "
+        f"observed {text!r}"
+    )
 
 
 def _conversion_check(row: dict[str, Any]) -> tuple[bool, str]:
@@ -663,19 +730,25 @@ def _render_report(review: pd.DataFrame, summary: dict[str, Any]) -> str:
     lines.append("## Provenance")
     lines.append("")
     lines.append(f"- Repo SHA used: `{summary['repo_sha']}`")
-    lines.append("- External and normalized inputs:")
+    lines.append("- Normalized source and optional external evidence inputs:")
     for path, digest in sorted(summary["input_sha256"].items()):
         lines.append(f"  - `{Path(path).name}`: `{digest}` (`{path}`)")
     lines.append("")
     lines.append(
-        "External reports are evidence/context inputs; the normalized source-candidate CSV is the "
-        "only machine-loaded candidate source."
+        "Optional external reports are evidence/context inputs only; the normalized "
+        "source-candidate CSV is the only machine-loaded candidate source."
     )
     lines.append("")
     lines.append("## Counts")
     lines.append("")
     lines.append(f"- Source rows: {summary['source_candidate_rows']}")
     lines.append(f"- RDKit parsed rows: {summary['rdkit_parse_ok_rows']}")
+    lines.append(f"- Internal duplicates: {summary['duplicate_internal_rows']}")
+    lines.append(
+        f"- Production benchmark duplicates: {summary['duplicate_production_benchmark_rows']}"
+    )
+    lines.append(f"- Reference-source conflicts: {summary['reference_source_conflict_rows']}")
+    lines.append(f"- Condition-source conflicts: {summary['condition_source_conflict_rows']}")
     lines.append(f"- Conversion checks passed: {summary['conversion_check_pass_rows']}")
     lines.append(
         "- Canonical duplicate collapse: "
@@ -718,19 +791,26 @@ def _render_report(review: pd.DataFrame, summary: dict[str, Any]) -> str:
         "the peak track is unchanged by this rescue package. Therefore this package does not close "
         "the Directive >=30 benchmark question by raw row count."
     )
+    lines.append(
+        "Numerically reproducible conversions are retained as audit transcriptions only; a "
+        "source-internal reference or condition conflict keeps the affected row out of "
+        "PROMOTE_NOW_CANDIDATE."
+    )
     lines.append("")
     lines.append("## Disposition")
     lines.append("")
     lines.append(
-        "| record | class | RDKit | canonical SMILES | formula | conversion | production duplicate | blocker |"
+        "| record | class | RDKit | canonical SMILES | formula | conversion | reference conflict | condition conflict | production duplicate | blocker |"
     )
-    lines.append("| --- | --- | :---: | --- | --- | :---: | :---: | --- |")
+    lines.append("| --- | --- | :---: | --- | --- | :---: | :---: | :---: | :---: | --- |")
     for _, row in review.iterrows():
         blocker = _clean(row["blocking_issue"]) or "-"
         lines.append(
             f"| {row['record_id']} | {row['review_classification']} | "
             f"{bool(row['rdkit_parse_ok'])} | `{row['canonical_smiles']}` | "
             f"{row['formula_match']} | {bool(row['conversion_check_pass'])} | "
+            f"{bool(row['reference_source_conflict'])} | "
+            f"{bool(row['condition_source_conflict'])} | "
             f"{bool(row['duplicate_production_benchmark'])} | {blocker} |"
         )
     lines.append("")
@@ -743,11 +823,11 @@ def _render_report(review: pd.DataFrame, summary: dict[str, Any]) -> str:
     lines.append("## Human Review Recommendation")
     lines.append("")
     lines.append(
-        "Review the PROMOTE_NOW_CANDIDATE rows against the primary figures/schemes before any "
-        "production ingest. Give special attention to rows without source formula/HRMS evidence, "
-        "because those are supported by the recorded structure/source locators and NMR-only text "
-        "rather than a machine-checkable formula line. If approved, ingest through a separate "
-        "benchmark-promotion task that preserves onset labels and keeps peak/onset counts separate."
+        "Review only the PROMOTE_NOW_CANDIDATE rows against the primary figures/schemes before "
+        "any production ingest. Keep source-conflicted rows in staging until a later scientific "
+        "decision resolves or excludes their internal reference/condition contradictions. If "
+        "approved, ingest through a separate benchmark-promotion task that preserves onset labels "
+        "and keeps peak/onset counts separate."
     )
     lines.append("")
     return "\n".join(lines)

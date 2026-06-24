@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-24 (Eox R11-R21 review-only staging rescue)_
+_Last updated: 2026-06-24 (R11-R21 primary-PDF staging correction)_
 
 ## How to read this
 
@@ -91,13 +91,14 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
   Tier-1 screen, but it does not create a held-out Tier-2 DFT validation set and does not satisfy a
   ">=30 clean groups" interpretation if that target is read as condition-relevant validation
   coverage rather than calibration-fit convenience.
-- **Update (2026-06-24, R11-R21 Eox rescue staging)**: the review-only rescue package adds 11
-  onset-labeled PROMOTE_NOW_CANDIDATE rows to staging, not to production. The counting audit is:
-  existing production groups = 16 onset / 23 peak; promotable rescue = 11 onset / 0 peak; projected
-  union = 27 onset / 23 peak; combined experimental-combination inventory = 50 only when peak and
-  onset are counted together. Decision implication: this improves validation coverage and makes the
-  shortfall explicit, but it does **not** close the Directive `>=30` question under an onset-only or
-  label-separated definition.
+- **Update (2026-06-24, R11-R21 primary-PDF correction)**: the primary-PDF audit supersedes the
+  initial review-only rescue disposition. Six thiophene SMILES were corrected, but source-internal
+  conflicts make R14-R21 ineligible for `PROMOTE_NOW_CANDIDATE` until a later scientific decision
+  resolves or excludes them. The corrected counting audit is: existing production groups = 16 onset
+  / 23 peak; promotable rescue = 3 onset / 0 peak; projected union = 19 onset / 23 peak; combined
+  experimental-combination inventory = 42 only when peak and onset are counted together. Decision
+  implication: the rescue no longer materially closes the `>=30` onset-coverage gap; it instead
+  identifies a source-quality decision gate for R14-R21 before any production benchmark ingest.
 - **Current lean**: Treat the current xTB->experimental fit as the explicit interim stand-in; run the live xTB->DFT batch, then revisit whether ">=30" governs calibration purity, validation coverage, or both. Do not auto-promote the xTB->DFT calibration without a recorded validation decision.
 - **Resolves when**: The recorded validation evidence decides whether >=30 governs calibration purity, validation coverage, or both; the live xTB->DFT batch is run; and a decide-and-report calibration-promotion decision is recorded. Large shared-cluster spend remains a T8 resource-planning item.
 - **Governance retag (2026-06-19, decide-and-report)**: Forum moved group-meeting -> self / report. The calibrate-(xTB->DFT)-then-validate-(DFT->experiment) split is the directive's own two-stage design; surfaced as info, not treated as a blocker.
@@ -249,13 +250,14 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 ## Decision log
 
-- 2026-06-24 (R11-R21 Eox staging-rescue package) — built a no-engine, review-only package for
-  records R11-R21. All 11 candidates RDKit-parse and pass the approved Ag-wire/SCE-to-Ag/AgCl
-  conversions; no row is a production benchmark duplicate; R14-R17 have source-formula agreement and
-  the remaining seven rows carry NMR-only/no-source-formula caveats. Decision: keep all rows in
-  staging and do not promote any candidate into `data/benchmark.csv` in this work unit. Counting
-  remains label-separated: projected onset groups are 27, peak groups stay 23, and only combined
-  peak+onset experimental combinations exceed 30.
+- 2026-06-24 (R11-R21 primary-PDF staging correction) — corrected six review-only thiophene
+  structures and added source-conflict flags/details to the normalized staging package. All 11 rows
+  still RDKit-parse and the working numeric transcriptions reproduce, but R14-R21 now fail closed:
+  R14-R17 have unresolved reference-source conflicts, and R18-R21 have both reference-source and
+  condition-source conflicts. Decision: keep conflicted rows in staging, do not promote them, and
+  require a later scientific decision to resolve or exclude them before benchmark ingest. Counting
+  remains label-separated: promotable rescue onset groups are 3, projected onset union is 19, peak
+  groups stay 23, and the combined peak+onset experimental-combination inventory is 42.
 
 - 2026-06-23 (directive section-7 validation closed as a package) — SGE 417671 completed the real
   xTB validation package from an isolated branch clone. Decision: treat the generated JSON/Markdown

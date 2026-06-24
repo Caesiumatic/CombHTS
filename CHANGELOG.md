@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-06-24 — correct R11-R21 primary-PDF Eox staging package
+
+Primary-PDF correction of the review-only R11-R21 Eox staging package. No production benchmark row,
+library CSV, scoring weight, threshold, calibration coefficient, redox constant, cache key,
+Tier-1/Tier-2 setting, public output schema, optical policy, scientific engine, or Lop artifact
+changed.
+
+- Corrected six thiophene donor SMILES in
+  `data/lit_curation/eox_r11_r21_source_candidates.csv`: R12, R13, R14, R15, R16, and R21 now use
+  alpha thiophen-2-yl attachment to the acceptor core.
+- Added staging-only `reference_source_conflict`, `condition_source_conflict`, and
+  `source_conflict_details` fields, with strict source-schema validation and fail-closed review
+  classification.
+- Regenerated `data/lit_curation/eox_r11_r21_rescue_review.csv` and
+  `docs/research/eox_r11_r21_staging_rescue_20260624.md`: 11/11 rows parse, 8 rows carry
+  reference-source conflicts, 4 carry condition-source conflicts, 3 rows remain
+  `PROMOTE_NOW_CANDIDATE`, and 8 rows are `NEEDS_REFERENCE_CHECK`.
+- Added `docs/research/eox_r11_r21_primary_pdf_correction_20260624.md` plus a local no-engine run
+  manifest documenting the correction. Updated counts are onset union 19, peak 23, combined
+  experimental-combination inventory 42.
+- Verification: `ruff check .` passed; targeted Eox rescue tests `51 passed`; staging-audit tests
+  `4 passed`; validation/directive tests `28 passed`; full pytest `290 passed, 5 skipped,
+  2 warnings`; `git diff --check` passed; `eps doctor` reported 0 FAIL and the expected four local
+  cluster-binary WARNs.
+
 ## 2026-06-24 — build review-only Eox R11-R21 staging rescue
 
 Review-only Eox curation package for records R11-R21. No production benchmark row, chemical

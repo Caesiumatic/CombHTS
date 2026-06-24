@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-24 (review-only Eox R11-R21 staging rescue)_
+_Last updated: 2026-06-24 (R11-R21 primary-PDF staging correction)_
 
 ## Current phase
 
@@ -54,15 +54,20 @@ The top blockers before production ingest are exact PC/MeCN-TBAPF6 ESW evidence,
 primary-source reconciliation, NMP/nitrobenzene ESW coverage, and a small set of Eox/polymerization
 rows needing source or reference checks.
 
-The R11-R21 Eox rescue package is now built as **review-only staging**, not production ingest. The
-normalized source transcription lives at
-`data/lit_curation/eox_r11_r21_source_candidates.csv`, the generated review table at
-`data/lit_curation/eox_r11_r21_rescue_review.csv`, and the report at
-`docs/research/eox_r11_r21_staging_rescue_20260624.md`. All 11 rows RDKit-parse, all approved
-Ag-wire/SCE-to-Ag/AgCl conversions reproduce, R14-R17 formulae match RDKit formulae, and no row
-duplicates the production benchmark. The projected onset-only union is 27 groups, peak remains 23,
-and the combined experimental-combination inventory is 50 only when onset and peak are counted
-together; this does **not** close the Directive `>=30` benchmark question by raw row count.
+The R11-R21 Eox rescue package remains **review-only staging**, not production ingest. A primary-PDF
+correction memo now records six thiophene attachment fixes (R12, R13, R14, R15, R16, R21) plus
+source-internal reference/condition conflicts in the R14-R21 papers. The normalized source
+transcription lives at `data/lit_curation/eox_r11_r21_source_candidates.csv`, the generated review
+table at `data/lit_curation/eox_r11_r21_rescue_review.csv`, the regenerated report at
+`docs/research/eox_r11_r21_staging_rescue_20260624.md`, and the correction memo at
+`docs/research/eox_r11_r21_primary_pdf_correction_20260624.md`. All 11 rows RDKit-parse, all
+working Ag-wire/SCE-to-Ag/AgCl transcriptions numerically reproduce, R14-R17 formulae match RDKit
+formulae, and no row duplicates the production benchmark. Only R11-R13 remain
+`PROMOTE_NOW_CANDIDATE`; R14-R21 are fail-closed as `NEEDS_REFERENCE_CHECK` because 8 rows carry
+reference-source conflicts and R18-R21 also carry condition-source conflicts. The projected
+onset-only union is now 19 groups, peak remains 23, and the combined experimental-combination
+inventory is 42 only when onset and peak are counted together; this does **not** close the
+Directive `>=30` benchmark question by raw row count.
 
 The Tier-2 monomer-Eox pilot workflow is implemented as a **mock-first, array-safe scaffold**.
 `eps tier2-plan` validates a selection CSV and emits one task per unique `(monomer, solvent,
@@ -115,8 +120,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   canonicalizes structures, detects internal and production duplicates, and writes review tables
   without touching production data.
 - The R11-R21 Eox rescue workflow loads only the manually normalized source-candidate CSV, audits
-  structures/conversions/duplicates, refuses production CSV outputs, and writes deterministic
-  review-only artifacts.
+  structures/conversions/source conflicts/duplicates, refuses production CSV outputs, and writes
+  deterministic review-only artifacts. Source-conflicted rows cannot be
+  `PROMOTE_NOW_CANDIDATE`.
 - Tier-2 pilot orchestration is split into plan / one-task run / harvest commands. Planning is
   schema-validated and monomer-solvent aware; task execution is mock-first and cache-separated by
   default; harvest preserves raw energy fields and emits a standard per-monomer-solvent Eox CSV
@@ -155,8 +161,9 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 1. Review the Section 7 staging-audit outputs, source-check the flagged Eox/ESW/polymerization rows,
    and promote only approved rows through a separate production-ingest task.
-2. Human-review the R11-R21 Eox rescue candidates against the primary schemes/figures, especially
-   the seven NMR-only/no-source-formula rows, before any separate benchmark-promotion task.
+2. For R11-R21, source-check only R11-R13 as still-promotable review candidates. Resolve or exclude
+   the R14-R21 source-internal reference/condition conflicts before any separate benchmark-promotion
+   task.
 3. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
    condition-relevant feasibility labels, then rerun `eps validate-directive` on the same
    salt-fixed harvest.
@@ -182,9 +189,11 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 - Codebase-map/hygiene verification: full pytest `238 passed, 5 skipped, 2 warnings`; ruff passed;
   `git diff --check` passed; `eps doctor` reported 0 FAIL and the expected four local
   cluster-binary WARNs; no-real-engine CLI smoke passed, including mock `eps validate`.
-- R11-R21 Eox rescue verification: targeted lit-curation tests `7 passed`; ruff passed for `src`,
-  `tests`, and `scripts/build_eox_r11_r21_staging.py`; `git diff --check` passed; full pytest
-  `242 passed, 5 skipped, 2 warnings`.
+- R11-R21 primary-PDF correction verification: `.venv/bin/ruff check .` passed;
+  `tests/test_eox_rescue.py` reported `51 passed`; `tests/test_lit_curation_audit.py` reported
+  `4 passed`; validation/directive target tests reported `28 passed`; full pytest reported
+  `290 passed, 5 skipped, 2 warnings`; `git diff --check` passed; `eps doctor` reported
+  21 checks, 0 FAIL, and the expected four local cluster-binary WARNs.
 
 ## Architecture invariants
 
