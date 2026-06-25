@@ -1,0 +1,14 @@
+# Run: 2026-06-25 — B1 coupling-feasibility descriptor batch (real gfn2-xtb)
+- run_id: 2026-06-25_b1-coupling-descriptor-batch_417844
+- date: 2026-06-25T18:16-05:00 (submitted)
+- command: `eps run-tier1 --engine xtb` in isolated `$HOME/CombHTS_b1_batch` (rsync of `$HOME/CombHTS-main` @ main code) with B1 batch library swapped into `data/{monomers,polymerization,solvents,electrolytes}.csv`; SGE `scripts/run_b1_batch.sge`
+- engine / method: gfn2-xtb real, conformer_search n=100 mmff94 (matches production harvest method), ALPB
+- scope: 10-monomer SIZE-MATCHED B1 set × 1 solvent (MeCN) × 1 salt (TBAPF6) = 10 triads. Monomers: intrinsic-NO 3-thiophenecarboxaldehyde / 3,4-dibutylthiophene / 2,5-dimethylpyrrole + YES comparators 3-methylthiophene / 3-hexylthiophene / DMOT / thiophene / EDOT / pyrrole / bithiophene
+- cluster job: SGE 417844, `-pe smp 8`, h_rt 4:00:00; state qw (queued) at submit
+- status: running (queued) — awaiting completion
+- headline results: PENDING. Target = dimerization_dG_kcal_mol per monomer for the size-matched B1 separability test (does coupling exothermicity separate the testable intrinsic NOs from size-matched YES?). 2,5-dimethylpyrrole expected to FAIL the dimer build (both α blocked = the coupling-site signal).
+- per-property failures: TBD (expect 2,5-dimethylpyrrole dimerization build failure = signal, not error)
+- output artifacts (paths, NOT committed): `$HOME/CombHTS_b1_batch/outputs/b1/{all.csv,ranked.csv,cache.sqlite}`
+- provenance: B1 inputs version-controlled at `data/lit_curation/b1_batch_*.csv`; code = CombHTS main (14cc443 == 0b9f3e6 code); production library/harvest UNTOUCHED
+- caveats: screening-grade GFN2-xTB; dimerization_dG carries ~0.67 size correlation (must compare size-matched, not raw); spin-density descriptor unavailable at xtb screening level (separate finding); this is a DIAGNOSTIC batch, not a production library change
+- supersedes / superseded_by: —

@@ -1,0 +1,2 @@
+name,smiles,eps_r,esw_anodic_V,esw_cathodic_V,potential_reference,xtb_gbsa_name,notes
+acetonitrile,CC#N,37.5,3.3,-2.7,Ag/AgCl,acetonitrile,B1 batch single solvent (dimerization is gas-phase per-monomer; solvent only needed to form a triad)

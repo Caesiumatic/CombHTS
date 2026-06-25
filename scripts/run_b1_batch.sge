@@ -1,0 +1,39 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_b1
+#$ -j y
+#$ -pe smp 8
+#$ -l h_rt=4:00:00
+# B1 coupling-feasibility descriptor batch (directive §5 / THINK B1). Computes real GFN2-xTB
+# dimerization_dG + secondary descriptors for a small SIZE-MATCHED set: the testable
+# intrinsic-NO thiophenes/pyrrole (3-thiophenecarboxaldehyde, 3,4-dibutylthiophene,
+# 2,5-dimethylpyrrole) alongside size-matched YES comparators (3-methylthiophene,
+# 3-hexylthiophene, DMOT, thiophene, EDOT, pyrrole, bithiophene). All run TOGETHER through the
+# SAME pipeline + conformer config (n=100 MMFF94) so dimerization_dG is directly comparable.
+# Isolated working dir; production CombHTS checkout/outputs untouched.
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load xtb/6.4.1
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export OMP_NUM_THREADS="${NSLOTS:-8}"
+export OMP_STACKSIZE=4G
+ulimit -s unlimited || true
+
+WORK="$HOME/CombHTS_b1_batch"
+rm -rf "$WORK"; mkdir -p "$WORK"
+rsync -a --exclude '.git' --exclude 'outputs' --exclude '.venv' "$HOME/CombHTS-main/" "$WORK/"
+cd "$WORK"
+# Swap in the B1 batch library (per-species; production library untouched).
+cp "$HOME/b1_inputs/b1_batch_monomers.csv"      data/monomers.csv
+cp "$HOME/b1_inputs/b1_batch_polymerization.csv" data/polymerization.csv
+cp "$HOME/b1_inputs/b1_batch_solvents.csv"      data/solvents.csv
+cp "$HOME/b1_inputs/b1_batch_electrolytes.csv"  data/electrolytes.csv
+export PYTHONPATH="$WORK/src"
+mkdir -p outputs/b1
+python -m eps.cli run-tier1 --engine xtb \
+  --output     outputs/b1/ranked.csv \
+  --cache      outputs/b1/cache.sqlite \
+  --all-output outputs/b1/all.csv
+echo "B1 BATCH DONE rc=$? outputs at $WORK/outputs/b1/"
