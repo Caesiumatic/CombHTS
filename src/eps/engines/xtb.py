@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -17,14 +18,32 @@ from eps.structures import smiles_to_xyz
 HARTREE_TO_EV = 27.211386245988
 HARTREE_TO_KCAL_MOL = 627.5094740631
 XTB_METHOD = "gfn2-xtb"
+STDA_FAILURE_MESSAGE_LIMIT = 240
 
 
 @dataclass(frozen=True)
 class XTBRunOutput:
-    """Raw xTB stdout plus optional structured JSON output."""
+    """Raw xTB stdout, optional structured JSON output, and optimized geometry."""
 
     stdout: str
     parsed_json: dict[str, float | None] | None
+    optimized_xyz: str | None = None
+
+
+class STDAStageError(RuntimeError):
+    """sTDA workflow failure with the failed stage preserved for provenance."""
+
+    def __init__(self, stage: str, message: str) -> None:
+        super().__init__(message)
+        self.stage = stage
+
+
+class STDAUnavailableError(RuntimeError):
+    """sTDA binary is not available for the optical-gap workflow."""
+
+
+class OptimizedGeometryMissingError(RuntimeError):
+    """Optimized xTB geometry was expected but not captured."""
 
 
 class XTBEngine(Engine):
@@ -68,7 +87,7 @@ class XTBEngine(Engine):
             value, raw = self._solvation_free_energy(req)
             return CalcResult(value=value, unit="kcal/mol", method=req.method, raw=raw)
         if req.quantity == "optical_gap":
-            value, gap_method, output = self._optical_gap(req)
+            value, output, optical_gap_metadata = self._optical_gap(req)
             return CalcResult(
                 value=value,
                 unit="eV",
@@ -76,7 +95,7 @@ class XTBEngine(Engine):
                 raw={
                     "engine": "XTBEngine",
                     "quantity": req.quantity,
-                    "optical_gap_method": gap_method,
+                    **optical_gap_metadata,
                     "stdout": output.stdout,
                     "parsed_json": output.parsed_json,
                 },
@@ -328,10 +347,17 @@ class XTBEngine(Engine):
             parsed_json = None
             if json_path.exists():
                 parsed_json = parse_xtb_json(json_path.read_text(encoding="utf-8"))
-        return XTBRunOutput(stdout=completed.stdout, parsed_json=parsed_json)
+            optimized_xyz = None
+            opt_path = Path(tmpdir) / "xtbopt.xyz"
+            if optimize and opt_path.exists():
+                optimized_xyz = opt_path.read_text(encoding="utf-8")
+        return XTBRunOutput(
+            stdout=completed.stdout,
+            parsed_json=parsed_json,
+            optimized_xyz=optimized_xyz,
+        )
 
-
-    def _optical_gap(self, req: CalcRequest) -> tuple[float, str, "XTBRunOutput"]:
+    def _optical_gap(self, req: CalcRequest) -> tuple[float, "XTBRunOutput", dict[str, object]]:
         """Lowest singlet excitation via sTDA-xTB if ``stda`` is available, else the
         oligomer GFN2-xTB HOMO–LUMO gap as a clearly-labeled screening proxy (directive §4.1).
         """
@@ -343,38 +369,158 @@ class XTBEngine(Engine):
             solvent_args=[],
             optimize=True,
         )
-        if shutil.which(self.stda_binary) is not None:
-            try:
-                excitation_eV = self._stda_lowest_excitation(req)
-                return excitation_eV, "stda-xtb", output
-            except Exception:  # noqa: BLE001 - any sTDA failure degrades to the HOMO–LUMO proxy.
-                pass
-        return _gap_from_output(output), "homo_lumo_hexamer_fallback", output
+        stda_available = shutil.which(self.stda_binary) is not None
+        if not stda_available:
+            failure_type, failure_message = _failure_details(
+                STDAUnavailableError(f"sTDA binary {self.stda_binary!r} was not found on PATH")
+            )
+            return (
+                _gap_from_output(output),
+                output,
+                _optical_gap_metadata(
+                    output,
+                    optical_gap_method="homo_lumo_hexamer_fallback",
+                    stda_available=False,
+                    stda_attempted=False,
+                    stda_status="not_available",
+                    fallback_used=True,
+                    stda_failure_type=failure_type,
+                    stda_failure_message=failure_message,
+                ),
+            )
+        if output.optimized_xyz is None:
+            failure_type, failure_message = _failure_details(
+                OptimizedGeometryMissingError(
+                    "optimized geometry was not captured from xtbopt.xyz"
+                )
+            )
+            return (
+                _gap_from_output(output),
+                output,
+                _optical_gap_metadata(
+                    output,
+                    optical_gap_method="homo_lumo_hexamer_fallback",
+                    stda_available=True,
+                    stda_attempted=False,
+                    stda_status="missing_optimized_geometry",
+                    fallback_used=True,
+                    stda_failure_type=failure_type,
+                    stda_failure_message=failure_message,
+                ),
+            )
+        try:
+            excitation_eV = self._stda_lowest_excitation(req, output.optimized_xyz)
+        except Exception as exc:  # noqa: BLE001 - all sTDA failures degrade with provenance.
+            failure_type, failure_message = _failure_details(exc)
+            status = exc.stage if isinstance(exc, STDAStageError) else "stda_failed"
+            return (
+                _gap_from_output(output),
+                output,
+                _optical_gap_metadata(
+                    output,
+                    optical_gap_method="homo_lumo_hexamer_fallback",
+                    stda_available=True,
+                    stda_attempted=True,
+                    stda_status=status,
+                    fallback_used=True,
+                    stda_failure_type=failure_type,
+                    stda_failure_message=failure_message,
+                ),
+            )
+        return (
+            excitation_eV,
+            output,
+            _optical_gap_metadata(
+                output,
+                optical_gap_method="stda-xtb",
+                stda_available=True,
+                stda_attempted=True,
+                stda_status="success",
+                fallback_used=False,
+                stda_failure_type="",
+                stda_failure_message="",
+            ),
+        )
 
-    def _stda_lowest_excitation(self, req: CalcRequest) -> float:
+    def _stda_lowest_excitation(self, req: CalcRequest, xyz: str) -> float:
         """Run xTB (dump wavefunction) + ``stda -xtb`` and return the lowest singlet eV."""
 
-        xyz = smiles_to_xyz(req.species.canonical_smiles, charge=req.species.charge)
         with tempfile.TemporaryDirectory(prefix="eps-stda-") as tmpdir:
             xyz_path = Path(tmpdir) / "input.xyz"
             xyz_path.write_text(xyz, encoding="utf-8")
             # xtb writes the sTDA wavefunction (wfn.xtb) when asked to.
             xtb_cmd = [
-                self.binary, str(xyz_path), "--gfn", "2",
-                "--chrg", str(req.species.charge),
-                "--uhf", str(max(req.species.multiplicity - 1, 0)),
+                self.binary,
+                str(xyz_path),
+                "--gfn",
+                "2",
+                "--chrg",
+                str(req.species.charge),
+                "--uhf",
+                str(max(req.species.multiplicity - 1, 0)),
                 *solvent_flag(req.xtb_gbsa_name),
             ]
             xtb_done = subprocess.run(xtb_cmd, cwd=tmpdir, check=False, capture_output=True, text=True)
             if xtb_done.returncode != 0:
-                raise RuntimeError(f"xtb (for sTDA) failed: exit {xtb_done.returncode}")
+                raise STDAStageError(
+                    "stda_preparation_failed",
+                    f"xtb (for sTDA) failed: exit {xtb_done.returncode}. STDERR: {xtb_done.stderr}",
+                )
             stda_done = subprocess.run(
                 [self.stda_binary, "-xtb", "-e", str(self.stda_energy_window_eV)],
                 cwd=tmpdir, check=False, capture_output=True, text=True,
             )
             if stda_done.returncode != 0:
-                raise RuntimeError(f"stda failed: exit {stda_done.returncode}")
-            return parse_stda_lowest_excitation(stda_done.stdout)
+                raise STDAStageError(
+                    "stda_failed",
+                    f"stda failed: exit {stda_done.returncode}. STDERR: {stda_done.stderr}",
+                )
+            try:
+                return parse_stda_lowest_excitation(stda_done.stdout)
+            except ValueError as exc:
+                raise STDAStageError("parse_failed", str(exc)) from exc
+
+
+def _optical_gap_metadata(
+    output: XTBRunOutput,
+    *,
+    optical_gap_method: str,
+    stda_available: bool,
+    stda_attempted: bool,
+    stda_status: str,
+    fallback_used: bool,
+    stda_failure_type: str,
+    stda_failure_message: str,
+) -> dict[str, object]:
+    optimized_xyz = output.optimized_xyz
+    optimized_geometry_available = optimized_xyz is not None
+    optimized_geometry_sha256 = (
+        hashlib.sha256(optimized_xyz.encode("utf-8")).hexdigest()
+        if optimized_geometry_available
+        else ""
+    )
+    return {
+        "optical_gap_method": optical_gap_method,
+        "optical_gap_geometry_source": "xtbopt.xyz" if optimized_geometry_available else "",
+        "optimized_geometry_available": optimized_geometry_available,
+        "optimized_geometry_sha256": optimized_geometry_sha256,
+        "stda_available": stda_available,
+        "stda_attempted": stda_attempted,
+        "stda_status": stda_status,
+        "fallback_used": fallback_used,
+        "stda_failure_type": stda_failure_type,
+        "stda_failure_message": _trim_failure_message(stda_failure_message),
+    }
+
+
+def _failure_details(exc: BaseException) -> tuple[str, str]:
+    message = str(exc).splitlines()[0] if str(exc) else exc.__class__.__name__
+    return exc.__class__.__name__, _trim_failure_message(message)
+
+
+def _trim_failure_message(message: str) -> str:
+    first_line = message.splitlines()[0] if message else ""
+    return first_line[:STDA_FAILURE_MESSAGE_LIMIT]
 
 
 def solvent_flag(xtb_gbsa_name: str | None) -> list[str]:
@@ -442,8 +588,8 @@ def parse_total_energy(stdout: str) -> float:
 def parse_homo_lumo(stdout: str) -> float:
     """Parse HOMO-LUMO gap in eV from xTB stdout text.
 
-    TODO: Replace this placeholder gap with sTDA-xTB excited-state output when the
-    optical-gap workflow is added.
+    This parser supports the explicit HOMO-LUMO fallback used when the sTDA-xTB
+    optical-gap workflow is unavailable or fails.
     """
 
     patterns = [

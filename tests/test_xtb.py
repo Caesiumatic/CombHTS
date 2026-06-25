@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import shutil
 import types
 from pathlib import Path
@@ -19,6 +20,25 @@ from eps.engines.xtb import (
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
+FALLBACK_GAP_EV = 4.321
+OPTIMIZED_XYZ = "3\noptimized geometry\nC 0.0 0.0 0.0\nH 0.0 0.0 1.0\nH 1.0 0.0 0.0\n"
+
+
+def _optical_gap_request() -> CalcRequest:
+    return CalcRequest(
+        species=SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1),
+        method="gfn2-xtb",
+        solvent_eps_r=None,
+        quantity="optical_gap",
+    )
+
+
+def _xtb_json(gap_eV: float = FALLBACK_GAP_EV) -> str:
+    return f'{{"total energy": -1.0, "HOMO-LUMO gap/eV": {gap_eV}}}'
+
+
+def _completed(stdout: str = "", stderr: str = "", returncode: int = 0) -> types.SimpleNamespace:
+    return types.SimpleNamespace(returncode=returncode, stdout=stdout, stderr=stderr)
 
 
 def test_solvent_flag_uses_alpb_keyword() -> None:
@@ -113,6 +133,138 @@ def test_parse_stda_lowest_excitation_returns_first_state() -> None:
 def test_parse_stda_lowest_excitation_raises_without_states() -> None:
     with pytest.raises(ValueError, match="sTDA excitation"):
         parse_stda_lowest_excitation("no excited states here\n")
+
+
+def test_optical_gap_stda_uses_optimized_xyz_and_records_success(monkeypatch) -> None:
+    captured_stda_prep_inputs: list[str] = []
+
+    def fake_run(command, cwd, check, capture_output, text):
+        cwd_path = Path(cwd)
+        if command[0] == "xtb" and "--opt" in command:
+            (cwd_path / "xtbout.json").write_text(_xtb_json(), encoding="utf-8")
+            (cwd_path / "xtbopt.xyz").write_text(OPTIMIZED_XYZ, encoding="utf-8")
+            return _completed(stdout=f"HOMO-LUMO GAP {FALLBACK_GAP_EV} eV")
+        if command[0] == "xtb":
+            captured_stda_prep_inputs.append((cwd_path / "input.xyz").read_text(encoding="utf-8"))
+            return _completed(stdout="sTDA preparation complete")
+        if command[0] == "stda":
+            return _completed(stdout=" state   eV    nm\n 1   2.345   528.7\n")
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(xtb_module.shutil, "which", lambda binary: f"/fake/bin/{binary}")
+    monkeypatch.setattr(xtb_module.subprocess, "run", fake_run)
+
+    result = XTBEngine().run(_optical_gap_request())
+
+    assert result.value == pytest.approx(2.345)
+    assert captured_stda_prep_inputs == [OPTIMIZED_XYZ]
+    assert result.raw["optical_gap_method"] == "stda-xtb"
+    assert result.raw["optical_gap_geometry_source"] == "xtbopt.xyz"
+    assert result.raw["optimized_geometry_available"] is True
+    assert result.raw["optimized_geometry_sha256"] == hashlib.sha256(
+        OPTIMIZED_XYZ.encode("utf-8")
+    ).hexdigest()
+    assert result.raw["stda_available"] is True
+    assert result.raw["stda_attempted"] is True
+    assert result.raw["stda_status"] == "success"
+    assert result.raw["fallback_used"] is False
+    assert result.raw["stda_failure_type"] == ""
+    assert result.raw["stda_failure_message"] == ""
+    assert "optimized_xyz" not in result.raw
+
+
+def test_optical_gap_stda_preparation_failure_falls_back_with_provenance(monkeypatch) -> None:
+    stda_called = False
+
+    def fake_run(command, cwd, check, capture_output, text):
+        nonlocal stda_called
+        cwd_path = Path(cwd)
+        if command[0] == "xtb" and "--opt" in command:
+            (cwd_path / "xtbout.json").write_text(_xtb_json(), encoding="utf-8")
+            (cwd_path / "xtbopt.xyz").write_text(OPTIMIZED_XYZ, encoding="utf-8")
+            return _completed(stdout=f"HOMO-LUMO GAP {FALLBACK_GAP_EV} eV")
+        if command[0] == "xtb":
+            assert (cwd_path / "input.xyz").read_text(encoding="utf-8") == OPTIMIZED_XYZ
+            return _completed(
+                stderr="prep failed at wavefunction write\nextra diagnostics",
+                returncode=17,
+            )
+        if command[0] == "stda":
+            stda_called = True
+            return _completed()
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(xtb_module.shutil, "which", lambda binary: f"/fake/bin/{binary}")
+    monkeypatch.setattr(xtb_module.subprocess, "run", fake_run)
+
+    result = XTBEngine().run(_optical_gap_request())
+
+    assert result.value == pytest.approx(FALLBACK_GAP_EV)
+    assert stda_called is False
+    assert result.raw["optical_gap_method"] == "homo_lumo_hexamer_fallback"
+    assert result.raw["optimized_geometry_available"] is True
+    assert result.raw["stda_available"] is True
+    assert result.raw["stda_attempted"] is True
+    assert result.raw["stda_status"] == "stda_preparation_failed"
+    assert result.raw["fallback_used"] is True
+    assert result.raw["stda_failure_type"] == "STDAStageError"
+    assert result.raw["stda_failure_message"] == (
+        "xtb (for sTDA) failed: exit 17. STDERR: prep failed at wavefunction write"
+    )
+
+
+def test_optical_gap_missing_stda_records_not_available_fallback(monkeypatch) -> None:
+    def fake_run(command, cwd, check, capture_output, text):
+        cwd_path = Path(cwd)
+        if command[0] == "xtb" and "--opt" in command:
+            (cwd_path / "xtbout.json").write_text(_xtb_json(), encoding="utf-8")
+            (cwd_path / "xtbopt.xyz").write_text(OPTIMIZED_XYZ, encoding="utf-8")
+            return _completed(stdout=f"HOMO-LUMO GAP {FALLBACK_GAP_EV} eV")
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(
+        xtb_module.shutil,
+        "which",
+        lambda binary: f"/fake/bin/{binary}" if binary == "xtb" else None,
+    )
+    monkeypatch.setattr(xtb_module.subprocess, "run", fake_run)
+
+    result = XTBEngine().run(_optical_gap_request())
+
+    assert result.value == pytest.approx(FALLBACK_GAP_EV)
+    assert result.raw["optical_gap_method"] == "homo_lumo_hexamer_fallback"
+    assert result.raw["optimized_geometry_available"] is True
+    assert result.raw["stda_available"] is False
+    assert result.raw["stda_attempted"] is False
+    assert result.raw["stda_status"] == "not_available"
+    assert result.raw["fallback_used"] is True
+    assert result.raw["stda_failure_type"] == "STDAUnavailableError"
+    assert result.raw["stda_failure_message"] == "sTDA binary 'stda' was not found on PATH"
+
+
+def test_optical_gap_missing_optimized_geometry_records_fallback_reason(monkeypatch) -> None:
+    def fake_run(command, cwd, check, capture_output, text):
+        if command[0] == "xtb" and "--opt" in command:
+            (Path(cwd) / "xtbout.json").write_text(_xtb_json(), encoding="utf-8")
+            return _completed(stdout=f"HOMO-LUMO GAP {FALLBACK_GAP_EV} eV")
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(xtb_module.shutil, "which", lambda binary: f"/fake/bin/{binary}")
+    monkeypatch.setattr(xtb_module.subprocess, "run", fake_run)
+
+    result = XTBEngine().run(_optical_gap_request())
+
+    assert result.value == pytest.approx(FALLBACK_GAP_EV)
+    assert result.raw["optical_gap_method"] == "homo_lumo_hexamer_fallback"
+    assert result.raw["optical_gap_geometry_source"] == ""
+    assert result.raw["optimized_geometry_available"] is False
+    assert result.raw["optimized_geometry_sha256"] == ""
+    assert result.raw["stda_available"] is True
+    assert result.raw["stda_attempted"] is False
+    assert result.raw["stda_status"] == "missing_optimized_geometry"
+    assert result.raw["fallback_used"] is True
+    assert result.raw["stda_failure_type"] == "OptimizedGeometryMissingError"
+    assert result.raw["stda_failure_message"] == "optimized geometry was not captured from xtbopt.xyz"
 
 
 @pytest.mark.skipif(shutil.which("xtb") is None, reason="xtb not installed")
