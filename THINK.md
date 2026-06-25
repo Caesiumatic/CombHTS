@@ -139,7 +139,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: [STATUS open debts #6 and #11](STATUS.md#open-debts); [data/polymerization.csv](data/polymerization.csv); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/properties/calculators.py](src/eps/properties/calculators.py).
 
 ## T6 — Band gap: oligomer + sTDA-xTB (directive route) vs an ML model
-- **Status**: exploring (417587 complete; diagnostic neutral-dimer baseline rejected for production scoring)
+- **Status**: exploring (optimized-geometry/cache identity fixed in code; real sTDA backend validation blocked on Lop binary/module availability)
 - **Forum**: group-meeting
 - **Cost**: compute-heavy
 - **Question**: Reach the polymer band gap via real oligomer assembly -> sTDA-xTB, or via a trained ML/GNN predictor?
@@ -158,12 +158,29 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Update (2026-06-23, SGE 417587 completed)**: 417587 completed successfully on Lop (exit 0, failed 0; compute-1-8.local; 2026-06-22 15:38:03 -> 2026-06-23 01:16:14 CDT). All 12 real ORCA requests completed (6 sTDA + 6 TDA) and final points/fit/report files exist. The diagnostic conclusion is negative/weak for production scoring: sTDA -> experiment gives slope 0.244967, intercept 0.972671 eV, R2 0.1509, in-sample MAE 0.3195 eV, LOO-CV MAE 0.4564 eV; TDA -> experiment gives slope 0.274225, intercept 0.902461 eV, R2 0.1712, in-sample MAE 0.3105 eV, LOO-CV MAE 0.4489 eV. Alkylenedioxyselenophene and fluorene are above the global MAE; no high-leverage flags. This confirms the neutral-dimer baseline is not a production optical calibration and the 15% optical axis remains diagnostic/unchanged.
 - **Update (2026-06-25, post-review triage)**: independent code review found a correctness defect
   in the already-decided oligomer+sTDA route, not a new optical-policy decision. `XTBEngine._optical_gap()`
-  performs an optimized xTB run, but the current `_stda_lowest_excitation()` reconstructs XYZ from
-  canonical SMILES instead of consuming the exact optimized geometry. Also, any sTDA exception is
-  silently converted to the HOMO-LUMO fallback. Resolution is an implementation fix: pass the exact
-  optimized geometry into the sTDA preparation run and expose structured fallback provenance. This
-  documentation task does not change the 15% optical weight, oligomer length, score, calibration
-  policy, or production results.
+  performed an optimized xTB run, but `_stda_lowest_excitation()` reconstructed XYZ from canonical
+  SMILES instead of consuming the exact optimized geometry. Also, any sTDA exception silently
+  converted to the HOMO-LUMO fallback. Resolution was an implementation fix: pass the exact optimized
+  geometry into the sTDA preparation run, expose structured fallback provenance, and separate optical
+  cache identity by backend.
+- **Update (2026-06-25, commit `b6d9ae957cb2cb779847b3e857a5098c19e483a8`)**: the
+  optimized-geometry/cache-identity implementation is resolved in code. The xTB optical-gap path now
+  captures `xtbopt.xyz`, feeds that captured geometry into sTDA preparation, records stable
+  sTDA/fallback metadata in `CalcResult.raw`, and writes backend-aware cache keys:
+  `base_method + "+optgap-optgeom-v2" + backend_tag`, with `+backend-stda`,
+  `+backend-hl-fallback`, `+backend-mock`, and `+backend-generic`. Public raw labels remain
+  `stda-xtb` and `homo_lumo_hexamer_fallback`; the local targeted tests reported
+  `36 passed, 1 skipped`.
+- **Update (2026-06-25, Lop real-backend smoke)**: real sTDA backend validation is **BLOCKED, not
+  PASS** pending binary/module availability. The isolated clone
+  `/home/shic4/CombHTS_optgap_smoke_20260624_235245/source` checked out
+  `b6d9ae957cb2cb779847b3e857a5098c19e483a8`, and relative to base
+  `fae6bbabce52c216ad2d89febcf44c05fff42558` only the four expected files changed. No SGE job was
+  submitted because `module avail stda` had no output, `module load stda` failed with
+  `ERROR:105: Unable to locate a modulefile for 'stda'`, and `command -v stda` was empty. A
+  HOMO-LUMO fallback must not be accepted as a successful optimized-geometry sTDA smoke. This does
+  not change the 15% optical weight, oligomer length, score, calibration policy, or production
+  results.
 - **Resolves when**: The group accepts the oligomer/sTDA route (with range-separated TD-DFT calibration as Step-2, validated per class) or explicitly chooses to pivot to an ML/GNN predictor.
 - **Links**: [STATUS open scientific and engineering debt](STATUS.md#open-scientific-and-engineering-debt); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
 
