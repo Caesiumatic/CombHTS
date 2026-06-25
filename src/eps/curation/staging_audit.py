@@ -132,6 +132,105 @@ STAGING_SPECS = (
 )
 
 
+# Additional staging schemas registered for the 2026-06-25 research ingest. These are kept
+# SEPARATE from STAGING_SPECS (which the existing Section-7 audit and its tests iterate over)
+# so that registering the new dated files does not change the established audit surface or its
+# production-touching classification/duplicate logic. Callers opt in by passing this tuple as
+# the ``specs`` argument to ``audit_staging``.
+RESEARCH_INGEST_20260625_SPECS = (
+    StagingSpec(
+        path="data/lit_curation/esw_windows_staging_20260625.csv",
+        required_columns=(
+            "solvent",
+            "anodic_limit_orig_V",
+            "cathodic_limit_orig_V",
+            "reference_electrode",
+            "supporting_electrolyte",
+            "electrolyte_conc",
+            "working_electrode",
+            "cutoff_criterion",
+            "anodic_limit_vs_AgAgCl_V",
+            "cathodic_limit_vs_AgAgCl_V",
+            "conversion",
+            "water_purity_note",
+            "source_doi",
+            "citation",
+            "confidence",
+            "flags",
+            "needs_review",
+        ),
+        key_fields=(
+            "solvent",
+            "supporting_electrolyte",
+            "working_electrode",
+            "reference_electrode",
+            "source_doi",
+        ),
+    ),
+    StagingSpec(
+        path="data/lit_curation/eox_calibration_staging_20260625.csv",
+        required_columns=(
+            "monomer",
+            "smiles",
+            "canonical_smiles",
+            "track",
+            "value_reported",
+            "observable",
+            "reference_electrode",
+            "solvent",
+            "electrolyte",
+            "electrode",
+            "scan_rate",
+            "value_vs_AgAgCl_V",
+            "conversion_note",
+            "source_doi",
+            "confidence",
+            "needs_review",
+        ),
+        smiles_fields=("smiles",),
+        key_fields=("canonical_smiles", "track", "source_doi"),
+    ),
+    StagingSpec(
+        path="data/lit_curation/feasibility_labels_staging_20260625.csv",
+        required_columns=(
+            "monomer",
+            "smiles",
+            "canonical_smiles",
+            "outcome",
+            "NO_type",
+            "baseline_medium",
+            "solvent",
+            "electrolyte",
+            "electrode",
+            "method",
+            "evidence_summary",
+            "source_doi",
+            "confidence",
+            "needs_review",
+        ),
+        smiles_fields=("smiles",),
+        key_fields=("canonical_smiles", "solvent", "electrolyte", "outcome", "source_doi"),
+    ),
+    StagingSpec(
+        path="data/lit_curation/optical_anchors_staging_20260625.csv",
+        required_columns=(
+            "polymer",
+            "repeat_unit_smiles",
+            "canonical_smiles",
+            "optical_gap_eV",
+            "derivation",
+            "film_state_neutral_confirmed",
+            "chemical_class",
+            "source_doi",
+            "confidence",
+            "needs_review",
+        ),
+        smiles_fields=("repeat_unit_smiles",),
+        key_fields=("canonical_smiles", "optical_gap_eV", "source_doi"),
+    ),
+)
+
+
 def canonicalize_smiles(smiles: Any) -> tuple[str, str]:
     """Return a canonical RDKit SMILES string for a neutral or charged species, or an error message."""
 
@@ -148,15 +247,21 @@ def audit_staging(
     repo_root: Path,
     summary_path: Path | None = None,
     issues_path: Path | None = None,
+    specs: tuple[StagingSpec, ...] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Audit literature-curation staging CSVs without modifying production inputs."""
+    """Audit literature-curation staging CSVs without modifying production inputs.
+
+    ``specs`` defaults to ``STAGING_SPECS`` (the established Section-7 audit surface). Pass an
+    explicit tuple (e.g. ``RESEARCH_INGEST_20260625_SPECS``) to audit a different set of staging
+    files with the same schema/SMILES/duplicate logic; no production data is ever modified.
+    """
 
     repo_root = repo_root.resolve()
     production = _load_production_indexes(repo_root)
     issue_rows: list[dict[str, Any]] = []
     summary_rows: list[dict[str, Any]] = []
 
-    for spec in STAGING_SPECS:
+    for spec in specs or STAGING_SPECS:
         path = repo_root / spec.path
         if not path.exists():
             issue_rows.append(

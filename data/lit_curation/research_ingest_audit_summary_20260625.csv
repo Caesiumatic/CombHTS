@@ -1,0 +1,5 @@
+file,rows,columns_ok,missing_columns,smiles_fields,rdkit_valid_smiles,rdkit_invalid_smiles,internal_duplicate_rows,production_duplicate_rows,PROMOTE_NOW_CANDIDATE,NEEDS_SOURCE_CHECK,NEEDS_REFERENCE_CONVERSION_CHECK,NEEDS_STRUCTURE_CHECK,NEEDS_CONDITION_MATCH_CHECK,PARK,REJECT
+data/lit_curation/esw_windows_staging_20260625.csv,12,True,,,0,0,0,0,0,0,0,0,0,12,0
+data/lit_curation/eox_calibration_staging_20260625.csv,11,True,,smiles,11,0,0,0,0,0,0,0,0,11,0
+data/lit_curation/feasibility_labels_staging_20260625.csv,32,True,,smiles,32,0,0,0,0,0,0,0,0,32,0
+data/lit_curation/optical_anchors_staging_20260625.csv,0,True,,repeat_unit_smiles,0,0,0,0,0,0,0,0,0,0,0
