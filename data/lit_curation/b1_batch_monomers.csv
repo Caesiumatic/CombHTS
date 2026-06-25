@@ -1,11 +1,11 @@
 name,monomer_class,smiles,notes
-3-thiophenecarboxaldehyde,alkylthiophene,O=Cc1ccsc1,B1 intrinsic-NO (electronic/EC' aldehyde); 2,5-alpha free; size-match to 3-methylthiophene
-3-4-dibutylthiophene,alkylthiophene,CCCCc1cscc1CCCC,B1 intrinsic-NO (beta-steric); 2,5-alpha free; size-match to 3-hexylthiophene
-3-4-dimethoxythiophene,alkoxythiophene,COc1cscc1OC,B1 YES comparator (DMOT); 2,5-alpha free
+3-thiophenecarboxaldehyde,alkylthiophene,O=Cc1ccsc1,"B1 intrinsic-NO (electronic/EC' aldehyde); 2,5-alpha free; size-match to 3-methylthiophene"
+3-4-dibutylthiophene,alkylthiophene,CCCCc1cscc1CCCC,"B1 intrinsic-NO (beta-steric); 2,5-alpha free; size-match to 3-hexylthiophene"
+3-4-dimethoxythiophene,alkoxythiophene,COc1cscc1OC,"B1 YES comparator (DMOT); 2,5-alpha free"
 thiophene,heteroaromatic,c1ccsc1,B1 comparator (parent)
 3-methylthiophene,alkylthiophene,Cc1ccsc1,B1 YES comparator (size-match to 3-thiophenecarboxaldehyde)
 3-hexylthiophene,alkylthiophene,CCCCCCc1ccsc1,B1 YES comparator (size-match to 3-4-dibutylthiophene)
 EDOT,alkylenedioxythiophene,C1COc2cscc2O1,B1 YES comparator (fast coupler)
 pyrrole,heteroaromatic,c1cc[nH]c1,B1 YES comparator (size-match to 2-5-dimethylpyrrole)
 bithiophene,oligothiophene,c1cc(sc1)c2ccsc2,B1 YES comparator
-2-5-dimethylpyrrole,alkylpyrrole,Cc1ccc(C)[nH]1,B1 intrinsic-NO (alpha-blocked); expect dimer-build FAILURE = coupling-site signal
+2-5-dimethylpyrrole,alkylpyrrole,Cc1ccc(C)[nH]1,"B1 intrinsic-NO (alpha-blocked); expect dimer-build FAILURE = coupling-site signal"
