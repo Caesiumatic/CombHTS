@@ -1,5 +1,5 @@
 # Project Status
-_Last updated: 2026-06-24 (G1.2 Eox master closure audit)_
+_Last updated: 2026-06-25 (post-review correctness/maintenance triage)_
 
 ## Current phase
 
@@ -8,6 +8,21 @@ Directive Section 7 validation is now a reproducible, machine-readable workflow.
 --outdir <dir>` gathers the existing calculators into one package without changing scoring
 weights, thresholds, calibration coefficients, redox constants, production CSVs, or the optical
 policy. Mock mode remains a deterministic, explicitly NON-PHYSICAL smoke path.
+
+### Post-review repository state (2026-06-25)
+
+The independent repository review concluded that the architecture is healthy and the repository is
+not broken: expensive work is still organized per species, triad scoring remains a join/arithmetic
+layer, engines go through the shared interface/cache boundary, and scientific data/configuration
+stay in CSV/YAML surfaces.
+
+Review-reported evidence from baseline `d79a944410e1e98ab99c53b4399cde126890e241`: local
+`main`/`origin/main` at `d79a944`, clean worktree, full pytest `313 passed, 5 skipped, 2 warnings`,
+`ruff check .` passed, `eps doctor` reported 21 checks, 0 FAIL, and 4 expected cluster-binary WARNs.
+Those test/tool results are review-reported here unless explicitly rerun in a later work unit. The
+current production library is **36 x 13 x 16 = 7,488 triads**; this is the current validated
+iteration scale, below the eventual directive target but not a failed run. No branch deletion or
+large refactor should occur in this documentation-only work unit.
 
 The authoritative real validation run is SGE **417671** on Lop, executed from isolated clone
 `/home/shic4/CombHTS_section7_e023a1c` at git commit
@@ -151,43 +166,70 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 ## Open scientific and engineering debt
 
-1. ESW descriptor physics is the largest validated failure. The raw isolated-solvent molecular
+1. Optical-gap implementation correctness needs closure. The reviewed code path performs an
+   optimized xTB run in `XTBEngine._optical_gap()`, but the sTDA preparation path currently
+   reconstructs XYZ from canonical SMILES instead of consuming that exact optimized geometry; sTDA
+   exceptions also fall through to the HOMO-LUMO fallback without structured provenance. Fix this
+   before treating new xTB optical-gap values as route evidence. This does not change the 15% optical
+   weight, oligomer length, score, calibration policy, or production results.
+2. Calibration operational truth needs better visibility. Production Tier-1 uses the
+   `agagcl_peak_strict` coefficients in `configs/tier1.yaml`, while default `eps validate` uses
+   `agagcl_peak_relaxed` from `configs/calibration_profiles.yaml`. Add an active-calibration
+   manifest and explicit CLI disclosure before revisiting strict-vs-relaxed scientifically.
+3. Current-operating-state documentation and stale terminology need a concise cleanup. Add a short
+   current-state/reader entrypoint and align outdated "placeholder" wording with the current
+   "screening-grade/diagnostic" reality without changing scientific conclusions.
+4. Interface/schema locking should precede large-module decomposition. Lock public CLI defaults/help
+   and generated CSV/JSON schemas before splitting `eps.cli`, directive validation, or curation
+   modules.
+5. ESW descriptor physics is the largest validated failure. The raw isolated-solvent molecular
    DeltaSCF descriptors are off by multiple volts versus practical ESW measurements. They should
    remain audited priors/caps, not standalone solvent-window calibrations.
-2. Exact ESW formulation coverage is sparse. The safety invariant passes, but exact `(solvent,salt)`
+6. Exact ESW formulation coverage is sparse. The safety invariant passes, but exact `(solvent,salt)`
    coverage is only 3.37% of the salt-fixed harvest rows. The staging audit now pinpoints priority
    review targets: exact PC BF4/PF6/ClO4/TFSI rows, MeCN/TBAPF6, nitromethane primary-source
    reconciliation, NMP, and nitrobenzene.
-3. Feasibility labels are not yet enough for the directive `>85%` claim. Add condition-relevant
+7. Feasibility labels are not yet enough for the directive `>85%` claim. Add condition-relevant
    negatives and exact-anion labels, especially in baseline nonaqueous media, until at least a
    defensible matched validation set exists.
-4. Tier-2 held-out DFT validation remains out of scope for the Section 7 package. The old 0.119 V
+8. Tier-2 held-out DFT validation remains out of scope for the Section 7 package. The old 0.119 V
    DFT number is in-sample and must not be reported as a held-out Tier-2 pass. The pilot
    orchestration is ready, but no real Gaussian array has been submitted and no completed Tier-2
    scientific values exist yet.
-5. The composite's diagnostic half remains data-limited: optical, dimerization absolute scale, and
+9. The composite's diagnostic half remains data-limited: optical, dimerization absolute scale, and
    solvation-affinity/true-solubility calibration are reference-only until better anchors exist.
-6. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
+10. Electrolyte compatibility remains partial. Anion oxidation is scored, but salt solubility,
    conductivity, ion pairing, acid/base speciation, cation deposition, and condition-specific anion
    limits are not calibrated.
-7. The library is still 36 x 13 x 16, not the requested roughly 80-150 x 25-35 x 20-30. The vetted
-   expansion proposal remains gated on stable ESW, solvation/solubility, and optical evidence.
+11. The current validated iteration scale is 36 x 13 x 16 = 7,488 triads, below the eventual
+   directive target of roughly 80-150 x 25-35 x 20-30 but not a failed run. The vetted expansion
+   proposal remains gated on stable ESW, solvation/solubility, and optical evidence.
 
 ## Immediate next actions
 
-1. Review the G1.2 master audit proposal table before any production ingest. Treat the 10 Camarada
+1. Fix the optical-gap optimized-geometry/fallback-provenance correctness issue in a dedicated code
+   and regression-test task. Do not change optical weight, oligomer length, scoring, calibration
+   policy, or production results as part of that fix.
+2. Add an active-calibration manifest plus explicit CLI disclosure so users can distinguish
+   production Tier-1 coefficients from validation-profile fits. Do not choose strict vs relaxed or
+   alter coefficients in that operational-visibility task.
+3. Add a concise current-operating-state entrypoint and clean stale terminology only where it
+   reduces confusion. Do not delete branches or start a large refactor in this work unit.
+4. Lock CLI/interface defaults and output schemas before decomposing large modules such as
+   `eps.cli`, `eps.validation.directive`, or curation audit builders.
+5. Review the G1.2 master audit proposal table before any production ingest. Treat the 10 Camarada
    rows as a separate production-correction task, and treat the 5 clean external Ag/AgCl onset rows
    as separate add-candidate rows that still need human sign-off.
-2. Resolve or exclude the R11-R21 mixed-solvent/source-conflict blockers before any separate
+6. Resolve or exclude the R11-R21 mixed-solvent/source-conflict blockers before any separate
    benchmark-promotion task.
-3. Review the Section 7 staging-audit outputs, source-check the flagged ESW/polymerization rows,
+7. Review the Section 7 staging-audit outputs, source-check the flagged ESW/polymerization rows,
    and promote only approved rows through a separate production-ingest task.
-4. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
+8. Expand Section 7 evidence coverage, not weights: add exact ESW formulation rows and
    condition-relevant feasibility labels, then rerun `eps validate-directive` on the same
    salt-fixed harvest.
-5. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
+9. Keep the Section 7 package as the authoritative validation report for the current 7,488-triad
    screen. Use the JSON/CSVs in the Lop output directory for group-update tables.
-6. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
+10. Prepare/review the concrete Tier-2 pilot selection CSV, run `eps tier2-plan`, execute a mock
    array smoke, and only then schedule a separate reviewed real-Gaussian cluster work unit.
 
 ## Verification
