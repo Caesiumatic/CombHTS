@@ -2,7 +2,7 @@
 
 THINK.md is the register of OPEN SCIENTIFIC / RESEARCH / DECISION questions for this project — the "why and what-if" layer. It is distinct from STATUS.md (a mutable snapshot of current state) and CHANGELOG.md (append-only history). THINK.md holds only items that require genuine scientific judgment, a tradeoff, or a sign-off — NOT routine engineering debt (those stay in STATUS.md). Entries are opened, updated as thinking evolves, and marked `decided`/`parked` with a resolution; this file is neither a snapshot nor append-only.
 
-_Last updated: 2026-06-24 (G1.2 Eox master closure audit)_
+_Last updated: 2026-06-25 (post-review correctness/maintenance triage)_
 
 ## How to read this
 
@@ -41,7 +41,16 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Resolves when**: The strict-vs-relaxed peak tiebreaker is decided from the recorded Fit-2 / validation evidence, then `configs/tier1.yaml` plus `configs/calibration_profiles.yaml` are reconciled onto one agreed anchor and reported through the group-update cadence. (Anchor TYPE resolved 2026-06-19; only strict-vs-relaxed remains, gated on live DFT LOO-CV.)
 - **Governance retag (2026-06-19, decide-and-report)**: Forum moved group-meeting-then-PI-signoff -> self. The anchor TYPE (peak-for-calibration / onset-for-screening) is an objective physics call we decide and report; the only remaining sub-question (strict vs relaxed peak) is DATA-gated by the Fit-2 LOO-CV tiebreaker after the live g16 batch, not a PI correctness gate.
 - **Update (2026-06-20)**: the strict-vs-relaxed tiebreaker is now gated specifically on **DFT batch 417442** (gas-phase B3LYP/6-31G(d,p), 72h wall, reported running on Lop) — the resubmit after job 417297 was SIGKILLed at the 24h wall and the DFT cache was wiped on the gas-phase method revert. On completion: fit Fit-2 on both eligible sets, compare LOO-CV MAE, adopt the better-generalizing anchor, then reconcile `tier1.yaml` + `calibration_profiles.yaml` onto it. The pinned slope/intercept and `default_screening_profile` remain UNCHANGED until then. Cross-repo note: the xTB→DFT Fit-1 R² from 417442 also gates a separate ElectroPolyBench multi-fidelity decision.
-- **Links**: [STATUS open debts #3 and #13](STATUS.md#open-debts); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml); [docs/research/eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md); [docs/research/eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md).
+- **Update (2026-06-25, post-review triage)**: independent code/config review reconfirmed the
+  operational split without changing the scientific tiebreaker: production Tier-1 uses the
+  `agagcl_peak_strict` coefficients pinned in `configs/tier1.yaml`, while default `eps validate`
+  resolves `default_screening_profile: agagcl_peak_relaxed` from
+  `configs/calibration_profiles.yaml`. Immediate engineering remedy is visibility, not a scientific
+  choice: add an active-calibration manifest and make the CLI explicitly disclose whether a report is
+  using the production Tier-1 coefficients or a validation-profile fit. Do not choose strict vs
+  relaxed here and do not alter coefficients; the strict-vs-relaxed tiebreaker remains pending its
+  recorded DFT evidence.
+- **Links**: [STATUS open scientific and engineering debt](STATUS.md#open-scientific-and-engineering-debt); [configs/calibration_profiles.yaml](configs/calibration_profiles.yaml); [configs/tier1.yaml](configs/tier1.yaml); [docs/research/eox_benchmark_and_reference_conversion.md](research/eox_benchmark_and_reference_conversion.md); [docs/research/eox_anchor_refscale_accuracy_partD.md](research/eox_anchor_refscale_accuracy_partD.md).
 
 ## T2 — Master reference scale: Ag/AgCl vs Fc/Fc+
 - **Status**: resolution decided (Ag/AgCl master scale; conversion constants pinned)
@@ -147,8 +156,16 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Historical update (2026-06-22 evening, superseded by 2026-06-23 completion)**: the six-anchor ORCA sTDA+TDA job had been submitted and was RUNNING on Lop as job 417587 (reported/unverified; no output inspected here). The scientific gate was unchanged: even a completed fit would be only a diagnostic dimer-vs-polymer baseline until per-class residuals, leverage, chain-length/geometry effects, and literature-anchor review were complete. Do not wire the optical result into the composite before human review.
 - **Historical update (2026-06-22 late, superseded by 2026-06-23 completion)**: read-only Lop access verified 417587 was still RUNNING by `qstat` (state `r`, queue `amd16smt@compute-1-8.local`, started 2026-06-22 15:38:03; `qacct -j 417587` had no completed record). Operational cache metadata showed 9/12 requests cached (5 sTDA, 4 TDA), no final points/fit/provenance files, and one active raw ORCA directory with temp files. No excitation values were inspected or treated as scientific results. The run is six experimental anchors evaluated as neutral dimers, not six-unit oligomers. The recoverable working checkout is `/home/shic4/CombHTS` on branch `calib/solubility-cosmors` at `06b7e1d`, correcting the earlier manifest branch label.
 - **Update (2026-06-23, SGE 417587 completed)**: 417587 completed successfully on Lop (exit 0, failed 0; compute-1-8.local; 2026-06-22 15:38:03 -> 2026-06-23 01:16:14 CDT). All 12 real ORCA requests completed (6 sTDA + 6 TDA) and final points/fit/report files exist. The diagnostic conclusion is negative/weak for production scoring: sTDA -> experiment gives slope 0.244967, intercept 0.972671 eV, R2 0.1509, in-sample MAE 0.3195 eV, LOO-CV MAE 0.4564 eV; TDA -> experiment gives slope 0.274225, intercept 0.902461 eV, R2 0.1712, in-sample MAE 0.3105 eV, LOO-CV MAE 0.4489 eV. Alkylenedioxyselenophene and fluorene are above the global MAE; no high-leverage flags. This confirms the neutral-dimer baseline is not a production optical calibration and the 15% optical axis remains diagnostic/unchanged.
+- **Update (2026-06-25, post-review triage)**: independent code review found a correctness defect
+  in the already-decided oligomer+sTDA route, not a new optical-policy decision. `XTBEngine._optical_gap()`
+  performs an optimized xTB run, but the current `_stda_lowest_excitation()` reconstructs XYZ from
+  canonical SMILES instead of consuming the exact optimized geometry. Also, any sTDA exception is
+  silently converted to the HOMO-LUMO fallback. Resolution is an implementation fix: pass the exact
+  optimized geometry into the sTDA preparation run and expose structured fallback provenance. This
+  documentation task does not change the 15% optical weight, oligomer length, score, calibration
+  policy, or production results.
 - **Resolves when**: The group accepts the oligomer/sTDA route (with range-separated TD-DFT calibration as Step-2, validated per class) or explicitly chooses to pivot to an ML/GNN predictor.
-- **Links**: [STATUS open debt #11](STATUS.md#open-debts); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
+- **Links**: [STATUS open scientific and engineering debt](STATUS.md#open-scientific-and-engineering-debt); [src/eps/structures/oligomer.py](src/eps/structures/oligomer.py); [src/eps/engines/xtb.py](src/eps/engines/xtb.py); [docs/research/bandgap_route_oligomer_stda_vs_ml.md](research/bandgap_route_oligomer_stda_vs_ml.md).
 
 ## T7 — What is the real deliverable?
 - **Status**: open
