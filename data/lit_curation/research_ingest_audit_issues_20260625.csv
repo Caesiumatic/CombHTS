@@ -1,0 +1,56 @@
+file,row_number,source_key,classification,canonical_smiles,duplicate_internal,duplicate_production,issue_type,message
+data/lit_curation/esw_windows_staging_20260625.csv,2,Propylene carbonate (PC),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,3,Propylene carbonate (PC),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,4,Propylene carbonate (PC),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,5,Propylene carbonate (PC),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,6,Acetonitrile (MeCN),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,7,Acetonitrile (MeCN),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,8,Nitromethane,PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,9,Nitromethane,PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,10,γ-Butyrolactone (GBL),PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,11,Benzonitrile,PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,12,DMF,PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/esw_windows_staging_20260625.csv,13,DMF,PARK,,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,2,Thiophene,PARK,c1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,3,Bithiophene,PARK,c1csc(-c2cccs2)c1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,4,Terthiophene,PARK,c1csc(-c2ccc(-c3cccs3)s2)c1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,5,Carbazole,PARK,c1ccc2c(c1)[nH]c1ccccc12,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,6,9-ethylcarbazole,PARK,CCn1c2ccccc2c2ccccc21,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,7,9-butylcarbazole,PARK,CCCCn1c2ccccc2c2ccccc21,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,8,9-hexylcarbazole,PARK,CCCCCCn1c2ccccc2c2ccccc21,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,9,9-octylcarbazole,PARK,CCCCCCCCn1c2ccccc2c2ccccc21,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,10,N-vinylcarbazole,PARK,C=Cn1c2ccccc2c2ccccc21,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,11,Furan,PARK,c1ccoc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/eox_calibration_staging_20260625.csv,12,2-methylfuran,PARK,Cc1ccco1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,2,Thiophene,PARK,c1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,3,Thiophene,PARK,c1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,4,Thiophene,PARK,c1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,5,Furan,PARK,c1ccoc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,6,Furan,PARK,c1ccoc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,7,2-Methylfuran,PARK,Cc1ccco1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,8,3-Thiophenecarboxaldehyde,PARK,O=Cc1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,9,"3,4-Dimethoxythiophene (DMOT)",PARK,COc1cscc1OC,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,10,"3,4-Dibutylthiophene",PARK,CCCCc1cscc1CCCC,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,11,Thiophene (in bithiophene series),PARK,c1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,12,"2,2′-Bithiophene",PARK,c1csc(-c2cccs2)c1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,13,"2,2′:5′,2″-Terthiophene",PARK,c1csc(-c2ccc(-c3cccs3)s2)c1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,14,3-Methylthiophene,PARK,Cc1ccsc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,15,EDOT,PARK,c1scc2c1OCCO2,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,16,EDOT,PARK,c1scc2c1OCCO2,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,17,Carbazole,PARK,c1ccc2c(c1)[nH]c1ccccc12,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,18,"3,6-Di-tert-butylcarbazole",PARK,CC(C)(C)c1ccc2[nH]c3ccc(C(C)(C)C)cc3c2c1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,19,"3,6-Diphenylcarbazole",PARK,c1ccc(-c2ccc3[nH]c4ccc(-c5ccccc5)cc4c3c2)cc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,20,3-Ethylcarbazole,PARK,CCc1ccc2[nH]c3ccccc3c2c1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,21,"N-Phenylcarbazole (3,6 free)",PARK,c1ccc(-n2c3ccccc3c3ccccc32)cc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,22,Fluorene,PARK,c1ccc2c(c1)Cc1ccccc1-2,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,23,Fluorene,PARK,c1ccc2c(c1)Cc1ccccc1-2,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,24,"2,7-Diaminofluorene",PARK,Nc1ccc2c(c1)Cc1cc(N)ccc1-2,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,25,Aniline,PARK,Nc1ccccc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,26,Aniline,PARK,Nc1ccccc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,27,Aniline,PARK,Nc1ccccc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,28,Diphenylamine,PARK,c1ccc(Nc2ccccc2)cc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,29,"N,N′-Diphenylbenzidine",PARK,c1ccc(Nc2ccc(-c3ccc(-c4ccccc4)cc3)cc2)cc1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,30,1-Aminopyrene,PARK,Nc1ccc2ccc3cccc4ccc1c2c34,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,31,Pyrene,PARK,c1cc2ccc3cccc4ccc(c1)c2c34,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,32,"2,5-Dimethylpyrrole (α,α′-disubstituted)",PARK,Cc1ccc(C)[nH]1,False,False,not_targeted,No targeted promotion rule for this staging file.
+data/lit_curation/feasibility_labels_staging_20260625.csv,33,Pyrrole,PARK,c1cc[nH]c1,False,False,not_targeted,No targeted promotion rule for this staging file.

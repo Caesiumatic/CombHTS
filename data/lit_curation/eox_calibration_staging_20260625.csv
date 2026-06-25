@@ -1,0 +1,12 @@
+monomer,smiles,canonical_smiles,track,value_reported,observable,reference_electrode,solvent,electrolyte,electrode,scan_rate,value_vs_AgAgCl_V,conversion_note,source_doi,confidence,needs_review
+Thiophene,c1ccsc1,c1ccsc1,onset,1.50 V,onset,Ag/AgCl sat KCl,MeCN,(LiClO₄/MeCN),Pt,—,1.50,exact (already Ag/AgCl),10.1002/polb.22360,high,true
+Bithiophene,c1ccc(-c2cccs2)s1,c1csc(-c2cccs2)c1,onset,1.15 V,onset,Ag/AgCl sat KCl,MeCN,(LiClO₄/MeCN),Pt,—,1.15,exact,10.1002/polb.22360,high,true
+Terthiophene,c1ccc(-c2ccc(-c3cccs3)s2)s1,c1csc(-c2ccc(-c3cccs3)s2)c1,onset,0.880 V,onset,Ag/AgCl sat KCl,MeCN,(LiClO₄/MeCN),Pt,—,0.880,exact,10.1002/polb.22360,high,true
+Carbazole,c1ccc2c(c1)[nH]c1ccccc12,c1ccc2c(c1)[nH]c1ccccc12,onset,1.05 V,onset,SCE,MeCN,0.1 M LiClO₄,Pt wire (0.785 mm²),50 mV/s,1.095,exact (SCE +0.045),10.3389/fmats.2019.00131,high,true
+9-ethylcarbazole,CCn1c2ccccc2c2ccccc21,CCn1c2ccccc2c2ccccc21,reversible_formal_E,E° 1.21 V (Epa +1.25 V),formal E° (reversible couple),Ag/AgCl,MeCN,0.1 M TBAB,Pt microelectrode (246 µm),100 V/s,1.21,exact (already Ag/AgCl),10.3389/fmats.2019.00131,high,true
+9-butylcarbazole,CCCCn1c2ccccc2c2ccccc21,CCCCn1c2ccccc2c2ccccc21,reversible_formal_E,E° 1.19 V,formal E° (reversible),Ag/AgCl,MeCN,0.1 M TBAB,Pt microelectrode,100 V/s,1.19,exact,10.3389/fmats.2019.00131,high,true
+9-hexylcarbazole,CCCCCCn1c2ccccc2c2ccccc21,CCCCCCn1c2ccccc2c2ccccc21,reversible_formal_E,E° 1.16 V,formal E° (reversible),Ag/AgCl,MeCN,0.1 M TBAB,Pt microelectrode,100 V/s,1.16,exact,10.3389/fmats.2019.00131,high,true
+9-octylcarbazole,CCCCCCCCn1c2ccccc2c2ccccc21,CCCCCCCCn1c2ccccc2c2ccccc21,reversible_formal_E,E° 1.11 ± 0.02 V,formal E° (reversible),Ag/AgCl,MeCN,0.1 M TBAB,Pt microelectrode,100 V/s,1.11,exact,10.3389/fmats.2019.00131,high,true
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,C=Cn1c2ccccc2c2ccccc21,peak,+1.3 V (1st-scan anodic peak),peak,SCE,MeCN,0.1 M LiClO₄,Pt,50 mV/s,1.345,exact (SCE +0.045),10.3389/fmats.2019.00131,med-high,true
+Furan,c1ccoc1,c1ccoc1,peak,1.75 V,peak (irreversible),Ag⁰/Ag⁺ (no Fc cal),MeCN,TBABF₄,Pt,—,,"EXCLUDED — bare Ag/Ag⁺, not convertible",10.1016/S0379-6779(98)01509-4,excl,true
+2-methylfuran,Cc1ccco1,Cc1ccco1,peak,1.50 V,peak (irreversible),Ag⁰/Ag⁺ (no Fc cal),MeCN,TBABF₄,Pt,—,,EXCLUDED — bare Ag/Ag⁺,10.1016/S0379-6779(98)01509-4,excl,true
