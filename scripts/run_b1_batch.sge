@@ -4,14 +4,14 @@
 #$ -j y
 #$ -pe smp 8
 #$ -l h_rt=4:00:00
-# B1 coupling-feasibility descriptor batch (directive §5 / THINK B1). Computes real GFN2-xTB
-# dimerization_dG + secondary descriptors for a small SIZE-MATCHED set: the testable
-# intrinsic-NO thiophenes/pyrrole (3-thiophenecarboxaldehyde, 3,4-dibutylthiophene,
-# 2,5-dimethylpyrrole) alongside size-matched YES comparators (3-methylthiophene,
-# 3-hexylthiophene, DMOT, thiophene, EDOT, pyrrole, bithiophene). All run TOGETHER through the
-# SAME pipeline + conformer config (n=100 MMFF94) so dimerization_dG is directly comparable.
-# Isolated working dir; production CombHTS checkout/outputs untouched.
-set -uo pipefail
+# B1 coupling-feasibility descriptor batch (directive §5 / THINK T15). Computes real GFN2-xTB
+# dimerization_dG + secondary descriptors for a small SIZE-MATCHED set: the testable intrinsic-NO
+# thiophenes/pyrrole alongside size-matched YES comparators, all run TOGETHER through the SAME
+# pipeline + conformer config (n=100 MMFF94) so dimerization_dG is directly comparable.
+# Isolated working dir built with cp -a (rsync is not on the compute-node PATH); set -e so any
+# copy/verify failure aborts loudly. PROJECT_ROOT = eps package parents[3], so PYTHONPATH=$WORK/src
+# makes load_monomers() read $WORK/data — hence the explicit eps-path + monomer-count asserts.
+set -euo pipefail
 if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
 module load anaconda/3-2023.09
 module load xtb/6.4.1
@@ -21,16 +21,22 @@ export OMP_NUM_THREADS="${NSLOTS:-8}"
 export OMP_STACKSIZE=4G
 ulimit -s unlimited || true
 
+SRC="$HOME/CombHTS-main"
 WORK="$HOME/CombHTS_b1_batch"
 rm -rf "$WORK"; mkdir -p "$WORK"
-rsync -a --exclude '.git' --exclude 'outputs' --exclude '.venv' "$HOME/CombHTS-main/" "$WORK/"
-cd "$WORK"
+cp -a "$SRC/src"     "$WORK/src"
+cp -a "$SRC/configs" "$WORK/configs"
+cp -a "$SRC/data"    "$WORK/data"
 # Swap in the B1 batch library (per-species; production library untouched).
-cp "$HOME/b1_inputs/b1_batch_monomers.csv"      data/monomers.csv
-cp "$HOME/b1_inputs/b1_batch_polymerization.csv" data/polymerization.csv
-cp "$HOME/b1_inputs/b1_batch_solvents.csv"      data/solvents.csv
-cp "$HOME/b1_inputs/b1_batch_electrolytes.csv"  data/electrolytes.csv
+cp -f "$HOME/b1_inputs/b1_batch_monomers.csv"       "$WORK/data/monomers.csv"
+cp -f "$HOME/b1_inputs/b1_batch_polymerization.csv" "$WORK/data/polymerization.csv"
+cp -f "$HOME/b1_inputs/b1_batch_solvents.csv"       "$WORK/data/solvents.csv"
+cp -f "$HOME/b1_inputs/b1_batch_electrolytes.csv"   "$WORK/data/electrolytes.csv"
+cd "$WORK"
 export PYTHONPATH="$WORK/src"
+echo "VERIFY eps from: $(python -c 'import eps,os;print(os.path.dirname(eps.__file__))')"
+echo "VERIFY monomers.csv lines: $(wc -l < data/monomers.csv) (expect 11)"
+test "$(wc -l < data/monomers.csv)" -eq 11
 mkdir -p outputs/b1
 python -m eps.cli run-tier1 --engine xtb \
   --output     outputs/b1/ranked.csv \

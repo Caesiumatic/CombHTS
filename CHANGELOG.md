@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-25 — director run: scale guardrail (freeze-then-scale), B1/λ dialectics
+
+- **Scale guardrail (top audit fix; protects directive §0 forbidden actions).** Added
+  `enforce_scale_guard` + `ScaleGuardError` in `eps.workflow.tier1`; `run-tier1` now raises above
+  `scale_guard.max_triads` (default 12,000; current scale 7,488) unless `--allow-large-scale` is
+  passed, and `plan_tier2_pilot` raises above 500 unique tasks unless authorized. This stops a
+  swapped/expanded library CSV from silently launching the ~50k Tier-1 harvest or the full-survivor
+  Tier-2 batch. New `tests/test_scale_guard.py` (5 cases); full suite 326 passed, 5 skipped; ruff clean.
+- **THINK T15 (B1 coupling-feasibility criterion).** Recorded the B1 diagnostic from existing data:
+  the 7 intrinsic-NO anchors are absent from the harvest; α-spin is unavailable at the xtb screening
+  level; α-count is a class-dependent *position-block* detector only; dimerization_dG is size-confounded
+  (r=0.67), so the intrinsic-NO vs YES test must be size-matched (SGE 417845). Failure modes partition
+  across the signals; proposed a config-driven SOFT `coupling_risk_flag` (B2), numeric balanced-accuracy
+  validation (B3), hard-reject deferred to PI (B4).
+- **THINK T16 (λ computed-but-unused).** Logged the audit's most directive-divergent finding
+  (reorganization energy λ enters neither filter nor score) with a decide-and-report recommendation to
+  add it as a reported/lightly-weighted soft term after a λ-vs-feasibility diagnostic, not a hard filter.
+- B1 batch corrected: 417844 killed (compute-node `rsync` absent + missing `set -e` → ran the wrong
+  library); resubmitted as 417845 with `cp -a` + `set -euo pipefail` + eps-path/monomer-count asserts.
+
 ## 2026-06-25 — director run: research-report sync baseline, §1-§9 code audit, feasibility reconcile, B1 batch launch
 
 Director autonomous run (Phase 1B). No production scoring weight, threshold, calibration

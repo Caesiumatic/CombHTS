@@ -149,6 +149,12 @@ def main(argv: list[str] | None = None) -> int:
     tier1.add_argument("--cache", type=Path, default=DEFAULT_CACHE_PATH, help="SQLite cache path")
     tier1.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Ranked CSV output path")
     tier1.add_argument("--all-output", type=Path, default=None, help="All-triads audit CSV output path")
+    tier1.add_argument(
+        "--allow-large-scale",
+        action="store_true",
+        help="Authorize a run above the scale_guard ceiling (the freeze-then-scale full-scale switch; "
+        "directive §0/§2 — only after per-species methods are frozen and signed off)",
+    )
 
     rescore = subparsers.add_parser(
         "rescore-tier1",
@@ -472,6 +478,12 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_TIER2_PLAN_OUTDIR,
         help="Directory for task_manifest.csv, plan_summary.json, plan_report.md, provenance.json.",
     )
+    tier2_plan.add_argument(
+        "--allow-large-scale",
+        action="store_true",
+        help="Authorize a Tier-2 plan above the scale_guard ceiling (directive §0 #2 full-survivor "
+        "DFT batch; only after freeze + sign-off).",
+    )
 
     tier2_run_task = subparsers.add_parser(
         "tier2-run-task",
@@ -608,6 +620,7 @@ def main(argv: list[str] | None = None) -> int:
             cache_path=args.cache,
             output_path=args.output,
             all_output_path=args.all_output,
+            allow_large_scale=args.allow_large_scale,
         )
         print(f"Tier 1 total triads: {result.total_triads}")
         print(f"Tier 1 surviving triads: {result.surviving_triads}")
@@ -1020,7 +1033,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "tier2-plan":
-        result = plan_tier2_pilot(args.selection, args.config, args.outdir)
+        result = plan_tier2_pilot(
+            args.selection, args.config, args.outdir, allow_large_scale=args.allow_large_scale
+        )
         print("Tier-2 pilot plan: no Engine calls; no triad-level quantum loop.")
         print(f"Selection rows: {result.n_selection_rows}; unique tasks: {result.n_tasks}")
         print(f"Unique monomers: {result.n_unique_monomers}; monomer-solvent pairs: {result.n_unique_monomer_solvent_pairs}")

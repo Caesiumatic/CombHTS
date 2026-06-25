@@ -36,7 +36,11 @@ from eps.engines.mock import MockEngine
 from eps.properties.redox import ip_eV_to_potential_vs_AgAgCl
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache, cached_run
-from eps.workflow.tier1 import PROJECT_ROOT, load_tier1_config
+from eps.workflow.tier1 import PROJECT_ROOT, enforce_scale_guard, load_tier1_config
+
+# freeze-then-scale ceiling for Tier-2 (directive §0 #2: the full DFT batch over ALL survivors is a
+# sign-off-gated action). Pilots are tens of tasks; this blocks an accidental all-survivor plan.
+DEFAULT_MAX_TIER2_TASKS = 500
 
 # Rough per-input cost for a B3LYP/6-31G(d,p) Opt of a small monomer/cation on the cluster.
 # Deliberately coarse — for human capacity planning only, not a benchmark.
@@ -173,6 +177,7 @@ def plan_tier2_pilot(
     selection_path: str | Path,
     config_path: str | Path,
     outdir: str | Path,
+    allow_large_scale: bool = False,
 ) -> Tier2PlanResult:
     """Plan one Tier-2 adiabatic-IP request per unique monomer/solvent/config identity.
 
@@ -187,6 +192,12 @@ def plan_tier2_pilot(
     method_label = config.cache_method_label()
     selection = pd.read_csv(selection_path, keep_default_na=False)
     tasks = _manifest_rows_from_selection(selection, method_label=method_label, config_hash=config_hash)
+    enforce_scale_guard(
+        len(tasks),
+        max_units=DEFAULT_MAX_TIER2_TASKS,
+        allow_large_scale=allow_large_scale,
+        kind="Tier-2 unique tasks",
+    )
 
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)

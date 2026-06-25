@@ -89,6 +89,37 @@ class Tier1Result:
     cache_path: Path
 
 
+DEFAULT_MAX_TRIADS = 12000
+
+
+class ScaleGuardError(RuntimeError):
+    """Raised when a run would exceed the freeze-then-scale triad/task ceiling."""
+
+
+def enforce_scale_guard(
+    n_units: int,
+    *,
+    max_units: int = DEFAULT_MAX_TRIADS,
+    allow_large_scale: bool = False,
+    kind: str = "Tier-1 triads",
+) -> None:
+    """Block an accidental full-scale (~50k) launch unless explicitly authorized.
+
+    freeze-then-scale (AGENTS.md / directive §2, §0): the full ~50,000-triad Tier-1 harvest and the
+    full Tier-2 DFT batch are method-frozen, sign-off-gated actions. A swapped or expanded library
+    CSV must never silently trigger them. Exceeding ``max_units`` requires an explicit
+    ``allow_large_scale`` (CLI ``--allow-large-scale``) — the documented full-scale switch.
+    """
+
+    if not allow_large_scale and n_units > max_units:
+        raise ScaleGuardError(
+            f"{kind} count {n_units} exceeds the scale-guard ceiling {max_units}. This looks like a "
+            "full-scale run, which is freeze-then-scale gated (AGENTS.md / directive §2 and §0): "
+            "freeze every per-species method first, then re-run with --allow-large-scale (or raise "
+            "scale_guard.max_triads in configs/tier1.yaml) to explicitly authorize it."
+        )
+
+
 def run_tier1(
     *,
     engine: Engine | None = None,
@@ -98,6 +129,7 @@ def run_tier1(
     all_output_path: str | Path | None = None,
     tier1_config_path: str | Path = DEFAULT_TIER1_CONFIG,
     scoring_config_path: str | Path = DEFAULT_SCORING_CONFIG,
+    allow_large_scale: bool = False,
 ) -> Tier1Result:
     """Run Tier-1 over seed libraries with per-species cached MockEngine calls."""
 
@@ -107,6 +139,13 @@ def run_tier1(
     solvents = load_solvents()
     electrolytes = load_electrolytes()
     tier1_config = load_tier1_config(tier1_config_path)
+    scale_guard_cfg = tier1_config.get("scale_guard", {}) or {}
+    enforce_scale_guard(
+        len(monomers) * len(solvents) * len(electrolytes),
+        max_units=int(scale_guard_cfg.get("max_triads", DEFAULT_MAX_TRIADS)),
+        allow_large_scale=allow_large_scale,
+        kind="Tier-1 triads",
+    )
     solvent_window_config = tier1_config.get("solvent_window_gate", {}) or {}
     solvent_window_measurements = None
     if bool(solvent_window_config.get("enabled", False)):

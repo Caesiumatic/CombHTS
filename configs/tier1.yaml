@@ -1,3 +1,9 @@
+scale_guard:
+  # freeze-then-scale ceiling (directive §0/§2). A swapped/expanded library must never silently
+  # launch the full ~50,000-triad harvest, which is method-frozen + sign-off gated. run-tier1 raises
+  # ScaleGuardError above max_triads unless --allow-large-scale is passed. Current validated scale is
+  # 36x13x16 = 7,488; raise this only together with the authorized full-scale run.
+  max_triads: 12000
 filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
