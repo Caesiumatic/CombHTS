@@ -1,5 +1,38 @@
 # Project Status
-_Last updated: 2026-06-25 (post-review correctness/maintenance triage)_
+_Last updated: 2026-06-25 (director autonomous run — Phase 1B: B1 criterion, §1–§9 audit, scale guard)_
+
+## Director autonomous run (2026-06-25) — current state
+
+**Read `DECISIONS_PENDING.md` first** for the human/PI checklist (3 decision gates + B1/λ/calibration/
+reconcile + freeze + §0 no-go's). What this run changed (all committed + pushed to `main`):
+
+- **Feasibility source of truth fixed.** Ingested the canonical 36-row set (19 YES / 17 NO) at
+  `data/lit_curation/feasibility_labels_canonical_36row.csv`; production `polymerizability_labels.csv`
+  (34) is superseded and has 3 **wrong carbazole SMILES** (pos 2/4, not 3,6 — corrected interpretation
+  in `docs/research/feasibility_reconcile_20260625.md`).
+- **§1–§9 code audit** (`docs/research/directive_section_audit_20260625.md`): hard gates + 5 composite
+  terms are live/correct; selenophene `[se]`, optical `*`-SMILES, benchmark≥30, peak/onset split, pinned
+  redox constant are already done. Net-new gaps: **λ computed-but-unused** (T16), **no scale guardrail**
+  (now fixed), calibration strict/relaxed inconsistency, sTDA/COSMO-RS external blockers.
+- **Scale guardrail implemented** (commit `6aca1be`): `run-tier1` blocks >12k triads and `tier2-plan`
+  blocks >500 tasks unless `--allow-large-scale` — protects the directive §0 forbidden full-scale actions.
+  Full suite **326 passed, 5 skipped**; ruff clean.
+- **B1 coupling-feasibility criterion (THINK T15)**: the 7 intrinsic-NO anchors are absent from the
+  harvest; α-spin is unavailable at the xtb screening level; α-count is a class-dependent *position-block*
+  detector (cleanly catches 2,5-dimethylpyrrole, misses the β-substituted NOs); dimerization_dG is
+  size-confounded (r=0.67) so the test must be **size-matched**. Size-matched dimerization batch
+  **SGE 417846** is running (10 monomers; 417844/417845 failed-fast and were fixed). B2 (config soft
+  `coupling_risk_flag`) / B3 (balanced-accuracy validation) follow the batch; B4 (hard reject) is a PI call.
+- **THINK T16** (λ wiring) and **T17** (two-tier freeze-readiness recommendation) added.
+- Targeted lit-gapfill (`docs/research/lit_gapfill_20260625.md`): DMSO ESW, pyrrole+EDOT Epa,
+  PFO/poly(2,7-carbazole)/polyfuran optical newly web-sourced (screening-grade, needs verification);
+  NMP/nitrobenzene/THF/sulfolane + 3-methylthiophene Epa + neutral PPy optical still open.
+- **No production scoring weight / threshold / calibration coefficient / redox constant / cache key /
+  filter / library / harvest was changed.** Nothing frozen; no §0 full-scale action launched.
+
+**Immediate next (this run, in flight):** finalize B1 from SGE 417846; if size-matched dimerization
+separates the testable intrinsic NOs, implement the config-driven soft `coupling_risk_flag` (B2) and
+run the B3 balanced-accuracy check; otherwise record that the signal needs Tier-2 (also a result).
 
 ## Current phase
 

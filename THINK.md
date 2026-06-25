@@ -28,6 +28,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T14 | What is a valid solvent-window gate? | decided / implemented / safety-validated | self / report (scientific validity) | continued data curation |
 | T15 | Coupling-feasibility second filter (B1–B4): can screening descriptors separate intrinsic NO from YES? | exploring (signal #1 characterized; #2 size-matched test pending SGE 417844; #3 unavailable) | self / report (B2 soft-flag); PI (B4 soft-vs-hard) | one small xTB batch |
 | T16 | Reorganization energy λ is computed but unused — should it be wired? | open (directive wants it used; recommend a soft term) | group-meeting / PI (adds a weighted axis) | small code + revalidation |
+| T17 | Method-freeze readiness before the §0 full-scale harvest | exploring (per-axis readiness assessed; recommendation below; freeze itself is the PI's action) | PI (freeze is the irreversible scale gate) | assessment now; freeze later |
 
 ## T1 — Screening calibration anchor: peak vs onset
 - **Status**: exploring -> ANCHOR-TYPE decided (peak for calibration, onset for screening); strict-vs-relaxed still pending live DFT LOO-CV
@@ -325,6 +326,25 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Current lean / recommendation (decide-and-report, pending group/PI)**: **(B)** — add λ as an explicit *reported-and-lightly-weighted* term or, more conservatively, first publish a λ-vs-feasibility diagnostic (does low λ track YES on the canonical-36?) before assigning any weight. Do **not** make it a hard filter (option C) given screening-grade noise. Any weight change requires a fresh harvest + re-validation (it reshapes ranking), so this is gated behind the same freeze discipline as any scoring change. Record as a PI/group item in `DECISIONS_PENDING.md`.
 - **Resolves when**: the group/PI decides report-only vs soft-term vs filter; if soft-term, a weight is chosen and the composite is re-validated.
 - **Links**: `docs/research/directive_section_audit_20260625.md`; `src/eps/properties/secondary_descriptors.py`; `configs/scoring.yaml`.
+
+## T17 — Method-freeze readiness before the §0 full-scale harvest
+- **Status**: exploring — per-axis readiness assessed below; the freeze itself is the PI's irreversible decision (`DECISIONS_PENDING.md` C7). This run *prepares* freeze readiness; it does not freeze.
+- **Forum**: PI (freeze is the freeze-then-scale gate that makes every per-species method permanent before the ~50k harvest)
+- **Cost**: assessment now (no compute); freeze later
+- **Question**: freeze-then-scale (directive §2, AGENTS.md) requires every per-species method to be frozen *before* the full ~50,000-triad Tier-1 harvest and the full Tier-2 batch, because changing any method invalidates that property's whole cache. Which axes are freeze-ready, and what blocks the rest?
+- **Per-axis readiness**:
+  | axis | method | freeze-ready? | blocker / note |
+  |---|---|---|---|
+  | Monomer Eox (Tier-1) | GFN2-xTB adiabatic IP → calibrated `agagcl_peak_strict` | **NEARLY** | reconcile strict-vs-relaxed from the recorded DFT 417442 Fit-2 LOO-CV + publish an active-calibration manifest (T1; `DECISIONS_PENDING` B3) before freezing this line |
+  | ESW window gate | measured-first conservative cap | **YES (policy)** | gate policy decided + safety-validated (0/5,760 unsafe widenings, T14); exact-formulation coverage is data-debt (adding measured rows is cache-free), not a method change |
+  | Anion oxidation | direct ΔSCF, wired hard constraint | **YES** | — |
+  | Conformer / geometry | n=100 MMFF94, T10 Se-skip; folded into cache key | **YES** | — |
+  | Solubility | ΔGsolv ALPB **affinity proxy** (not true solubility) | **as-proxy** | freezing it freezes the documented proxy; a true openCOSMO-RS solubility axis needs install + 13-solvent profiles (PI/resource, `DECISIONS_PENDING` C9) |
+  | Optical gap | sTDA-xTB route, but production runs the **HOMO-LUMO hexamer fallback** (stda absent on Lop); diagnostic (weak fits) | **NO (production-grade)** / as-diagnostic only | install `stda` on Lop, or freeze the 15% axis explicitly **as diagnostic** and disclose `optical_gap_method` in every frozen ranking (T6; `DECISIONS_PENDING` A③/C9) |
+  | Dimerization ΔG | GFN2 2 M⁺•→M–M+2H⁺ | computational: yes / **interpretation confounded** | size-confounded (r=0.67, T15); ranking-safe only via the min-max-cancelling proton constant; the coupling-feasibility *reading* needs the B1 size-matched verdict before it is trusted as more than a soft term |
+- **Recommendation (decide-and-report → PI executes)**: freeze in **two tiers**. (1) Freeze the **hard-constraint methods** — Eox calibration (after the strict/relaxed reconcile + manifest), ESW gate policy, anion oxidation, conformer/geometry — since these gate the survivor set and are nearly ready; the scale guardrail (commit `6aca1be`) now protects against an accidental full launch. (2) The **diagnostic axes** (optical / dimerization / solubility) either freeze **as explicitly-diagnostic** (disclose method + caveat in the frozen ranking) or are improved first (optical→stda, solubility→openCOSMO-RS) — a PI value/resource call. Do **not** launch the §0 full harvest until at least tier (1) is frozen.
+- **Resolves when**: PI signs off the freeze (per tier); then `--allow-large-scale` authorizes the full harvest.
+- **Links**: `DECISIONS_PENDING.md`; `docs/research/directive_section_audit_20260625.md`; [T1](#t1--screening-calibration-anchor-peak-vs-onset), [T6](#t6--band-gap-oligomer--stda-xtb-directive-route-vs-an-ml-model), [T14](#t14--what-is-a-valid-solvent-window-gate), [T15](#t15--coupling-feasibility-second-filter-b1b4-can-screening-descriptors-separate-intrinsic-no-from-yes).
 
 ## Decision log
 
