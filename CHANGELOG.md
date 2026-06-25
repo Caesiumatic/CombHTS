@@ -1,6 +1,32 @@
 # Changelog
 
-## 2026-06-24 — complete review-only G1.2 Eox master closure audit
+## 2026-06-25 — director run: research-report sync baseline, §1-§9 code audit, feasibility reconcile, B1 batch launch
+
+Director autonomous run (Phase 1B). No production scoring weight, threshold, calibration
+coefficient, redox constant, cache key, filter, or production library/harvest was changed; all
+additions are version-controlled data/docs + an isolated diagnostic batch.
+
+- Ingested the **canonical 36-row feasibility validation set** (19 YES / 17 NO) as the single
+  source of truth at `data/lit_curation/feasibility_labels_canonical_36row.csv`. Wrote
+  `docs/research/feasibility_reconcile_20260625.md` diffing it vs the superseded production
+  `polymerizability_labels.csv` (34 rows) and the staged 32/33-row WIP. Structural QA: the
+  production CSV's three carbazole SMILES are mis-placed (position 2/4); the canonical report's are
+  the correct 3,6-isomers (topological position assignment; canonical confirmed authoritative).
+- Archived the 8 handed-in external reports (6 deep-research md + mentor md, +1 pointer for the
+  24 MB OMIEC review PDF kept out of git history) under `docs/research/external_reports_20260625/`
+  with an index mapping each to its repo counterpart + decision-gate cross-reference.
+- Ran a 10-agent **§1-§9 section-by-section code audit** (`docs/research/directive_section_audit_20260625.md`).
+  Key true findings: hard gates + 5 composite terms are live and correct; reorganization energy λ is
+  computed but UNUSED (directive wants it used); no scale guardrail (top freeze-time risk); calibration
+  strict/relaxed inconsistency; sTDA / openCOSMO-RS are external blockers; selenophene `[se]`, optical
+  `*`-SMILES, benchmark≥30, peak/onset separation, and the pinned redox constant are already done.
+- Established the **B1 coupling-feasibility diagnostic state from existing data**: the 7 intrinsic-NO
+  anchors are absent from the harvest library, the cation-spin descriptor failed for all 36 monomers
+  (documented xtb-output limitation, confirmed by a live xtb probe), α-count is class-dependent, and
+  dimerization_dG carries a ~0.67 size correlation. Launched a size-matched real-xTB dimerization
+  batch (SGE 417844, `data/lit_curation/b1_batch_*.csv`, `scripts/run_b1_batch.sge`) to test the
+  testable intrinsic NOs against size-matched YES comparators.
+
 
 Review-only G1.2 Eox master audit across current production, R11-R21 staging rows, and the prepared
 external evidence packet. No production benchmark row, library CSV, scoring weight, threshold,

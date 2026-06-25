@@ -1,0 +1,2 @@
+salt,cation_smiles,anion_smiles,salt_class,notes,electrolyte_role,supporting_electrolyte_ok,electrolyte_role_justification
+TBAPF6,CCCC[N+](CCCC)(CCCC)CCCC,F[P-](F)(F)(F)(F)F,tetraalkylammonium,B1 batch single salt,supporting,true,Common nonaqueous supporting electrolyte
