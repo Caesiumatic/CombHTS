@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import shutil
+
 from eps.chemspace.models import Electrolyte, Monomer, Solvent
 from eps.engines.base import CalcRequest, Engine, SpeciesSpec
+from eps.engines.mock import MockEngine
+from eps.engines.xtb import XTBEngine
 from eps.properties.redox import ip_eV_to_potential_vs_AgAgCl
 from eps.storage.cache import SQLiteCache, cached_run
 from eps.structures.oligomer import (
@@ -15,6 +19,18 @@ from eps.structures.oligomer import (
 )
 
 DEFAULT_METHOD = "mock-gfn2"
+OPTICAL_GAP_METHOD_REVISION = "+optgap-optgeom-v2"
+"""Cache-key-only revision for optical gaps that consume optimized xTB geometry."""
+OPTICAL_GAP_BACKEND_STDA = "+backend-stda"
+OPTICAL_GAP_BACKEND_HL_FALLBACK = "+backend-hl-fallback"
+OPTICAL_GAP_BACKEND_MOCK = "+backend-mock"
+OPTICAL_GAP_BACKEND_GENERIC = "+backend-generic"
+OPTICAL_GAP_BACKEND_TAGS = (
+    OPTICAL_GAP_BACKEND_STDA,
+    OPTICAL_GAP_BACKEND_HL_FALLBACK,
+    OPTICAL_GAP_BACKEND_MOCK,
+    OPTICAL_GAP_BACKEND_GENERIC,
+)
 
 EV_TO_KCAL_MOL = 23.060547830619
 PROTON_GIBBS_EV = 0.0
@@ -163,14 +179,45 @@ def optical_gap_oligomer(monomer: Monomer, spec: PolymerizationSpec, n: int) -> 
     return truncate_inert_alkyl_to_methyl(oligo_smiles)
 
 
-def _optical_gap_request(monomer: Monomer, spec: PolymerizationSpec, method: str, n: int) -> CalcRequest:
+def _optical_gap_request(
+    monomer: Monomer,
+    spec: PolymerizationSpec,
+    method: str,
+    n: int,
+    engine: Engine,
+) -> CalcRequest:
     oligo_smiles, _ = optical_gap_oligomer(monomer, spec, n)
     return CalcRequest(
         species=SpeciesSpec(oligo_smiles, charge=0, multiplicity=1),
-        method=method,
+        method=_optical_gap_cache_method(method, engine),
         solvent_eps_r=None,
         quantity="optical_gap",
     )
+
+
+def _optical_gap_cache_method(method: str, engine: Engine) -> str:
+    base_method = _strip_optical_gap_cache_suffix(method)
+    return f"{base_method}{OPTICAL_GAP_METHOD_REVISION}{_optical_gap_backend_tag(engine)}"
+
+
+def _strip_optical_gap_cache_suffix(method: str) -> str:
+    for backend_tag in OPTICAL_GAP_BACKEND_TAGS:
+        suffix = f"{OPTICAL_GAP_METHOD_REVISION}{backend_tag}"
+        if method.endswith(suffix):
+            return method[: -len(suffix)]
+    if method.endswith(OPTICAL_GAP_METHOD_REVISION):
+        return method[: -len(OPTICAL_GAP_METHOD_REVISION)]
+    return method
+
+
+def _optical_gap_backend_tag(engine: Engine) -> str:
+    if isinstance(engine, XTBEngine):
+        if shutil.which(engine.stda_binary) is not None:
+            return OPTICAL_GAP_BACKEND_STDA
+        return OPTICAL_GAP_BACKEND_HL_FALLBACK
+    if isinstance(engine, MockEngine):
+        return OPTICAL_GAP_BACKEND_MOCK
+    return OPTICAL_GAP_BACKEND_GENERIC
 
 
 def polymer_optical_gap(
@@ -190,7 +237,7 @@ def polymer_optical_gap(
     Raw/uncalibrated vs TD-DFT (Step-2 calibration hook), screening-grade.
     """
 
-    req = _optical_gap_request(monomer, spec, method, n)
+    req = _optical_gap_request(monomer, spec, method, n, engine)
     return cached_run(cache, engine, req, solvent_name=None).value
 
 
@@ -205,7 +252,7 @@ def polymer_optical_gap_method(
 ) -> str:
     """Return which method produced the cached optical gap (stda-xtb / HOMO–LUMO proxy / mock)."""
 
-    req = _optical_gap_request(monomer, spec, method, n)
+    req = _optical_gap_request(monomer, spec, method, n, engine)
     result = cached_run(cache, engine, req, solvent_name=None)
     return str(result.raw.get("optical_gap_method", "unknown"))
 
