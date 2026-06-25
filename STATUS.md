@@ -122,6 +122,35 @@ axis remains diagnostic. Dimerization is ranking-safe only because its proton-re
 one common additive constant that min-max normalization cancels. The former solubility axis remains
 documented as solvation affinity (`dGsolv` proxy), not measured solubility.
 
+### Optical-gap correctness state (2026-06-25)
+
+The optical-gap correctness fix is committed and pushed on `main`/`origin/main` as
+`b6d9ae957cb2cb779847b3e857a5098c19e483a8` (`Fix optical gap sTDA cache key and geometry path`).
+The code now captures optimized `xtbopt.xyz`, passes that captured optimized geometry into the sTDA
+preparation calculation, records structured sTDA/fallback metadata in `CalcResult.raw`, and uses a
+backend-aware optical cache key:
+`base_method + "+optgap-optgeom-v2" + backend_tag`, where backend tags are `+backend-stda`,
+`+backend-hl-fallback`, `+backend-mock`, and `+backend-generic`. Public raw result labels remain
+`stda-xtb` and `homo_lumo_hexamer_fallback`.
+
+Local targeted verification before the commit was
+`.venv/bin/python -m pytest -q tests/test_xtb.py tests/test_oligomer.py`, reporting
+`36 passed, 1 skipped`. The Lop real-backend smoke was prepared only in the isolated clone
+`/home/shic4/CombHTS_optgap_smoke_20260624_235245/source`, checked out at the same commit; relative
+to base `fae6bbabce52c216ad2d89febcf44c05fff42558`, only the four expected code/test files changed.
+No SGE job was submitted, and no production run result was produced.
+
+**Lop blocker wording:** real optimized-geometry sTDA smoke is **BLOCKED, not PASS**: `module avail
+xtb` shows `xtb/6.4.1`, `module avail anaconda` shows `anaconda/3-2023.09`, but `module avail stda`
+has no output, `module load stda` fails with `ERROR:105: Unable to locate a modulefile for 'stda'`,
+and `command -v stda` is empty. A HOMO-LUMO fallback must not be accepted as a successful sTDA
+smoke. The next operational blocker is locating, installing, or configuring a usable `stda` /
+`xtb4stda` binary/module on Lop.
+
+No production Lop checkout change occurred: `$HOME/CombHTS` remained on
+`calib/solubility-cosmors` at `06b7e1dde6e66cf65d88300ba7809915b5d45d3f`; existing untracked files
+remained unchanged, and the production stash was empty.
+
 The corrected real-harvest ranking state is unchanged: CSV-only SGE 417569 applied the salt-role
 gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW survivors
 2,938 -> 2,143 (795 dropped, zero gained), with retained scores unchanged. Read-only analysis
@@ -166,12 +195,12 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 ## Open scientific and engineering debt
 
-1. Optical-gap implementation correctness needs closure. The reviewed code path performs an
-   optimized xTB run in `XTBEngine._optical_gap()`, but the sTDA preparation path currently
-   reconstructs XYZ from canonical SMILES instead of consuming that exact optimized geometry; sTDA
-   exceptions also fall through to the HOMO-LUMO fallback without structured provenance. Fix this
-   before treating new xTB optical-gap values as route evidence. This does not change the 15% optical
-   weight, oligomer length, score, calibration policy, or production results.
+1. Real-backend optical-gap validation is blocked by missing Lop `stda` / `xtb4stda` availability.
+   The optimized-geometry/cache-identity implementation is resolved in code at
+   `b6d9ae957cb2cb779847b3e857a5098c19e483a8`, but the real optimized-geometry sTDA smoke did not
+   run because Lop exposes `xtb/6.4.1` and `anaconda/3-2023.09` but no usable `stda` module or
+   binary. Do not claim real sTDA PASS, and do not treat the HOMO-LUMO fallback as a successful sTDA
+   smoke.
 2. Calibration operational truth needs better visibility. Production Tier-1 uses the
    `agagcl_peak_strict` coefficients in `configs/tier1.yaml`, while default `eps validate` uses
    `agagcl_peak_relaxed` from `configs/calibration_profiles.yaml`. Add an active-calibration
@@ -207,9 +236,10 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 ## Immediate next actions
 
-1. Fix the optical-gap optimized-geometry/fallback-provenance correctness issue in a dedicated code
-   and regression-test task. Do not change optical weight, oligomer length, scoring, calibration
-   policy, or production results as part of that fix.
+1. Locate, install, or configure a usable Lop `stda` / `xtb4stda` binary/module, then rerun the
+   isolated real optimized-geometry sTDA smoke against
+   `b6d9ae957cb2cb779847b3e857a5098c19e483a8`. Do not accept HOMO-LUMO fallback as a successful
+   sTDA smoke.
 2. Add an active-calibration manifest plus explicit CLI disclosure so users can distinguish
    production Tier-1 coefficients from validation-profile fits. Do not choose strict vs relaxed or
    alter coefficients in that operational-visibility task.
@@ -258,6 +288,10 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
   `23 passed`; targeted ruff on the new module, wrapper, exports, and tests passed; full pytest
   reported `313 passed, 5 skipped, 2 warnings`; `git diff --check` passed; `eps doctor` reported
   21 checks, 0 FAIL, and the expected four local cluster-binary WARNs.
+- Optical-gap correctness verification before commit `b6d9ae957cb2cb779847b3e857a5098c19e483a8`:
+  `.venv/bin/python -m pytest -q tests/test_xtb.py tests/test_oligomer.py` reported
+  `36 passed, 1 skipped`; the Lop real-backend smoke stopped before submission at the missing
+  `stda` module/binary preflight.
 
 ## Architecture invariants
 
