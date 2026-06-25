@@ -1,0 +1,18 @@
+schema_version: 1
+
+production:
+  workflow: tier1
+  profile: agagcl_peak_strict
+  coefficients_path: configs/tier1.yaml
+  coefficients_key: calibration.monomer_eox
+  expected_source: agagcl_peak_strict_2026_06_17_xtb_v3
+
+validation:
+  profiles_path: configs/calibration_profiles.yaml
+  default_profile: agagcl_peak_relaxed
+
+relationship:
+  state: intentionally_divergent_pending_evidence
+  reason: strict_vs_relaxed_peak_tiebreaker_pending_live_dft_loo_cv
+  production_role: current_tier1_screening_truth
+  validation_default_role: broader_diagnostic_validation_default

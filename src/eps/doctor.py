@@ -25,6 +25,7 @@ PINNED_CONFIGS = (
     "configs/tier1.yaml",
     "configs/scoring.yaml",
     "configs/calibration_profiles.yaml",
+    "configs/calibration_operational.yaml",
     "configs/validation.yaml",
     "configs/orca_pilots.yaml",
 )
@@ -99,9 +100,34 @@ def run_doctor(project_root: str | Path = PROJECT_ROOT) -> DoctorReport:
         else:
             checks.append(DoctorCheck(f"data:{relative}", FAIL, "missing"))
 
+    checks.append(_calibration_operational_check(root))
     checks.extend(_tier2_checks(root))
 
     return DoctorReport(checks=checks)
+
+
+def _calibration_operational_check(root: Path) -> DoctorCheck:
+    """Check that production and validation calibration roles are explicitly consistent."""
+
+    try:
+        from eps.calibration.operational import load_operational_calibration
+
+        disclosure = load_operational_calibration(project_root=root)
+    except Exception as exc:  # noqa: BLE001 - malformed operational truth is a hard failure.
+        return DoctorCheck(
+            "calibration:operational-truth",
+            FAIL,
+            f"semantic inconsistency: {type(exc).__name__}: {exc}",
+        )
+    return DoctorCheck(
+        "calibration:operational-truth",
+        PASS,
+        (
+            f"production={disclosure.production_profile}; "
+            f"validation_default={disclosure.validation_default_profile}; "
+            f"relationship={disclosure.relationship_state}"
+        ),
+    )
 
 
 def _tier2_checks(root: Path) -> list[DoctorCheck]:

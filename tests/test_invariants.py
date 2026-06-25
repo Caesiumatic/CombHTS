@@ -14,7 +14,7 @@ import pandas as pd
 import pytest
 
 from eps.analysis import build_shortlist
-from eps.analysis.plots import PLACEHOLDER_LABEL
+from eps.analysis.plots import DIAGNOSTIC_LABEL
 from eps.analysis.summary import DIAGNOSTIC_NOTE
 from eps.chemspace import load_electrolytes, load_monomers, load_solvents
 from eps.engines import MockEngine
@@ -155,7 +155,7 @@ def test_directional_ordering_holds_in_clean_mock_harvest(tmp_path: Path) -> Non
     assert result.n_fail == 0
 
 
-# --- 5. Honesty invariants: memo never fabricates the two §7 gaps; analyze labels placeholders -
+# --- 5. Honesty invariants: memo never fabricates the two §7 gaps; analyze labels diagnostics -
 
 def test_memo_marks_feasibility_gap_not_computable_and_solvent_esw_computable(tmp_path: Path) -> None:
     memo_path = write_validation_memo(
@@ -178,10 +178,10 @@ def test_memo_marks_feasibility_gap_not_computable_and_solvent_esw_computable(tm
 def test_analyze_honesty_labels_are_screening_grade_not_validated() -> None:
     # The two axes are now REAL physics but uncalibrated/proton-referenced; the labels must say
     # screening-grade and NOT claim validation, while still flagging the diagnostic status.
-    assert "SCREENING-GRADE" in PLACEHOLDER_LABEL
+    assert "SCREENING-GRADE" in DIAGNOSTIC_LABEL
     assert "SCREENING-GRADE" in DIAGNOSTIC_NOTE
     assert "NOT a validated experimental recommendation" in DIAGNOSTIC_NOTE
-    assert "uncalibrated" in PLACEHOLDER_LABEL.lower()
+    assert "uncalibrated" in DIAGNOSTIC_LABEL.lower()
 
     frame = pd.DataFrame(
         {

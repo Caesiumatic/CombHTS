@@ -2,7 +2,7 @@
 
 All third-party plotting/ML imports happen INSIDE the functions so that a missing
 ``matplotlib`` or ``scikit-learn`` only skips the affected figure (with a note) rather than
-crashing the whole command. Figures touching placeholder axes are labeled as such.
+crashing the whole command. Figures touching diagnostic soft axes are labeled as such.
 """
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-PLACEHOLDER_LABEL = "SCREENING-GRADE -- uncalibrated band gap + proton-referenced dimerization; diagnostic"
+DIAGNOSTIC_LABEL = "SCREENING-GRADE -- uncalibrated band gap + proton-referenced dimerization; diagnostic"
 
-# Real descriptor axes (safe to plot without a placeholder warning).
+# Real descriptor axes (safe to plot without a diagnostic soft-axis warning).
 DISTRIBUTION_COLUMNS = ("window_margin_V", "solubility_score", "anion_stability_margin_V")
 DISTRIBUTION_FALLBACK = {"solubility_score": "solvation_dG_kcal_mol"}
 CHEMSPACE_FEATURES = (
@@ -107,8 +107,8 @@ def plot_pareto(frame: pd.DataFrame, out: Path, notes: list[str]) -> Path | None
     )
     ax.set_xlabel("window_margin_V")
     ax.set_ylabel("solubility_score")
-    ax.set_title(f"Pareto front (point size ~ -band_gap_deviation_eV)\n{PLACEHOLDER_LABEL}")
-    ax.legend(title=PLACEHOLDER_LABEL, fontsize=8)
+    ax.set_title(f"Pareto front (point size ~ -band_gap_deviation_eV)\n{DIAGNOSTIC_LABEL}")
+    ax.legend(title=DIAGNOSTIC_LABEL, fontsize=8)
     fig.tight_layout()
     path = out / "pareto_window_vs_solubility.png"
     fig.savefig(path, dpi=120)
