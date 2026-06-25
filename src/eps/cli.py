@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from eps.analysis import run_analyze
+from eps.calibration.operational import load_operational_calibration
 from eps.doctor import run_doctor
 from eps.engines import GaussianEngine, MockEngine, XTBEngine
 from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL, load_tier2_config
@@ -138,13 +139,41 @@ def _stamp_provenance(output_path, *, engine: str, method: str, extra=None) -> N
         print(f"WARNING: could not write provenance sidecar for {output_path}: {exc}")
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the ``eps`` CLI."""
+def _print_calibration_disclosure(
+    *,
+    selected_profile: str | None,
+    all_profiles: bool = False,
+) -> None:
+    """Print the Tier-1 production vs validation-profile relationship."""
+
+    disclosure = load_operational_calibration(selected_validation_profile=selected_profile)
+    print(f"Tier-1 production calibration profile: {disclosure.production_profile}")
+    if all_profiles:
+        print(f"Configured validation default profile: {disclosure.validation_default_profile}")
+        print(f"Calibration relationship: {disclosure.relationship_state}")
+        print("NOTE: this table compares independent fits and does not alter production coefficients or screening policy.")
+        return
+
+    print(f"Validation calibration profile: {disclosure.selected_validation_profile}")
+    print(f"Validation operational role: {disclosure.selected_operational_role}")
+    print(f"Calibration relationship: {disclosure.relationship_state}")
+    if not disclosure.selected_matches_production:
+        print(
+            "WARNING: this validation profile is not the current Tier-1 production calibration. "
+            "No production coefficients or screening policy are changed."
+        )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Build the public ``eps`` argument parser without dispatching a command."""
 
     parser = argparse.ArgumentParser(prog="eps")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    tier1 = subparsers.add_parser("run-tier1", help="Run the mock Tier-1 screening workflow")
+    tier1 = subparsers.add_parser(
+        "run-tier1",
+        help="Run the Tier-1 screening workflow (mock default; xtb for real runs)",
+    )
     tier1.add_argument("--engine", choices=("mock", "xtb"), default="mock", help="Calculation engine")
     tier1.add_argument("--cache", type=Path, default=DEFAULT_CACHE_PATH, help="SQLite cache path")
     tier1.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH, help="Ranked CSV output path")
@@ -591,6 +620,13 @@ def main(argv: list[str] | None = None) -> int:
         help="No-compute environment readiness check (Python, binaries, imports, configs, data)",
     )
 
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the ``eps`` CLI."""
+
+    parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "doctor":
         report = run_doctor()
@@ -654,6 +690,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "validate":
         engine, method = _engine_from_name(args.engine)
         if args.all_profiles:
+            _print_calibration_disclosure(selected_profile=None, all_profiles=True)
             comparison = run_all_calibration_profiles(
                 engine=engine,
                 method=method,
@@ -669,6 +706,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 0
 
+        _print_calibration_disclosure(selected_profile=args.profile)
         result = run_calibration_profile(
             args.profile,
             engine=engine,

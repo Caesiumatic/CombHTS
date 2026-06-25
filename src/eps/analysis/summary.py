@@ -2,9 +2,9 @@
 
 This module NEVER recomputes or rescores anything: it only reads columns already written by
 the Tier-1 workflow and produces summaries, distributions, a Pareto plot, a chemical-space
-map, and a diagnostic shortlist. Any output that touches a placeholder axis (``optical_gap``,
+map, and a diagnostic shortlist. Outputs that depend on soft axes such as ``optical_gap``,
 ``dimerization_dG``, ``band_gap_deviation_eV``, ``composite_score``, or the ``pareto_front``
-flag that depends on them) is explicitly labeled placeholder-contaminated / diagnostic-only.
+flag are explicitly labeled screening-grade / diagnostic-only.
 """
 
 from __future__ import annotations
@@ -22,7 +22,8 @@ SHORTLIST_REQUIRED_COLUMNS = ("composite_score", "pareto_front")
 RETENTION_DIMENSIONS = ("monomer_name", "solvent_name", "salt_class")
 
 DIAGNOSTIC_NOTE = (
-    "SCREENING-GRADE -- all five composite axes are now real physics, but optical_gap is the "
+    "SCREENING-GRADE -- all five composite axes now have real descriptor implementations, "
+    "but optical_gap is the "
     "sTDA-xTB/HOMO-LUMO oligomer gap UNCALIBRATED vs TD-DFT and dimerization_dG is the xTB "
     "coupling free energy whose ABSOLUTE value is set up to a proton constant. The composite is "
     "a usable screening signal, NOT a validated experimental recommendation. See STATUS "

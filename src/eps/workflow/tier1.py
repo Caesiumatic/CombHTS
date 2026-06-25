@@ -256,7 +256,7 @@ def compute_monomer_table(
 
     The optical gap is now the sTDA-xTB (or HOMO–LUMO proxy) gap of the assembled n-mer
     oligomer, and dimerization is the real radical–radical coupling ΔG (directive §3.1/§4.2)
-    — neither is a single-monomer placeholder any longer.
+    — neither is a single-monomer proxy any longer.
 
     Additionally reports the oligomer Eox-vs-length trend + 1/n infinite-chain extrapolation as
     a REPORTED descriptor (reused oligomer assembly + side-chain truncation). These columns are

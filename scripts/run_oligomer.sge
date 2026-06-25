@@ -6,7 +6,7 @@
 #$ -l h_rt=48:00:00
 #$ -l h_vmem=8G
 # TEMPLATE - do not submit blindly. Runs the Tier-1 harvest with real GFN2-xTB, which now
-# assembles n=6 oligomers (optical gap) and dimer dications (dimerization dG) per monomer.
+# assembles n=6 oligomers (optical gap) and radical-coupling descriptors per monomer.
 # Hexamers are markedly larger than monomers, so this is sized with more cores / wall time /
 # memory than run_tier1.sge. The leading "#$ -S /bin/bash" is REQUIRED.
 
