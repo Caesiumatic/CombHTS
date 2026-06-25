@@ -4,8 +4,8 @@
 - command: `eps run-tier1 --engine xtb` in isolated `$HOME/CombHTS_b1_batch` (rsync of `$HOME/CombHTS-main` @ main code) with B1 batch library swapped into `data/{monomers,polymerization,solvents,electrolytes}.csv`; SGE `scripts/run_b1_batch.sge`
 - engine / method: gfn2-xtb real, conformer_search n=100 mmff94 (matches production harvest method), ALPB
 - scope: 10-monomer SIZE-MATCHED B1 set × 1 solvent (MeCN) × 1 salt (TBAPF6) = 10 triads. Monomers: intrinsic-NO 3-thiophenecarboxaldehyde / 3,4-dibutylthiophene / 2,5-dimethylpyrrole + YES comparators 3-methylthiophene / 3-hexylthiophene / DMOT / thiophene / EDOT / pyrrole / bithiophene
-- cluster job: SGE 417844, `-pe smp 8`, h_rt 4:00:00; state qw (queued) at submit
-- status: running (queued) — awaiting completion
+- cluster job: SGE 417844 (KILLED — see below) -> corrected resubmit **SGE 417845**, `-pe smp 8`, h_rt 4:00:00
+- status: 417844 qdel'd (data-swap bug: `rsync` is absent on the compute-node PATH and the script lacked `set -e`, so the isolated WORK dir was never built and the run fell back to the installed eps reading the PRODUCTION 36-monomer library — wrong input, not the B1 set). Fixed script uses `cp -a` + `set -euo pipefail` + an eps-path/monomer-count assert. **417845 is the authoritative B1 run.**
 - headline results: PENDING. Target = dimerization_dG_kcal_mol per monomer for the size-matched B1 separability test (does coupling exothermicity separate the testable intrinsic NOs from size-matched YES?). 2,5-dimethylpyrrole expected to FAIL the dimer build (both α blocked = the coupling-site signal).
 - per-property failures: TBD (expect 2,5-dimethylpyrrole dimerization build failure = signal, not error)
 - output artifacts (paths, NOT committed): `$HOME/CombHTS_b1_batch/outputs/b1/{all.csv,ranked.csv,cache.sqlite}`
