@@ -1,11 +1,11 @@
 monomer_name,coupling_mode,building_block_smiles,approximate,notes
-3-thiophenecarboxaldehyde,alpha,,False,2,5-alpha auto-derived (CHO at beta-3; both alpha C-H free)
-3-4-dibutylthiophene,alpha,,False,2,5-alpha auto-derived (butyls at beta-3,4; both alpha C-H free)
-3-4-dimethoxythiophene,alpha,,False,2,5-alpha auto-derived (methoxy at beta-3,4; both alpha C-H free)
-thiophene,alpha,[1*]c1ccc([2*])s1,False,2,5-alpha coupling
-3-methylthiophene,alpha,,False,2,5-alpha auto-derived (both alpha C-H free)
-3-hexylthiophene,alpha,[1*]c1cc(CCCCCC)c([2*])s1,False,2,5-alpha coupling
-EDOT,alpha,,False,2,5-alpha auto-derived (3,4-EDOT both alpha C-H free)
-pyrrole,alpha,[1*]c1ccc([2*])[nH]1,False,2,5-alpha coupling
-bithiophene,alpha,[1*]c1ccc(-c2csc([2*])c2)s1,False,5,5'-outer-alpha coupling
-2-5-dimethylpyrrole,alpha,,False,both alpha methylated -> auto-derive expected to FAIL (B1 coupling-site signal)
+3-thiophenecarboxaldehyde,alpha,,False,"2,5-alpha auto-derived (CHO at beta-3; both alpha C-H free)"
+3-4-dibutylthiophene,alpha,,False,"2,5-alpha auto-derived (butyls at beta-3,4; both alpha C-H free)"
+3-4-dimethoxythiophene,alpha,,False,"2,5-alpha auto-derived (methoxy at beta-3,4; both alpha C-H free)"
+thiophene,alpha,[1*]c1ccc([2*])s1,False,"2,5-alpha coupling"
+3-methylthiophene,alpha,,False,"2,5-alpha auto-derived (both alpha C-H free)"
+3-hexylthiophene,alpha,[1*]c1cc(CCCCCC)c([2*])s1,False,"2,5-alpha coupling"
+EDOT,alpha,,False,"2,5-alpha auto-derived (3,4-EDOT both alpha C-H free)"
+pyrrole,alpha,[1*]c1ccc([2*])[nH]1,False,"2,5-alpha coupling"
+bithiophene,alpha,[1*]c1ccc(-c2csc([2*])c2)s1,False,"5,5'-outer-alpha coupling"
+2-5-dimethylpyrrole,alpha,,False,"both alpha methylated -> auto-derive expected to FAIL (B1 coupling-site signal)"
