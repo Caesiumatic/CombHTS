@@ -232,12 +232,15 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
 
 ## Open scientific and engineering debt
 
-1. Real-backend optical-gap validation is blocked by missing Lop `stda` / `xtb4stda` availability.
-   The optimized-geometry/cache-identity implementation is resolved in code at
-   `b6d9ae957cb2cb779847b3e857a5098c19e483a8`, but the real optimized-geometry sTDA smoke did not
-   run because Lop exposes `xtb/6.4.1` and `anaconda/3-2023.09` but no usable `stda` module or
-   binary. Do not claim real sTDA PASS, and do not treat the HOMO-LUMO fallback as a successful sTDA
-   smoke.
+1. **RESOLVED 2026-06-25 (binary + engine level).** Real-backend optical-gap sTDA is now operational on
+   Lop: `stda` (prebuilt v1.6.3) installed and `xtb4stda` built from source (`meson -Dla_backend=openblas`)
+   in `$HOME/bin`; the eps engine fix (`src/eps/engines/xtb.py`, commit c5dce3a) now calls `xtb4stda`
+   (writes `wfn.xtb`) instead of plain `xtb` — the prior code could never produce real sTDA. End-to-end
+   eps smoke SGE 417865 returned `optical_gap_method="stda-xtb"` (value 5.354 eV, thiophene), not the
+   fallback (manifest `docs/runs/2026-06-25_optical-stda-unblock-417865.md`). Runtime needs
+   `PATH=$HOME/bin` + `XTB4STDAHOME=$HOME/xtb4stda_src`. **Remaining:** the production optical re-harvest
+   with the working sTDA path (replaces the HOMO-LUMO fallback gaps), tied to the T6 optical
+   route/calibration decision; the 15% optical axis stays DIAGNOSTIC until per-class calibration.
 2. Calibration operational truth needs better visibility. Production Tier-1 uses the
    `agagcl_peak_strict` coefficients in `configs/tier1.yaml`, while default `eps validate` uses
    `agagcl_peak_relaxed` from `configs/calibration_profiles.yaml`. Add an active-calibration
