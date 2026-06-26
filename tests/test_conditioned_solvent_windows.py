@@ -52,6 +52,17 @@ def _base_triads() -> pd.DataFrame:
                 "solvent_anodic_limit_source": "computed",
                 "solvent_cathodic_limit_V": -2.4,
             },
+            {
+                # sulfolane has NO window measurement (no sourced Fc->aqueous offset), so it
+                # exercises the conservative no-measurement fallback path.
+                "solvent_name": "sulfolane",
+                "salt": "TBAPF6",
+                "solvent_anodic_limit_V": 3.4,
+                "solvent_anodic_limit_csv_V": 2.9,
+                "solvent_anodic_limit_calibrated_V": 3.4,
+                "solvent_anodic_limit_source": "computed",
+                "solvent_cathodic_limit_V": -2.4,
+            },
         ]
     )
 
@@ -70,14 +81,27 @@ def test_exact_salt_measurement_precedes_solvent_only_conservative_value() -> No
     assert generic["solvent_window_condition_match"] == "solvent_only_conservative"
 
 
-def test_no_measurement_uses_conservative_minimum_of_csv_and_computed() -> None:
+def test_thf_uses_fc_bridged_measured_window() -> None:
+    # THF now carries an Fc-bridged measured window (Izutsu Table 8 +1.6 V vs Fc +0.605 V
+    # offset = +2.205 V vs Ag/AgCl), which beats the conservative cap (min csv 2.9 / computed 3.4).
     selected = apply_condition_aware_solvent_windows(
         _base_triads(), load_solvent_window_measurements()
     )
     thf = selected.iloc[2]
-    assert thf["solvent_anodic_limit_V"] == pytest.approx(2.9)
-    assert thf["solvent_anodic_limit_source"] == "fallback_conservative_min_csv_computed"
+    assert thf["solvent_anodic_limit_V"] == pytest.approx(2.205)
+    assert thf["solvent_anodic_limit_source"] == "measured_conditioned"
+    assert thf["solvent_window_measurement_tier"] == "C-fcbridge"
     assert thf["solvent_anodic_limit_prior_V"] == pytest.approx(3.4)
+
+
+def test_no_measurement_uses_conservative_minimum_of_csv_and_computed() -> None:
+    selected = apply_condition_aware_solvent_windows(
+        _base_triads(), load_solvent_window_measurements()
+    )
+    sulfolane = selected.iloc[3]
+    assert sulfolane["solvent_anodic_limit_V"] == pytest.approx(2.9)
+    assert sulfolane["solvent_anodic_limit_source"] == "fallback_conservative_min_csv_computed"
+    assert sulfolane["solvent_anodic_limit_prior_V"] == pytest.approx(3.4)
 
 
 def test_wide_generic_measurement_cannot_relax_the_conservative_prior() -> None:

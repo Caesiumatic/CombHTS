@@ -27,6 +27,11 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SOLVENT_WINDOWS_PATH = PROJECT_ROOT / "data" / "solvent_windows.csv"
+DEFAULT_FC_OFFSETS_PATH = PROJECT_ROOT / "configs" / "fc_to_agagcl_offsets.csv"
+DEFAULT_FC_WINDOWS_PATH = (
+    PROJECT_ROOT / "data" / "lit_curation" / "esw_fc_scale_izutsu_table8.csv"
+)
+FC_BRIDGE_TIER = "C-fcbridge"
 
 SOLVENT_WINDOW_COLUMNS = (
     "solvent",
@@ -225,6 +230,90 @@ def apply_condition_aware_solvent_windows(
     out["solvent_window_conservative_cap_source"] = cap_sources
     out["solvent_window_cap_applied"] = cap_applied
     return out
+
+
+def load_fc_to_agagcl_offsets(
+    path: str | Path = DEFAULT_FC_OFFSETS_PATH,
+) -> dict[str, float]:
+    """Load per-solvent Fc/Fc+ -> aqueous Ag/AgCl(sat. KCl) bridge offsets (V).
+
+    Offsets are ``Fc-vs-SCE`` (Connelly & Geiger, Chem. Rev. 1996, Table 1) plus the
+    SCE->Ag/AgCl +0.045 V constant. A solvent ABSENT from this table has no sourced
+    Fc<->aqueous tie and therefore cannot be bridged to the Ag/AgCl gate scale (e.g. NMP
+    and sulfolane are intentionally absent from Connelly & Geiger Table 1).
+    """
+
+    frame = pd.read_csv(path, keep_default_na=False)
+    required = {"solvent", "fc_to_agagcl_V"}
+    missing = required.difference(frame.columns)
+    if missing:
+        raise ValueError(f"{path} is missing required columns: {', '.join(sorted(missing))}")
+    offsets: dict[str, float] = {}
+    for _, row in frame.iterrows():
+        value = _as_finite(row["fc_to_agagcl_V"])
+        if value is not None:
+            offsets[str(row["solvent"])] = value
+    return offsets
+
+
+def fc_windows_to_agagcl_rows(
+    fc_windows: pd.DataFrame,
+    offsets: dict[str, float],
+    *,
+    tier: str = FC_BRIDGE_TIER,
+    use_for_gate: bool = True,
+) -> pd.DataFrame:
+    """Bridge Fc/Fc+-referenced solvent windows to Ag/AgCl rows for the gate.
+
+    Each input row must carry ``solvent``, ``positive_limit_V_vs_Fc``,
+    ``negative_limit_V_vs_Fc`` (the Izutsu Table 8 schema). Only solvents that have a
+    sourced offset in ``offsets`` are emitted; the rest are dropped (they stay Fc-scale
+    soft priors, never silently placed on the aqueous gate). Output uses the
+    :data:`SOLVENT_WINDOW_COLUMNS` schema with ``reference == "Ag/AgCl"`` so the existing
+    conservative-cap gate consumes them unchanged.
+    """
+
+    rows: list[dict[str, object]] = []
+    for _, row in fc_windows.iterrows():
+        solvent = str(row["solvent"])
+        offset = offsets.get(solvent)
+        if offset is None:
+            continue
+        anodic_fc = _as_finite(row.get("positive_limit_V_vs_Fc"))
+        cathodic_fc = _as_finite(row.get("negative_limit_V_vs_Fc"))
+        if anodic_fc is None:
+            continue
+        electrolyte = str(row.get("supporting_electrolyte", ""))
+        cutoff = str(row.get("current_density_cutoff", ""))
+        src = str(row.get("source", ""))
+        rows.append(
+            {
+                "solvent": solvent,
+                "salt": "",
+                "anodic_limit_V_vs_AgAgCl": round(anodic_fc + offset, 3),
+                "cathodic_limit_V_vs_AgAgCl": (
+                    round(cathodic_fc + offset, 3) if cathodic_fc is not None else float("nan")
+                ),
+                "reference": "Ag/AgCl",
+                "electrolyte": electrolyte,
+                "electrode": "Pt",
+                "temperature_C": "",
+                "cutoff": cutoff,
+                "source": (
+                    f"{src} bridged to Ag/AgCl via Fc->Ag/AgCl +{offset:.3f} V "
+                    "(Connelly & Geiger 1996 Fc-vs-SCE + SCE->Ag/AgCl +0.045)"
+                ),
+                "tier": tier,
+                "limit_set_by_electrolyte": False,
+                "use_for_gate": use_for_gate,
+                "notes": (
+                    f"Fc-scale window {anodic_fc:+.2f}/{cathodic_fc:+.2f} V vs Fc/Fc+ "
+                    "(Izutsu Table 8) bridged cross-paper to Ag/AgCl; medium confidence; "
+                    "conservative-cap gate policy still applies."
+                ),
+            }
+        )
+    return pd.DataFrame(rows, columns=list(SOLVENT_WINDOW_COLUMNS))
 
 
 def _most_conservative(group: pd.DataFrame) -> pd.Series:
