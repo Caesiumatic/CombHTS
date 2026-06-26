@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-25 — director run: sTDA-xTB optical UNBLOCKED (engine fix) + carbazole SMILES fix + λ diagnostic
+
+- **sTDA-xTB optical unblocked** (Lop admin OK'd home-dir installs). Installed `stda` (prebuilt v1.6.3)
+  and built `xtb4stda` from source (`meson -Dla_backend=openblas`) in `$HOME/bin`; validated the full
+  recipe on Lop (`xtb4stda → wfn.xtb → stda -xtb` gives real excitations, thiophene S1 = 5.247 eV).
+  **Engine fix** (`src/eps/engines/xtb.py`): `_stda_lowest_excitation` now calls `xtb4stda` (which
+  writes `wfn.xtb`) instead of plain `xtb` (which does not) — the prior code could *never* produce real
+  sTDA and always fell back to HOMO–LUMO. Added `xtb4stda_binary`; the sTDA path now requires both
+  binaries; gas-phase (matches the gas-phase geometry opt). Runtime must export `XTB4STDAHOME`.
+  Updated the two optical tests. Production optical re-harvest is the next step (ties to T6).
+- **Carbazole SMILES fix**: corrected six systematically-wrong production carbazole SMILES (pos 2/4 → 3,6).
+- **λ-vs-feasibility diagnostic** (T16): λ_ox shows no clean feasibility signal (has-NO λ −0.09→+0.32
+  overlaps YES +0.01→+0.15) → supports keeping λ report-only / lightly-weighted soft term, not a filter.
+- DECISIONS_PENDING updated: stda now installable (done); COSMOtherm NOT licensed → solubility = openCOSMO-RS only.
+
 ## 2026-06-25 — director run: B1 verdict + B2 soft coupling_risk_flag + B3 validation
 
 - **B1 decided** (SGE 417846/417848, real GFN2-xTB `conf-mmff94-n100`): only the per-class

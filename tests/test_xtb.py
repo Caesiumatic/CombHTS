@@ -144,8 +144,9 @@ def test_optical_gap_stda_uses_optimized_xyz_and_records_success(monkeypatch) ->
             (cwd_path / "xtbout.json").write_text(_xtb_json(), encoding="utf-8")
             (cwd_path / "xtbopt.xyz").write_text(OPTIMIZED_XYZ, encoding="utf-8")
             return _completed(stdout=f"HOMO-LUMO GAP {FALLBACK_GAP_EV} eV")
-        if command[0] == "xtb":
+        if command[0] == "xtb4stda":
             captured_stda_prep_inputs.append((cwd_path / "input.xyz").read_text(encoding="utf-8"))
+            (cwd_path / "wfn.xtb").write_text("wfn", encoding="utf-8")
             return _completed(stdout="sTDA preparation complete")
         if command[0] == "stda":
             return _completed(stdout=" state   eV    nm\n 1   2.345   528.7\n")
@@ -183,7 +184,7 @@ def test_optical_gap_stda_preparation_failure_falls_back_with_provenance(monkeyp
             (cwd_path / "xtbout.json").write_text(_xtb_json(), encoding="utf-8")
             (cwd_path / "xtbopt.xyz").write_text(OPTIMIZED_XYZ, encoding="utf-8")
             return _completed(stdout=f"HOMO-LUMO GAP {FALLBACK_GAP_EV} eV")
-        if command[0] == "xtb":
+        if command[0] == "xtb4stda":
             assert (cwd_path / "input.xyz").read_text(encoding="utf-8") == OPTIMIZED_XYZ
             return _completed(
                 stderr="prep failed at wavefunction write\nextra diagnostics",
@@ -209,7 +210,7 @@ def test_optical_gap_stda_preparation_failure_falls_back_with_provenance(monkeyp
     assert result.raw["fallback_used"] is True
     assert result.raw["stda_failure_type"] == "STDAStageError"
     assert result.raw["stda_failure_message"] == (
-        "xtb (for sTDA) failed: exit 17. STDERR: prep failed at wavefunction write"
+        "xtb4stda (for sTDA) failed: exit 17. STDERR: prep failed at wavefunction write"
     )
 
 
