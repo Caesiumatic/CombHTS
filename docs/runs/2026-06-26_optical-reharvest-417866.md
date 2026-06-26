@@ -4,9 +4,9 @@
 - command: `eps run-tier1 --engine xtb` on the 36×13×16 production library (CombHTS-main @ main), cache seeded from the 417538 real harvest; SGE `scripts/run_optical_reharvest.sge`
 - engine / method: real gfn2-xtb; **optical axis = real sTDA-xTB** (xtb4stda→wfn.xtb→`stda -xtb`); non-optical axes are cache HITS from 417538 (Eox / dimerization / secondary / oligomer-Eox unchanged)
 - scope: 36 monomers × 13 solvents × 16 salts = 7,488 triads (current validated scale; < scale_guard 12,000; NOT the §0 full ~50k harvest)
-- cluster job: SGE 417866 (`opt_reharvest`), `-pe smp 8`, h_rt 24:00:00; state qw at submit
-- status: running (queued). Resumable — per-species cache commits incrementally; resubmit with the same `--cache` after any wall-kill.
-- headline results: PENDING. Goal = replace the HOMO-LUMO fallback optical gaps with real sTDA-xTB across all 36 monomers; also populates the new `oligomer_Eox_monotonic_status` column at assembly.
+- cluster job: SGE 417866 (`opt_reharvest`), `-pe smp 8`; completed rc=0
+- status: **completed / PASS**. (Fast because the seeded cache made the optical geometry/non-optical axes hits, so only the sTDA step recomputed.)
+- headline results: **all 36 monomers → `optical_gap_method=stda-xtb`, `optical_gap_calc_status=ok`, 0 NaN** (HOMO-LUMO fallback fully replaced). Hexamer sTDA gaps physically sensible: polythiophene 2.84, PEDOT 2.66, terthiophene 2.56, pyrrole 3.25, furan 2.93, carbazole 4.04 eV (above polymer limits, as expected for finite 6-mers; sTDA-xTB overestimates slightly — known/diagnostic). New `oligomer_Eox_monotonic_status` = **monotonic_decreasing for all 36** (independent confirmation the oligomer-Eox series is physically sound).
 - output artifacts (paths, NOT committed): `$HOME/CombHTS-main/outputs/tier1_real_7488_optical_stda/{all.csv,ranked.csv,cache.sqlite}`
 - provenance: code @ commit 1fae366 (engine fix c5dce3a + monotonicity flag); binaries `$HOME/bin/{stda,xtb4stda}`, `XTB4STDAHOME=$HOME/xtb4stda_src`; seed cache `$HOME/CombHTS/outputs/tier1_real_7488/tier1_cache.sqlite`
 - caveats: optical axis remains DIAGNOSTIC (15%) and uncalibrated; sTDA-xTB is documented-weak on low-gap D–A — per-class calibration is the T6 follow-up. This re-harvest provides the real sTDA descriptors that calibration would consume. Scoring weights/filters unchanged.
