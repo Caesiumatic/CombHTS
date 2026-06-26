@@ -45,6 +45,29 @@ solvent / supporting electrolyte (+conc.) / working electrode / **reference elec
 - **Bard group oligothiophene/fluorene** Chem. Sci. 2012 `10.1039/c2sc20263h`: oligomers (n≥2), **1:1 benzene:MeCN** mixed solvent → off-target + Fc-MeCN constant inapplicable.
 - **CPDT/DTP** ferrocene-functionalized derivatives (PMC9079884): not parent monomers (Fc-ester decorated) → off-target.
 
+## UPDATE 2026-06-26 (PDFs provided — needs-PDF list RESOLVED)
+The user supplied 5 PDFs; values extracted and staged in `data/lit_curation/eox_gapfill_candidates_20260626.csv`
+(candidates only — NOT promoted to production `data/benchmark.csv`). All converted to Ag/AgCl by allowed/same-paper ties.
+
+**Clean convertible anchors found (library monomers, PEAK = calibration-track quality):**
+
+| monomer | native | ref | → V vs Ag/AgCl | conditions | source | conf |
+|---|---|---|---|---|---|---|
+| **EDOT** | 1.44 V (peak) | SCE | **1.485** | MeCN/0.1 M TBAPF6/Pt/100 mV/s | Aqad & Cava, *Org. Lett.* 2001, 3, 4283 (10.1021/ol0169473) | high |
+| **EDOS** | 1.18 V (peak) | SCE | **1.225** | same paper/conditions | 10.1021/ol0169473 | high |
+| **pyrrole** | 1.20 V (Epa) | NaCE≈SCE | **1.245** | MeCN/0.1 M Et4NBF4/Pt/50 mV/s | Diaz, Martinez, Kanazawa, Salmon, *J. Electroanal. Chem.* 1981, 130, 181 | high |
+| **pyrrole** (2nd) | 0.920 V (Epa) | Ag/AgNO3 (=+0.337 vs SCE, paper) | **1.302** | MeCN/0.1 M Bu4NClO4/Pt/100 mV/s | Tabba & Smith, *J. Org. Chem.* 1984, 49, 1870 (10.1021/jo00185a005) | medium |
+| **N-methylpyrrole** | 1.14 V (Epa) | NaCE≈SCE | **1.185** | MeCN/0.1 M Et4NBF4/Pt/50 mV/s | Diaz 1981 | high |
+| **carbazole** | 1.16 V (Ep/2) | SCE | **1.205** | MeCN/0.1 M TEAP/Pt/80 mV/s | Ambrose & Nelson, *J. Electrochem. Soc.* 1968, 115, 1159 | medium (Ep/2, not full Epa) |
+
+Notes / cross-checks:
+- **EDOT** now has a clean PEAK (1.485, calibration track) plus a low-confidence ONSET (~1.23 V, Ag/AgCl-wire quasi-ref in DCM; Hu et al., *Mater. Chem. Phys.* 2020, 244, 122699, 10.1016/j.matchemphys.2020.122699). Peak−onset ≈ 0.25 V, internally consistent.
+- **pyrrole**: two independent PEAK values (1.245 vs 1.302) differ by ~60 mV — within the ~0.05–0.15 V reference floor; report both, mean ≈ 1.27 V.
+- EDOS/EDOT paper notes "Fc/Fc⁺ shows 0.33 V under conditions" (vs the standard ~0.40 V vs SCE) → ~0.05–0.07 V reference uncertainty; SCE→Ag/AgCl +0.045 used (project standard).
+- **B1/feasibility corroboration (bonus):** Diaz 1981 reports 2,5-dimethylpyrrole Epa 0.84 V and that α,α′-blocked pyrroles give *soluble* products / **no film** (vs N-substituted/parent pyrroles which form conducting films); Ambrose 1968 reports carbazoles with N and 3,6 positions blocked become electrochemically *reversible* (no coupling). Both independently confirm the THINK T15 "position-blocked → intrinsic-NO" mechanism.
+
+**Promotion recommendation:** EDOT/EDOS/pyrrole/N-methylpyrrole are native-SCE-convertible irreversible PEAKs in MeCN — i.e. they meet the strict-set (tier-A) criteria and would strengthen the n=9 strict calibration set with canonical, chemically-diverse heteroaromatic monomers (it currently lacks EDOT/pyrrole/carbazole). carbazole is Ep/2 (half-peak) → tier-B. Promotion changes the calibration fit (a method change) → requires sign-off + re-validation under the freeze discipline; staged pending that.
+
 ## Recommendation
 - Pursue PDFs #1, #2, #3 first (pyrrole family; a possible convertible EDOT onset; carbazole). #2 is the
   highest-value single item — a convertible EDOT anchor would fill the most glaring gap.
