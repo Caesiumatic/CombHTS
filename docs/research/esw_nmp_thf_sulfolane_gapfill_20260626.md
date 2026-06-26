@@ -118,7 +118,64 @@ The integrity-preserving resolution has three layers:
 Ag/AgCl reference **OR** a same-paper Fc/Li tie in that solvent. Cross-paper bridges and bare-Ag pseudo-refs
 are soft priors at most.
 
+## UPDATE 2026-06-26 (primary PDFs READ) — the real blocker is the master-scale choice
+
+Three primary PDFs were obtained (UIUC library) and read in full. Net finding: **sulfolane's window is
+now known; NMP still has none; and the true blocker is that non-aqueous ESW data essentially never lives
+on an aqueous reference — so forcing it to aqueous Ag/AgCl is the wrong architecture.**
+
+### Sulfolane — window FOUND, but not aqueous-Ag/AgCl-convertible (it IS Fc-scale derivable)
+- **Armstrong, Quinn & Vanderborgh, *J. Electrochem. Soc.* 1976, 123, 646** (read): residual CV at a **Pt
+  electrode in 0.10 M TBAP/sulfolane** gives, verbatim, *"A wide potential window, between the cathodic and
+  anodic limits, of **3.5 V** is available using this system."* Fig. 1 places it ≈ **−1.0 to +2.5 V** vs an
+  **anodized-Ag-wire pseudo-reference (AgRE)** (absolute limits read from the figure → approximate; the
+  **3.5 V span is verbatim/exact**). Reference is a pseudo-ref → not aqueous-convertible. The paper also
+  states **Fc(AgRE) = Fc(Ag/AgClO₄) − 0.74 V** (a sulfolane-internal silver-reference tie).
+- **Coetzee & Simon, *Anal. Chem.* 1972, 44, 1129** (DOI 10.1021/ac60315a012, read): solute polarography in
+  sulfolane vs **Ag/(0.1 M AgClO₄ in sulfolane)** (a *non-aqueous* Ag/Ag⁺ ref, NOT aqueous Ag/AgCl). Table
+  III gives **Fc/Fc⁺ = +0.30 V (anodic, reversible) vs that Ag/Ag⁺**. No clean solvent-window limit is
+  stated (it is solute data), and the reference is non-aqueous.
+- **Same-solvent chain → sulfolane window ON THE Fc SCALE:** Fc(vs AgRE) = 0.30 − 0.74 = **−0.44 V**, so the
+  Armstrong window of −1.0…+2.5 V vs AgRE becomes **≈ −0.56 to +2.94 V vs Fc/Fc⁺** (span 3.5 V exact;
+  absolute placement low-confidence, figure-read). **This is a legitimate same-solvent derivation** — no
+  cross-solvent assumption. What is STILL missing is any tie of *any* sulfolane silver reference to aqueous
+  SCE/Ag-AgCl, so the aqueous-Ag/AgCl conversion remains genuinely impossible.
+
+### NMP — still no primary window even with the PDFs in hand
+No NMP three-electrode solvent window was located. The only documented route remains the Izutsu/Mann Pt
+window table, which is itself **referenced vs Fc/Fc⁺** — so on an Fc scale it would be usable directly with
+no NMP Fc-offset needed; we just do not yet have its numeric NMP limits.
+
+### Third PDF was the wrong paper
+`1-s2.0-0022072886900082-main.pdf` = Gilbert M. Brown, *J. Electroanal. Chem.* 198 (1986) 319, "The
+reduction of chlorate and perchlorate ions at an active titanium electrode" — an **aqueous 1.0 M HClO₄**
+study, unrelated to NMP/THF/sulfolane ESW. Not used.
+
+### ROOT-CAUSE REFRAME + recommended solve
+The reason all three solvents are "unconvertible" is **the aqueous Ag/AgCl master scale**, not missing data.
+Non-aqueous electropolymerization/electrochemistry is measured against **Fc/Fc⁺** (IUPAC-recommended,
+solvent-portable) or non-aqueous silver refs — almost never against aqueous Ag/AgCl. On an **Fc/Fc⁺ ESW
+track** the picture changes:
+- **THF:** usable now — La Pierre 2026 reports the THF window directly vs Fc/Fc⁺ (already staged).
+- **Sulfolane:** usable now — **≈ −0.56 to +2.94 V vs Fc/Fc⁺** (derived above from the two primaries, same-solvent).
+- **NMP:** one retrieval away — the Izutsu/Mann Pt table is already vs Fc/Fc⁺; we only need its numbers.
+
+**Recommendation (PI / scope — a scale-architecture decision):** add a documented **Fc/Fc⁺ reference frame
+for non-aqueous solvent ESW gating**, keeping aqueous Ag/AgCl for the monomer-Eox benchmark (where the data
+lives), and bridging the two scales per-solvent ONLY where a same-solvent Fc-vs-aqueous tie exists (pinned in
+MeCN; flagged elsewhere). This is the scientifically correct architecture and the only one that actually
+closes THF + sulfolane. It is a PI call because it changes how the constraint-① in-window gate is computed
+for non-aqueous solvents (monomer Eox and solvent window must share a scale). The infrastructure partly
+exists (`calibration_profiles.yaml` already defines `fc` reference frames for monomer Eox).
+
+**If the strict aqueous-only policy is kept instead:** NMP/THF/sulfolane stay parked on the conservative
+fallback window (no measured gate) — safe, but it permanently forgoes measured windows for these three,
+since the aqueous-referenced data does not exist in the literature.
+
 ## Sources consulted (this sweep)
+- Armstrong, Quinn & Vanderborgh, *J. Electrochem. Soc.* 1976, 123, 646 — sulfolane window 3.5 V (Pt, 0.1 M TBAP, vs AgRE pseudo-ref); Fc(AgRE)=Fc(Ag/AgClO₄)−0.74 V. **READ.**
+- Coetzee & Simon, *Anal. Chem.* 1972, 44, 1129 (DOI 10.1021/ac60315a012) — sulfolane Fc=+0.30 V vs Ag/(0.1 M AgClO₄ in sulfolane); solute data, non-aqueous ref. **READ.**
+- Gilbert M. Brown, *J. Electroanal. Chem.* 198 (1986) 319 — perchlorate reduction at Ti in aqueous HClO₄; **wrong topic, not used.**
 - Connelly & Geiger, *Chem. Rev.* 1996, 96, 877 (DOI 10.1021/cr940053x) — THF Fc/Fc⁺ vs SCE 0.56/0.53 V (compilation; THF bridge).
 - IntechOpen chapter 81101 "Effects of Electrolyte on Redox Potentials" — corroborates the C&G THF value; Shalev & Evans [22] = JACS 1989 111 2667 (anion-radical solvation, NOT the value's primary).
 - Coetzee & Simon, *Anal. Chem.* 1972, 44(7), 1129 (DOI 10.1021/ac60315a012) — sulfolane window primary (value NOT extracted).
