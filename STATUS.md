@@ -238,9 +238,12 @@ gate to the existing real-xTB harvest without rerunning xTB, changing capped-ESW
    (writes `wfn.xtb`) instead of plain `xtb` — the prior code could never produce real sTDA. End-to-end
    eps smoke SGE 417865 returned `optical_gap_method="stda-xtb"` (value 5.354 eV, thiophene), not the
    fallback (manifest `docs/runs/2026-06-25_optical-stda-unblock-417865.md`). Runtime needs
-   `PATH=$HOME/bin` + `XTB4STDAHOME=$HOME/xtb4stda_src`. **Remaining:** the production optical re-harvest
-   with the working sTDA path (replaces the HOMO-LUMO fallback gaps), tied to the T6 optical
-   route/calibration decision; the 15% optical axis stays DIAGNOSTIC until per-class calibration.
+   `PATH=$HOME/bin` + `XTB4STDAHOME=$HOME/xtb4stda_src`. **Production re-harvest DONE** (SGE 417866,
+   `docs/runs/2026-06-26_optical-reharvest-417866.md`): all 36 monomers now have real
+   `optical_gap_method=stda-xtb` (0 NaN; sane hexamer gaps), replacing the HOMO-LUMO fallback, and the
+   new `oligomer_Eox_monotonic_status` is monotonic_decreasing for all 36. **Remaining:** per-class
+   optical calibration (T6) — the 15% axis stays DIAGNOSTIC until then; the real sTDA descriptors it
+   would consume now exist.
 2. Calibration operational truth needs better visibility. Production Tier-1 uses the
    `agagcl_peak_strict` coefficients in `configs/tier1.yaml`, while default `eps validate` uses
    `agagcl_peak_relaxed` from `configs/calibration_profiles.yaml`. Add an active-calibration
