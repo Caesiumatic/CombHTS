@@ -1,0 +1,13 @@
+# Run: 2026-06-25 — sTDA-xTB optical unblock + eps smoke (real gfn2-xtb/sTDA)
+- run_id: 2026-06-25_optical-stda-unblock_417865
+- date: 2026-06-25T23:42-05:00
+- command: install `stda` + `xtb4stda` in `$HOME`; engine fix `src/eps/engines/xtb.py`; SGE `scripts/run_optical_smoke.sge` runs `XTBEngine().run(optical_gap request)` on thiophene
+- engine / method: real gfn2-xtb geometry opt + **sTDA-xTB** (xtb4stda → wfn.xtb → `stda -xtb -e 10`)
+- scope: 1 molecule (thiophene) end-to-end eps-path smoke
+- cluster job: SGE 417865 (`opt_smoke`), `-pe smp 2`; completed
+- status: **completed / PASS** — `OPTICAL_SMOKE value_eV 5.354 method stda-xtb status success fallback False`. The eps engine now produces `optical_gap_method="stda-xtb"` (not the HOMO-LUMO fallback). Raw recipe cross-check (xtb4stda+stda directly): thiophene S1 = 5.247 eV.
+- install provenance: `stda` = prebuilt v1.6.3 (github.com/grimme-lab/stda) → `$HOME/bin/stda`; `xtb4stda` = built from source (github.com/grimme-lab/xtb4stda) with `meson setup build -Dla_backend=openblas && ninja` (meson/ninja pip-installed in the combhts env) → `$HOME/bin/xtb4stda`; param files at `$HOME/xtb4stda_src` (`.param_stda*.xtb`, `.param_gbsa_*`). Runtime env: `PATH=$HOME/bin:$PATH`, `XTB4STDAHOME=$HOME/xtb4stda_src`.
+- engine fix: `_stda_lowest_excitation` now calls `xtb4stda` (writes wfn.xtb) instead of plain `xtb` (which does not). Both binaries required for the sTDA path; gas-phase. Commit c5dce3a; tests updated; full suite 335 passed.
+- caveats: optical axis remains DIAGNOSTIC (15%); sТDA-xTB is documented-weak on low-gap D–A and needs per-class calibration (T6). Lop admin: COSMOtherm NOT licensed (solubility stays openCOSMO-RS/ΔGsolv).
+- next: **production optical re-harvest** with the working sTDA-xTB path (replaces the HOMO-LUMO fallback gaps), tied to the T6 optical route/calibration decision.
+- supersedes / superseded_by: resolves the "sTDA blocked on Lop" debt (STATUS open debt #1)

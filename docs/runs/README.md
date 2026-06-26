@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-06-25 | sTDA-xTB optical unblock + eps smoke | gfn2-xtb + sTDA real | install stda/xtb4stda; 1-molecule eps smoke | completed/PASS (SGE 417865) | engine now yields optical_gap_method=stda-xtb (5.354 eV), not fallback; production re-harvest pending (T6) | [link](2026-06-25_optical-stda-unblock-417865.md) |
 | 2026-06-25 | B1 coupling-feasibility descriptor batch | gfn2-xtb real | 10 size-matched monomers × MeCN × TBAPF6 |  completed (SGE 417848; 417846 qdel'd redundant) | B1 decided: only position-block separable; size-matched dimerization does not separate electronic/β-steric NOs; B2/B3 done (bal-acc 0.50→0.71) | [link](2026-06-25_b1-coupling-descriptor-batch-417844.md) |
 | 2026-06-24 | Eox G1.2 master closure audit | none (no-engine curation) | review-only current production + R11-R21 staging + external evidence manifest | completed | 86 master rows; 31 directive-eligible combinations PASS vs >=30; 5 clean external additions proposed; 10 Camarada production rows flagged for future correction | [link](2026-06-24_eox-g1-2-master-closure-audit.md) |
 | 2026-06-24 | Eox R11-R21 primary-PDF correction | none (no-engine curation) | primary-PDF review-only correction for R11-R21 Eox candidates | completed | 11/11 RDKit parsed; 3 PROMOTE_NOW_CANDIDATE; 8 NEEDS_REFERENCE_CHECK; reference conflicts 8; condition conflicts 4; no benchmark promotion | [link](2026-06-24_eox-r11-r21-primary-pdf-correction.md) |
