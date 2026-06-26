@@ -205,7 +205,36 @@ Notes:
 (and uniformly for the rest). Recommend adopting it (PI/scope) per the resolution layers above; the data is
 staged in `esw_fc_scale_izutsu_table8.csv` pending that go-ahead. Nothing promoted to the production gate yet.
 
+## IMPLEMENTED 2026-06-26 — Fc/Fc⁺ bridge track (PI-approved)
+
+The Fc track was implemented as a **per-solvent Fc→Ag/AgCl bridge feeding the existing
+condition-aware gate** (no gate-algorithm rewrite; reuses the measured-first conservative-cap policy).
+
+- **Bridge offsets** `configs/fc_to_agagcl_offsets.csv` — per-solvent Fc/Fc⁺→Ag/AgCl = (Fc vs SCE from
+  Connelly & Geiger 1996 Table 1) + 0.045 (SCE→Ag/AgCl). Cross-check: the MeCN offset comes out **+0.445 V,
+  exactly the project-pinned MeCN constant** — independent validation of the whole bridge chain.
+- **Converter** `eps.properties.solvent_windows.fc_windows_to_agagcl_rows()` + `load_fc_to_agagcl_offsets()`
+  — bridges the Izutsu Table 8 Fc windows (`data/lit_curation/esw_fc_scale_izutsu_table8.csv`) to Ag/AgCl,
+  emitting gate rows **only for solvents with a sourced offset**.
+- **Result per target solvent:**
+  - **THF → HARD-GATEABLE.** Bridged window **+2.205 / −3.245 V vs Ag/AgCl** (Izutsu +1.6/−3.85 vs Fc, +0.605
+    offset), committed to `data/solvent_windows.csv` as tier `C-fcbridge`. This is *more conservative* than the
+    prior THF stopgap (+2.9 V TODO), so it tightens the THF anodic gate with real evidence. The conservative-cap
+    policy still applies (it can only tighten, never wrongly relax).
+  - **NMP, sulfolane → remain Fc-scale soft priors (NOT gated).** Connelly & Geiger Table 1 contains neither
+    solvent, so **no sourced Fc↔aqueous offset exists** — the converter intentionally drops them. Their windows
+    live on the Fc scale only (`esw_fc_scale_izutsu_table8.csv`); this is the honest wall (the data genuinely
+    does not exist), not a code limitation.
+- **Tests:** `tests/test_fc_scale_windows.py` (offset load, MeCN-pin cross-check, NMP/sulfolane absence,
+  THF bridge value, CSV↔converter sync) + updated `tests/test_conditioned_solvent_windows.py` (THF now measured;
+  sulfolane exercises the no-measurement fallback). Full suite passes.
+
+**Net:** the Fc track delivers exactly what the literature supports — THF gated on a real Fc-bridged window;
+NMP/sulfolane honestly parked (windows known on Fc, but no aqueous tie exists for either). The bridge
+infrastructure also covers PC/DMSO/DMF/DCM/acetone/NM for any future Fc-sourced windows.
+
 ## Sources consulted (this sweep)
+- Connelly & Geiger, *Chem. Rev.* 1996, 96, 877 (DOI 10.1021/cr940053x), **Table 1** — Fc/Fc⁺ vs SCE per solvent (THF 0.56; MeCN 0.40; **NMP & sulfolane ABSENT**). **READ (full table).** This is the bridge-offset source.
 - Izutsu, *Electrochemistry in Nonaqueous Solutions*, Table 8 (Pt potential limits V vs Fc/Fc⁺, 10 µA/mm²) — NMP/sulfolane/THF windows on the Fc scale. **READ (image).**
 - Armstrong, Quinn & Vanderborgh, *J. Electrochem. Soc.* 1976, 123, 646 — sulfolane window 3.5 V (Pt, 0.1 M TBAP, vs AgRE pseudo-ref); Fc(AgRE)=Fc(Ag/AgClO₄)−0.74 V. **READ.**
 - Coetzee & Simon, *Anal. Chem.* 1972, 44, 1129 (DOI 10.1021/ac60315a012) — sulfolane Fc=+0.30 V vs Ag/(0.1 M AgClO₄ in sulfolane); solute data, non-aqueous ref. **READ.**

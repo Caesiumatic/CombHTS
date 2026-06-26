@@ -1,0 +1,9 @@
+solvent,fc_vs_sce_V,sce_to_agagcl_V,fc_to_agagcl_V,electrolyte,source,source_doi,confidence,notes
+acetonitrile,0.40,0.045,0.445,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1 (Fc+/0 vs SCE)",10.1021/cr940053x,high,"Fc 0.40 vs SCE +0.045 -> +0.445; EXACTLY matches the project-pinned MeCN Fc->Ag/AgCl constant (independent cross-check of the whole bridge)"
+propylene carbonate,0.38,0.045,0.425,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1",10.1021/cr940053x,medium,"Fc 0.38 vs SCE +0.045 -> +0.425"
+DMSO,0.45,0.045,0.495,[NBu4][ClO4],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1",10.1021/cr940053x,medium,"Fc 0.45 vs SCE (ClO4 col) +0.045 -> +0.495"
+DMF,0.45,0.045,0.495,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1",10.1021/cr940053x,medium,"Fc 0.45 vs SCE +0.045 -> +0.495"
+DCM,0.46,0.045,0.505,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1 (CH2Cl2)",10.1021/cr940053x,medium,"Fc 0.46 vs SCE +0.045 -> +0.505"
+acetone,0.48,0.045,0.525,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1",10.1021/cr940053x,medium,"Fc 0.48 vs SCE +0.045 -> +0.525"
+nitromethane,0.35,0.045,0.395,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1",10.1021/cr940053x,medium,"Fc 0.35 vs SCE +0.045 -> +0.395"
+THF,0.56,0.045,0.605,[NBu4][PF6],"Connelly & Geiger, Chem. Rev. 1996, 96, 877, Table 1",10.1021/cr940053x,medium,"Fc 0.56 vs SCE +0.045 -> +0.605; bridges the Izutsu Table 8 THF Fc-scale window to Ag/AgCl"
