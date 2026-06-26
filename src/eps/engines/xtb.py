@@ -63,10 +63,15 @@ class XTBEngine(Engine):
         binary: str = "xtb",
         *,
         stda_binary: str = "stda",
+        xtb4stda_binary: str = "xtb4stda",
         stda_energy_window_eV: float = 10.0,
     ) -> None:
         self.binary = binary
         self.stda_binary = stda_binary
+        # xtb4stda generates the sTDA tight-binding wavefunction (wfn.xtb); plain xtb does NOT, so
+        # both binaries are required for the real sTDA-xTB path (else the HOMO–LUMO fallback is used).
+        # Runtime must also export XTB4STDAHOME (dir holding .param_stda*.xtb) — set it in the SGE script.
+        self.xtb4stda_binary = xtb4stda_binary
         self.stda_energy_window_eV = stda_energy_window_eV
 
     def run(self, req: CalcRequest) -> CalcResult:
@@ -369,7 +374,10 @@ class XTBEngine(Engine):
             solvent_args=[],
             optimize=True,
         )
-        stda_available = shutil.which(self.stda_binary) is not None
+        stda_available = (
+            shutil.which(self.stda_binary) is not None
+            and shutil.which(self.xtb4stda_binary) is not None
+        )
         if not stda_available:
             failure_type, failure_message = _failure_details(
                 STDAUnavailableError(f"sTDA binary {self.stda_binary!r} was not found on PATH")
@@ -443,28 +451,32 @@ class XTBEngine(Engine):
         )
 
     def _stda_lowest_excitation(self, req: CalcRequest, xyz: str) -> float:
-        """Run xTB (dump wavefunction) + ``stda -xtb`` and return the lowest singlet eV."""
+        """Run ``xtb4stda`` (writes wfn.xtb) + ``stda -xtb`` and return the lowest singlet eV.
+
+        Canonical sTDA-xTB (Grimme): xtb4stda builds the sTDA tight-binding wavefunction wfn.xtb,
+        then ``stda -xtb`` reads it. Gas phase (the optical gap is reported gas/vacuum and the
+        geometry was optimized gas-phase). Plain ``xtb`` does NOT write wfn.xtb — that was the prior
+        always-fallback bug. Requires XTB4STDAHOME (param dir) exported at runtime.
+        """
 
         with tempfile.TemporaryDirectory(prefix="eps-stda-") as tmpdir:
             xyz_path = Path(tmpdir) / "input.xyz"
             xyz_path.write_text(xyz, encoding="utf-8")
-            # xtb writes the sTDA wavefunction (wfn.xtb) when asked to.
-            xtb_cmd = [
-                self.binary,
+            xtb4stda_cmd = [
+                self.xtb4stda_binary,
                 str(xyz_path),
-                "--gfn",
-                "2",
-                "--chrg",
+                "-chrg",
                 str(req.species.charge),
-                "--uhf",
+                "-uhf",
                 str(max(req.species.multiplicity - 1, 0)),
-                *solvent_flag(req.xtb_gbsa_name),
             ]
-            xtb_done = subprocess.run(xtb_cmd, cwd=tmpdir, check=False, capture_output=True, text=True)
-            if xtb_done.returncode != 0:
+            xtb_done = subprocess.run(
+                xtb4stda_cmd, cwd=tmpdir, check=False, capture_output=True, text=True
+            )
+            if xtb_done.returncode != 0 or not (Path(tmpdir) / "wfn.xtb").exists():
                 raise STDAStageError(
                     "stda_preparation_failed",
-                    f"xtb (for sTDA) failed: exit {xtb_done.returncode}. STDERR: {xtb_done.stderr}",
+                    f"xtb4stda (for sTDA) failed: exit {xtb_done.returncode}. STDERR: {xtb_done.stderr}",
                 )
             stda_done = subprocess.run(
                 [self.stda_binary, "-xtb", "-e", str(self.stda_energy_window_eV)],
