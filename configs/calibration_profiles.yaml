@@ -14,7 +14,7 @@
 #   Epa-Eonset gap would inject ~0.2 V of artificial scatter. The anchor TYPE is fixed; only the
 #   strict-vs-relaxed (peak) choice remains, pending the live DFT LOO-CV tiebreaker.
 
-default_screening_profile: agagcl_peak_relaxed
+default_screening_profile: agagcl_peak_strict
 
 profiles:
   agagcl_peak_strict:
