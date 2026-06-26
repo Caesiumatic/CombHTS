@@ -71,6 +71,10 @@ carbazole-class conclusion is unaffected.
 
 - [x] Canonical 36-row CSV ingested as source of truth (this commit).
 - [x] B1 diagnostic uses canonical SMILES + the 7 intrinsic-NO subset (NO_type = `intrinsic`).
-- [ ] **Pending (PI):** decide whether to fold the production-only monomers with valid SMILES +
-  primary sources into a future expanded feasibility set, and to **delete/correct** the production
-  CSV's wrong carbazole rows. See `DECISIONS_PENDING.md`.
+- [x] **Done 2026-06-25:** corrected all **six** wrong production carbazole SMILES (3-ethyl,
+  3-tert-butyl, 3-phenyl, 3,6-diethyl, 3,6-di-tert-butyl, 3,6-diphenyl) from position 2/4 → 3/6
+  (verified at distance-4 from the ring N); `flags` column annotated. The error was systematic across
+  every substituted carbazole in the generator.
+- [ ] **Pending (PI):** whether to retire the production CSV in favor of canonical-36, and which
+  production-only monomers (triphenylamine, tris-amines, …) to fold into a future expanded set with
+  primary sources. See `DECISIONS_PENDING.md` B4.
