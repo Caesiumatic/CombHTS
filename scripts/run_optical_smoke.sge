@@ -1,0 +1,35 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N opt_smoke
+#$ -j y
+#$ -pe smp 2
+#$ -l h_rt=0:20:00
+# End-to-end eps sTDA-xTB smoke (THINK T6 / §3.1 optical). Confirms the engine fix produces
+# optical_gap_method="stda-xtb" (not the HOMO-LUMO fallback) now that stda + xtb4stda are installed.
+# Requires $HOME/bin/{stda,xtb4stda} and XTB4STDAHOME (the .param_stda* dir).
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load xtb/6.4.1
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export PATH="$HOME/bin:$PATH"
+export XTB4STDAHOME="$HOME/xtb4stda_src"
+export OMP_NUM_THREADS="${NSLOTS:-2}"; export OMP_STACKSIZE=2G; ulimit -s unlimited || true
+
+git -C "$HOME/CombHTS-main" pull --ff-only 2>&1 | tail -2 || true
+grep -q "xtb4stda" "$HOME/CombHTS-main/src/eps/engines/xtb.py" || { echo "FIX NOT PRESENT in CombHTS-main"; exit 3; }
+echo "stda: $(command -v stda)  xtb4stda: $(command -v xtb4stda)"
+export PYTHONPATH="$HOME/CombHTS-main/src"
+python - << 'PY'
+from eps.engines.xtb import XTBEngine
+from eps.engines.base import CalcRequest, SpeciesSpec
+req = CalcRequest(species=SpeciesSpec("c1ccsc1", 0, 1), method="gfn2-xtb",
+                  solvent_eps_r=None, quantity="optical_gap")
+res = XTBEngine().run(req)
+print("OPTICAL_SMOKE value_eV", round(res.value, 4),
+      "method", res.raw["optical_gap_method"],
+      "status", res.raw.get("stda_status"),
+      "fallback", res.raw.get("fallback_used"))
+PY
+echo "OPTICAL SMOKE DONE rc=$?"
