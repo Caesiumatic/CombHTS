@@ -442,12 +442,12 @@ def test_counting_semantics_preserve_benchmark_onset_peak_separation(tmp_path: P
     result = _build_from_source(_source_fixture(), tmp_path)
 
     assert result.summary["existing_production_onset_groups"] == 16
-    assert result.summary["existing_production_peak_groups"] == 23
+    assert result.summary["existing_production_peak_groups"] == 29  # +6 canonical-monomer peak rows promoted 2026-06-26 (EDOT/EDOS/2x pyrrole/N-methylpyrrole/carbazole)
     assert result.summary["promotable_rescue_onset_groups"] == 3
     assert result.summary["promotable_rescue_peak_groups"] == 0
     assert result.summary["projected_union_onset_groups"] == 19
-    assert result.summary["projected_union_peak_groups"] == 23
-    assert result.summary["combined_experimental_combination_inventory"] == 42
+    assert result.summary["projected_union_peak_groups"] == 29
+    assert result.summary["combined_experimental_combination_inventory"] == 48
     assert result.summary["reference_source_conflict_rows"] == 8
     assert result.summary["condition_source_conflict_rows"] == 4
 
@@ -539,8 +539,8 @@ def test_review_package_is_review_only_and_deterministic(tmp_path: Path) -> None
     )
     assert result.summary["promotable_rescue_onset_groups"] == 3
     assert result.summary["projected_union_onset_groups"] == 19
-    assert result.summary["projected_union_peak_groups"] == 23
-    assert result.summary["combined_experimental_combination_inventory"] == 42
+    assert result.summary["projected_union_peak_groups"] == 29
+    assert result.summary["combined_experimental_combination_inventory"] == 48
     assert result.summary["no_candidate_promoted_to_benchmark"] is True
     assert "No candidate was promoted into `data/benchmark.csv`" in report_path_a.read_text(
         encoding="utf-8"
