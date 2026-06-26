@@ -29,12 +29,12 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    `agagcl_peak_strict`; `eps validate` defaults to `agagcl_peak_relaxed`. *Recommend:* publish an
    active-calibration manifest (decidable, doing it), then decide strict-vs-relaxed from the recorded
    DFT 417442 Fit-2 LOO-CV. *Why human:* the choice reshapes the window filter + 0.30-weight axis. (`THINK` T1.)
-4. **Feasibility set reconciliation.** Canonical 36-row is now source of truth; production
-   `polymerizability_labels.csv` (34) is superseded **and** has three **wrong carbazole SMILES**
-   (position 2/4, not 3,6 — see `docs/research/feasibility_reconcile_20260625.md`). *Recommend:*
-   delete/correct the production carbazole rows; fold the valid production-only monomers
-   (triphenylamine, tris-amines, …) into a future expanded set with primary sources. *Why human:*
-   curation sign-off + which extra monomers are in scope.
+4. **Feasibility set reconciliation.** Canonical 36-row is now source of truth. Production
+   `polymerizability_labels.csv` (34) had **six wrong carbazole SMILES** (substituent at position 2/4,
+   not 3,6) — a systematic generator error; **all six CORRECTED 2026-06-25** (3-ethyl, 3-tert-butyl,
+   3-phenyl, 3,6-diethyl, 3,6-di-tert-butyl, 3,6-diphenyl; verified at distance-4 = pos 3/6). *Remaining
+   PI part:* whether to retire production in favor of canonical-36, and which production-only monomers
+   (triphenylamine, tris-amines, …) to fold into a future expanded set with primary sources.
 
 ## C. Standing sign-offs / no-go's
 
@@ -50,8 +50,13 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    can), not executing it. See the freeze-readiness summary in `STATUS.md` / `THINK` (pending T17).
 8. **Library expansion to directive scale** (~80–150 monomers × 25–35 solvents × 20–30 salts ≈ 50k)
    is a **resource/scope** call (`THINK` T8), gated on stable ESW/solubility/optical evidence.
-9. **External dependencies (PI/resource):** install `stda`/`xtb4stda` on Lop (blocks production optical);
-   openCOSMO-RS expansion beyond the 3 built-in solvent profiles (blocks a true solubility axis).
+9. **External dependencies (UPDATED 2026-06-25 per Lop admin):** (a) `stda`/`xtb4stda` — admin confirmed
+   users may install into `$HOME` and submit from there; build tools (gfortran/gcc/cmake/make) are present,
+   36 TB free home. → **now an in-progress engineering task** (install + real sTDA-xTB smoke), no longer an
+   external blocker. (b) **COSMOtherm is NOT licensed on the cluster** → commercial COSMO-RS is out; the
+   only true-solubility path is **openCOSMO-RS via ORCA 6.1 (open-source, already on Lop)**, with the
+   ΔGsolv ALPB affinity proxy as the documented fallback. PI/resource call: how far to push the
+   openCOSMO-RS solvent-profile expansion (PC/NMP σ-profiles were deferred in the pilot).
 10. **OMIEC review PDF (24 MB)** kept out of git history (size + published-article redistribution);
     pointer in `docs/research/external_reports_20260625/README.md`. Add via git-LFS only if you want it tracked.
 
