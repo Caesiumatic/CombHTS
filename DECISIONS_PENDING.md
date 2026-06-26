@@ -14,7 +14,7 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
 |---|---|---|---|---|
 | **① ESW physics wall** | Isolated-molecule ΔSCF cannot compute a real electrochemical window (audit: anodic MAE 5.4 V / cathodic 3.8 V vs measured). | **Decided & implemented** as measured-first-conservative cap (`THINK` T14); §6 audit reconfirmed the raw descriptor must stay an audited prior, not the window. | Keep measured window as conservative upper bound; treat the directive §3.2 *literal* ΔSCF-window as physically unachievable. | **Deviates from directive §3.2 literal** — PI should acknowledge the deviation (it serves the goal; veto via cadence). |
 | **② Accuracy floor** | Directive §8 wants Tier-2 Eox MAE < 0.15 V. | **Decided** (`THINK` T3): physically unreachable; honest band **0.20–0.35 V**, hard floor 0.15 V. Active Tier-1 profile = 0.186 V LOO-CV (passes the <0.30 V gate). | Adopt 0.20–0.35 V language; never claim <0.15 V. | PI should accept that the §8 <0.15 V target is **retired as physically impossible** (literature-argued in report 05). |
-| **③ Band-gap route** | sTDA-xTB vs ML/GNN for the optical gap. | sTDA-xTB chosen (directive §3.1/§4.1-faithful); `THINK` T6. **Caveat:** production currently uses the HOMO-LUMO hexamer *fallback* because `stda` is absent on Lop, and the 15% optical axis is diagnostic (weak fits). | Stay on sTDA-xTB now; keep ML/GNN as a future enhancement (sTDA-xTB is documented-weak on low-gap D–A). | Resource/scope: installing `stda` on Lop, and any future ML/GNN pivot, are PI calls. |
+| **③ Band-gap route** | sTDA-xTB vs ML/GNN for the optical gap. | sTDA-xTB chosen (directive §3.1/§4.1-faithful); `THINK` T6. **UPDATED 2026-06-26:** `stda`+`xtb4stda` installed on Lop, engine fixed, all 36 monomers re-harvested with REAL sTDA-xTB (HOMO-LUMO fallback fully retired, SGE 417866). Hexamer-vs-experiment calibration (8 anchors) → **stays 15% diagnostic**: LOO-CV 0.30 eV > ±0.2 eV anchor floor; every class is a singleton so per-class offsets are not estimable. | Stay on sTDA-xTB diagnostic now; graduation requires ≥3 anchors/class (curation, not compute); keep ML/GNN as future (sTDA-xTB documented-weak on low-gap D–A). | Resource/scope: anchor-density curation + any future ML/GNN pivot are PI calls. |
 
 ## B. New decisions from this run
 
@@ -25,10 +25,15 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    report-only (the audit's most directive-divergent finding). *Recommend:* publish a λ-vs-feasibility
    diagnostic, then add λ as a *reported / lightly-weighted soft term* — **not** a hard filter (GFN2
    λ is noisy). *Why human:* any weight change reshapes ranking → group/PI + a fresh harvest. (`THINK` T16.)
-3. **Calibration strict vs relaxed + active-calibration manifest.** Production Tier-1 uses
-   `agagcl_peak_strict`; `eps validate` defaults to `agagcl_peak_relaxed`. *Recommend:* publish an
-   active-calibration manifest (decidable, doing it), then decide strict-vs-relaxed from the recorded
-   DFT 417442 Fit-2 LOO-CV. *Why human:* the choice reshapes the window filter + 0.30-weight axis. (`THINK` T1.)
+3. **Calibration strict vs relaxed — RESOLVED 2026-06-26: STRICT.** Re-validated on the current
+   benchmark with real GFN2-xTB (SGE 417876): strict (tier A, n=9) LOO-CV **0.197 V** / R² 0.889 / ρ
+   0.833 beats relaxed (A+B, n=23) LOO 0.232 V / R² 0.508 / ρ 0.663 on every metric; DFT 417442
+   composed line corroborates (max |Δ| 0.087 V). Production `tier1.yaml` **already pins the strict
+   coefficients** (0.725837 / −3.145372) — no production change. *Remaining PI part (one calibration-
+   freeze action):* flip `configs/calibration_profiles.yaml` `default_screening_profile`
+   relaxed→strict to remove the validate-default label inconsistency (`configs/CALIBRATION_ACTIVE.md`).
+   Not executed because changing the default profile is a calibration-freeze call.
+   Evidence `docs/research/eox_strict_vs_relaxed_loocv_20260626.md`. (`THINK` T1.)
 4. **Feasibility set reconciliation.** Canonical 36-row is now source of truth. Production
    `polymerizability_labels.csv` (34) had **six wrong carbazole SMILES** (substituent at position 2/4,
    not 3,6) — a systematic generator error; **all six CORRECTED 2026-06-25** (3-ethyl, 3-tert-butyl,

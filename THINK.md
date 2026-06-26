@@ -12,12 +12,12 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 
 | ID | Title | Status | Forum | Cost |
 | --- | --- | --- | --- | --- |
-| T1 | Screening calibration anchor: peak vs onset | exploring (anchor type decided) | self (anchor type decided on physics; strict-vs-relaxed data-gated via LOO-CV) | scope/policy |
+| T1 | Screening calibration anchor: peak vs onset | DECIDED (anchor type=peak; strict-vs-relaxed=STRICT via 2026-06-26 LOO-CV) | self / report (strict wins every metric; PI flips default_screening_profile label) | scope/policy |
 | T2 | Master reference scale: Ag/AgCl vs Fc/Fc+ | resolution decided | self / report (directive-sanctioned; PI retains veto) | scope/policy |
 | T3 | Potential-type mismatch sets the accuracy ceiling | decided (validated in section-7 reporting) | self (rigor) | lit-curation (no compute) |
 | T4 | What ">=30 clean groups" actually validates | exploring (G1.2 review basis passes; production ingest/correction still separate) | self / report (directive's own two-stage design; surface as info) | scope/policy |
 | T5 | Which placeholder axis to make real first | decided/done | self (rigor) | scope/policy |
-| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | exploring (417587 complete; weak diagnostic dimer baseline only) | group-meeting | compute-heavy |
+| T6 | Band gap: oligomer + sTDA-xTB (directive route) vs an ML model | DECIDED (real sTDA-xTB unblocked + all-36 reharvest 417866; 2026-06-26 hexamer calibration → stays 15% diagnostic, LOO 0.30 eV, per-class not estimable) | group-meeting (ML pivot = future) | done (calibration); curation to graduate |
 | T7 | What is the real deliverable? | open | self / report (directive §8 lists both; produce both) | scope/policy |
 | T8 | Chemical-space coverage vs weight tuning | open | PI/group (RESOURCE planning: full-scale Tier-2 spend/sequencing) | compute-heavy |
 | T9 | The mock-preview trap after real-xTB calibration is pinned | open | self (rigor) | lit-curation (no compute) |
@@ -349,6 +349,26 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Links**: `DECISIONS_PENDING.md`; `docs/research/directive_section_audit_20260625.md`; [T1](#t1--screening-calibration-anchor-peak-vs-onset), [T6](#t6--band-gap-oligomer--stda-xtb-directive-route-vs-an-ml-model), [T14](#t14--what-is-a-valid-solvent-window-gate), [T15](#t15--coupling-feasibility-second-filter-b1b4-can-screening-descriptors-separate-intrinsic-no-from-yes).
 
 ## Decision log
+
+- 2026-06-26 (three data-gated analyses: optical T6 / Eox strict-vs-relaxed T1 / ESW T3) — all
+  decide-and-report; no scoring/weight/config change executed. (1) **T6 optical calibration** of the
+  real sTDA-xTB hexamer gaps (SGE 417866) against the 8 library-mapped neutral-polymer anchors:
+  global fit R²=0.626, **LOO-CV MAE 0.299 eV** (> the ±0.1–0.2 eV anchor floor); raw n6−exp bias
+  +0.876 eV (std 0.36, not constant); only 4/8 hexamers converged; all 8 anchors are singletons in
+  their class so per-class offsets are NOT estimable. **Decision: optical axis stays 15% diagnostic /
+  uncalibrated; cannot graduate.** Graduation path = curate ≥3 anchors/class from report 03 (curation,
+  not compute). Evidence `docs/research/optical_calibration_real_n6_20260626.md`. (2) **T1 Eox
+  strict-vs-relaxed** re-validated on the CURRENT benchmark with real GFN2-xTB (SGE 417876, seeded
+  cache): strict (tier A, n=9) LOO-CV **0.197 V**, R² 0.889, ρ 0.833 BEATS relaxed (A+B, n=23) LOO
+  0.232 V, R² 0.508, ρ 0.663 on every metric — the tier-B D–A peak rows flatten the slope (0.73→0.45).
+  DFT 417442 composed line corroborates strict (max |Δ|=0.087 V). **Decision: strict.** Production
+  `tier1.yaml` already pins the strict coefficients (unchanged/confirmed); recommend the PI flip
+  `default_screening_profile` relaxed→strict to remove the config-label inconsistency. Evidence
+  `docs/research/eox_strict_vs_relaxed_loocv_20260626.md`. (3) **T3 NMP/THF/sulfolane ESW**: fresh
+  primary sweep found NO Ag/AgCl-convertible primary Pt/GC tetraalkylammonium window for any of the
+  three (NMP=Li/Li⁺ only; THF=Fc/Fc⁺-vs-bare-Ag, MeCN-only pin; sulfolane=Li/Li⁺ battery). **Decision:
+  stage nothing (no fabricated conversion); keep all three parked from the measured-first ESW gate.**
+  Evidence `docs/research/esw_nmp_thf_sulfolane_gapfill_20260626.md`.
 
 - 2026-06-24 (R11-R21 primary-PDF staging correction) — corrected six review-only thiophene
   structures and added source-conflict flags/details to the normalized staging package. All 11 rows
