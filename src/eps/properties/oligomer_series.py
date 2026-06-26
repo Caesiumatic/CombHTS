@@ -192,11 +192,29 @@ def _finalize(
             # Neither extrapolation is a converged polymer Eox from short oligomers.
             "oligomer_Eox_extrap_caveat": EXTRAP_CAVEAT,
             "oligomer_Eox_sidechain_truncated": truncated,
+            # Directive §3.1 monotonicity check (REPORTED-ONLY diagnostic; not a filter/score input):
+            # the oxidation potential should DECREASE with chain length (so the growing film does not
+            # over-oxidise). Non-monotonic series flag screening-grade noise or a genuine anomaly for
+            # human inspection.
+            "oligomer_Eox_monotonic_status": _monotonic_decreasing_status(eox_by_n),
             "oligomer_Eox_calc_status": status,
             "oligomer_Eox_calc_error": "; ".join(errors)[:240],
         }
     )
     return columns
+
+
+def _monotonic_decreasing_status(eox_by_n: dict[int, float], tol: float = 0.05) -> str:
+    """Is the raw Eox-vs-n series (weakly) monotonically decreasing? (directive §3.1, reported-only).
+
+    Ordered by chain length n, each step may rise by at most ``tol`` eV (screening-grade noise) before
+    the series is called ``non_monotonic``. Returns ``insufficient_points`` for < 2 finite points.
+    """
+
+    pts = [eox_by_n[n] for n in sorted(eox_by_n)]
+    if len(pts) < 2:
+        return "insufficient_points"
+    return "monotonic_decreasing" if all(b <= a + tol for a, b in zip(pts, pts[1:])) else "non_monotonic"
 
 
 def _concise(exc: Exception) -> str:

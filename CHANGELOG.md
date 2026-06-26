@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-06-25 — director run: oligomer-Eox monotonicity flag + applicability-domain decision
+
+- **Oligomer Eox monotonicity flag** (directive §3.1, T12): added `oligomer_Eox_monotonic_status`
+  (reported-only; `monotonic_decreasing` / `non_monotonic` / `insufficient_points`, 0.05 eV noise
+  tolerance) in `eps.properties.oligomer_series._finalize` — the Eox-vs-n series should decrease with
+  chain length (film must not over-oxidise). Computed from the already-computed series (no recompute);
+  not a filter/score input. +test. The production re-harvest will populate the column.
+- **Applicability-domain flag**: deliberately NOT hardwired into the harvest. It already exists in the
+  validation layer (`directive._applicability_domain_rows`), which derives the descriptor range from
+  the ACTIVE calibration set per run and flags every library monomer. A static harvest column would
+  either duplicate that or bake in the *provisional* calibration's range (which the strict-vs-relaxed
+  decision will change) — so the domain report stays validation-side until the calibration settles.
+
 ## 2026-06-25 — director run: sTDA-xTB optical UNBLOCKED (engine fix) + carbazole SMILES fix + λ diagnostic
 
 - **sTDA-xTB optical unblocked** (Lop admin OK'd home-dir installs). Installed `stda` (prebuilt v1.6.3)
