@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-06-25 — director run: B1 verdict + B2 soft coupling_risk_flag + B3 validation
+
+- **B1 decided** (SGE 417846/417848, real GFN2-xTB `conf-mmff94-n100`): only the per-class
+  coupling-SITE-availability signal separates intrinsic NO from YES, and only for position-blocked
+  monomers. Size-matched dimerization ΔG does NOT separate the electronic (3-thiophenecarboxaldehyde
+  −21.2 ≈ thiophene) or β-steric (3,4-dibutylthiophene +36.6 ≈ 3-hexylthiophene) NOs; α-spin is
+  unavailable at the xtb screening level. Full results: `docs/research/b1_coupling_feasibility_results_20260625.md`.
+- **B2**: added `src/eps/properties/coupling_risk.py` `coupling_risk_flag` — config-driven
+  (`configs/tier1.yaml: coupling_risk`, not hardcoded), reported-only soft second-tier flag with
+  per-class rules (α,α′-diblock for 5-rings; 3,6-block for carbazoles; `not_assessed` otherwise).
+  Never changes survivors or the composite. +`tests/test_coupling_risk.py` (9 cases).
+- **B3**: on the canonical-36 simple monomers the flag catches 3/7 intrinsic NOs with 0/11 false
+  positives on simple YES → balanced accuracy 0.50→0.71; 4/7 are documented Tier-2 blind spots. It can
+  false-positive on fused/constructed SMILES (the trimer) → stays soft; B4 (hard reject) is a PI call.
+- THINK T15 marked decided with the verdict + B2/B3 results.
+
 ## 2026-06-25 — director run: scale guardrail (freeze-then-scale), B1/λ dialectics
 
 - **Scale guardrail (top audit fix; protects directive §0 forbidden actions).** Added
