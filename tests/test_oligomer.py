@@ -420,3 +420,17 @@ def test_building_block_artifact_is_written_with_review_columns(tmp_path: Path) 
     assert len(frame) == len(monomers)
     # No assembly errors leaked into the artifact.
     assert not frame["oligomer_n6_smiles"].astype(str).str.contains("ASSEMBLY_ERROR").any()
+
+
+def test_oligomer_eox_monotonic_status() -> None:
+    """Directive §3.1 reported-only monotonicity diagnostic on the oligomer Eox-vs-n series."""
+    from eps.properties.oligomer_series import _monotonic_decreasing_status
+
+    # Eox decreases with chain length (physical expectation) -> monotonic
+    assert _monotonic_decreasing_status({1: 1.50, 2: 1.15, 3: 0.95, 6: 0.80}) == "monotonic_decreasing"
+    # a genuine rise beyond the noise tolerance -> non-monotonic
+    assert _monotonic_decreasing_status({1: 1.0, 2: 1.4, 3: 0.9}) == "non_monotonic"
+    # within-tolerance wobble is still called monotonic (screening-grade noise)
+    assert _monotonic_decreasing_status({1: 1.0, 2: 1.03, 3: 0.8}, tol=0.05) == "monotonic_decreasing"
+    # fewer than two finite points -> insufficient
+    assert _monotonic_decreasing_status({2: 1.0}) == "insufficient_points"

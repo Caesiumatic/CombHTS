@@ -1,0 +1,42 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N opt_reharvest
+#$ -j y
+#$ -pe smp 8
+#$ -l h_rt=24:00:00
+# Production optical re-harvest with REAL sTDA-xTB (THINK T6 / directive §3.1). Re-runs
+# `eps run-tier1` on the 36x13x16 production library, SEEDING the per-species cache from the 417538
+# real harvest so only the optical axis (changed cache key -> +backend-stda) recomputes (real
+# sTDA-xTB hexamers via xtb4stda+stda) while Eox / dimerization / secondary / oligomer-Eox are cache
+# HITS. Also populates the new oligomer_Eox_monotonic_status column at assembly. This is the CURRENT
+# validated scale (7,488 < scale_guard ceiling 12,000), NOT the directive §0 full ~50k harvest.
+# Resumable: per-species cache commits incrementally, so a wall-kill is recovered by resubmitting
+# with the same --cache.
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load xtb/6.4.1
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export PATH="$HOME/bin:$PATH"             # stda + xtb4stda
+export XTB4STDAHOME="$HOME/xtb4stda_src"  # .param_stda*.xtb
+export OMP_NUM_THREADS="${NSLOTS:-8}"; export OMP_STACKSIZE=4G; ulimit -s unlimited || true
+
+git -C "$HOME/CombHTS-main" pull --ff-only 2>&1 | tail -2
+grep -q "xtb4stda" "$HOME/CombHTS-main/src/eps/engines/xtb.py" || { echo "ENGINE FIX MISSING"; exit 3; }
+grep -q "oligomer_Eox_monotonic_status" "$HOME/CombHTS-main/src/eps/properties/oligomer_series.py" || { echo "MONOTONIC FLAG MISSING"; exit 3; }
+{ command -v stda && command -v xtb4stda; } >/dev/null || { echo "sTDA BINARIES MISSING"; exit 3; }
+cd "$HOME/CombHTS-main"
+export PYTHONPATH="$HOME/CombHTS-main/src"
+OUT=outputs/tier1_real_7488_optical_stda
+mkdir -p "$OUT"
+SEED=/home/shic4/CombHTS/outputs/tier1_real_7488/tier1_cache.sqlite
+if [ ! -f "$OUT/cache.sqlite" ]; then
+  [ -f "$SEED" ] || { echo "SEED CACHE MISSING: $SEED"; exit 4; }
+  echo "seeding cache from $SEED"; cp "$SEED" "$OUT/cache.sqlite"
+fi
+python -m eps.cli run-tier1 --engine xtb \
+  --cache "$OUT/cache.sqlite" \
+  --output "$OUT/ranked.csv" \
+  --all-output "$OUT/all.csv"
+echo "OPT REHARVEST DONE rc=$? out=$OUT"
