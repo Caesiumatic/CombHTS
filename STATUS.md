@@ -17,12 +17,14 @@ reconcile + freeze + §0 no-go's). What this run changed (all committed + pushed
 - **Scale guardrail implemented** (commit `6aca1be`): `run-tier1` blocks >12k triads and `tier2-plan`
   blocks >500 tasks unless `--allow-large-scale` — protects the directive §0 forbidden full-scale actions.
   Full suite **326 passed, 5 skipped**; ruff clean.
-- **B1 coupling-feasibility criterion (THINK T15)**: the 7 intrinsic-NO anchors are absent from the
-  harvest; α-spin is unavailable at the xtb screening level; α-count is a class-dependent *position-block*
-  detector (cleanly catches 2,5-dimethylpyrrole, misses the β-substituted NOs); dimerization_dG is
-  size-confounded (r=0.67) so the test must be **size-matched**. Size-matched dimerization batch
-  **SGE 417846** is running (10 monomers; 417844/417845 failed-fast and were fixed). B2 (config soft
-  `coupling_risk_flag`) / B3 (balanced-accuracy validation) follow the batch; B4 (hard reject) is a PI call.
+- **B1 coupling-feasibility criterion — DECIDED (THINK T15; `docs/research/b1_coupling_feasibility_results_20260625.md`)**:
+  via the size-matched real-xTB batch (SGE 417846/417848), only the per-class coupling-SITE-availability
+  signal separates intrinsic NO from YES, and only for **position-blocked** monomers. Size-matched
+  dimerization ΔG does NOT separate the electronic (3-thiophenecarboxaldehyde −21.2 ≈ thiophene) or
+  β-steric (3,4-dibutylthiophene +36.6 ≈ 3-hexylthiophene) NOs; α-spin is unavailable at xtb screening
+  level. **B2** soft `coupling_risk_flag` implemented (`src/eps/properties/coupling_risk.py`, config in
+  `tier1.yaml`, reported-only). **B3**: catches 3/7 intrinsic NOs with 0/11 false positives on simple
+  YES → balanced accuracy 0.50→0.71; 4/7 are Tier-2 blind spots. **B4** (hard reject) → PI.
 - **THINK T16** (λ wiring) and **T17** (two-tier freeze-readiness recommendation) added.
 - Targeted lit-gapfill (`docs/research/lit_gapfill_20260625.md`): DMSO ESW, pyrrole+EDOT Epa,
   PFO/poly(2,7-carbazole)/polyfuran optical newly web-sourced (screening-grade, needs verification);
@@ -30,9 +32,11 @@ reconcile + freeze + §0 no-go's). What this run changed (all committed + pushed
 - **No production scoring weight / threshold / calibration coefficient / redox constant / cache key /
   filter / library / harvest was changed.** Nothing frozen; no §0 full-scale action launched.
 
-**Immediate next (this run, in flight):** finalize B1 from SGE 417846; if size-matched dimerization
-separates the testable intrinsic NOs, implement the config-driven soft `coupling_risk_flag` (B2) and
-run the B3 balanced-accuracy check; otherwise record that the signal needs Tier-2 (also a result).
+**Immediate next (for the PI / next session):** see `DECISIONS_PENDING.md`. Key calls: strict-vs-relaxed
+calibration reconcile (data-gated on DFT 417442) + freeze tier-1 hard-constraint methods (T17); whether
+to wire `coupling_risk_flag` into the harvest/feasibility report (needs the feasibility-anchor monomers
+in the library — the library-expansion/promote decision); λ soft-term diagnostic (T16). No method frozen
+and no §0 full-scale action launched by this run.
 
 ## Current phase
 

@@ -1,3 +1,13 @@
+coupling_risk:
+  # Directive §5 B2 SOFT second-tier flag (THINK T15): reported-only coupling-site-availability.
+  # NEVER changes the survivor set or the composite (a hard reject is a PI call — DECISIONS_PENDING B4).
+  # B1 showed only POSITION-BLOCKED intrinsic NOs are screening-separable; electronic/beta-steric/
+  # radical-overstabilized/3,3'-dimerizing NOs are blind spots (-> Tier-2). The flag can mis-fire on
+  # fused/constructed SMILES (alpha undercount) -> stays soft, constructed monomers reviewed.
+  enabled: true
+  # 5-ring alpha-coupling monomers flagged when fewer than this many free alpha C-H sites remain.
+  # 1 => flag only the alpha,alpha'-diblocked case (one free alpha still couples, e.g. 2-methylfuran=YES).
+  min_free_alpha: 1
 scale_guard:
   # freeze-then-scale ceiling (directive §0/§2). A swapped/expanded library must never silently
   # launch the full ~50,000-triad harvest, which is method-frozen + sign-off gated. run-tier1 raises
