@@ -172,7 +172,41 @@ exists (`calibration_profiles.yaml` already defines `fc` reference frames for mo
 fallback window (no measured gate) — safe, but it permanently forgoes measured windows for these three,
 since the aqueous-referenced data does not exist in the literature.
 
+## UPDATE 2026-06-26 (NMP FOUND) — Izutsu Table 8 puts all three on the Fc scale
+
+The Izutsu Table 8 page was obtained ("Limits of measurable potentials of Pt in various solvents,
+V vs Fc/Fc⁺", current-density cutoff **10 µA/mm²**, supporting electrolyte in parentheses). This is the
+single authoritative source that closes the NMP gap and places **all three target solvents on one
+consistent Fc/Fc⁺ scale**. Verbatim rows (→ `data/lit_curation/esw_fc_scale_izutsu_table8.csv`):
+
+| solvent | positive (V vs Fc) | negative (V vs Fc) | electrolyte | span |
+|---|---:|---:|---|---:|
+| **NMP** | **+1.35** | **−3.9** | LiClO₄ | 5.25 V |
+| **sulfolane (TMS)** | **+2.0** (LiClO₄); **+3.0** (Et₄NBF₄) | **−3.95** | LiClO₄ | ~6 V |
+| **THF** | **+1.6** | **−3.85** | Bu₄NClO₄ | 5.45 V |
+
+Notes:
+- **NMP gap closed** (on the Fc scale). This was the user's decision-gate condition ("get the NMP Izutsu
+  number first"). All three now have Fc-referenced windows from one current-density-criterion table.
+- **Sulfolane reconciliation:** Izutsu's full window (+2.0…−3.95, or +3.0 anodic with Et₄NBF₄) is wider
+  than Armstrong 1976's practical 3.5 V CV figure (TBAP). The anodic limits ~agree (Armstrong-derived
+  +2.94 V vs Fc ≈ Izutsu +3.0 with Et₄NBF₄); the difference is mainly the cathodic limit + electrolyte +
+  cutoff criterion. Izutsu (defined 10 µA/mm² criterion) is the authoritative full window; Armstrong is a
+  narrower cell-/electrolyte-limited practical range. Both are same-solvent-consistent.
+- **THF corroboration:** Izutsu +1.6/−3.85 vs Fc independently corroborates the staged La Pierre 2026 THF
+  window (also vs Fc).
+- **Caveat:** Izutsu Table 8 is a *compilation* (its ref [1]); current-density-criterion, vs Fc, but
+  secondary. Confidence = medium. Still **not** aqueous-Ag/AgCl-convertible (these are Fc-scale windows).
+- **Bonus:** the same table covers the project's other non-aqueous solvents (MeCN, PC, NM, DMSO, DMF,
+  DCM, DME, …) on the *same* Fc scale — so adopting the Fc track would let the whole non-aqueous solvent
+  ESW set rest on one uniform basis instead of the current per-solvent mixed-reference patchwork.
+
+**Decision now unblocked:** with NMP in hand, the Fc/Fc⁺ ESW track is viable for all three target solvents
+(and uniformly for the rest). Recommend adopting it (PI/scope) per the resolution layers above; the data is
+staged in `esw_fc_scale_izutsu_table8.csv` pending that go-ahead. Nothing promoted to the production gate yet.
+
 ## Sources consulted (this sweep)
+- Izutsu, *Electrochemistry in Nonaqueous Solutions*, Table 8 (Pt potential limits V vs Fc/Fc⁺, 10 µA/mm²) — NMP/sulfolane/THF windows on the Fc scale. **READ (image).**
 - Armstrong, Quinn & Vanderborgh, *J. Electrochem. Soc.* 1976, 123, 646 — sulfolane window 3.5 V (Pt, 0.1 M TBAP, vs AgRE pseudo-ref); Fc(AgRE)=Fc(Ag/AgClO₄)−0.74 V. **READ.**
 - Coetzee & Simon, *Anal. Chem.* 1972, 44, 1129 (DOI 10.1021/ac60315a012) — sulfolane Fc=+0.30 V vs Ag/(0.1 M AgClO₄ in sulfolane); solute data, non-aqueous ref. **READ.**
 - Gilbert M. Brown, *J. Electroanal. Chem.* 198 (1986) 319 — perchlorate reduction at Ti in aqueous HClO₄; **wrong topic, not used.**
