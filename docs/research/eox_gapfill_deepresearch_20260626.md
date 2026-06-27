@@ -108,3 +108,30 @@ gap is **paywall-bound**, not absent.
 (EDOP, ProDOT, parent thiophene+furan). Supplying those 3 PDFs is the unblock — the same route that turned
 the round-1 needs-PDF list into 6 promoted anchors. A resume after the limit resets would only re-confirm the
 walls; it cannot defeat a paywall.
+
+### UPDATE 2026-06-26 — all 3 round-2 PDFs supplied; extracted + promoted
+
+The user supplied the 3 paywalled PDFs. Extraction result (benchmark grew 45 → **48** rows; strict tier-A
+peak set UNCHANGED at n=9 → production `tier1.yaml` untouched):
+
+| monomer | paper | native | conversion → Ag/AgCl | result | track | status |
+|---|---|---|---|---|---|---|
+| **EDOP** | Gaupp et al. *Macromolecules* 2000, 33, 1132 (`10.1021/ma9916180`) | Ep,m **+0.7 V vs Ag/Ag⁺**, 0.1 M LiClO₄/**PC**, Pt, 20 mV/s | same-paper Ag/Ag⁺→SCE tie (E1/2 −0.5 Ag/Ag⁺ = ca. −0.3 SCE ⇒ **+0.20**) then SCE→Ag/AgCl **+0.045** = +0.245 | **0.945 V** | peak (tier B) | **PROMOTED** |
+| **furan** (parent) | Tourillon & Garnier *J. Electroanal. Chem.* 1982, 135, 173 (`10.1016/0022-0728(82)90015-8`) | +1.85 V vs SCE, MeCN/0.1 M Bu₄NClO₄, Pt, 20 mV/s | SCE→Ag/AgCl +0.045 | **1.895 V** | onset (tier B) | **PROMOTED** (first parent-furan anchor) |
+| **pyrrole** (onset) | Tourillon & Garnier 1982 (same) | +0.80 V vs SCE | SCE→Ag/AgCl +0.045 | **0.845 V** | onset (tier B) | **PROMOTED** (pyrrole had peaks only) |
+| thiophene (onset) | Tourillon & Garnier 1982 (same) | +1.6 V vs SCE → 1.645 | — | 1.645 V | onset | **NOT promoted** — thiophene onset already in benchmark (Camarada 2011, 1.5 V); Tourillon corroborates (~0.15 V spread) |
+| **ProDOT** | Welsh et al. *Adv. Mater.* 1999, 11, 1379 (`10.1002/...ADMA1379`) | film grown potentiostatically at **+1.2 V vs Ag/Ag⁺** | — | — | — | **WALL CONFIRMED** — no CV monomer peak/onset; only a deposition setpoint vs an uncalibrated Ag/Ag⁺ pseudo-ref (no Fc). Unconvertible. |
+
+Notes:
+- **EDOP** is the key new canonical monomer (it was entirely absent). Tier B (PC solvent + same-paper "ca."
+  Ag/Ag⁺→SCE tie → ~0.1–0.2 V reference floor). Internal cross-check holds: the paper states EDOP oxidizes
+  0.25 V easier than EDOT and 0.5 V easier than pyrrole, consistent with our EDOT (1.485) / pyrrole (~1.27) peaks.
+- The Tourillon values are read off an anodic linear-sweep (current "rises sharply") with no CV peak reported,
+  so they are labeled **onset (Eonset)**, not peak — keeping them out of the strict/relaxed peak calibration set.
+- **Welsh (ProDOT)**: the only convertible-looking number is a *deposition* potential vs Ag/Ag⁺ — not a monomer
+  oxidation observable and not on a convertible reference. ProDOT Eox remains open (needs a CV paper with SCE/
+  Ag-AgCl/Fc-in-MeCN). Welsh *does* contain a PProDOT optical spectrum (neutral onset ~2 eV) but only as a
+  figure, no numeric gap → not extractable as an optical anchor either.
+- Snapshot tests updated (raw/eligible/selected 45→48, all-groups 44→47, relaxed peak 28→29, onset 16→18;
+  eox_rescue existing onset 16→18 / peak 29→30, union onset 19→21 / peak 29→30, inventory 48→51). Full Lop
+  validation re-fit submitted (SGE 417948).
