@@ -101,3 +101,21 @@ anchors** — exactly the role they now play (`calibration_eligible`, but not in
   retroactively strengthens that flip.
 - No new action required; the only remaining freeze action is the PI-level calibration freeze itself
   (THINK T17 layer-1), which this analysis clears for the Eox axis.
+
+### UPDATE 2026-06-26 (b) — second expansion to 48 rows (SGE 417948); strict re-confirmed a 3rd time
+
+Three more anchors landed from user-supplied PDFs (EDOP peak → relaxed; parent furan + pyrrole onset →
+onset track; see `eox_gapfill_deepresearch_20260626.md`). Re-fit on the 48-row benchmark:
+
+| profile | n | slope | R² | LOO-CV (V) |
+|---|---:|---:|---:|---:|
+| **agagcl_peak_strict** (tier A) | 9 | 0.7258 | 0.889 | **0.197** (byte-identical; production line) |
+| agagcl_peak_relaxed (A+B) | 29 | 0.4205 | 0.470 | 0.213 |
+| agagcl_onset_relaxed (A+B) | 18 | 0.3036 | 0.574 | 0.171 |
+
+- **strict still wins** (0.197 < relaxed 0.213); the EDOP tier-B peak nudged relaxed LOO-CV 0.211 → 0.213.
+  Three independent re-fits (45-row 417945, 48-row 417948, plus the 9-point base) now agree: strict generalizes
+  best, production line unchanged.
+- The **onset** track grew 16 → 18 with parent furan (1.895) and pyrrole (0.845); its LOO-CV rose 0.149 → 0.171
+  because furan's 1.895 V is a wide-range, high-leverage point — a more representative (harder, more honest)
+  onset line, still a separate screening-filter track, not a strict-vs-relaxed competitor.
