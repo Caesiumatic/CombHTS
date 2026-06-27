@@ -522,7 +522,7 @@ def _write_report(
     lines.append("")
     lines.append("## Method / config")
     lines.append("")
-    lines.append(f"- xTB descriptor: `monomer_eox_vs_AgAgCl` (adiabatic IP -> V vs Ag/AgCl), method `{xtb_method}`")
+    lines.append(f"- xTB descriptor: `monomer_eox_vs_AgAgCl` (IPEA-xTB vertical IP -> V vs Ag/AgCl), method `{xtb_method}`")
     lines.append(f"- DFT Eox: `engine.run(adiabatic_ip)`, {method_label} (method `{dft_method}`)")
     lines.append(f"- Calibration set: rows of `{Path(benchmark_path).name}` with `calibration_eligible == true`, dedup by canonical SMILES")
     lines.append(f"- Calibration points used (status ok): {len(ok_points)} of {len(points)} candidate monomers")
