@@ -4,18 +4,23 @@ _Created 2026-06-25 (director run). Resolves the audit/T1 visibility gap: produc
 `eps validate` resolve their Eox calibration from two config files. This manifest is the single
 statement of which calibration is live where._
 
-_**Updated 2026-06-26:** the strict-vs-relaxed tiebreaker (T1) has resolved to **STRICT**
-(`docs/research/eox_strict_vs_relaxed_loocv_20260626.md`, SGE 417876 on the current benchmark).
-`default_screening_profile` flipped `agagcl_peak_relaxed → agagcl_peak_strict`, so the validate-default
-now matches the already-pinned production line. No coefficient changed; production Tier-1 was already
-strict. This is a reporting-default/label realignment, not a scoring change._
+_**Updated 2026-06-26 (a):** the strict-vs-relaxed tiebreaker (T1) resolved to **STRICT**; `default_screening_profile`
+flipped `agagcl_peak_relaxed → agagcl_peak_strict`._
+
+_**Updated 2026-06-26 (b) — ENGINE CHANGE, directive §4.1 compliance (THINK T18):** the Tier-1 IP/EA engine was
+switched from **GFN2-xTB adiabatic** to the directive-mandated **IPEA-xTB vertical** (`xtb --vipea`). The strict
+line was re-fit on the 49-row benchmark (SGE 417986) and re-pinned: **slope 0.931164 / intercept −0.083599**,
+R²=0.772, LOO-CV **0.246 V**. Honest note: the engine switch raised strict LOO-CV 0.197→0.246 and narrows/reverses
+the strict-vs-relaxed gap (under IPEA, relaxed n=29 LOO 0.198 < strict 0.246, but strict keeps higher R² 0.772 vs
+0.559). Strict pinned for tier-A purity + R² + continuity; strict-vs-relaxed re-confirmation under IPEA is a
+freeze-time item. This IS a scoring change (new calibration line). The GFN2 numbers below are superseded._
 
 ## What converts the screen's xTB Eox
 
 | context | profile / source | slope | intercept (V) | n groups | metrics | where pinned |
 |---|---|---|---|---|---|---|
-| **Production Tier-1 harvest** (the 50k-bound screen; constraint-① window filter + 0.30 composite axis) | `agagcl_peak_strict_2026_06_17_xtb_v3` | **0.725837** | **−3.145372** | 9 | R²=0.889; in-sample MAE 0.144 V; **LOO-CV 0.197 V** | `configs/tier1.yaml` → `calibration.monomer_eox` (pinned constants) |
-| **`eps validate` default report** | `agagcl_peak_strict` (fit at runtime; **= production line**, since 2026-06-26) | runtime fit (≈0.7258) | runtime fit (≈−3.1454) | 9 | R²=0.889; **LOO-CV 0.197 V** (SGE 417876, current benchmark) | `configs/calibration_profiles.yaml` → `default_screening_profile` |
+| **Production Tier-1 harvest** (the 50k-bound screen; constraint-① window filter + 0.30 composite axis) | `agagcl_peak_strict_2026_06_26_ipea_xtb` (**IPEA-xTB**) | **0.931164** | **−0.083599** | 9 | R²=0.772; in-sample MAE 0.177 V; **LOO-CV 0.246 V** | `configs/tier1.yaml` → `calibration.monomer_eox` (pinned constants) |
+| **`eps validate` default report** | `agagcl_peak_strict` (fit at runtime; **= production line**) | runtime fit (≈0.9312) | runtime fit (≈−0.0836) | 9 | R²=0.772; **LOO-CV 0.246 V** (SGE 417986, IPEA-xTB, 49-row benchmark) | `configs/calibration_profiles.yaml` → `default_screening_profile` |
 | _(superseded)_ relaxed comparator | `agagcl_peak_relaxed` (kept for out-of-sample monitoring, not the fit) | runtime fit | runtime fit | 23 | LOO-CV **0.232 V** (SGE 417876) — loses to strict on every metric | comparison CSV only |
 | Onset screening-filter track (reported, not the calibration anchor) | `agagcl_onset_relaxed` | runtime fit | runtime fit | 16 | LOO-CV 0.087 V (separate onset subset; **not** a sub-floor production claim) | `configs/calibration_profiles.yaml` |
 
