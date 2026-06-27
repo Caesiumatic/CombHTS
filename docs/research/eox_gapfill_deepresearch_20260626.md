@@ -135,3 +135,20 @@ Notes:
 - Snapshot tests updated (raw/eligible/selected 45→48, all-groups 44→47, relaxed peak 28→29, onset 16→18;
   eox_rescue existing onset 16→18 / peak 29→30, union onset 19→21 / peak 29→30, inventory 48→51). Full Lop
   validation re-fit submitted (SGE 417948).
+
+### UPDATE 2026-06-26 (round 3, deep research wrfy9jvx5) — ProDOT onset found (the round-2 wall is cleared)
+
+A dedicated ProDOT pass (after the Welsh deposition-setpoint dead end) found a usable value:
+**ProDOT onset E_onset = 1.45 V vs Ag/AgCl** — native Ag/AgCl (identity conversion), 0.1 M Et₄NBF₄ in
+ACN:DCM (3:1), 50 mV/s, estimated from the first electropolymerization cycle (i.e. the monomer onset before
+any film exists). *J. Electrochem. Soc.* 2020, `10.1149/1945-7111/ab7f85`; verbatim: "the onset oxidation
+potentials (E_onset) of ProDOT … initiated at 1.45 … V vs. Ag/AgCl." **PROMOTED** to benchmark (onset track,
+tier B; benchmark 48 → 49). Confidence **low–med** (deep-research vote 2-1; first-cycle onset estimate; mixed
+ACN:DCM solvent — `solvent_name` set to acetonitrile for the solvation model, true medium kept in the medium
+column). The substituted perfluoro-ProDOT derivatives (≈1.60 V vs SCE) and ProDOT oligomers/D-A-D trimers
+seen in the same pass are off-target and were not used.
+
+Net Eox curation tally across rounds 1–3: **EDOT, EDOS, pyrrole (×2 peak + onset), N-methylpyrrole,
+carbazole, EDOP, furan onset, ProDOT onset** all anchored. Still genuinely open: parent **selenophene** Eox
+(Ag/Ag⁺/BFEE walls) and a true ProDOT **peak** (only an onset exists so far). Snapshot tests + validation
+re-fit (SGE 417955) updated for the 49-row benchmark.
