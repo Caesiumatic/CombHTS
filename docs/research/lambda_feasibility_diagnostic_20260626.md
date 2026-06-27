@@ -78,8 +78,19 @@ steric-topological reason an electronic single-molecule descriptor cannot see.
 3. **The feasibility-relevant electronic descriptor is the cation spin at coupling sites**
    (`monomer_cation_max_spin_is_alpha` / `monomer_cation_alpha_spin_sum`) — it directly asks "does the
    radical localize on an *open* α/coupling position?" That is the descriptor to develop for a feasibility
-   axis, and it is currently broken by the spin-density cache `NOT NULL` write bug surfaced here. Fixing it
-   is the actionable follow-up (logged separately), not λ.
+   axis, and it was broken by the spin-density cache `NOT NULL` write bug surfaced here.
+
+   **UPDATE 2026-06-26: the spin descriptor is now FIXED and available.** Root cause was twofold — xtb
+   6.4.1 prints no per-atom spin block at production verbosity, and a failed parse returned NaN that
+   crashed the cache (NaN→NULL on a NOT NULL column). Both fixed: `_spin_density` now requests the block
+   via an xcontrol `$write/spin population=true` file, the parser reads the real `(R)spin-density
+   population` rows, and `cached_run` no longer caches non-finite values. All 13 feasibility monomers
+   recomputed to `status=ok` with populated spins (SGE 417959). **Early signal confirms the hypothesis**:
+   the α-coupling-site-blocked NOs carry ~zero α-spin — 2,5-dimethylthiophene `alpha_spin_sum` = 0.0,
+   3,6-di-tert-butylcarbazole = 0.0 — i.e. the radical cation has no spin on an *open* coupling position,
+   exactly the structural-infeasibility signature λ_ox cannot see. **Actionable follow-up (now unblocked):**
+   re-run the feasibility-separation analysis using `monomer_cation_alpha_spin_sum` as the discriminator
+   (this is the descriptor to develop, not λ).
 
 ## Honesty / limits
 - n=29, with NO-chem dominated by carbazoles/triarylamines; not a balanced multi-family sample. The verdict
