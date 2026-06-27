@@ -60,6 +60,37 @@ def fit_linear(x: np.ndarray, y: np.ndarray) -> dict:
     }
 
 
+def fit_per_class_line(x: np.ndarray, y: np.ndarray, global_slope: float) -> dict:
+    """Per-class calibration with LOO-CV.
+
+    If the class spans >=2 distinct x values, fit a full 2-param class line.
+    If x is degenerate (all monomers in the class share an n6, e.g. 3-methyl vs
+    3-hexylthiophene), a slope is unidentifiable, so fall back to an OFFSET-ONLY
+    model on the shared GLOBAL slope: intercept_c = mean(y - global_slope*x).
+    Graduation threshold (report 03): LOO-CV MAE <= 0.2 eV.
+    """
+    n = len(x)
+    distinct_x = len(set(np.round(x, 6)))
+    if n >= 3 and distinct_x >= 2:
+        f = fit_linear(x, y)
+        return {"model": "class_line_2param", "n": n, "distinct_x": distinct_x,
+                "slope": f["slope"], "intercept_eV": f["intercept_eV"], "r2": f["r2"],
+                "in_sample_mae_eV": f["in_sample_mae_eV"], "loo_cv_mae_eV": f["loo_cv_mae_eV"]}
+    # offset-only on the global slope (works for n>=2, degenerate or not)
+    resid = y - global_slope * x
+    intercept = float(resid.mean())
+    in_sample = float(np.mean(np.abs((global_slope * x + intercept) - y)))
+    loo = []
+    for i in range(n):
+        keep = np.arange(n) != i
+        b = float((y[keep] - global_slope * x[keep]).mean()) if n > 1 else intercept
+        loo.append(global_slope * x[i] + b)
+    loo_mae = float(np.mean(np.abs(np.asarray(loo) - y))) if n > 1 else float("nan")
+    return {"model": "offset_only_global_slope", "n": n, "distinct_x": distinct_x,
+            "slope": float(global_slope), "intercept_eV": intercept, "r2": None,
+            "in_sample_mae_eV": in_sample, "loo_cv_mae_eV": loo_mae}
+
+
 def main() -> int:
     anchors = pd.read_csv(ANCHORS)
     n6 = pd.read_csv(N6)
@@ -102,16 +133,34 @@ def main() -> int:
     fit_hi = fit_linear(hi["n6_stda_eV"].to_numpy(float), hi["exp_gap_eV"].to_numpy(float)) if len(hi) >= 3 else None
 
     # Per-class offsets after the global fit (mean residual = how far that class sits off the line)
+    # PLUS, for classes with >=3 anchors, a proper per-class fit with LOO-CV and a graduation flag.
+    GRADUATION_LOO_EV = 0.2
     per_class = []
+    graduates = []
     for cls, g in pts.groupby("anchor_class"):
-        per_class.append({
+        entry = {
             "anchor_class": cls,
             "n": int(len(g)),
             "mean_resid_eV": float(g["global_resid_eV"].mean()),
             "mae_eV": float(g["global_resid_eV"].abs().mean()),
             "mean_raw_bias_eV": float(g["raw_bias_n6_minus_exp_eV"].mean()),
             "singleton": len(g) == 1,
-        })
+        }
+        if len(g) >= 3:
+            cf = fit_per_class_line(
+                g["n6_stda_eV"].to_numpy(float), g["exp_gap_eV"].to_numpy(float), fit["slope"]
+            )
+            entry["per_class_fit"] = cf
+            entry["graduates"] = bool(
+                cf["loo_cv_mae_eV"] == cf["loo_cv_mae_eV"]  # not NaN
+                and cf["loo_cv_mae_eV"] <= GRADUATION_LOO_EV
+            )
+            if entry["graduates"]:
+                graduates.append(cls)
+        else:
+            entry["per_class_fit"] = None
+            entry["graduates"] = False
+        per_class.append(entry)
 
     payload = {
         "status": "diagnostic_only_not_production_calibration",
@@ -126,6 +175,8 @@ def main() -> int:
         "std_raw_bias_eV": float(pts["raw_bias_n6_minus_exp_eV"].std(ddof=1)),
         "n6_converged_count": int(pts["n6_converged"].sum()),
         "per_class": per_class,
+        "graduation_threshold_loo_eV": GRADUATION_LOO_EV,
+        "classes_that_graduate": graduates,
         "production_scoring_changed": False,
     }
 
@@ -150,7 +201,19 @@ def main() -> int:
         print("\n=== HIGH-confidence-only fit ===")
         print(json.dumps(payload["high_conf_fit"], indent=2))
     print("\n=== per-class offsets (after global fit) ===")
-    print(pd.DataFrame(per_class).to_string(index=False))
+    print(pd.DataFrame([{k: v for k, v in e.items() if k != "per_class_fit"} for e in per_class]).to_string(index=False))
+    print(f"\n=== per-class CALIBRATION fits (classes with n>=3); graduation if LOO-CV MAE <= {GRADUATION_LOO_EV} eV ===")
+    any_fit = False
+    for e in per_class:
+        cf = e.get("per_class_fit")
+        if cf:
+            any_fit = True
+            print(f"  {e['anchor_class']:24s} n={cf['n']} distinct_x={cf['distinct_x']} "
+                  f"model={cf['model']:24s} slope={cf['slope']:.3f} intercept={cf['intercept_eV']:.3f} "
+                  f"LOO-CV={cf['loo_cv_mae_eV']:.3f} eV  -> {'GRADUATES' if e['graduates'] else 'stays diagnostic'}")
+    if not any_fit:
+        print("  (no class has >=3 mapped anchors yet — all classes remain singletons/pairs)")
+    print(f"\nclasses that graduate: {graduates if graduates else 'NONE'}")
     print(f"\nWrote {OUT_CSV}\nWrote {OUT_JSON}")
     return 0
 
