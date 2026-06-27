@@ -93,3 +93,40 @@ is unchanged. The global fit improved marginally with the well-placed polythioph
 needs-PDF list; with them the heteroaromatic class would reach 4/4 distinct-x anchors and become the first
 graduation candidate. Same structural wall as the Eox curation: the values exist in primary papers, but
 behind paywalls / not in open full text.
+
+---
+
+## UPDATE 2026-06-26 (round 3, deep research w9fj4lrcw) — selenophene added; the blocker is NOT anchor density, it is descriptor degeneracy
+
+Added a third heteroaromatic-class anchor: neutral **parent polyselenophene optical gap 1.76 eV**
+(absorption onset 705 nm; de-doped oCVD film, MeOH-rinsed + XPS-confirmed neutral; *Org. Electron.* 2015,
+`10.1016/j.orgel.2015.07.017`; high confidence) → maps to library `selenophene`. The heteroaromatic class
+now has **3 of 4** anchors (furan 2.31, thiophene 2.0, selenophene 1.76) — meeting the ≥3 threshold, so a
+per-class fit is finally attemptable. (Neutral **polypyrrole** remains walled: every retrieved source was
+either the doped/oxidized as-grown film (1.79–1.95 eV at +0.7 V SCE) or a theoretical band structure — no
+clean neutral-onset value.)
+
+**Per-class fit result (Lop): the class still does NOT graduate, and the reason is more fundamental than
+"too few points."** A 2-parameter per-class line over the 3 anchors gives slope **4.62**, intercept −11.21,
+**LOO-CV MAE 0.686 eV** — far above the 0.2 eV graduation floor and physically absurd.
+
+Root cause — **the sTDA-xTB hexamer descriptor is degenerate across this class:**
+
+| parent | sTDA-xTB n6 (computed) | experimental polymer gap |
+|---|---:|---:|
+| selenophene | 2.825 eV | 1.76 eV |
+| thiophene | 2.836 eV | 2.00 eV |
+| furan | 2.927 eV | 2.31 eV |
+
+The computed n6 spans only **0.10 eV** while the experimental gaps span **0.55 eV** — sTDA-xTB predicts the
+three parent heteroaromatics as essentially the *same* gap, while reality places them 0.55 eV apart. The
+ordering happens to be right (Se < S < O), but the slope needed to stretch a 0.10 eV input range onto a
+0.55 eV output range is ~5.5, which both amplifies descriptor noise catastrophically and fails LOO-CV.
+
+**This is the decisive T6 finding: the optical axis cannot graduate by adding anchors, because calibration
+cannot rescue a descriptor that barely varies with the target.** Within the best-anchored class, sTDA-xTB
+lacks the *within-class resolution* the calibration would need. This generalizes the earlier "documented-weak
+low-gap regime" point into a sharper statement: the limitation is descriptor sensitivity, not anchor density.
+The optical/band-gap axis stays at **15% weight, diagnostic, uncalibrated** — now on the strongest possible
+evidence (a class that finally has enough anchors and *still* can't be calibrated). A 4th anchor (polypyrrole)
+would not change this; only a more sensitive optical method (e.g. an ML/GNN gap or higher-level TD-DFT) could.
