@@ -27,7 +27,7 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 | T13 | DFT calibration cache key is config-blind (correctness bug) | DECIDED/FIXED (config-encoded cache label; regression-tested) | self (rigor) | small code fix |
 | T14 | What is a valid solvent-window gate? | decided / implemented / safety-validated | self / report (scientific validity) | continued data curation |
 | T15 | Coupling-feasibility second filter (B1–B4): can screening descriptors separate intrinsic NO from YES? | B1 DECIDED (only position-block separable); B2 soft flag implemented; B3 balanced-acc 0.50→0.71; B4 (hard reject) PI | self / report (B2 soft-flag); PI (B4 soft-vs-hard) | done (SGE 417846/417848) |
-| T16 | Reorganization energy λ is computed but unused — should it be wired? | open (directive wants it used; recommend a soft term) | group-meeting / PI (adds a weighted axis) | small code + revalidation |
+| T16 | Reorganization energy λ is computed but unused — should it be wired? | RESOLVED 2026-06-26 (decide-and-report): do NOT wire λ as a feasibility term — diagnostic (n=29) shows no separation (AUC 0.24, overlapping) + the mechanism is steric coupling-site blocking, not electronic | reported (PI veto via cadence) | none (keep λ report-only) |
 | T17 | Method-freeze readiness before the §0 full-scale harvest | exploring (per-axis readiness assessed; recommendation below; freeze itself is the PI's action) | PI (freeze is the irreversible scale gate) | assessment now; freeze later |
 
 ## T1 — Screening calibration anchor: peak vs onset
@@ -325,9 +325,32 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Why it matters**: It is the single most directive-divergent finding of the code audit. A "freeze" today would freeze a harvest where a descriptor the directive wants used contributes nothing — a scientific-completeness gap (not a bug).
 - **Thinking / options (steelman each)**: (A) **Report-only (status quo)** — λ at GFN2 screening grade is noisy and its physical role (Marcus-type kinetic barrier) is only loosely captured by a vertical−adiabatic ΔSCF on independently-embedded geometries; adding a noisy axis could degrade ranking. (B) **Soft composite term** — a small weighted term rewarding low λ (faster, more reversible oxidation → cleaner coupling), folded into the diagnostic half of the composite; cheap, reversible, honors the directive without a hard gate. (C) **Hard kinetic-margin filter** — require λ below a threshold; strongest directive reading but most dangerous (a noisy descriptor gating survivors).
 - **λ-vs-feasibility diagnostic (2026-06-25, done)**: correlated `monomer_lambda_ox_eV` (from the real harvest) with the canonical feasibility labels for the in-library monomers. **No clean signal**: "has-NO" monomers span λ −0.088 (selenophene) → +0.318 V (aniline) and "YES-only" span +0.013 (carbazole) → +0.145 V (terthiophene) — heavily overlapping. (Caveat: these in-library NOs are condition-specific, not coupling NOs, and the intrinsic NOs aren't in the library, so the test is partial.) So at GFN2 screening grade λ does not by itself discriminate feasibility.
-- **Current lean / recommendation (decide-and-report, pending group/PI)**: given the null diagnostic, **keep λ report-only**, or at most a *very* lightly-weighted soft term — **not** a hard filter (option C). Any weight change requires a fresh harvest + re-validation (reshapes ranking), gated behind the freeze discipline. Record as a PI/group item in `DECISIONS_PENDING.md`.
-- **Resolves when**: the group/PI decides report-only vs soft-term vs filter; if soft-term, a weight is chosen and the composite is re-validated.
-- **Links**: `docs/research/directive_section_audit_20260625.md`; `src/eps/properties/secondary_descriptors.py`; `configs/scoring.yaml`.
+- **λ-vs-feasibility diagnostic CLOSED (2026-06-26, decisive)**: the 2026-06-25 test was partial because
+  the intrinsic-NO monomers were not in the library. Computed λ_ox for 13 of them on Lop (SGE 417946,
+  `scripts/compute_lambda_extra.py`) and re-ran the diagnostic on the full **n=29** matched set
+  (16 YES / 11 NO-chem / 2 NO-medium; `scripts/analyze_lambda_feasibility.py`). Result: **YES mean
+  λ_ox 0.195 eV vs NO-chem 0.081 eV — the intrinsic-NO set has LOWER λ, AUC 0.24, fully overlapping**
+  (p≈0.023 in the *wrong* direction for a barrier filter). Within-family contrasts settle it:
+  3-ethylcarbazole (YES, 0.040) ≈ 3,6-diethylcarbazole (NO, 0.045); 3-methylthiophene (YES, 0.271) ≫
+  2,5-dimethylthiophene (NO, 0.095). The feasibility flip is set by **coupling-site blocking** (steric/
+  topological, THINK T15), which an electronic vertical−adiabatic IP is physically blind to; blocking
+  substituents even rigidify the ring and *lower* λ. Full writeup:
+  `docs/research/lambda_feasibility_diagnostic_20260626.md`.
+- **Decision (2026-06-26, decide-and-report — SUPERSEDES the earlier "lightly-weighted soft term" lean)**:
+  **do NOT wire λ_ox as a feasibility filter OR a feasibility soft term** (options B and C both rejected;
+  stay at option A). It carries no usable feasibility signal and the only signal present is mechanistically
+  spurious. **Keep λ_ox report-only for its legitimate meaning (charge-transport / polaron self-trapping)** —
+  this honors directive §3.2's "compute and report λ" without misusing it. No `configs/scoring.yaml` change;
+  no fresh harvest needed for this decision. The feasibility-relevant *electronic* descriptor is instead the
+  **cation spin at coupling sites** (`monomer_cation_max_spin_is_alpha` / `..._alpha_spin_sum`), which is
+  currently broken by a spin-density cache NOT-NULL write bug surfaced by SGE 417946 — fixing that, not λ,
+  is the actionable feasibility-descriptor follow-up.
+- **Resolves when**: RESOLVED (report-only, decided 2026-06-26). Reopen only if a future powered,
+  multi-family balanced λ set (incl. solvent outer-sphere term) overturns the null — unlikely given the
+  steric mechanism.
+- **Links**: `docs/research/lambda_feasibility_diagnostic_20260626.md`;
+  `docs/research/directive_section_audit_20260625.md`; `src/eps/properties/secondary_descriptors.py`;
+  `configs/scoring.yaml`.
 
 ## T17 — Method-freeze readiness before the §0 full-scale harvest
 - **Status**: exploring — per-axis readiness assessed below; the freeze itself is the PI's irreversible decision (`DECISIONS_PENDING.md` C7). This run *prepares* freeze readiness; it does not freeze.
