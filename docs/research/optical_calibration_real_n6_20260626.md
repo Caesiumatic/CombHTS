@@ -59,3 +59,37 @@ The blocker is anchor *density per class*, not method capability. Report 03 alre
 - Only if a class achieves LOO-CV MAE ≲ 0.2 eV should that class's optical term move from diagnostic to calibrated.
 
 This is a curation task (literature → CSV), not a compute task; the real sTDA-xTB descriptors it would consume now exist for all 36 monomers.
+
+---
+
+## UPDATE 2026-06-26 — round-2 anchor curation (deep research we3euunvm); axis still does NOT graduate
+
+Ran a dedicated deep-research pass for ≥3 primary neutral-polymer optical gaps per class, targeting the
+heteroaromatic parent class (thiophene/pyrrole/furan/selenophene — the only class with 4 distinct library
+monomers). The run was **truncated by a session usage limit** (synthesis + most verifications failed; 9
+verified claims returned). Net yield: **one** usable new anchor.
+
+- **Added:** polythiophene (unsubstituted, electrochemically grown), neutral absorption **edge ~2.0 eV** —
+  Kaneto, Yoshino & Inuishi, *Solid State Commun.* 1983, 46(5), 389–391 (10.1016/0038-1098(83)90454-4),
+  mapped to library `thiophene`. Confidence **medium** (value paraphrased from the abstract; full text
+  paywalled, but it is a textbook-corroborated value). The task's original author attribution (Chung et al.)
+  was wrong — verified author is Kaneto et al.
+- **Polypyrrole → `pyrrole`: NOT FOUND (clean primary).** The only retrieved primary source was *theoretical*
+  (tight-binding band structure, Phys. Rev. B 30, 1023) and another reported only the **doped-state** polaron/
+  bipolaron spectrum — both excluded by the neutral-onset rule. No verifiable neutral-polypyrrole onset gap.
+- **Polyselenophene → `selenophene`: NOT FOUND** in the truncated run.
+- Polyfuran (2.31 eV) corroborated by a second primary source (Glenis et al., *JACS* 1993, 115, 12519,
+  10.1021/ja00079a035: electropolymerized from terfuran, undoped λmax 468 nm) — but it is a λmax peak, not an
+  onset, so the existing Sheberla Tauc value stands as the furan anchor.
+
+**Per-class re-fit result (Lop, `scripts/analyze_optical_calibration_real_n6.py` extended with per-class
+LOO-CV):** the heteroaromatic class now has **2 of 4** anchors (furan 2.31 + thiophene 2.0). **No class
+reaches the ≥3 needed for a per-class fit, so NO class graduates** — the verdict (15% diagnostic, uncalibrated)
+is unchanged. The global fit improved marginally with the well-placed polythiophene point (LOO-CV
+0.299 → **0.263 eV**), still above the ±0.2 eV anchor floor.
+
+**Remaining blocker is exactly two primary onset gaps** — neutral **polypyrrole** and neutral
+**polyselenophene** — plus the paywalls noted above. These are the highest-value items for the optical
+needs-PDF list; with them the heteroaromatic class would reach 4/4 distinct-x anchors and become the first
+graduation candidate. Same structural wall as the Eox curation: the values exist in primary papers, but
+behind paywalls / not in open full text.

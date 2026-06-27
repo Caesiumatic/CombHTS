@@ -74,3 +74,37 @@ Notes / cross-checks:
 - Keep treating the EDOS/furan Ag/Ag⁺ values as *known-but-unconvertible* (record, never convert).
 - Optionally resume `wf_eb8942d7-050` after the session limit resets to complete synthesis + the
   EDOT-specific Fc-in-MeCN search angle that abstained.
+
+---
+
+## ROUND-2 deep research 2026-06-26 (wf_33fd5a6c-4fe) — remaining canonical monomers: 0 convertible, paywall-bound
+
+A second dedicated pass targeted the still-missing monomers (EDOP, furan, selenophene, ProDOT,
+3-hexyl/3-methylthiophene, 3,4-dimethylpyrrole, 3-methylfuran, bithiophene, terthiophene). It was
+**truncated by a session usage limit** (synthesis + most verifications failed; 9 verified claims returned).
+**Net new convertible anchors: zero.** The verified claims are all walls, and they cluster the same two ways
+as round 1 (paywall / non-convertible reference). Honest, useful negative result: the canonical-monomer Eox
+gap is **paywall-bound**, not absent.
+
+### NEEDS-PDF list (round 2) — give me these PDFs → I extract + stage
+| # | source | DOI | what to extract | why |
+|---|---|---|---|---|
+| 1 | **Gaupp, Zong, Schottland, Thompson, Thomas & Reynolds 2000**, *Macromolecules* 33, 1132–1133 | `10.1021/ma9916180` | parent **EDOP** monomer Epa/onset + reference electrode + electrolyte | THE primary PEDOP-from-EDOP electrochemistry paper; verified-real, fully paywalled (403). Top EDOP anchor. |
+| 2 | **Welsh, Kumar, Meijer & Reynolds 1999**, *Adv. Mater.* 11(16), 1379–1382 | `10.1002/(SICI)1521-4095(199911)11:16<1379::AID-ADMA1379>3.0.CO;2-Q` | **ProDOT** (and ProDOT-Me2) monomer Epa/onset + reference | verified-real, paywalled (402). The ProDOT anchor. |
+| 3 | **Tourillon & Garnier 1982**, *J. Electroanal. Chem.* 135, 173–178 | `10.1016/0022-0728(82)90015-8` | parent **thiophene** and **furan** monomer oxidation potentials + reference electrode | seminal CV electropolymerization paper; verified-real, 403. Could anchor parent thiophene AND furan Eox. |
+
+### Documented unconvertible / not-the-target (round 2; do NOT chase for our scale)
+- **Parent furan / terfuran** (PMC5586207, Bendikov-type): smallest species is terfuran (not parent furan), and
+  all potentials vs an **Ag/AgCl-wire pseudo-reference with no ferrocene calibrant** → unconvertible.
+- **Substituted EDOP/ProDOP** (ACS Omega `10.1021/acsomega.8b00871`, `.8b02026`): only N-aryl/alkyl-substituted
+  derivatives studied, and only an **aggregate range 0.96–1.12 V** is given — no individual monomer value and
+  not the parent target.
+- **"bithiophene/terthiophene"** hit (PMC9078966): actually benzofulvene polymers with oligothiophene side
+  chains, not the parent oligomers → off-target.
+- **Selenophene (parent):** no clean primary convertible value surfaced (consistent with round 1: parent
+  selenophene electropolymerization is reported in BFEE or vs Ag/Ag⁺).
+
+**Verdict:** the remaining canonical Eox anchors are real but locked behind 3 paywalled primary papers
+(EDOP, ProDOT, parent thiophene+furan). Supplying those 3 PDFs is the unblock — the same route that turned
+the round-1 needs-PDF list into 6 promoted anchors. A resume after the limit resets would only re-confirm the
+walls; it cannot defeat a paywall.
