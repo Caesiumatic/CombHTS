@@ -21,10 +21,16 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
 1. **B4 — coupling-feasibility flag: soft vs hard.** *Recommend:* implement a config-driven **soft**
    `coupling_risk_flag` (does not drop survivors); keep any **hard** reject for PI. *Why human:* a hard
    reject removes Tier-1 survivors — a scope call. (`THINK` T15; B1 evidence pending SGE 417845.)
-2. **Reorganization energy λ — wire it or not.** Directive §3.2 wants λ *used*; it is currently
-   report-only (the audit's most directive-divergent finding). *Recommend:* publish a λ-vs-feasibility
-   diagnostic, then add λ as a *reported / lightly-weighted soft term* — **not** a hard filter (GFN2
-   λ is noisy). *Why human:* any weight change reshapes ranking → group/PI + a fresh harvest. (`THINK` T16.)
+2. **Reorganization energy λ — wire it or not. RESOLVED 2026-06-26 (decide-and-report): NO.** The
+   λ-vs-feasibility diagnostic is now closed on a full **n=29** set (the intrinsic-NO monomers, previously
+   absent from the library, were computed on Lop — SGE 417946): YES mean λ_ox **0.195 eV** vs intrinsic-NO
+   **0.081 eV** — *no separation* (AUC 0.24, fully overlapping; weak signal in the WRONG direction for a
+   barrier filter). Mechanism is steric coupling-site blocking (THINK T15), which an electronic
+   vertical−adiabatic IP is physically blind to. **λ_ox stays report-only** (legitimate as a
+   charge-transport descriptor, not feasibility); no `scoring.yaml` change, no fresh harvest. This
+   SUPERSEDES the earlier "lightly-weighted soft term" recommendation. The genuinely feasibility-relevant
+   electronic descriptor is the cation spin at coupling sites — currently broken by a spin-density cache
+   NOT-NULL bug (separate fix). Evidence `docs/research/lambda_feasibility_diagnostic_20260626.md`. (`THINK` T16.)
 3. **Calibration strict vs relaxed — RESOLVED 2026-06-26: STRICT.** Re-validated on the current
    benchmark with real GFN2-xTB (SGE 417876): strict (tier A, n=9) LOO-CV **0.197 V** / R² 0.889 / ρ
    0.833 beats relaxed (A+B, n=23) LOO 0.232 V / R² 0.508 / ρ 0.663 on every metric; DFT 417442
