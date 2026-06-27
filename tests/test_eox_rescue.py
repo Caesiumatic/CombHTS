@@ -441,13 +441,13 @@ def test_counting_semantics_preserve_benchmark_onset_peak_separation(tmp_path: P
 
     result = _build_from_source(_source_fixture(), tmp_path)
 
-    assert result.summary["existing_production_onset_groups"] == 18  # +furan +pyrrole onset (Tourillon&Garnier 1982) promoted 2026-06-26
+    assert result.summary["existing_production_onset_groups"] == 19  # +furan +pyrrole (Tourillon 1982) +ProDOT (JES 2020) onsets promoted 2026-06-26
     assert result.summary["existing_production_peak_groups"] == 30  # +EDOP peak (Gaupp 2000) promoted 2026-06-26 (atop the 6 round-1 canonical peaks)
     assert result.summary["promotable_rescue_onset_groups"] == 3
     assert result.summary["promotable_rescue_peak_groups"] == 0
-    assert result.summary["projected_union_onset_groups"] == 21
+    assert result.summary["projected_union_onset_groups"] == 22
     assert result.summary["projected_union_peak_groups"] == 30
-    assert result.summary["combined_experimental_combination_inventory"] == 51
+    assert result.summary["combined_experimental_combination_inventory"] == 52
     assert result.summary["reference_source_conflict_rows"] == 8
     assert result.summary["condition_source_conflict_rows"] == 4
 
@@ -538,9 +538,9 @@ def test_review_package_is_review_only_and_deterministic(tmp_path: Path) -> None
         for record_id in ["R11", "R12", "R13", "R18", "R19", "R20", "R21"]
     )
     assert result.summary["promotable_rescue_onset_groups"] == 3
-    assert result.summary["projected_union_onset_groups"] == 21
+    assert result.summary["projected_union_onset_groups"] == 22
     assert result.summary["projected_union_peak_groups"] == 30
-    assert result.summary["combined_experimental_combination_inventory"] == 51
+    assert result.summary["combined_experimental_combination_inventory"] == 52
     assert result.summary["no_candidate_promoted_to_benchmark"] is True
     assert "No candidate was promoted into `data/benchmark.csv`" in report_path_a.read_text(
         encoding="utf-8"
