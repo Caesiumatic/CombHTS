@@ -43,7 +43,7 @@ class FailingSolventEngine(Engine):
 
     def run(self, req: CalcRequest) -> CalcResult:
         if (
-            req.quantity == "adiabatic_ip"
+            req.quantity == "ipea_ip"
             and req.species.charge == 0
             and req.species.canonical_smiles == self.failing_smiles
         ):
@@ -63,23 +63,23 @@ def _engine_value(solvent, quantity: str) -> float:
 
 
 @pytest.mark.parametrize("name", ["acetonitrile", "water"])
-def test_solvent_anodic_limit_projects_adiabatic_ip(tmp_path: Path, name: str) -> None:
+def test_solvent_anodic_limit_projects_ipea_ip(tmp_path: Path, name: str) -> None:
     solvent = _solvent(name)
     cache = SQLiteCache(tmp_path / "cache.sqlite")
 
     value = solvent_anodic_limit(solvent, MockEngine(), cache)
 
-    assert value == pytest.approx(ip_eV_to_potential_vs_AgAgCl(_engine_value(solvent, "adiabatic_ip")))
+    assert value == pytest.approx(ip_eV_to_potential_vs_AgAgCl(_engine_value(solvent, "ipea_ip")))
 
 
 @pytest.mark.parametrize("name", ["acetonitrile", "water"])
-def test_solvent_cathodic_limit_projects_adiabatic_ea(tmp_path: Path, name: str) -> None:
+def test_solvent_cathodic_limit_projects_ipea_ea(tmp_path: Path, name: str) -> None:
     solvent = _solvent(name)
     cache = SQLiteCache(tmp_path / "cache.sqlite")
 
     value = solvent_cathodic_limit(solvent, MockEngine(), cache)
 
-    assert value == pytest.approx(ip_eV_to_potential_vs_AgAgCl(_engine_value(solvent, "adiabatic_ea")))
+    assert value == pytest.approx(ip_eV_to_potential_vs_AgAgCl(_engine_value(solvent, "ipea_ea")))
 
 
 def test_solvent_anodic_limit_is_cached(tmp_path: Path) -> None:
