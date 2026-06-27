@@ -79,3 +79,33 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
 - B1 diagnostic from existing data + size-matched batch launched (417845); B1/λ dialectics written.
 - No production scoring weight / threshold / calibration coefficient / redox constant / cache key /
   filter / library / harvest was changed.
+
+## E. Data-curation ledger — 2026-06-26 deep-research rounds 1–3 (decide-and-report)
+
+Benchmark grew **39 → 49 rows**; strict tier-A peak set **unchanged at n=9**, so `tier1.yaml` production
+coefficients are untouched throughout. All additions are tier-B (relaxed peak / onset diagnostic tracks).
+
+**CLOSED — anchors promoted to `data/benchmark.csv`:**
+- Eox peaks (tier B): EDOT 1.485, EDOS 1.225, pyrrole 1.245 + 1.302, N-methylpyrrole 1.185, carbazole 1.205,
+  **EDOP 0.945** (Gaupp 2000, same-paper Ag/Ag⁺→SCE tie).
+- Eox onsets (tier B): parent **furan 1.895** + **pyrrole 0.845** (Tourillon & Garnier 1982), **ProDOT 1.45**
+  (JES 2020, native Ag/AgCl).
+- Optical anchors (`optical_anchors_selected.csv`): polythiophene 2.0 (Kaneto 1983), **polyselenophene 1.76**
+  (oCVD neutral film, Org. Electron. 2015) — heteroaromatic optical class now 3/4.
+
+**ANSWERED (no further data needed):**
+- **Optical axis graduation → NO.** Even at 3/4 anchors the heteroaromatic class can't be calibrated:
+  sTDA-xTB n6 spans only 0.10 eV across furan/thiophene/selenophene while experiment spans 0.55 eV →
+  descriptor lacks within-class resolution (LOO-CV 0.686 eV). Stays 15% diagnostic. A 4th anchor
+  (polypyrrole) would not change this; only a more sensitive optical method would (PI resource call).
+- **λ-vs-feasibility → λ is the wrong descriptor** (T16 resolved). The right one (cation α-coupling-site
+  spin) is now computable after the spin fix — re-running B1 separation with it is the open follow-up.
+
+**STILL OPEN / WALLED (low–medium value; reference-electrode walls, not just paywalls):**
+- Parent **selenophene Eox** — only ever vs Ag/Ag⁺ or in BFEE (unconvertible).
+- A true **ProDOT peak (Epa)** — only an onset exists so far.
+- Neutral **polypyrrole** optical onset — only doped-state / theoretical sources found (and now low-value
+  per the descriptor-degeneracy finding above).
+
+**ENGINEERING FIXED THIS PASS:** spin-density cache NaN→NULL crash + xtb spin-block emission/parse
+(`monomer_cation_alpha_spin_sum` now populates; SGE 417959). Deep-research session limit resets 3:30am CT.

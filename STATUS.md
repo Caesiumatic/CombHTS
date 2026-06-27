@@ -21,10 +21,17 @@ reconcile + freeze + §0 no-go's). What this run changed (all committed + pushed
   via the size-matched real-xTB batch (SGE 417846/417848), only the per-class coupling-SITE-availability
   signal separates intrinsic NO from YES, and only for **position-blocked** monomers. Size-matched
   dimerization ΔG does NOT separate the electronic (3-thiophenecarboxaldehyde −21.2 ≈ thiophene) or
-  β-steric (3,4-dibutylthiophene +36.6 ≈ 3-hexylthiophene) NOs; α-spin is unavailable at xtb screening
-  level. **B2** soft `coupling_risk_flag` implemented (`src/eps/properties/coupling_risk.py`, config in
-  `tier1.yaml`, reported-only). **B3**: catches 3/7 intrinsic NOs with 0/11 false positives on simple
-  YES → balanced accuracy 0.50→0.71; 4/7 are Tier-2 blind spots. **B4** (hard reject) → PI.
+  β-steric (3,4-dibutylthiophene +36.6 ≈ 3-hexylthiophene) NOs. **B2** soft `coupling_risk_flag`
+  implemented (`src/eps/properties/coupling_risk.py`, config in `tier1.yaml`, reported-only). **B3**:
+  catches 3/7 intrinsic NOs with 0/11 false positives on simple YES → balanced accuracy 0.50→0.71;
+  4/7 are Tier-2 blind spots. **B4** (hard reject) → PI.
+  **UPDATE 2026-06-26: the "α-spin unavailable at xtb screening" blocker is CLEARED.** xtb 6.4.1 does
+  emit per-atom spin populations when asked via an xcontrol `$write/spin population=true` file (fix in
+  `XTBEngine._spin_density` + `parse_atomic_spin_populations`; cache no longer crashes on the prior
+  NaN→NULL path). The cation `monomer_cation_alpha_spin_sum` (spin on α coupling sites) now computes
+  for all monomers, and early signal is promising — α-blocked NOs (2,5-dimethylthiophene, 3,6-blocked
+  carbazoles) show alpha_spin_sum ≈ 0. This is the electronic descriptor B1/T15 wants; re-running the
+  B1 coupling-feasibility separation with it now enabled is the actionable follow-up.
 - **THINK T16** (λ wiring) and **T17** (two-tier freeze-readiness recommendation) added.
 - Targeted lit-gapfill (`docs/research/lit_gapfill_20260625.md`): DMSO ESW, pyrrole+EDOT Epa,
   PFO/poly(2,7-carbazole)/polyfuran optical newly web-sourced (screening-grade, needs verification);
