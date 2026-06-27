@@ -371,6 +371,16 @@ Each entry is a question we have not fully resolved. The `Forum` field says who 
 - **Resolves when**: PI signs off the freeze (per tier); then `--allow-large-scale` authorizes the full harvest.
 - **Links**: `DECISIONS_PENDING.md`; `docs/research/directive_section_audit_20260625.md`; [T1](#t1--screening-calibration-anchor-peak-vs-onset), [T6](#t6--band-gap-oligomer--stda-xtb-directive-route-vs-an-ml-model), [T14](#t14--what-is-a-valid-solvent-window-gate), [T15](#t15--coupling-feasibility-second-filter-b1b4-can-screening-descriptors-separate-intrinsic-no-from-yes).
 
+## T18 — Tier-1 IP engine: the directive mandates IPEA-xTB; the project silently used GFN2-xTB (deviation to CORRECT)
+- **Status**: deviation identified 2026-06-26; **remediation = restore directive compliance** (switch Tier-1 monomer/solvent IP/EA to IPEA-xTB). NOT a "should we" question — the directive decided.
+- **Forum**: self / decide-and-report (switching FROM a deviation TO the directive-specified method is the most directive-faithful action; the only PI gate remains the §0 full-scale launch). Must be done **before** the method freeze (it changes the Eox cache + calibration line).
+- **What the directive says**: §4.1 "**IPEA-xTB** vertical and adiabatic IP/EA calculations for monomers and solvents. Apply previously calibrated linear model (Zwijnenburg et al.) to map to B3LYP-quality values. Use GBSA implicit solvation…"; §6 software stack lists IPEA-xTB; GFN2-xTB is specified for **geometry only**.
+- **What the project did (deviation)**: Tier-1 monomer Eox uses **GFN2-xTB adiabatic ΔSCF IP** (`XTBEngine`, `XTB_METHOD="gfn2-xtb"`, `adiabatic_ip`), calibrated to **experimental Ag/AgCl** (not the Zwijnenburg→B3LYP model), computed in **gas phase** (not GBSA implicit). Three deviations from §4.1, none previously logged.
+- **Availability CONFIRMED (Lop, 2026-06-26)**: `param_ipea-xtb.txt` ships at `/share/apps/xtb/xtb-6.4.1/share/xtb/`; invoke `xtb mol.xyz --vipea` with `XTBPATH` set to that dir; parse `delta SCC IP (eV):` (GFN1-xTB Hamiltonian + empirical IP/EA shift = IPEA-xTB). Smoke: thiophene neutral → vertical IP 9.0296 eV, vertical EA −1.4056 eV.
+- **Remediation plan**: (1) add an IPEA-xTB vertical-IP path to `XTBEngine`; (2) re-harvest the benchmark monomer IPs with IPEA-xTB; (3) re-fit the Ag/AgCl calibration (new slope/intercept) + LOO-CV; (4) report IPEA-xTB line vs the old GFN2 line; (5) re-pin `configs/tier1.yaml` + profiles + manifest onto the IPEA-xTB line; (6) update snapshot tests. Vertical IPEA-xTB (Tier-1) is consistent with the directive's Tier-2 **adiabatic DFT ΔSCF** (§4.2) — fast vertical pre-screen, accurate adiabatic refinement.
+- **Resolves when**: production Tier-1 IP runs IPEA-xTB with a re-fitted calibration, tests/manifest reconciled, and the GFN2→IPEA change recorded — i.e. §4.1 compliance restored before the freeze.
+- **Links**: `DECISIONS_PENDING.md`; [T1](#t1--screening-calibration-anchor-peak-vs-onset); §4.1/§6/§7 of `Directive_CombHTS.pdf`.
+
 ## Decision log
 
 - 2026-06-26 (three data-gated analyses: optical T6 / Eox strict-vs-relaxed T1 / ESW T3) — all

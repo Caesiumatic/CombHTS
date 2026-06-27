@@ -46,6 +46,18 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    3-phenyl, 3,6-diethyl, 3,6-di-tert-butyl, 3,6-diphenyl; verified at distance-4 = pos 3/6). *Remaining
    PI part:* whether to retire production in favor of canonical-36, and which production-only monomers
    (triphenylamine, tris-amines, …) to fold into a future expanded set with primary sources.
+5. **§4.1 directive-compliance deviations (4) — must correct or PI-accept BEFORE freeze.** Full binary
+   audit: `docs/research/tier1_directive_compliance_audit_20260626.md`. None is physically impossible:
+   (a) **IP/EA engine** — directive §4.1 mandates **IPEA-xTB**; project uses **GFN2-xTB adiabatic**
+   (confirmed available on Lop, `xtb --vipea`; T18, remediation in progress). (b) **Solvation** —
+   directive mandates **COSMO-RS** (COSMOtherm/openCOSMO-RS); project uses **ALPB ΔGsolv affinity proxy**
+   (openCOSMO-RS via ORCA 6.1 on Lop is the sanctioned fix). (c) **Optical** — directive says calibrate
+   sTDA-xTB **against a TD-DFT reference set**; project keeps it **uncalibrated diagnostic** (no TD-DFT set
+   built; note optical still can't graduate per T6). (d) **Oligomer assembly** — directive names **stk**;
+   project uses **RDKit RWMol** (stk absent in env). Each must be restored to compliance or recorded as an
+   explicit PI-accepted deviation — not kept silently. COMPLIANT in §4.1: per-solvent ALPB(≈GBSA) IP
+   solvation, all three filter thresholds (0.3/0.2/−3 V·kcal), geometry/conformer/optical engines.
+   §4.2 (Tier-2) is NOT YET RUN at scale; its DFT calibration batch (417442) was gas-phase vs the §4.2 SMD spec.
 
 ## C. Standing sign-offs / no-go's
 
