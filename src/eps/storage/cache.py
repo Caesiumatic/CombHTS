@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -56,8 +57,9 @@ class SQLiteCache:
             ).fetchone()
         if row is None:
             return None
+        cached_value = row["value"]
         return CalcResult(
-            value=float(row["value"]),
+            value=float(cached_value) if cached_value is not None else float("nan"),
             unit=str(row["unit"]),
             method=key.method,
             raw=json.loads(row["raw_json"]),
@@ -153,5 +155,12 @@ def cached_run(
         return cached
 
     result = engine.run(req)
-    cache.put(key, result)
+    # Do not cache a non-finite scalar value. SQLite stores IEEE NaN as NULL, which violates the
+    # results.value NOT NULL constraint (IntegrityError) — this is exactly how a failed-to-parse
+    # spin_density (value=NaN, data only in raw['atomic_spin_density']) used to crash the per-monomer
+    # secondary-descriptor pass. Skipping the write also avoids stickily caching a transient failure:
+    # the next run recomputes instead of returning a cached NaN. Array/raw payloads whose scalar
+    # value is meaningful (finite) still cache normally.
+    if result.value is not None and math.isfinite(result.value):
+        cache.put(key, result)
     return result
