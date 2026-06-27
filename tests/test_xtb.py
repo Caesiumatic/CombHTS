@@ -95,21 +95,41 @@ def test_parse_frontier_orbital_eV_raises_when_tag_absent() -> None:
         parse_frontier_orbital_eV("no orbital block here\n", "homo")
 
 
-def test_parse_atomic_spin_populations_empty_on_real_open_shell_stdout() -> None:
-    """Regression documenting a VERIFIED xtb 6.4.1 limitation: at the production verbosity,
-    an open-shell single point prints NO per-atom spin-population block (only the scalar setup
-    line ``spin : 0.5``). The parser must degrade to ``[]`` (=> _spin_density NaN, descriptor
-    marked failed), NOT raise or return garbage. See STATUS open debt on always-NaN spin_density.
+def test_parse_atomic_spin_populations_empty_without_xcontrol_block() -> None:
+    """Without the xcontrol ``$write/spin population=true`` request, xtb 6.4.1 prints NO per-atom
+    spin block (only the scalar setup line ``spin : 0.5``); the parser must degrade to ``[]`` (=>
+    _spin_density NaN), NOT raise or return garbage. ``XTBEngine._spin_density`` now always passes
+    that xcontrol file (see the (R)spin-density test below), but the no-block degrade path must stay
+    robust for any run made without it.
     """
 
     text = (FIXTURES / "xtb_radical_cation_stdout.txt").read_text(encoding="utf-8")
     assert parse_atomic_spin_populations(text) == []
 
 
-def test_parse_atomic_spin_populations_reads_block_when_present() -> None:
-    """When a higher-verbosity run DOES print a spin-population block, the parser collects the
-    trailing numeric column per atom row. Guards the regex/heuristic against silent regressions
-    (this synthetic block is clearly labeled; real 6.4.1 production output omits it — see above).
+def test_parse_atomic_spin_populations_reads_real_R_spin_density_block() -> None:
+    """The real xtb 6.4.1 block (emitted with the xcontrol ``$write/spin population=true`` file):
+    atom rows start with a fused index+element token (``1C``, ``4S``) and the FIRST float per row is
+    that atom's total spin population. The parser must take numbers[0], not the trailing column.
+    """
+
+    block = (
+        " (R)spin-density population\n"
+        "\n"
+        " Mulliken population  n(s)   n(p)   n(d)\n"
+        "     1C     0.1704   0.000  0.170  0.000\n"
+        "     4S     0.3261   0.000  0.319  0.007\n"
+        "     6H     0.0000   0.000  0.000  0.000\n"
+        "\n"
+        " #   Z          covCN\n"
+    )
+    spins = parse_atomic_spin_populations(block)
+    assert spins == [pytest.approx(0.1704), pytest.approx(0.3261), pytest.approx(0.0)]
+
+
+def test_parse_atomic_spin_populations_reads_single_column_block() -> None:
+    """A simpler labeled block with one trailing spin float per row also parses (numbers[0] is the
+    only float). Guards the heuristic against silent regressions.
     """
 
     block = (

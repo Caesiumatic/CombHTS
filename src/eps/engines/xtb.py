@@ -225,6 +225,7 @@ class XTBEngine(Engine):
             multiplicity=req.species.multiplicity,
             solvent_args=solvent_flag(req.xtb_gbsa_name),
             optimize=False,
+            extra_input="$write\n   spin population=true\n   mulliken=true\n$end\n",
         )
         spins = parse_atomic_spin_populations(output.stdout)
         value = max(spins) if spins else float("nan")
@@ -309,6 +310,7 @@ class XTBEngine(Engine):
         multiplicity: int,
         solvent_args: list[str] | None = None,
         optimize: bool = False,
+        extra_input: str | None = None,
     ) -> XTBRunOutput:
         xyz = smiles_to_xyz(req.species.canonical_smiles, charge=charge)
         args = solvent_args if solvent_args is not None else solvent_flag(req.xtb_gbsa_name)
@@ -331,6 +333,13 @@ class XTBEngine(Engine):
                 *args,
                 "--json",
             ]
+            # Optional xcontrol file. Used for spin_density: xtb 6.4.1 only prints the per-atom
+            # "(R)spin-density population" block when "$write/spin population=true" is requested
+            # (verified on Lop); without it the production output has no atomic spin block.
+            if extra_input is not None:
+                input_path = Path(tmpdir) / "xcontrol"
+                input_path.write_text(extra_input, encoding="utf-8")
+                command += ["--input", str(input_path)]
             if optimize:
                 command.append("--opt")
             completed = subprocess.run(
@@ -640,19 +649,21 @@ def parse_frontier_orbital_eV(stdout: str, which: str) -> float:
 def parse_atomic_spin_populations(stdout: str) -> list[float]:
     """Parse per-atom Mulliken spin populations from xTB stdout (best-effort).
 
-    Scans for a spin-population section (a header containing "spin" plus "population"/"density")
-    and collects the trailing numeric column per atom row. Returns ``[]`` when no such block is
-    present, so the caller can degrade gracefully.
+    Targets the real xtb 6.4.1 block emitted when ``XTBEngine._spin_density`` requests it via an
+    xcontrol ``$write/spin population=true`` file (verified on Lop)::
 
-    VERIFIED LIMITATION (xtb 6.4.1, captured real open-shell radical-cation single point — see
-    ``tests/fixtures/xtb_radical_cation_stdout.txt``): at the production verbosity used by
-    ``XTBEngine._run_xtb`` (no ``--verbose``/raised print level), xtb 6.4.1 emits **no per-atom
-    spin-population block** — the only "spin" token is the scalar setup line ``spin : 0.5``, and
-    ``xtbout.json`` carries only ``partial charges`` (no atomic spin density). This parser therefore
-    returns ``[]`` for the real production output, so ``_spin_density`` yields NaN and the screen's
-    ``_safe_calculate`` marks the descriptor failed (screening-grade, acceptable). The regex is kept
-    correct for the case where a higher-verbosity run does print such a block; see STATUS open debt
-    for the always-NaN ``spin_density`` finding.
+        (R)spin-density population
+
+         Mulliken population  n(s)   n(p)   n(d)
+             1C     0.1704   0.000  0.170  0.000
+             4S     0.3261   0.000  0.319  0.007
+             ...
+
+    The atom rows begin with a fused index+element token (``1C``, ``4S``), and the **first** float
+    on each row is that atom's total spin population (= n(s)+n(p)+n(d)). Returns ``[]`` when no such
+    block is present (e.g. a run made without the xcontrol file), so the caller degrades gracefully
+    to a NaN spin descriptor. NOTE: without the xcontrol ``$write`` request, xtb 6.4.1 prints no
+    per-atom spin block at all — the ``extra_input`` in ``_spin_density`` is what makes this parse.
     """
 
     lines = stdout.splitlines()
@@ -664,21 +675,20 @@ def parse_atomic_spin_populations(stdout: str) -> list[float]:
             in_block = True
             spins = []
             continue
-        if in_block:
-            parts = line.split()
-            if not parts:
-                if spins:
-                    break
-                continue
-            try:
-                int(parts[0])
-            except ValueError:
-                if spins:
-                    break
-                continue
-            numbers = re.findall(r"-?\d+\.\d+", line)
-            if numbers:
-                spins.append(float(numbers[-1]))
+        if not in_block:
+            continue
+        if not line.strip():
+            if spins:
+                break
+            continue
+        # Atom rows start with an index, optionally fused with the element symbol ("1C", "4S").
+        if re.match(r"^\s*\d+", line) is None:
+            if spins:
+                break
+            continue  # sub-header like "Mulliken population  n(s) ..." before the data rows
+        numbers = re.findall(r"-?\d+\.\d+", line)
+        if numbers:
+            spins.append(float(numbers[0]))
     return spins
 
 
