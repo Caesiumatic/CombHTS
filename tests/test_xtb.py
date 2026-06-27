@@ -12,6 +12,7 @@ from eps.engines import xtb as xtb_module
 from eps.engines.xtb import (
     parse_atomic_spin_populations,
     parse_frontier_orbital_eV,
+    parse_ipea_value,
     parse_homo_lumo,
     parse_stda_lowest_excitation,
     parse_total_energy,
@@ -93,6 +94,27 @@ def test_parse_frontier_orbital_eV_lumo_from_real_stdout() -> None:
 def test_parse_frontier_orbital_eV_raises_when_tag_absent() -> None:
     with pytest.raises(ValueError, match="HOMO orbital energy"):
         parse_frontier_orbital_eV("no orbital block here\n", "homo")
+
+
+def test_parse_ipea_value_reads_delta_scc_ip_and_ea() -> None:
+    """IPEA-xTB (`xtb --vipea`) prints the final `delta SCC IP/EA (eV)` (empirical shift already
+    applied); the parser must read those, not the `empirical IP shift` line. Real thiophene values."""
+
+    stdout = (
+        "          |        vertical delta SCC IP calculation        |\n"
+        "empirical IP shift (eV):    4.8455\n"
+        "delta SCC IP (eV):    9.0296\n"
+        "          |        vertical delta SCC EA calculation        |\n"
+        "empirical EA shift (eV):    4.8455\n"
+        "delta SCC EA (eV):   -1.4056\n"
+    )
+    assert parse_ipea_value(stdout, "IP") == pytest.approx(9.0296)
+    assert parse_ipea_value(stdout, "EA") == pytest.approx(-1.4056)
+
+
+def test_parse_ipea_value_raises_when_absent() -> None:
+    with pytest.raises(ValueError):
+        parse_ipea_value("no ipea block here", "IP")
 
 
 def test_parse_atomic_spin_populations_empty_without_xcontrol_block() -> None:

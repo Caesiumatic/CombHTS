@@ -59,7 +59,7 @@ def monomer_eox_vs_AgAgCl(
         species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
         method=method,
         solvent_eps_r=solvent.eps_r,
-        quantity="adiabatic_ip",
+        quantity="ipea_ip",
         xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     result = cached_run(cache, engine, req, solvent.name)
@@ -79,7 +79,7 @@ def solvent_anodic_limit(
         species=SpeciesSpec(solvent.canonical_smiles, charge=0, multiplicity=1),
         method=method,
         solvent_eps_r=solvent.eps_r,
-        quantity="adiabatic_ip",
+        quantity="ipea_ip",
         xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     result = cached_run(cache, engine, req, solvent.name)
@@ -108,7 +108,7 @@ def solvent_cathodic_limit(
         species=SpeciesSpec(solvent.canonical_smiles, charge=0, multiplicity=1),
         method=method,
         solvent_eps_r=solvent.eps_r,
-        quantity="adiabatic_ea",
+        quantity="ipea_ea",
         xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     result = cached_run(cache, engine, req, solvent.name)
