@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -140,6 +141,10 @@ class XTBEngine(Engine):
         if req.quantity in ("vertical_ip", "vertical_ea"):
             value, raw = self._vertical_redox(req)
             return CalcResult(value=value, unit="eV", method=req.method, raw=raw)
+        if req.quantity in ("ipea_ip", "ipea_ea"):
+            ip_eV, ea_eV, raw = self._run_ipea(req)
+            value = ip_eV if req.quantity == "ipea_ip" else ea_eV
+            return CalcResult(value=value, unit="eV", method=req.method, raw=raw)
         if req.quantity == "spin_density":
             value, raw = self._spin_density(req)
             return CalcResult(value=value, unit="fraction", method=req.method, raw=raw)
@@ -209,6 +214,54 @@ class XTBEngine(Engine):
             "ion_stdout": ion_output.stdout,
             "neutral_json": neutral_output.parsed_json,
             "ion_json": ion_output.parsed_json,
+        }
+
+    def _ipea_share_dir(self) -> Path | None:
+        """Locate the dir holding ``param_ipea-xtb.txt`` (``<xtb>/../share/xtb``)."""
+        binpath = shutil.which(self.binary)
+        if binpath is None:
+            return None
+        share = Path(binpath).resolve().parent.parent / "share" / "xtb"
+        return share if (share / "param_ipea-xtb.txt").exists() else None
+
+    def _run_ipea(self, req: CalcRequest) -> tuple[float, float, dict]:
+        """IPEA-xTB vertical IP/EA (directive §4.1) via ``xtb --vipea`` on the NEUTRAL species.
+
+        Returns ``(vertical_IP_eV, vertical_EA_eV, raw)``. ``--vipea`` runs the IPEA-xTB
+        parameterisation (GFN1 Hamiltonian + empirical IP/EA shift) and prints the final
+        ``delta SCC IP/EA (eV)`` (shift already applied). The IPEA parameter file is found via
+        ``XTBPATH``; we set it to the binary's ``share/xtb`` dir when the caller has not, so the
+        engine is self-sufficient (no SGE-env dependency). GBSA/ALPB at the candidate solvent's
+        dielectric is applied through ``solvent_args`` (directive §4.1).
+        """
+
+        xyz = smiles_to_xyz(req.species.canonical_smiles, charge=0)
+        solvent_args = solvent_flag(req.xtb_gbsa_name)
+        env = os.environ.copy()
+        if not env.get("XTBPATH"):
+            share = self._ipea_share_dir()
+            if share is not None:
+                env["XTBPATH"] = str(share)
+        with tempfile.TemporaryDirectory(prefix="eps-ipea-") as tmpdir:
+            xyz_path = Path(tmpdir) / "input.xyz"
+            xyz_path.write_text(xyz, encoding="utf-8")
+            command = [self.binary, str(xyz_path), "--vipea", "--chrg", "0", "--uhf", "0", *solvent_args]
+            completed = subprocess.run(
+                command, cwd=tmpdir, check=False, capture_output=True, text=True, env=env
+            )
+            if completed.returncode != 0:
+                raise RuntimeError(
+                    "xTB --vipea (IPEA-xTB) failed with exit code "
+                    f"{completed.returncode}.\nSTDOUT:\n{completed.stdout}\nSTDERR:\n{completed.stderr}"
+                )
+        ip_eV = parse_ipea_value(completed.stdout, "IP")
+        ea_eV = parse_ipea_value(completed.stdout, "EA")
+        return ip_eV, ea_eV, {
+            "engine": "XTBEngine",
+            "quantity": req.quantity,
+            "method": "ipea-xtb",
+            "solvent_args": solvent_args,
+            "stdout": completed.stdout,
         }
 
     def _spin_density(self, req: CalcRequest) -> tuple[float, dict]:
@@ -644,6 +697,19 @@ def parse_frontier_orbital_eV(stdout: str, which: str) -> float:
             if numbers:
                 return float(numbers[-1])
     raise ValueError(f"Could not parse {which.upper()} orbital energy from xTB stdout")
+
+
+def parse_ipea_value(stdout: str, which: str) -> float:
+    """Parse the IPEA-xTB vertical IP or EA (eV) from ``xtb --vipea`` stdout.
+
+    ``which`` is "IP" or "EA"; the target line is e.g. ``delta SCC IP (eV):    9.0296``
+    (the final value, empirical shift already applied).
+    """
+
+    match = re.search(rf"delta SCC {which} \(eV\):\s*(-?\d+\.\d+)", stdout)
+    if match is None:
+        raise ValueError(f"Could not parse IPEA-xTB {which} from xtb --vipea stdout")
+    return float(match.group(1))
 
 
 def parse_atomic_spin_populations(stdout: str) -> list[float]:

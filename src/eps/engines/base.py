@@ -18,6 +18,9 @@ SUPPORTED_QUANTITIES = frozenset(
         "lumo",
         "vertical_ip",
         "vertical_ea",
+        # IPEA-xTB vertical IP/EA (directive §4.1 Tier-1 monomer/solvent oxidation engine).
+        "ipea_ip",
+        "ipea_ea",
     }
 )
 

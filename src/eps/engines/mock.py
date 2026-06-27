@@ -69,6 +69,14 @@ class MockEngine(Engine):
             value = self._adiabatic_ea_value(req) + reorg
             unit = "eV"
             raw["reorganization_eV"] = reorg
+        elif quantity == "ipea_ip":
+            # IPEA-xTB vertical IP (directive §4.1): own deterministic basis, IPEA absolute scale
+            # (~7.5-9.5 eV). Calibration absorbs the offset, so only monotonicity/determinism matter.
+            value = self._scale(self._unit_float_for(req, "ipea_ip"), 7.5, 9.5)
+            unit = "eV"
+        elif quantity == "ipea_ea":
+            value = self._scale(self._unit_float_for(req, "ipea_ea"), -2.0, 0.5)
+            unit = "eV"
         elif quantity == "spin_density":
             value = self._scale(base, 0.0, 1.0)
             unit = "fraction"
