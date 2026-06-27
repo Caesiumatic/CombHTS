@@ -59,3 +59,45 @@ fit, and xTB→DFT→exp composition) converge on the same production line. This
 
 Resolves the `calibration_profiles.yaml` "strict-vs-relaxed (peak) choice ... pending the live DFT
 LOO-CV tiebreaker" note: **strict.**
+
+---
+
+## UPDATE 2026-06-26 — re-fit on the EXPANDED benchmark (SGE 417945)
+
+The benchmark was expanded with 6 clean convertible canonical-monomer PEAK anchors
+(EDOT 1.485 / EDOS 1.225 / pyrrole 1.245 / pyrrole 1.302 / N-methylpyrrole 1.185 / carbazole 1.205 V vs
+Ag/AgCl; all tier-B; the strict tier-A set is untouched at n=9 — see `eox_gapfill_deepresearch_20260626.md`).
+The strict↔relaxed verdict was re-run on this expanded set to test a specific hypothesis: **does adding
+clean, canonical, chemically-diverse monomers to the relaxed (A|B) set rescue it?** Run on Lop, all
+profiles, cache warm so only the new monomers recomputed. Output:
+`outputs/calibration_profile_comparison.csv` (cluster).
+
+| profile | track | n | slope | intercept (V) | R² | MAE_after (V) | **LOO-CV (V)** | Spearman ρ | resid σ (V) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **agagcl_peak_strict** (tier A) | calibration | 9 | 0.7258 | −3.1454 | **0.889** | 0.144 | **0.197** | 0.833 | 0.158 |
+| agagcl_peak_relaxed (A+B) | calibration | **28** | 0.4181 | −1.3869 | 0.475 | 0.184 | 0.211 | 0.711 | 0.267 |
+| agagcl_onset_relaxed (A+B) | screening-filter | 16 | 0.2694 | −0.6101 | 0.618 | 0.121 | 0.149 | 0.871 | 0.160 |
+| fc_peak_strict / fc_onset_relaxed | — | 0 | — | — | — | — | — | — | skipped (no Fc-scale Eox rows) |
+
+**Hypothesis FALSIFIED — and the falsification is the result.** I predicted the clean canonical anchors
+would pull the relaxed slope *up* toward the thermodynamic ~0.7 V/eV. They did not: slope moved the wrong
+way (0.446 → **0.418**), R² stayed poor (0.508 → 0.475), and although LOO-CV improved marginally
+(0.232 → **0.211 V**) with the larger, more stable set, **relaxed still loses to strict** (0.211 > 0.197).
+Strict is unchanged to the digit (its tier-A set didn't move) and remains the winner on every metric.
+
+The scientific upgrade: this rules out **small-sample instability** as the reason relaxed underperforms.
+Going 9→23→28 points and adding the cleanest possible canonical monomers did *not* fix the slope. The
+deficit is therefore **structural / data-quality**, not quantity: the tier-B rows carry a genuinely noisier
+xTB-adiabatic-IP ↔ experimental-Eox relationship (heterogeneous measurement conditions; D–A push–pull
+monomers whose peak potential decouples from a single-molecule adiabatic IP), so they flatten the line no
+matter how many clean points sit alongside them. They are **out-of-sample validation material, not fit
+anchors** — exactly the role they now play (`calibration_eligible`, but not in the production strict fit).
+
+**Decisions (post-expansion):**
+- **Production line UNCHANGED and re-confirmed.** `configs/tier1.yaml` strict coefficients
+  (0.725837 / −3.145372) are byte-identical to this re-fit's strict row. No edit.
+- **Decision #2 above is now DONE, not pending.** `default_screening_profile` was flipped
+  relaxed→strict in commit `1d59349` and `configs/CALIBRATION_ACTIVE.md` reconciled. The expanded re-fit
+  retroactively strengthens that flip.
+- No new action required; the only remaining freeze action is the PI-level calibration freeze itself
+  (THINK T17 layer-1), which this analysis clears for the Eox axis.
