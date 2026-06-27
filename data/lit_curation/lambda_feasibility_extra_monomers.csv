@@ -1,0 +1,14 @@
+monomer_name,feasibility_label,monomer_smiles
+"2,3-benzofuran",NO-chem,c1ccc2occc2c1
+"2,5-dimethylthiophene",NO-chem,Cc1ccc(C)s1
+"3,4-dimethoxythiophene",YES,COc1cscc1OC
+"3,6-di-tert-butylcarbazole",NO-chem,CC(C)(C)c1ccc2[nH]c3ccc(C(C)(C)C)cc3c2c1
+"3,6-diethylcarbazole",NO-chem,CCc1ccc2[nH]c3ccc(CC)cc3c2c1
+"3,6-diphenylcarbazole",NO-chem,c1ccc(-c2ccc3[nH]c4ccc(-c5ccccc5)cc4c3c2)cc1
+3-ethylcarbazole,YES,CCc1ccc2[nH]c3ccccc3c2c1
+3-phenylcarbazole,NO-chem,c1ccc(-c2ccc3[nH]c4ccccc4c3c2)cc1
+3-tert-butylcarbazole,NO-chem,CC(C)(C)c1ccc2[nH]c3ccccc3c2c1
+N-phenylpyrrole,YES,c1ccc(-n2cccc2)cc1
+triphenylamine,NO-chem,c1ccc(N(c2ccccc2)c2ccccc2)cc1
+tris(4-bromophenyl)amine,NO-chem,Brc1ccc(N(c2ccc(Br)cc2)c2ccc(Br)cc2)cc1
+tris(4-methoxyphenyl)amine,NO-chem,COc1ccc(N(c2ccc(OC)cc2)c2ccc(OC)cc2)cc1
