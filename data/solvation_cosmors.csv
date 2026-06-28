@@ -1,0 +1,469 @@
+monomer_name,monomer_canonical_smiles,solvent_name,dGsolv_kcal_mol,method
+thiophene,c1ccsc1,acetonitrile,-4.154327,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,DCM,-4.556734,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,propylene carbonate,-4.178485,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,DMF,-4.588488,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,DMSO,-4.503934,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,THF,-4.636932,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,nitromethane,-3.807381,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,water,-1.285033,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,GBL,-4.442396,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,sulfolane,-4.382832,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,NMP,-4.610572,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,nitrobenzene,-4.278836,orca6.1/opencosmors24a/bp86/def2-tzvpd
+thiophene,c1ccsc1,benzonitrile,-4.289942,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,acetonitrile,-7.933971,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,DCM,-8.204409,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,propylene carbonate,-7.876781,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,DMF,-8.320800,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,DMSO,-8.263783,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,THF,-8.197768,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,nitromethane,-7.547103,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,water,-4.181513,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,GBL,-8.202967,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,sulfolane,-8.119099,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,NMP,-8.331090,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,nitrobenzene,-7.831764,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOT,c1scc2c1OCCO2,benzonitrile,-7.873268,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,acetonitrile,-8.183662,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,DCM,-8.979765,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,propylene carbonate,-8.253178,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,DMF,-8.717003,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,DMSO,-8.595050,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,THF,-8.794686,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,nitromethane,-7.842794,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,water,-4.198910,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,GBL,-8.569590,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,sulfolane,-8.490149,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,NMP,-8.760221,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,nitrobenzene,-8.428487,orca6.1/opencosmors24a/bp86/def2-tzvpd
+ProDOT,c1scc2c1OCCCO2,benzonitrile,-8.427968,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,acetonitrile,-6.314755,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,DCM,-8.238485,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,propylene carbonate,-6.708036,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,DMF,-7.701777,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,DMSO,-7.338019,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,THF,-8.364802,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,nitromethane,-5.603550,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,water,-0.092257,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,GBL,-7.253418,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,sulfolane,-7.142510,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,NMP,-7.853665,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,nitrobenzene,-7.453152,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylthiophene,CCCCCCc1ccsc1,benzonitrile,-7.387012,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,acetonitrile,-8.336464,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,DCM,-8.976521,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,propylene carbonate,-8.456075,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,DMF,-9.184169,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,DMSO,-9.023763,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,THF,-9.310621,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,nitromethane,-7.682165,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,water,-3.218615,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,GBL,-8.934681,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,sulfolane,-8.854919,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,NMP,-9.287759,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,nitrobenzene,-8.648449,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bithiophene,c1csc(-c2ccsc2)c1,benzonitrile,-8.676924,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,acetonitrile,-6.966761,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,DCM,-5.469332,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,propylene carbonate,-6.649897,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,DMF,-8.334795,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,DMSO,-8.621119,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,THF,-7.865436,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,nitromethane,-5.893562,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,water,-4.840336,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,GBL,-7.471931,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,sulfolane,-6.926309,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,NMP,-8.448184,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,nitrobenzene,-5.807003,orca6.1/opencosmors24a/bp86/def2-tzvpd
+pyrrole,c1cc[nH]c1,benzonitrile,-6.312806,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,acetonitrile,-10.074587,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,DCM,-8.823529,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,propylene carbonate,-9.718813,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,DMF,-11.249101,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,DMSO,-11.524428,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,THF,-10.674216,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,nitromethane,-9.142410,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,water,-7.421281,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,GBL,-10.500640,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,sulfolane,-9.990598,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,NMP,-11.333243,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,nitrobenzene,-8.866263,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOP,c1[nH]cc2c1OCCO2,benzonitrile,-9.331275,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,acetonitrile,-3.746602,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,DCM,-3.933606,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,propylene carbonate,-3.697403,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,DMF,-4.066208,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,DMSO,-4.019263,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,THF,-4.006463,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,nitromethane,-3.435436,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,water,-1.256713,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,GBL,-3.937125,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,sulfolane,-3.869579,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,NMP,-4.059042,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,nitrobenzene,-3.688380,orca6.1/opencosmors24a/bp86/def2-tzvpd
+furan,c1ccoc1,benzonitrile,-3.717615,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,acetonitrile,-4.372990,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,DCM,-4.637755,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,propylene carbonate,-4.367561,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,DMF,-4.860613,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,DMSO,-4.803498,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,THF,-4.836724,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,nitromethane,-3.975924,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,water,-1.371457,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,GBL,-4.673680,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,sulfolane,-4.601186,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,NMP,-4.888780,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,nitrobenzene,-4.393225,orca6.1/opencosmors24a/bp86/def2-tzvpd
+selenophene,c1cc[se]c1,benzonitrile,-4.429548,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,acetonitrile,-7.677674,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,DCM,-8.093618,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,propylene carbonate,-7.651704,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,DMF,-8.204099,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,DMSO,-8.145861,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,THF,-8.106375,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,nitromethane,-7.265021,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,water,-4.013652,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,GBL,-8.012634,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,sulfolane,-7.912749,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,NMP,-8.235776,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,nitrobenzene,-7.642888,orca6.1/opencosmors24a/bp86/def2-tzvpd
+EDOS,c1[se]cc2c1OCCO2,benzonitrile,-7.694295,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,acetonitrile,-7.481829,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,DCM,-6.880339,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,propylene carbonate,-7.257335,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,DMF,-8.449630,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,DMSO,-8.616660,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,THF,-8.010448,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,nitromethane,-6.791545,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,water,-4.804370,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,GBL,-7.853366,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,sulfolane,-7.574108,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,NMP,-8.520740,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,nitrobenzene,-6.740993,orca6.1/opencosmors24a/bp86/def2-tzvpd
+aniline,Nc1ccccc1,benzonitrile,-7.010427,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,acetonitrile,-11.313385,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,DCM,-10.534382,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,propylene carbonate,-11.234562,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,DMF,-13.219921,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,DMSO,-13.347138,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,THF,-13.046466,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,nitromethane,-9.945582,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,water,-6.256018,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,GBL,-12.267761,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,sulfolane,-11.754152,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,NMP,-13.458635,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,nitrobenzene,-10.721475,orca6.1/opencosmors24a/bp86/def2-tzvpd
+carbazole,c1ccc2c(c1)[nH]c1ccccc12,benzonitrile,-11.176080,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,acetonitrile,-13.900893,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,DCM,-18.682898,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,propylene carbonate,-15.156292,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,DMF,-17.254946,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,DMSO,-16.374746,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,THF,-19.087214,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,nitromethane,-12.344487,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,water,0.135073,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,GBL,-16.322790,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,sulfolane,-16.178150,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,NMP,-17.797392,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,nitrobenzene,-17.163500,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"fluorene 9,9-dioctyl",CCCCCCCCC1(CCCCCCCC)c2ccccc2-c2ccccc21,benzonitrile,-16.970072,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,acetonitrile,-7.926831,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,DCM,-8.974098,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,propylene carbonate,-8.158937,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,DMF,-8.846124,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,DMSO,-8.633960,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,THF,-9.155970,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,nitromethane,-7.337793,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,water,-2.768118,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,GBL,-8.598293,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,sulfolane,-8.531536,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,NMP,-8.975438,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,nitrobenzene,-8.542441,orca6.1/opencosmors24a/bp86/def2-tzvpd
+CPDT,c1cc2c(s1)-c1sccc1C2,benzonitrile,-8.530053,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,acetonitrile,-10.262051,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,DCM,-11.431273,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,propylene carbonate,-10.477708,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,DMF,-11.308994,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,DMSO,-11.121121,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,THF,-11.507402,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,nitromethane,-9.621180,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,water,-4.853738,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,GBL,-10.998430,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,sulfolane,-10.900484,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,NMP,-11.455743,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,nitrobenzene,-10.805620,orca6.1/opencosmors24a/bp86/def2-tzvpd
+benzothiadiazole-thiophene D-A,c1csc(-c2ccc3nsnc3c2)c1,benzonitrile,-10.828613,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,acetonitrile,-4.462179,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,DCM,-5.196294,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,propylene carbonate,-4.562822,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,DMF,-5.051180,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,DMSO,-4.910767,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,THF,-5.232645,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,nitromethane,-4.086028,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,water,-1.064793,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,GBL,-4.857799,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,sulfolane,-4.790277,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,NMP,-5.094971,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,nitrobenzene,-4.802469,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylthiophene,Cc1ccsc1,benzonitrile,-4.791751,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,acetonitrile,-4.111341,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,DCM,-4.437892,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,propylene carbonate,-4.132781,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,DMF,-4.678518,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,DMSO,-4.593097,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,THF,-4.707041,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,nitromethane,-3.644542,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,water,-0.935041,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,GBL,-4.470598,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,sulfolane,-4.402343,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,NMP,-4.716842,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,nitrobenzene,-4.206359,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-fluorothiophene,Fc1ccsc1,benzonitrile,-4.237527,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,acetonitrile,-3.949980,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,DCM,-4.274255,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,propylene carbonate,-3.996300,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,DMF,-4.755229,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,DMSO,-4.674968,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,THF,-4.795118,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,nitromethane,-3.358524,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,water,-0.525778,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,GBL,-4.423640,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,sulfolane,-4.333436,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,NMP,-4.827787,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,nitrobenzene,-4.067698,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-difluorothiophene",Fc1cscc1F,benzonitrile,-4.126261,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,acetonitrile,-5.633769,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,DCM,-6.202707,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,propylene carbonate,-5.656179,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,DMF,-6.108005,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,DMSO,-5.999866,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,THF,-6.160460,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,nitromethane,-5.287443,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,water,-2.163346,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,GBL,-5.950920,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,sulfolane,-5.871921,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,NMP,-6.126499,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,nitrobenzene,-5.775157,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methoxythiophene,COc1ccsc1,benzonitrile,-5.781821,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,acetonitrile,-11.712154,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,DCM,-12.794316,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,propylene carbonate,-12.001035,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,DMF,-13.050661,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,DMSO,-12.790660,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,THF,-13.368093,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,nitromethane,-10.756710,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,water,-4.471616,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,GBL,-12.682971,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,sulfolane,-12.597441,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,NMP,-13.257396,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,nitrobenzene,-12.397490,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terthiophene,c1csc(-c2ccc(-c3cccs3)s2)c1,benzonitrile,-12.422079,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,acetonitrile,-5.377837,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,DCM,-5.892558,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,propylene carbonate,-5.346838,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,DMF,-5.646831,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,DMSO,-5.577345,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,THF,-5.624650,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,nitromethane,-5.196302,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,water,-2.513165,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,GBL,-5.544446,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,sulfolane,-5.462951,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,NMP,-5.621768,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,nitrobenzene,-5.413118,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-methylpyrrole,Cn1cccc1,benzonitrile,-5.413745,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,acetonitrile,-7.720339,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,DCM,-9.998308,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,propylene carbonate,-8.144554,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,DMF,-9.142486,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,DMSO,-8.744956,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,THF,-9.849914,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,nitromethane,-7.079599,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,water,-0.957422,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,GBL,-8.682622,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,sulfolane,-8.549548,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,NMP,-9.289097,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,nitrobenzene,-8.975109,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-octylpyrrole,CCCCCCCCn1cccc1,benzonitrile,-8.890802,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,acetonitrile,-6.754786,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,DCM,-6.255085,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,propylene carbonate,-6.645932,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,DMF,-8.257670,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,DMSO,-8.371610,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,THF,-8.109076,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,nitromethane,-5.750853,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,water,-3.409174,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,GBL,-7.427117,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,sulfolane,-6.988711,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,NMP,-8.398652,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,nitrobenzene,-6.241880,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylpyrrole",Cc1c[nH]cc1C,benzonitrile,-6.601118,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,acetonitrile,-3.995442,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,DCM,-4.557611,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,propylene carbonate,-4.029150,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,DMF,-4.462596,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,DMSO,-4.354900,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,THF,-4.550858,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,nitromethane,-3.670391,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,water,-0.994454,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,GBL,-4.291432,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,sulfolane,-4.216698,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,NMP,-4.475512,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,nitrobenzene,-4.176491,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-methylfuran,Cc1ccoc1,benzonitrile,-4.178454,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,acetonitrile,-5.820348,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,DCM,-7.569114,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,propylene carbonate,-6.145926,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,DMF,-7.082688,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,DMSO,-6.752220,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,THF,-7.651127,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,nitromethane,-5.160469,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,water,-0.000916,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,GBL,-6.658113,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,sulfolane,-6.540482,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,NMP,-7.203276,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,nitrobenzene,-6.797606,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylfuran,CCCCCCc1ccoc1,benzonitrile,-6.744037,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,acetonitrile,-4.338177,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,DCM,-5.221245,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,propylene carbonate,-4.443513,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,DMF,-4.947328,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,DMSO,-4.787683,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,THF,-5.159109,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,nitromethane,-3.989007,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,water,-0.832583,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,GBL,-4.734455,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,sulfolane,-4.652407,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,NMP,-4.980066,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,nitrobenzene,-4.722672,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"3,4-dimethylfuran",Cc1cocc1C,benzonitrile,-4.703300,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,acetonitrile,-7.386400,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,DCM,-7.727373,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,propylene carbonate,-7.378626,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,DMF,-8.022858,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,DMSO,-7.922369,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,THF,-7.989722,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,nitromethane,-6.823750,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,water,-3.040587,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,GBL,-7.800033,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,sulfolane,-7.703668,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,NMP,-8.062708,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,nitrobenzene,-7.407729,orca6.1/opencosmors24a/bp86/def2-tzvpd
+bifuran,c1coc(-c2ccco2)c1,benzonitrile,-7.456070,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,acetonitrile,-11.140424,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,DCM,-11.668926,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,propylene carbonate,-11.180268,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,DMF,-12.096787,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,DMSO,-11.937390,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,THF,-12.104419,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,nitromethane,-10.328495,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,water,-4.933367,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,GBL,-11.781083,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,sulfolane,-11.656344,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,NMP,-12.182903,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,nitrobenzene,-11.262983,orca6.1/opencosmors24a/bp86/def2-tzvpd
+terfuran,c1coc(-c2ccc(-c3ccco3)o2)c1,benzonitrile,-11.326588,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,acetonitrile,-6.702059,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,DCM,-8.381015,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,propylene carbonate,-7.041059,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,DMF,-8.012012,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,DMSO,-7.693967,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,THF,-8.549050,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,nitromethane,-5.994677,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,water,-0.474541,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,GBL,-7.589863,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,sulfolane,-7.478412,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,NMP,-8.160334,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,nitrobenzene,-7.664557,orca6.1/opencosmors24a/bp86/def2-tzvpd
+3-hexylselenophene,CCCCCCc1cc[se]c1,benzonitrile,-7.623710,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,acetonitrile,-7.935272,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,DCM,-8.054681,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,propylene carbonate,-7.825465,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,DMF,-8.716344,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,DMSO,-8.748200,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,THF,-8.489992,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,nitromethane,-7.425399,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,water,-4.602841,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,GBL,-8.302269,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,sulfolane,-8.094219,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,NMP,-8.763732,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,nitrobenzene,-7.617356,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-methoxyaniline,COc1ccccc1N,benzonitrile,-7.766726,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,acetonitrile,-7.567328,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,DCM,-7.436684,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,propylene carbonate,-7.446189,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,DMF,-8.535110,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,DMSO,-8.613692,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,THF,-8.261367,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,nitromethane,-6.935764,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,water,-4.361882,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,GBL,-8.000741,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,sulfolane,-7.763011,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,NMP,-8.614262,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,nitrobenzene,-7.147423,orca6.1/opencosmors24a/bp86/def2-tzvpd
+o-toluidine,Cc1ccccc1N,benzonitrile,-7.348673,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,acetonitrile,-10.311046,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,DCM,-10.516603,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,propylene carbonate,-10.366714,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,DMF,-11.821976,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,DMSO,-11.781792,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,THF,-11.842313,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,nitromethane,-9.310590,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,water,-4.665308,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,GBL,-11.147812,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,sulfolane,-10.855960,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,NMP,-12.006446,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,nitrobenzene,-10.281174,orca6.1/opencosmors24a/bp86/def2-tzvpd
+diphenylamine,c1ccc(Nc2ccccc2)cc1,benzonitrile,-10.498961,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,acetonitrile,-9.588091,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,DCM,-10.596090,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,propylene carbonate,-9.820040,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,DMF,-10.668562,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,DMSO,-10.454624,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,THF,-10.927114,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,nitromethane,-8.863881,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,water,-3.344724,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,GBL,-10.368360,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,sulfolane,-10.280969,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,NMP,-10.830767,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,nitrobenzene,-10.157015,orca6.1/opencosmors24a/bp86/def2-tzvpd
+N-vinylcarbazole,C=Cn1c2ccccc2c2ccccc21,benzonitrile,-10.172441,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,acetonitrile,-8.961390,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,DCM,-10.606931,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,propylene carbonate,-9.339119,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,DMF,-10.163044,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,DMSO,-9.856063,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,THF,-10.697784,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,nitromethane,-8.307796,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,water,-2.482996,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,GBL,-9.850542,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,sulfolane,-9.773592,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,NMP,-10.343463,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,nitrobenzene,-9.965168,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"9,9-dimethylfluorene",CC1(C)c2ccccc2-c2ccccc21,benzonitrile,-9.914506,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,acetonitrile,-7.242815,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,DCM,-7.958683,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,propylene carbonate,-7.214906,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,DMF,-7.654088,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,DMSO,-7.618088,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,THF,-7.522922,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,nitromethane,-7.009960,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,water,-5.061416,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,GBL,-7.499045,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,sulfolane,-7.404655,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,NMP,-7.663011,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,nitrobenzene,-7.244026,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"thieno[3,4-b]pyrazine",c1cnc2cscc2n1,benzonitrile,-7.282107,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,acetonitrile,-10.989564,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,DCM,-9.898170,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,propylene carbonate,-10.890831,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,DMF,-13.024248,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,DMSO,-13.185407,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,THF,-12.820228,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,nitromethane,-9.470041,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,water,-6.273448,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,GBL,-11.998424,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,sulfolane,-11.435733,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,NMP,-13.286048,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,nitrobenzene,-10.280939,orca6.1/opencosmors24a/bp86/def2-tzvpd
+"dithieno[3,2-b:2',3'-d]pyrrole",c1cc2[nH]c3ccsc3c2s1,benzonitrile,-10.801363,orca6.1/opencosmors24a/bp86/def2-tzvpd
