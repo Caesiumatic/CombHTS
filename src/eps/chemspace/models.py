@@ -26,6 +26,8 @@ class Solvent(BaseModel):
         esw_cathodic_V: Approximate cathodic stability limit in V on potential_reference.
         potential_reference: Reference electrode for ESW limits, default V vs Ag/AgCl.
         xtb_gbsa_name: xTB ALPB solvent keyword or versioned proxy keyword.
+        orca_smd_name: ORCA SMD solvent keyword for the §4.2 Tier-2 DFT redox (CPCM SMDsolvent).
+            None -> ORCA Tier-2 runs this solvent in gas phase (no built-in SMD parametrization).
     """
 
     name: str
@@ -36,6 +38,7 @@ class Solvent(BaseModel):
     esw_cathodic_V: float
     potential_reference: str = "Ag/AgCl"
     xtb_gbsa_name: Optional[str] = None
+    orca_smd_name: Optional[str] = None
     notes: str = ""
 
 

@@ -1,0 +1,25 @@
+# Tier-2 DFT (ORCA 6.1) — directive §4.2 PRODUCTION profile.
+#
+# This is the directive-faithful Tier-2 refinement config: B3LYP/6-31G(d,p) with PER-TRIAD SMD
+# implicit solvation (each triad's own solvent via data/solvents.csv orca_smd_name) and a Freq
+# thermal/ZPE correction, so Eox = ΔG(cation) − ΔG(neutral) in solution. The radical-cation job
+# also emits Hirshfeld spin populations for α–α′/α–β coupling-site mapping (engine default on).
+#
+# Engine = ORCA, not Gaussian: ORCA is the DFT engine already used on Lop (cosmors, optical) and
+# natively supports per-solvent SMD / Freq / Hirshfeld / TD-DFT. The legacy Gaussian gas-phase
+# config (configs/tier2.yaml) is retained ONLY to reproduce the historical 417442 v1 calibration.
+#
+# SMD names: solvents whose orca_smd_name is EMPTY (propylene carbonate, GBL, NMP — not in the
+# standard SMD built-in set) fall back to gas phase until verified/custom-descriptor names are
+# added. All orca_smd_name values are PENDING ORCA-6.1 verification before any production batch.
+#
+# Running Tier-2 at scale remains a separate PI / freeze decision (scale_guard + sign-off). This
+# config only parameterizes HOW each ORCA Tier-2 job is built.
+
+engine: "orca"
+method: "B3LYP"
+basis: "6-31G(d,p)"
+use_smd: true             # per-triad SMD continuum (directive "solvent-specific parameters").
+use_freq: true            # Opt+Freq -> Eox = ΔG with thermal + ZPE at 298 K (directive §4.2).
+nprocshared: 8            # mapped to ORCA %pal nprocs.
+calibration_set: "benchmark_calibration_eligible"
