@@ -1,0 +1,17 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_pytest
+#$ -j y
+#$ -pe smp 4
+#$ -l h_rt=2:00:00
+#$ -o /home/shic4/combhts_pytest.o$JOB_ID
+# Full pytest suite on Lop (real xtb in test_xtb). Writes a clean summary to the job output.
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load xtb/6.4.1
+source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate combhts
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export OMP_NUM_THREADS="${NSLOTS:-4}"
+python -m pytest -q -p no:cacheprovider -rfE
