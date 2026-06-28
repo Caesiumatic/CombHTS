@@ -1,0 +1,26 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_cosmors_harvest
+#$ -j y
+#$ -pe smp 4
+#$ -l h_rt=24:00:00
+#$ -o /home/shic4/combhts_cosmors_harvest.o$JOB_ID
+# Decoupled openCOSMO-RS ΔGsolv harvest for the current library (36 monomers x 13 solvents = 49
+# σ-profiles + cheap pairwise combine). REAL ORCA. The leading "#$ -S /bin/bash" is REQUIRED.
+
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+# σ-profile generation uses ORCA serial per species (1 core) to avoid the Lop OpenMPI/hwloc crash;
+# 4 slots reserved so several profiles could parallelize later. ORCA itself runs nprocs=1 (cosmors.py).
+export OMP_NUM_THREADS=1
+
+python scripts/harvest_cosmors.py
