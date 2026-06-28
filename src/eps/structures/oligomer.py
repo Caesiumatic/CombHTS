@@ -1,8 +1,12 @@
 """Reusable n-mer oligomer assembly for Tier-1 band-gap and dimerization physics.
 
-The directive (§4.1) names ``stk`` for oligomer assembly; ``stk`` is not available in this
-environment, so this module implements the equivalent capability with RDKit (a documented
-substitution — see STATUS / the overnight report). Coupling regiochemistry is DATA-DRIVEN:
+The directive (§4.1) names ``stk`` for oligomer assembly. ``stk`` is installable here (it
+resolves with ``numpy<2`` + ``rdkit``), but it is deliberately NOT used: it wraps RDKit and the
+n-mer it constructs is byte-identical to this module's output (same canonical SMILES — proven in
+``docs/research/stk_vs_rdkit_oligomer_equivalence_20260628.md``), while pulling ~15 heavy
+transitive deps (a MongoDB client, polars, pathos, …) into a screening repo. This module
+therefore implements the same capability with pure RDKit (a documented, scientifically-equivalent
+substitution — see that note and the §4.1 compliance audit). Coupling regiochemistry is DATA-DRIVEN:
 each monomer's ditopic building block (two ``[*]`` dummies marking the coupling atoms, isotope
 1 = head, 2 = tail) lives in ``data/polymerization.csv`` and is human-reviewable. For the
 clean 5-membered heteroaromatics the two α-coupling carbons can also be auto-derived

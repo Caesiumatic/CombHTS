@@ -9,7 +9,7 @@ deviates?". Verdict per line: **COMPLIANT** / **DEVIATION** / **NOT YET IMPLEMEN
 | directive line | required | implemented | verdict |
 |---|---|---|---|
 | Structure: SMILES→3D | RDKit | RDKit ETKDG | **COMPLIANT** |
-| Structure: oligomer assembly | **stk** (Supramolecular Toolkit) | RDKit `RWMol` assembly (`structures/oligomer.py`; stk absent in env) | **DEVIATION** (substitute) |
+| Structure: oligomer assembly | **stk** (Supramolecular Toolkit) | RDKit `RWMol` assembly (`structures/oligomer.py`); stk is installable but adopting it gives a byte-identical n-mer for ~15 heavy deps | **DEVIATION** (tool-identity only; result proven equivalent 2026-06-28, PI-accepted) |
 | Structure: conformer search | MMFF94, 50–200 confs, lowest-E | MMFF94, n=100, lowest-E | **COMPLIANT** (Se monomers skipped — MMFF94 has no Se, T10 → limitation) |
 | Geometry engine | GFN2-xTB, vacuum | GFN2-xTB, vacuum | **COMPLIANT** |
 | IP/EA engine | **IPEA-xTB** (vertical + adiabatic) | **GFN2-xTB adiabatic ΔSCF** | **DEVIATION** (engine; T18) |
@@ -51,7 +51,9 @@ Per the directive-adherence priority, every deviation is either *correctable* or
 - **IPEA-xTB**: available on Lop (`param_ipea-xtb.txt`; `xtb --vipea`). → correct (T18, in progress).
 - **COSMO-RS**: openCOSMO-RS via ORCA 6.1 (on Lop) is directive-sanctioned. → correctable (currently proxy).
 - **Optical TD-DFT calibration**: build a TD-DFT reference set on the hexamers. → correctable (note: optical still can't graduate per T6, but the directive step itself is doable).
-- **stk**: pip-installable. → correctable (or justify RDKit assembly is structurally equivalent + PI-accept).
+- **stk**: pip-installable (verified 2026-06-28). → **RESOLVED as PI-accepted tool-identity deviation**: the
+  RDKit assembly is proven byte-identical (same canonical SMILES; `stk_vs_rdkit_oligomer_equivalence_20260628.md`),
+  so adopting stk changes zero numbers while adding ~15 heavy deps (MongoDB client, polars, pathos). Directive METHOD met.
 - **Se conformer skip**: use UFF/xtb geometry for Se. → correctable.
 - **DFT SMD (Tier-2)**: tier2 config supports SMD; the gas-phase was a v1 calibration choice. → correct when Tier-2 runs.
 

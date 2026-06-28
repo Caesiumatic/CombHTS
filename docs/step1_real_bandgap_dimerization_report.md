@@ -43,9 +43,17 @@ skip when the binary is absent). `ruff check`: clean.
 - General n-mer assembly: data-driven ditopic `[1*]/[2*]` building blocks → RDKit head-to-tail
   α-coupling → H-capped linear n-mer. `detect_alpha_carbons` auto-derives the two α sites for
   the clean 5-membered heteroaromatics; explicit building blocks cover the rest.
-- **Deviation (documented):** the directive names `stk`; `stk` is not installable/usable in
-  this env, so an equivalent RDKit α-coupling was implemented. `stk` was therefore **not** added
-  to `pyproject.toml`.
+- **Deviation (documented, tool-identity only):** the directive names `stk`. `stk` IS
+  installable here (resolves cleanly with `numpy<2` + `rdkit`; verified 2026-06-28), so the
+  earlier "not installable" justification was wrong and is retired. It is deliberately **not**
+  adopted because (1) the assembled molecule is **byte-identical** to ours — stk wraps RDKit and
+  the constructed n-mer canonicalizes to the same SMILES (proof:
+  `docs/research/stk_vs_rdkit_oligomer_equivalence_20260628.md`), so adopting it changes **zero**
+  numbers, and (2) stk pulls ~15 heavy transitive deps (a MongoDB client via `atomlite`, `polars`,
+  `pathos`, …) into a CV-screening repo, violating the maintainability/anti-bloat constraint. The
+  directive's METHOD — defined-regiochemistry linear oligomer assembly with reviewable coupling
+  sites — is fully met by `oligomer.py` (data-driven `[1*]/[2*]` building blocks in
+  `data/polymerization.csv`). `stk` is therefore **not** in `pyproject.toml`.
 - **Verification artifact:** `eps run-tier1` writes `outputs/oligomer_buildingblocks.csv`
   (per-monomer building block + assembled dimer/hexamer SMILES + α-autodetect cross-check) for
   human review — do not trust auto sites blindly.

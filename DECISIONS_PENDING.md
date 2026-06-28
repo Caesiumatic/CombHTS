@@ -61,10 +61,14 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    `docs/research/opencosmors_decoupling_20260628.md`. **Remaining (deployment, next step):** per-quantity
    routing (solvation→openCOSMO-RS) in Tier-1, full library σ-profile harvest, replace the ALPB proxy,
    re-validate — this changes a hard-constraint axis. (c) **Optical** — directive says calibrate
-   sTDA-xTB **against a TD-DFT reference set**; project keeps it **uncalibrated diagnostic** (no TD-DFT set
-   built; note optical still can't graduate per T6). (d) **Oligomer assembly** — directive names **stk**;
-   project uses **RDKit RWMol** (stk absent in env). Each must be restored to compliance or recorded as an
-   explicit PI-accepted deviation — not kept silently. COMPLIANT in §4.1: per-solvent ALPB(≈GBSA) IP
+   sTDA-xTB **against a TD-DFT reference set**. ADDRESSED, declined-for-cause: the TD-DFT/TDA reference set
+   WAS built on real ORCA (runs 417543/417587, 6 anchors) and the sTDA→TD-DFT/exp calibration WAS fit, then
+   **rejected on rigor** (R²≈0.15, LOO-CV MAE 0.30–0.46 eV ≫ ±0.2 eV anchor floor) and kept
+   **uncalibrated diagnostic at 15% weight** (`optical_calibration_real_n6_20260626.md`). More anchors won't
+   fix an R²-0.15 descriptor (T6). (d) **Oligomer assembly** — directive names **stk**.
+   **RESOLVED as PI-accepted tool-identity deviation** (2026-06-28): stk IS installable but the RDKit `RWMol`
+   assembler is **proven byte-identical** (same canonical SMILES — `stk_vs_rdkit_oligomer_equivalence_20260628.md`),
+   so adopting it changes zero numbers while adding ~15 heavy deps (MongoDB client, polars, pathos). COMPLIANT in §4.1: per-solvent ALPB(≈GBSA) IP
    solvation, all three filter thresholds (0.3/0.2/−3 V·kcal), geometry/conformer/optical engines.
    §4.2 (Tier-2) is NOT YET RUN at scale; its DFT calibration batch (417442) was gas-phase vs the §4.2 SMD spec.
 
