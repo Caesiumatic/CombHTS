@@ -523,7 +523,9 @@ class PerfectEoxEngine(Engine):
         self.potential_by_smiles = potential_by_smiles
 
     def run(self, req: CalcRequest) -> CalcResult:
-        if req.quantity != "adiabatic_ip":
+        # monomer_eox_vs_AgAgCl now requests the IPEA-xTB quantity (directive §4.1); the synthetic
+        # "perfect" engine answers it the same way it did the legacy adiabatic_ip path.
+        if req.quantity not in ("ipea_ip", "adiabatic_ip"):
             raise ValueError(f"Unexpected quantity in synthetic test: {req.quantity}")
         potential = self.potential_by_smiles[req.species.canonical_smiles]
         return CalcResult(
