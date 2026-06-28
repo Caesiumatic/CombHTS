@@ -70,12 +70,16 @@ class MockEngine(Engine):
             unit = "eV"
             raw["reorganization_eV"] = reorg
         elif quantity == "ipea_ip":
-            # IPEA-xTB vertical IP (directive §4.1): own deterministic basis, IPEA absolute scale
-            # (~7.5-9.5 eV). Calibration absorbs the offset, so only monotonicity/determinism matter.
-            value = self._scale(self._unit_float_for(req, "ipea_ip"), 7.5, 9.5)
+            # IPEA-xTB vertical IP (directive §4.1) for the MockEngine test double. It must sit on the
+            # SAME scale as adiabatic_ip, because the screen's anion-stability margin compares the
+            # (IPEA) monomer Eox against the (adiabatic ΔSCF) anion Eox — a different absolute scale
+            # would make every anion margin negative and yield zero survivors. Real IPEA-xTB has its
+            # own absolute scale; the production calibration (configs/tier1.yaml) handles that. The mock
+            # only needs comparable, deterministic values, so it reuses the adiabatic-IP value.
+            value = self._adiabatic_ip_value(req)
             unit = "eV"
         elif quantity == "ipea_ea":
-            value = self._scale(self._unit_float_for(req, "ipea_ea"), -2.0, 0.5)
+            value = self._adiabatic_ea_value(req)
             unit = "eV"
         elif quantity == "spin_density":
             value = self._scale(base, 0.0, 1.0)
