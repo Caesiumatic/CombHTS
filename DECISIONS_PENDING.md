@@ -51,8 +51,16 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    (a) **IP/EA engine — DONE 2026-06-26.** Switched GFN2-adiabatic → **IPEA-xTB** (`xtb --vipea`), re-fit
    (SGE 417986, strict 0.931164 / −0.083599, LOO 0.246 V), re-pinned, tests green (T18;
    `docs/research/ipea_xtb_switch_20260626.md`). (b) **Solvation** —
-   directive mandates **COSMO-RS** (COSMOtherm/openCOSMO-RS); project uses **ALPB ΔGsolv affinity proxy**
-   (openCOSMO-RS via ORCA 6.1 on Lop is the sanctioned fix). (c) **Optical** — directive says calibrate
+   directive mandates **COSMO-RS** (COSMOtherm/openCOSMO-RS); production still uses the **ALPB ΔGsolv
+   affinity proxy**. **Decoupled openCOSMO-RS now IMPLEMENTED + VALIDATED (2026-06-28):** ORCA 6.1 natively
+   supports σ-profile reuse (bundled `openCOSMORS` binary + `.orcacosmo`; no external package); cross-run
+   combine + e2e reproduce the per-pair dGsolv (thiophene/MeCN −4.13). New `engines/cosmors.py` (σ-profile
+   once per species, cached; cheap pairwise combine) + tests. Cost: ~2 min (small) to ~45 min (large) per
+   σ-profile; decoupled ~44 CPU-hr one-time (feasible) vs per-pair ~560 CPU-hr (infeasible). My earlier
+   "DFT CPU-hours, Tier-1-infeasible, needs A/B" claim was wrong/unbenchmarked and is retracted.
+   `docs/research/opencosmors_decoupling_20260628.md`. **Remaining (deployment, next step):** per-quantity
+   routing (solvation→openCOSMO-RS) in Tier-1, full library σ-profile harvest, replace the ALPB proxy,
+   re-validate — this changes a hard-constraint axis. (c) **Optical** — directive says calibrate
    sTDA-xTB **against a TD-DFT reference set**; project keeps it **uncalibrated diagnostic** (no TD-DFT set
    built; note optical still can't graduate per T6). (d) **Oligomer assembly** — directive names **stk**;
    project uses **RDKit RWMol** (stk absent in env). Each must be restored to compliance or recorded as an
