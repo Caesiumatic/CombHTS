@@ -39,6 +39,13 @@ trade-off") was **wrong and unbenchmarked**: I assumed per-pair DFT and pattern-
 Real cost is ~2 min (small) to tens of min (large) per **species** σ-profile, decoupled and reusable. The
 A/B dilemma is void — openCOSMO-RS at Tier-1 is the directive-faithful and feasible path.
 
+## Decoupling VALIDATED (2026-06-28)
+Combining thiophene's σ-profile (from pilot run `f9776utv`) with the **MeCN σ-profile computed in a
+DIFFERENT run** (`fuws58nq`, the EDOT/MeCN pair) via the bundled `openCOSMORS` binary gives
+**−4.132111549377441 kcal/mol — identical to the digit** to the integrated same-run result. So σ-profiles
+are run-independent and reusable across pairings; the decoupled combine reproduces the per-pair value
+exactly. The mechanism is proven; production can rely on it.
+
 ## Implementation plan (decoupled; low-risk on the hard-constraint axis)
 1. **Per-species σ-profile**, cached as a file: generate the `.orcacosmo` (+ gas E) once per monomer and per
    solvent. The solute-specific json fields (`dGsolv_E_gas`, `dGsolv_numberOfAtomsInRing`) are taken
