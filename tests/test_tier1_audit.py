@@ -264,7 +264,7 @@ class FailingMonomerEoxEngine(Engine):
 
     def run(self, req: CalcRequest) -> CalcResult:
         if (
-            req.quantity == "adiabatic_ip"
+            req.quantity == "ipea_ip"  # monomer Eox now uses IPEA-xTB (directive §4.1)
             and req.species.charge == 0
             and req.species.canonical_smiles == self.failing_smiles
         ):
