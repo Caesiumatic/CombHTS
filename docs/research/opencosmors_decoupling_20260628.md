@@ -58,3 +58,11 @@ exactly. The mechanism is proven; production can rely on it.
    to the digit before wiring into the screen.
 4. **Wire**: per-quantity engine routing in Tier-1 — `solvation_free_energy` → openCOSMO-RS, all other
    quantities → IPEA-xTB/GFN2-xTB. Replaces the ALPB ΔGsolv affinity proxy (the §4.1 deviation).
+
+## Status (2026-06-28): module DONE + end-to-end validated; deployment pending
+`engines/cosmors.py` implemented with `generate_sigma_profile` (one cached ORCA run per species) +
+`dgsolv_kcal_mol` (bundled `openCOSMORS` combine) + unit tests (3 passed). End-to-end on Lop (SGE 417990):
+generate thiophene + acetonitrile σ-profiles → combine → **dGsolv −4.154 kcal/mol** (vs the pilot's −4.132;
+0.02 kcal/mol = geometry difference, negligible); σ-profile **cache hit reused in 0.002 s**. The decoupled
+computation is correct and ready. Steps 1–3 above are realised; step 4 (Tier-1 wiring) + the full library
+σ-profile harvest + re-validation are the remaining deployment (changes the hard-constraint solubility axis).
