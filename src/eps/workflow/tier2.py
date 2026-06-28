@@ -33,6 +33,7 @@ from eps.chemspace import load_solvents
 from eps.engines.base import CalcRequest, SpeciesSpec
 from eps.engines.gaussian import GaussianEngine, Tier2Config, build_gaussian_input, load_tier2_config
 from eps.engines.mock import MockEngine
+from eps.engines.orca import OrcaConfig, OrcaEngine
 from eps.properties.redox import ip_eV_to_potential_vs_AgAgCl
 from eps.scoring import add_composite_score, load_scoring_config
 from eps.storage import SQLiteCache, cached_run
@@ -758,8 +759,29 @@ def _read_manifest(manifest_path: str | Path) -> pd.DataFrame:
 def _tier2_engine(engine_name: str, *, config: Tier2Config, work_dir: Path):
     if engine_name == "mock":
         return MockEngine()
+    # The real engine identity is pinned in the config (it is folded into the cache method label
+    # and config_hash at plan time); a CLI engine flag that disagrees would silently mislabel
+    # results, so require them to match.
+    if engine_name != config.engine:
+        raise ValueError(
+            f"engine_name {engine_name!r} disagrees with config engine {config.engine!r}; "
+            "the manifest method_label/config_hash were planned for the config engine"
+        )
     if engine_name == "gaussian":
         return GaussianEngine(config=config, work_root=work_dir)
+    if engine_name == "orca":
+        # Map the Tier-2 config onto OrcaEngine's redox knobs; SMD solvent comes per-triad from
+        # the request (data/solvents.csv orca_smd_name), gated by config.use_smd.
+        return OrcaEngine(
+            OrcaConfig(
+                redox_functional=config.method,
+                redox_basis=config.basis,
+                redox_use_freq=config.use_freq,
+                redox_smd=config.use_smd,
+                redox_hirshfeld=True,
+                nprocs=config.nprocshared,
+            )
+        )
     raise ValueError(f"Unknown Tier-2 task engine {engine_name!r}")
 
 
@@ -776,7 +798,9 @@ def _task_request(task: dict[str, Any]) -> CalcRequest:
         ),
         method=str(task["method_label"]),
         solvent_eps_r=float(solvent.eps_r),
-        solvent_model_name=str(task["solvent_name"]),
+        # ORCA SMD reads this as the CPCM SMDsolvent name; None (no built-in SMD param) -> the
+        # OrcaEngine runs that triad in gas phase. Gaussian/mock ignore solvent_model_name.
+        solvent_model_name=solvent.orca_smd_name,
         quantity=str(task["quantity"]),
     )
 

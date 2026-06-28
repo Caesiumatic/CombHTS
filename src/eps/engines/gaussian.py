@@ -63,26 +63,40 @@ class Tier2Config:
     mem: str = DEFAULT_MEM
     nprocshared: int = DEFAULT_NPROCSHARED
     calibration_set: str = "benchmark_calibration_eligible"
+    # Tier-2 DFT engine: "gaussian" (legacy global-solvent ΔSCF, used by the 417442 calibration)
+    # or "orca" (directive §4.2 production: per-triad SMD + Freq + Hirshfeld via OrcaEngine).
+    engine: str = "gaussian"
+    # ORCA only: apply SMD using each triad's OWN solvent (data/solvents.csv orca_smd_name).
+    # Gaussian uses the global smd_solvent above instead; use_smd is ignored for gaussian.
+    use_smd: bool = False
 
     def method_label(self) -> str:
         """Human-readable one-line description of the effective Tier-2 method."""
 
-        phase = f"SMD({self.smd_solvent})" if self.smd_solvent else "gas phase"
         rigor = "opt+freq (ΔG)" if self.use_freq else "opt only (ΔE_SCF)"
+        if self.engine == "orca":
+            phase = "SMD per-solvent" if self.use_smd else "gas phase"
+            return f"ORCA {self.method}/{self.basis}, {phase}, {rigor}"
+        phase = f"SMD({self.smd_solvent})" if self.smd_solvent else "gas phase"
         return f"{self.method}/{self.basis}, {phase}, {rigor}"
 
     def cache_method_label(self) -> str:
         """Compact, cache-safe method label that ENCODES the effective DFT configuration.
 
         Unlike :meth:`method_label` (human display), this string is threaded into the SQLite
-        cache key (``CalcRequest.method``) so that changing the functional, basis, SMD solvent,
-        or the Freq/thermal toggle in ``configs/tier2.yaml`` forces a recompute instead of
-        silently reusing a stale value (THINK T13 — config-blind DFT cache key). Examples:
-        ``b3lyp/6-31g(d,p)/gas/freq:off`` vs ``b3lyp/6-31g(d,p)/smd:acetonitrile/freq:on``.
+        cache key (``CalcRequest.method``) so that changing the engine, functional, basis, SMD,
+        or the Freq/thermal toggle in the config forces a recompute instead of silently reusing a
+        stale value (THINK T13 — config-blind DFT cache key). The ORCA per-solvent SMD does NOT
+        encode the specific solvent here (it already enters the cache key via ``solvent_name``).
+        Examples: ``b3lyp/6-31g(d,p)/gas/freq:off`` (gaussian),
+        ``orca6.1/b3lyp/6-31g(d,p)/smd/freq:on`` (orca).
         """
 
-        phase = f"smd:{self.smd_solvent.lower()}" if self.smd_solvent else "gas"
         freq = "freq:on" if self.use_freq else "freq:off"
+        if self.engine == "orca":
+            phase = "smd" if self.use_smd else "gas"
+            return f"orca6.1/{self.method.lower()}/{self.basis.lower()}/{phase}/{freq}"
+        phase = f"smd:{self.smd_solvent.lower()}" if self.smd_solvent else "gas"
         return f"{self.method.lower()}/{self.basis.lower()}/{phase}/{freq}"
 
 
@@ -111,6 +125,8 @@ def load_tier2_config(path: str | Path = DEFAULT_TIER2_CONFIG) -> Tier2Config:
         mem=str(data.get("mem", DEFAULT_MEM)),
         nprocshared=int(data.get("nprocshared", DEFAULT_NPROCSHARED)),
         calibration_set=str(data.get("calibration_set", "benchmark_calibration_eligible")),
+        engine=str(data.get("engine", "gaussian")),
+        use_smd=bool(data.get("use_smd", False)),
     )
 
 
