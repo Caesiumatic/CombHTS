@@ -122,7 +122,10 @@ def generate_sigma_profile(
     if cached is not None:
         return cached
 
-    coords = smiles_to_xyz(canonical, charge=0)
+    xyz_lines = smiles_to_xyz(canonical, charge=0).splitlines()
+    if len(xyz_lines) < 3:
+        raise ValueError(f"Generated XYZ has no coordinates for {smiles!r}")
+    coords = "\n".join(xyz_lines[2:])  # drop .xyz count+comment header; ORCA `* xyz` wants atom lines only
     inp = (
         f"! COSMORS({ref_solvent}) TightSCF\n"
         f"%pal nprocs {nprocs} end\n"
