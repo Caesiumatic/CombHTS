@@ -48,8 +48,9 @@ ones that are genuine **value / scope / resource / sign-off** calls, not correct
    (triphenylamine, tris-amines, …) to fold into a future expanded set with primary sources.
 5. **§4.1 directive-compliance deviations (4) — must correct or PI-accept BEFORE freeze.** Full binary
    audit: `docs/research/tier1_directive_compliance_audit_20260626.md`. None is physically impossible:
-   (a) **IP/EA engine** — directive §4.1 mandates **IPEA-xTB**; project uses **GFN2-xTB adiabatic**
-   (confirmed available on Lop, `xtb --vipea`; T18, remediation in progress). (b) **Solvation** —
+   (a) **IP/EA engine — DONE 2026-06-26.** Switched GFN2-adiabatic → **IPEA-xTB** (`xtb --vipea`), re-fit
+   (SGE 417986, strict 0.931164 / −0.083599, LOO 0.246 V), re-pinned, tests green (T18;
+   `docs/research/ipea_xtb_switch_20260626.md`). (b) **Solvation** —
    directive mandates **COSMO-RS** (COSMOtherm/openCOSMO-RS); project uses **ALPB ΔGsolv affinity proxy**
    (openCOSMO-RS via ORCA 6.1 on Lop is the sanctioned fix). (c) **Optical** — directive says calibrate
    sTDA-xTB **against a TD-DFT reference set**; project keeps it **uncalibrated diagnostic** (no TD-DFT set
