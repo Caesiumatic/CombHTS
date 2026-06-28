@@ -24,6 +24,7 @@ from eps.properties import (
     dimerization_dG,
     monomer_eox_vs_AgAgCl,
     monomer_solvation,
+    load_cosmors_solvation_table,
     optical_gap_oligomer,
     polymer_optical_gap,
     polymer_optical_gap_method,
@@ -156,6 +157,19 @@ def run_tier1(
             window_path = PROJECT_ROOT / window_path
         solvent_window_measurements = load_solvent_window_measurements(window_path)
 
+    # Decoupled openCOSMO-RS ΔGsolv table (directive §4.1, COSMO-RS). Read cosmors-first; the screen
+    # falls back to the ALPB ΔGsolv proxy for any (monomer, solvent) absent from the table. Loading an
+    # empty/missing table is the safe default (pure-ALPB behaviour, e.g. mock tests).
+    # Only for a REAL engine: the cosmors ΔGsolv values are physical, so mixing them with MockEngine's
+    # synthetic Eox would make the mock end-to-end tests inconsistent. MockEngine stays pure-mock (ALPB).
+    solvation_config = tier1_config.get("solvation", {}) or {}
+    solvation_table: dict[tuple[str, str], float] = {}
+    if bool(solvation_config.get("prefer_cosmors", False)) and not isinstance(engine, MockEngine):
+        cosmors_path = Path(solvation_config.get("cosmors_table_path", "data/solvation_cosmors.csv"))
+        if not cosmors_path.is_absolute():
+            cosmors_path = PROJECT_ROOT / cosmors_path
+        solvation_table = load_cosmors_solvation_table(cosmors_path)
+
     oligomer_config = tier1_config.get("oligomer", {})
     oligomer_n = int(oligomer_config.get("n", DEFAULT_OLIGOMER_N))
     dimer_n = int(oligomer_config.get("dimer_n", DIMER_N))
@@ -185,6 +199,7 @@ def run_tier1(
             cache,
             method=method,
             calibration_config=tier1_config.get("calibration", {}),
+            solvation_table=solvation_table,
         )
         solvent_table = compute_solvent_table(
             solvents,
@@ -393,9 +408,16 @@ def compute_monomer_solvent_table(
     cache: SQLiteCache,
     method: str = "mock-gfn2",
     calibration_config: dict | None = None,
+    solvation_table: dict[tuple[str, str], float] | None = None,
 ) -> pd.DataFrame:
-    """Compute monomer-in-solvent properties over monomer x solvent pairs."""
+    """Compute monomer-in-solvent properties over monomer x solvent pairs.
 
+    Solvation ΔGsolv is read **cosmors-first** from ``solvation_table`` (the precomputed decoupled
+    openCOSMO-RS values, directive §4.1) when the (monomer, solvent) pair is present; otherwise it
+    falls back to the ALPB ΔGsolv affinity proxy via ``monomer_solvation`` (measured-first discipline).
+    """
+
+    solvation_table = solvation_table or {}
     eox_calibration = _oxidation_calibration(calibration_config or {})
     rows = []
     for monomer in monomers:
@@ -417,15 +439,21 @@ def compute_monomer_solvent_table(
                 raw_eox = float("nan")
                 calibrated_eox = float("nan")
                 filter_eox = float("nan")
-            solvation = _safe_calculate(
-                lambda: monomer_solvation(
-                    monomer,
-                    solvent,
-                    engine,
-                    cache,
-                    method=method,
+            cosmors_dG = solvation_table.get((monomer.canonical_smiles, solvent.name))
+            if cosmors_dG is not None:
+                solvation = _CalcOutcome(value=cosmors_dG, status="ok", error="")
+                solvation_source = "opencosmors_csv"
+            else:
+                solvation = _safe_calculate(
+                    lambda: monomer_solvation(
+                        monomer,
+                        solvent,
+                        engine,
+                        cache,
+                        method=method,
+                    )
                 )
-            )
+                solvation_source = "alpb_fallback"
             rows.append(
                 {
                     "monomer_canonical_smiles": monomer.canonical_smiles,
@@ -439,6 +467,7 @@ def compute_monomer_solvent_table(
                     "monomer_Eox_calc_status": eox.status,
                     "monomer_Eox_calc_error": eox.error,
                     "solvation_dG_kcal_mol": solvation.value,
+                    "solvation_dG_source": solvation_source,
                     "solvation_calc_status": solvation.status,
                     "solvation_calc_error": solvation.error,
                 }
