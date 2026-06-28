@@ -66,3 +66,43 @@ def test_dgsolv_parses_opencosmors_output(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(cosmors.subprocess, "run", fake_run)
     value = dgsolv_kcal_mol(solute, solvent, opencosmors_binary="/fake/openCOSMORS")
     assert value == -4.132111549377441
+
+
+def test_load_cosmors_solvation_table(tmp_path: Path) -> None:
+    from eps.properties import load_cosmors_solvation_table
+
+    csv_path = tmp_path / "solvation_cosmors.csv"
+    csv_path.write_text(
+        "monomer_name,monomer_canonical_smiles,solvent_name,dGsolv_kcal_mol,method\n"
+        "thiophene,c1ccsc1,acetonitrile,-4.154327,orca\n",
+        encoding="utf-8",
+    )
+    table = load_cosmors_solvation_table(csv_path)
+    assert table[("c1ccsc1", "acetonitrile")] == -4.154327
+    assert load_cosmors_solvation_table(tmp_path / "absent.csv") == {}
+
+
+def test_screen_reads_cosmors_table_first_then_alpb(tmp_path: Path) -> None:
+    """compute_monomer_solvent_table uses the cosmors ΔGsolv where present, ALPB fallback otherwise."""
+    from eps.chemspace.models import Monomer, Solvent
+    from eps.engines.mock import MockEngine
+    from eps.storage.cache import SQLiteCache
+    from eps.workflow.tier1 import compute_monomer_solvent_table
+
+    monomer = Monomer(name="thiophene", monomer_class="x", smiles="c1ccsc1", canonical_smiles="c1ccsc1")
+    solv = Solvent(
+        name="acetonitrile", smiles="CC#N", canonical_smiles="CC#N", eps_r=37.5,
+        esw_anodic_V=3.3, esw_cathodic_V=-2.7, xtb_gbsa_name="acetonitrile",
+    )
+    table = {("c1ccsc1", "acetonitrile"): -5.55}
+    df = compute_monomer_solvent_table(
+        [monomer], [solv], MockEngine(), SQLiteCache(tmp_path / "c.sqlite"), solvation_table=table
+    )
+    row = df.iloc[0]
+    assert row["solvation_dG_kcal_mol"] == -5.55
+    assert row["solvation_dG_source"] == "opencosmors_csv"
+
+    df_fallback = compute_monomer_solvent_table(
+        [monomer], [solv], MockEngine(), SQLiteCache(tmp_path / "c2.sqlite"), solvation_table={}
+    )
+    assert df_fallback.iloc[0]["solvation_dG_source"] == "alpb_fallback"

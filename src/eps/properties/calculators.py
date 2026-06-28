@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import csv
 import shutil
+from pathlib import Path
 
 from eps.chemspace.models import Electrolyte, Monomer, Solvent
 from eps.engines.base import CalcRequest, Engine, SpeciesSpec
@@ -164,6 +166,28 @@ def monomer_solvation(
         xtb_gbsa_name=solvent.xtb_gbsa_name,
     )
     return cached_run(cache, engine, req, solvent.name).value
+
+
+def load_cosmors_solvation_table(path: str | Path) -> dict[tuple[str, str], float]:
+    """Load the precomputed decoupled openCOSMO-RS ΔGsolv table (directive §4.1, COSMO-RS).
+
+    Keyed by ``(monomer_canonical_smiles, solvent_name)`` → ΔGsolv (kcal/mol). The Tier-1 screen
+    reads this cosmors-first and falls back to the ALPB ΔGsolv proxy when a pair is absent (the same
+    measured-first discipline used for the ESW window gate). Returns ``{}`` if the file is missing.
+    """
+
+    path = Path(path)
+    if not path.exists():
+        return {}
+    table: dict[tuple[str, str], float] = {}
+    with path.open() as fh:
+        for row in csv.DictReader(fh):
+            try:
+                key = (row["monomer_canonical_smiles"].strip(), row["solvent_name"].strip())
+                table[key] = float(row["dGsolv_kcal_mol"])
+            except (KeyError, ValueError):
+                continue
+    return table
 
 
 def optical_gap_oligomer(monomer: Monomer, spec: PolymerizationSpec, n: int) -> tuple[str, bool]:

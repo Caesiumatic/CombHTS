@@ -18,6 +18,13 @@ filters:
   min_window_margin_V: 0.3
   min_anion_stability_margin_V: 0.2
   max_solvation_dG_kcal_mol: -3.0
+solvation:
+  # Directive §4.1 solubility = COSMO-RS. Read the precomputed DECOUPLED openCOSMO-RS dGsolv table
+  # (one ORCA sigma-profile per species, cheap pairwise combine) cosmors-first; fall back to the ALPB
+  # dGsolv affinity proxy for any (monomer, solvent) absent from the table (measured-first discipline).
+  # Only applied for a REAL engine; MockEngine stays pure-mock for deterministic tests.
+  prefer_cosmors: true
+  cosmors_table_path: data/solvation_cosmors.csv
 supporting_electrolyte_gate:
   # Exclude library entries whose versioned role metadata says they are not bulk supporting
   # electrolytes. This is a role guard, not a metal-deposition model; disable only for an
