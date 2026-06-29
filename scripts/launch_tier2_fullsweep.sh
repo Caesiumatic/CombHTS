@@ -9,6 +9,12 @@
 # No `set -u`: the optional empty HOLDOPT array trips "unbound variable" on Lop's older bash.
 set -o pipefail
 HOLD="${1:-}"
+# Activate the project env — the login shell's default `python` is system python2.7, which cannot
+# even parse the py3 CLI (the tier2-plan step ran under it and SyntaxError'd).
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09 2>/dev/null || true
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
 cd "$HOME/CombHTS"
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 NSHARDS=32
