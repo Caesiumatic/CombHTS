@@ -55,7 +55,9 @@ if [ -f "$OUTDIR/dft_calibration_points.csv" ] && grep -q ",ok," "$OUTDIR/dft_ca
 fi
 
 echo "SHARD $SHARD of $NSHARDS -> $OUTDIR"
-eps calibrate-dft \
+# python -m eps.cli (NOT the `eps` console script): the tier2 arrays use this so the freshly
+# git-pulled src/ is always what runs, regardless of how the console entry point was installed.
+python -m eps.cli calibrate-dft \
     --engine orca \
     --config configs/tier2_orca.yaml \
     --n-shards "$NSHARDS" \
