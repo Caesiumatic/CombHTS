@@ -1,5 +1,34 @@
 # Project Status
-_Last updated: 2026-06-25 (director autonomous run — Phase 1B: B1 criterion, §1–§9 audit, scale guard)_
+_Last updated: 2026-06-28 (directive-faithfulness program — §4.1/§4.2 method code complete; Tier-1 re-harvest running, Tier-2 auto-fire armed)_
+
+## 2026-06-28 — directive-faithfulness program (current state)
+
+This run closed the remaining §4.1/§4.2 method gaps and put the production compute in flight.
+**All §4.1/§4.2 method code is complete + tested (full suite 381 passed)**; the only remaining work
+is Lop execution. Highlights (all committed + pushed to `main`):
+
+- **§4.1 deviations corrected:** (1) IP/EA engine GFN2-adiabatic → **IPEA-xTB** (`xtb --vipea`),
+  re-calibrated + re-pinned (strict tier-A peak n=9, slope 0.931164 / intercept −0.083599, LOO 0.246 V).
+  (2) Solubility ALPB proxy → **decoupled openCOSMO-RS** (σ-profile once/species + cheap pairwise
+  combine); **full 468-row ΔGsolv table harvested + committed + validated** (100% `opencosmors_csv`
+  routing on the live library). (3) optical sTDA→TD-DFT calibration **addressed, declined-for-cause**
+  (R²0.15 ≪ floor → diagnostic 15%). (4) **stk** proven byte-identical to the RDKit assembler →
+  PI-accepted tool-identity deviation (no deps added).
+- **§4.2 Tier-2 switched Gaussian → ORCA** and built out the FULL state set: per-triad SMD redox
+  (monomer IP+EA, solvent anodic/cathodic, electrolyte anion-ox + cation-red), Freq/ΔG thermal+ZPE,
+  Hirshfeld spin, DFT dimerization (f4), TD-DFT band-gap convergence (f5), DFT HOMO/LUMO (§3.1).
+  PC/GBL/NMP (absent from ORCA's SMD set, verified job 417994) use a **CPCM(ε) fallback** (verified
+  job 417997). Refined screen consumes the DFT values into the §5 composite.
+- **§8 output added:** non-obvious solvent–electrolyte pairing report + εr conductivity proxy.
+- **Running now:** Tier-1 re-harvest **SGE 417996** (IPEA + cosmors + real sTDA-xTB, fresh cache).
+  **Tier-2 auto-fires** via held orchestrator **417998** (`-hold_jid 417996`): plans full-scope +
+  qsubs the wide 16-core ORCA array the instant Tier-1 lands. Tier-3 (#7), B1-spin re-run (#10),
+  and the §7 ESW re-measurement (#9) follow once Tier-2 results exist.
+- Scale unchanged (7,488 triads); the 50k scale-up + library expansion (ionic liquids / BFEE / DES)
+  remain freeze + sign-off gated (DECISIONS_PENDING §C).
+
+The 2026-06-25 section below is retained for history; some "open debt" items there are now closed
+(optical real sTDA done, IPEA done, COSMO-RS deployed) — see the per-item notes in DECISIONS_PENDING.
 
 ## Director autonomous run (2026-06-25) — current state
 
