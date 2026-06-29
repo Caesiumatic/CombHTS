@@ -47,7 +47,7 @@ if grep -q success "$RESULTS/$TASK_ID/status.txt" 2>/dev/null; then
 fi
 
 echo "ARRAY $SGE_TASK_ID -> task $TASK_ID"
-eps tier2-run-task \
+python -m eps.cli tier2-run-task \
     --manifest "$MANIFEST" \
     --task-id "$TASK_ID" \
     --engine orca \

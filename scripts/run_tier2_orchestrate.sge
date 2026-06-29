@@ -1,0 +1,52 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_t2_orchestrate
+#$ -j y
+#$ -pe smp 1
+#$ -l h_rt=01:00:00
+#$ -o /home/shic4/combhts_t2_orchestrate.o$JOB_ID
+# Auto-fire the Tier-2 DFT array the instant Tier-1 lands (zero idle gap). Submit with a hold on
+# the Tier-1 job, e.g.:   qsub -hold_jid <TIER1_JOBID> scripts/run_tier2_orchestrate.sge
+# When Tier-1 finishes it: pulls latest code, filters survivors, plans the full §4.2 scope, and
+# qsubs the wide ORCA array (16-core tasks). Aborts cleanly if Tier-1 produced no output.
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+export PATH="${SGE_ROOT:-/opt/gridengine}/bin/lx-amd64:$PATH"  # qsub available inside the job
+
+cd "$HOME/CombHTS"
+git fetch origin -q && git reset --hard origin/main -q
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+
+ALL=outputs/tier1_ipea_cosmors/tier1_all.csv
+if [ ! -f "$ALL" ]; then
+    echo "ORCH ABORT: $ALL missing — Tier-1 produced no output."
+    exit 1
+fi
+
+python - "$ALL" <<'PY'
+import sys, pandas as pd
+t = pd.read_csv(sys.argv[1])
+col = "passes_all_tier1_filters"
+s = t[t[col] == True] if col in t.columns else t  # noqa: E712
+s.to_csv("outputs/tier1_ipea_cosmors/survivors.csv", index=False)
+print(f"ORCH survivors: {len(s)} of {len(t)} triads")
+PY
+
+python -m eps.cli tier2-plan \
+    --selection outputs/tier1_ipea_cosmors/survivors.csv \
+    --config configs/tier2_orca.yaml \
+    --scope full --allow-large-scale \
+    --outdir outputs/tier2_full_plan
+
+MANIFEST="$PWD/outputs/tier2_full_plan/task_manifest.csv"
+N=$(( $(wc -l < "$MANIFEST") - 1 ))
+echo "ORCH TIER2 TASKS: $N"
+if [ "$N" -lt 1 ]; then echo "ORCH ABORT: no tasks planned."; exit 1; fi
+
+qsub -t 1-"$N" \
+    -v MANIFEST="$MANIFEST",RESULTS="$PWD/outputs/tier2_full_task_results",WORKROOT="$PWD/outputs/tier2_full_work",T2CONFIG=configs/tier2_orca.yaml \
+    scripts/run_tier2_array.sge
+echo "ORCH: submitted Tier-2 DFT array of $N tasks (16 cores each)"
