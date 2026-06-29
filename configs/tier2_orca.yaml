@@ -21,6 +21,8 @@ method: "B3LYP"
 basis: "6-31G(d,p)"
 use_smd: true             # per-triad SMD continuum (directive "solvent-specific parameters").
 use_freq: true            # Opt+Freq -> Eox = ΔG with thermal + ZPE at 298 K (directive §4.2).
-nprocshared: 16           # ORCA %pal nprocs = a full 16-core Lop node (effective upper bound for
-                          # small-molecule B3LYP/6-31G(d,p); cluster is saturated via array width).
+nprocshared: 1            # ORCA %pal nprocs = 1 (SERIAL). Lop's OpenMPI/hwloc crashes parallel ORCA
+                          # (opal_hwloc_topology_load segfault — same reason cosmos runs serial), so
+                          # nprocs>1 aborts every job. Throughput comes from MANY serial tasks
+                          # running concurrently across the array, not from multi-core per task.
 calibration_set: "benchmark_calibration_eligible"
