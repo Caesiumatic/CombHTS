@@ -484,6 +484,13 @@ def main(argv: list[str] | None = None) -> int:
         help="Authorize a Tier-2 plan above the scale_guard ceiling (directive §0 #2 full-survivor "
         "DFT batch; only after freeze + sign-off).",
     )
+    tier2_plan.add_argument(
+        "--scope",
+        choices=("monomer_ip", "full"),
+        default="monomer_ip",
+        help="monomer_ip (default): monomer oxidation only. full: directive §4.2 complete state set "
+        "(monomer IP+EA, solvent anodic+cathodic, electrolyte anion-ox + cation-red).",
+    )
 
     tier2_run_task = subparsers.add_parser(
         "tier2-run-task",
@@ -1034,7 +1041,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "tier2-plan":
         result = plan_tier2_pilot(
-            args.selection, args.config, args.outdir, allow_large_scale=args.allow_large_scale
+            args.selection, args.config, args.outdir,
+            allow_large_scale=args.allow_large_scale, scope=args.scope,
         )
         print("Tier-2 pilot plan: no Engine calls; no triad-level quantum loop.")
         print(f"Selection rows: {result.n_selection_rows}; unique tasks: {result.n_tasks}")

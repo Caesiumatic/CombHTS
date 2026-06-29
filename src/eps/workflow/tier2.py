@@ -77,6 +77,7 @@ TASK_MANIFEST_COLUMNS = (
 
 HARVEST_COLUMNS = (
     "task_id",
+    "entity_type",
     "monomer_name",
     "monomer_canonical_smiles",
     "canonical_smiles",
@@ -86,6 +87,7 @@ HARVEST_COLUMNS = (
     "config_hash",
     "tier2_monomer_Eox_V_vs_AgAgCl",
     "dft_monomer_Eox_V_vs_AgAgCl",
+    "redox_potential_V_vs_AgAgCl",
     "adiabatic_ip_eV",
     "energy_basis",
     "initial_charge",
@@ -179,6 +181,7 @@ def plan_tier2_pilot(
     config_path: str | Path,
     outdir: str | Path,
     allow_large_scale: bool = False,
+    scope: str = "monomer_ip",
 ) -> Tier2PlanResult:
     """Plan one Tier-2 adiabatic-IP request per unique monomer/solvent/config identity.
 
@@ -192,7 +195,9 @@ def plan_tier2_pilot(
     config_hash = tier2_config_hash(config, config_path)
     method_label = config.cache_method_label()
     selection = pd.read_csv(selection_path, keep_default_na=False)
-    tasks = _manifest_rows_from_selection(selection, method_label=method_label, config_hash=config_hash)
+    tasks = _manifest_rows_from_selection(
+        selection, method_label=method_label, config_hash=config_hash, scope=scope
+    )
     enforce_scale_guard(
         len(tasks),
         max_units=DEFAULT_MAX_TIER2_TASKS,
@@ -562,6 +567,10 @@ def _resolve_monomer_eox(
 
     if dft_results_path is not None and Path(dft_results_path).exists():
         dft = pd.read_csv(dft_results_path)
+        # In a full-scope harvest the CSV mixes entity types; keep ONLY the monomer oxidation rows
+        # so a solvent/anion/EA potential can never be mistaken for the monomer Eox.
+        if "entity_type" in dft.columns and "quantity" in dft.columns:
+            dft = dft[(dft["entity_type"] == "monomer") & (dft["quantity"] == "adiabatic_ip")]
         column = next((c for c in _DFT_EOX_COLUMNS if c in dft.columns), None)
         if column is not None and "monomer_canonical_smiles" in dft.columns:
             mapping = (
@@ -582,44 +591,88 @@ def _manifest_rows_from_selection(
     *,
     method_label: str,
     config_hash: str,
+    scope: str = "monomer_ip",
 ) -> list[dict[str, Any]]:
+    """Build the Tier-2 task manifest.
+
+    ``scope='monomer_ip'`` (default, backward-compatible) plans only the monomer oxidation
+    (adiabatic IP). ``scope='full'`` plans the complete directive §4.2 DFT state set:
+    monomer oxidation+reduction (IP+EA); solvent anodic+cathodic in self-solvent; and per-triad
+    electrolyte anion oxidation + cation reduction. Each distinct (entity_type, species, solvent,
+    quantity) collapses to ONE task (per-species compute discipline) — e.g. a solvent's anodic
+    limit is computed once per solvent, not once per triad that uses it.
+    """
+
+    if scope not in {"monomer_ip", "full"}:
+        raise ValueError(f"scope must be 'monomer_ip' or 'full', got {scope!r}")
     _validate_selection_schema(selection)
     solvents = {solvent.name: solvent for solvent in load_solvents()}
-    grouped: dict[tuple[str, str, str, str, str], dict[str, Any]] = {}
+    grouped: dict[tuple[str, str, str, str, str, str], dict[str, Any]] = {}
+
+    def _add(*, entity_type, smiles, solvent_name, quantity, ic, im, fc, fm, label, role, src):
+        key = (entity_type, smiles, solvent_name, quantity, method_label, config_hash)
+        item = grouped.get(key)
+        if item is None:
+            item = grouped[key] = {
+                "entity_type": entity_type,
+                "canonical_smiles": smiles,
+                "solvent_name": solvent_name,
+                "quantity": quantity,
+                "initial_charge": ic,
+                "initial_multiplicity": im,
+                "final_charge": fc,
+                "final_multiplicity": fm,
+                "method_label": method_label,
+                "config_hash": config_hash,
+                "status": "planned",
+                "labels": [],
+                "roles": [],
+                "rows": [],
+            }
+        _append_unique(item["labels"], label)
+        _append_unique(item["roles"], role)
+        item["rows"].append(src)
+
+    full = scope == "full"
     for index, row in selection.iterrows():
         canonical_smiles = _canonical_smiles_from_selection(row, row_number=index + 2)
         solvent_name = str(row["solvent_name"]).strip()
         if solvent_name not in solvents:
             raise ValueError(f"row {index + 2}: unknown solvent_name {solvent_name!r}")
         monomer_name = str(row.get("monomer_name", canonical_smiles)).strip() or canonical_smiles
-        selection_role = str(row.get("selection_role", "selected")).strip() or "selected"
-        key = (canonical_smiles, solvent_name, "adiabatic_ip", method_label, config_hash)
-        if key not in grouped:
-            grouped[key] = {
-                "entity_type": "monomer",
-                "monomer_names": [],
-                "canonical_smiles": canonical_smiles,
-                "solvent_name": solvent_name,
-                "quantity": "adiabatic_ip",
-                "initial_charge": 0,
-                "initial_multiplicity": 1,
-                "final_charge": 1,
-                "final_multiplicity": 2,
-                "method_label": method_label,
-                "config_hash": config_hash,
-                "status": "planned",
-                "selection_roles": [],
-                "source_rows": [],
-            }
-        _append_unique(grouped[key]["monomer_names"], monomer_name)
-        _append_unique(grouped[key]["selection_roles"], selection_role)
-        grouped[key]["source_rows"].append(str(index + 2))
+        role = str(row.get("selection_role", "selected")).strip() or "selected"
+        src = str(index + 2)
+        solvent = solvents[solvent_name]
+
+        # Monomer oxidation (AIP) — always (the §4.1 refined-filter descriptor).
+        _add(entity_type="monomer", smiles=canonical_smiles, solvent_name=solvent_name,
+             quantity="adiabatic_ip", ic=0, im=1, fc=1, fm=2, label=monomer_name, role=role, src=src)
+        if not full:
+            continue
+        # Monomer reduction (AEA / anion state).
+        _add(entity_type="monomer", smiles=canonical_smiles, solvent_name=solvent_name,
+             quantity="adiabatic_ea", ic=0, im=1, fc=-1, fm=2, label=monomer_name, role=role, src=src)
+        # Solvent anodic + cathodic limits in implicit SELF-solvent (directive §3.2).
+        _add(entity_type="solvent", smiles=solvent.canonical_smiles, solvent_name=solvent_name,
+             quantity="adiabatic_ip", ic=0, im=1, fc=1, fm=2, label=solvent_name, role=role, src=src)
+        _add(entity_type="solvent", smiles=solvent.canonical_smiles, solvent_name=solvent_name,
+             quantity="adiabatic_ea", ic=0, im=1, fc=-1, fm=2, label=solvent_name, role=role, src=src)
+        # Electrolyte anion oxidation (anion -> neutral radical) + cation reduction (§3.3).
+        anion = _optional_canonical_smiles(row, ("anion_canonical_smiles", "anion_smiles"))
+        cation = _optional_canonical_smiles(row, ("cation_canonical_smiles", "cation_smiles"))
+        salt = str(row.get("salt", "") or "").strip()
+        if anion:
+            _add(entity_type="electrolyte_anion", smiles=anion, solvent_name=solvent_name,
+                 quantity="adiabatic_ip", ic=-1, im=1, fc=0, fm=2, label=salt or anion, role=role, src=src)
+        if cation:
+            _add(entity_type="electrolyte_cation", smiles=cation, solvent_name=solvent_name,
+                 quantity="adiabatic_ea", ic=1, im=1, fc=0, fm=2, label=salt or cation, role=role, src=src)
 
     rows = []
     for item in grouped.values():
         row = {
             "entity_type": item["entity_type"],
-            "monomer_name": "|".join(item["monomer_names"]),
+            "monomer_name": "|".join(item["labels"]),
             "canonical_smiles": item["canonical_smiles"],
             "solvent_name": item["solvent_name"],
             "quantity": item["quantity"],
@@ -630,13 +683,35 @@ def _manifest_rows_from_selection(
             "method_label": item["method_label"],
             "config_hash": item["config_hash"],
             "status": item["status"],
-            "selection_role": "|".join(item["selection_roles"]),
-            "source_selection_row": "|".join(item["source_rows"]),
+            "selection_role": "|".join(item["roles"]),
+            "source_selection_row": "|".join(item["rows"]),
         }
         row["task_id"] = _task_id(row)
         rows.append(row)
 
-    return sorted(rows, key=lambda r: (r["solvent_name"], r["monomer_name"], r["canonical_smiles"]))
+    return sorted(
+        rows,
+        key=lambda r: (
+            r["entity_type"], r["solvent_name"], r["monomer_name"],
+            r["canonical_smiles"], r["quantity"],
+        ),
+    )
+
+
+def _optional_canonical_smiles(row: pd.Series, columns: tuple[str, ...]) -> str | None:
+    """Canonicalize the first present, non-empty SMILES among ``columns``; None if none/invalid."""
+
+    for column in columns:
+        if column not in row:
+            continue
+        value = str(row[column]).strip()
+        if not value:
+            continue
+        mol = Chem.MolFromSmiles(value, sanitize=True)
+        if mol is None:
+            return None
+        return Chem.MolToSmiles(mol, canonical=True)
+    return None
 
 
 def _validate_selection_schema(selection: pd.DataFrame) -> None:
@@ -674,6 +749,7 @@ def _append_unique(values: list[str], value: str) -> None:
 
 def _task_id(row: dict[str, Any]) -> str:
     payload = {
+        "entity_type": row["entity_type"],
         "canonical_smiles": row["canonical_smiles"],
         "solvent_name": row["solvent_name"],
         "quantity": row["quantity"],
@@ -943,8 +1019,11 @@ def _harvest_row(task: dict[str, Any], record: dict[str, Any], result_path: Path
     eox_v = ip_eV_to_potential_vs_AgAgCl(ip_eV)
     neutral = record.get("neutral", {})
     cation = record.get("cation", {})
+    entity_type = task.get("entity_type", "monomer")
+    is_monomer_ox = entity_type == "monomer" and task["quantity"] == "adiabatic_ip"
     return {
         "task_id": task["task_id"],
+        "entity_type": entity_type,
         "monomer_name": task["monomer_name"],
         "monomer_canonical_smiles": task["canonical_smiles"],
         "canonical_smiles": task["canonical_smiles"],
@@ -952,8 +1031,12 @@ def _harvest_row(task: dict[str, Any], record: dict[str, Any], result_path: Path
         "quantity": task["quantity"],
         "method_label": task["method_label"],
         "config_hash": task["config_hash"],
-        "tier2_monomer_Eox_V_vs_AgAgCl": eox_v,
-        "dft_monomer_Eox_V_vs_AgAgCl": eox_v,
+        # Monomer-Eox columns stay populated ONLY for the monomer oxidation row (the §4.2 refined
+        # filter descriptor); other entity/quantity rows leave them blank and use the generic
+        # redox_potential column, so the screen never mistakes a solvent/anion/EA value for Eox.
+        "tier2_monomer_Eox_V_vs_AgAgCl": eox_v if is_monomer_ox else None,
+        "dft_monomer_Eox_V_vs_AgAgCl": eox_v if is_monomer_ox else None,
+        "redox_potential_V_vs_AgAgCl": eox_v,
         "adiabatic_ip_eV": ip_eV,
         "energy_basis": record.get("energy_basis", ""),
         "initial_charge": task["initial_charge"],
