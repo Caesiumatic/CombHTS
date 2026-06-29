@@ -234,6 +234,13 @@ def main(argv: list[str] | None = None) -> int:
         help="Existing salt-fixed Tier-1 all-triads harvest CSV (read-only).",
     )
     validate_directive.add_argument(
+        "--dft-benchmark",
+        type=Path,
+        default=None,
+        help="DFT-on-benchmark artifact (eps calibrate-dft dft_calibration_points.csv) for the "
+        "directive §7 Tier-2 DFT-vs-experiment MAE (< 0.15 V). Omitted -> NOT_YET_TESTABLE.",
+    )
+    validate_directive.add_argument(
         "--cache",
         type=Path,
         default=DEFAULT_DIRECTIVE_CACHE,
@@ -781,6 +788,7 @@ def main(argv: list[str] | None = None) -> int:
             method=method,
             cache_path=args.cache,
             harvest_path=args.harvest,
+            dft_benchmark_path=args.dft_benchmark,
             outdir=args.outdir,
         )
         print(f"Directive section-7 validation package: {result.outdir}")
