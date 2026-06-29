@@ -88,6 +88,7 @@ def run_directive_validation(
     method: str = "mock-gfn2",
     cache_path: str | Path = DEFAULT_DIRECTIVE_CACHE,
     harvest_path: str | Path | None,
+    dft_benchmark_path: str | Path | None = None,
     outdir: str | Path = DEFAULT_DIRECTIVE_OUTDIR,
     benchmark_path: str | Path = DEFAULT_BENCHMARK_PATH,
     solvent_benchmark_path: str | Path = DEFAULT_SOLVENT_BENCHMARK_PATH,
@@ -156,10 +157,14 @@ def run_directive_validation(
         harvest_path=harvest_path,
         bootstrap_seed=bootstrap_seed,
     )
+    # Directive §7 accuracy target: original DFT Eox vs experiment (< 0.15 V), graded from the
+    # DFT-on-benchmark artifact (eps calibrate-dft points CSV). No artifact -> NOT_YET_TESTABLE.
+    dft_eox_meta = _compute_dft_eox_validation(dft_benchmark_path)
 
     metric_table = _directive_metric_table(
         validation_config=validation_config,
         eox_meta=eox_meta,
+        dft_eox_meta=dft_eox_meta,
         esw_descriptor_meta=esw_descriptor_meta,
         esw_gate_meta=esw_gate_meta,
         feasibility_meta=feasibility_meta,
@@ -188,6 +193,7 @@ def run_directive_validation(
         "harvest_path": str(harvest_path) if harvest_path is not None else None,
         "directive_status_table": metric_table,
         "eox": eox_meta,
+        "dft_eox": dft_eox_meta,
         "esw_descriptor": esw_descriptor_meta,
         "esw_gate": esw_gate_meta,
         "feasibility": feasibility_meta,
@@ -589,6 +595,56 @@ def _compute_esw_descriptor_points(
     return points, meta
 
 
+def _compute_dft_eox_validation(dft_benchmark_path: str | Path | None) -> dict[str, Any]:
+    """Directive §7 Tier-2 accuracy target: RAW MAE of B3LYP/SMD DFT Eox vs experimental peak.
+
+    Reads the DFT-on-benchmark artifact written by ``eps calibrate-dft`` (its
+    ``dft_calibration_points.csv``), keeps rows that computed successfully and carry the
+    ``monomer_oxidation_peak`` label, and returns ``mean |dft_Eox_V - exp_Eox_V|`` — the original
+    DFT error against experiment, NOT a fit residual. With no artifact (or no peak rows) the metric
+    is honestly NOT_YET_TESTABLE rather than fabricated or silently out of scope.
+    """
+
+    not_testable = {
+        "computable": False,
+        "n_peak_points": 0,
+        "dft_vs_exp_mae_V": None,
+        "note": "no DFT-on-benchmark artifact supplied (--dft-benchmark); not yet testable.",
+    }
+    if dft_benchmark_path is None:
+        return not_testable
+    path = Path(dft_benchmark_path)
+    if not path.exists():
+        return {**not_testable, "note": f"DFT-on-benchmark artifact not found: {path}"}
+
+    frame = pd.read_csv(path, keep_default_na=False)
+    required = {"label_type", "dft_calc_status", "dft_Eox_V_vs_AgAgCl", "exp_Eox_V_vs_AgAgCl"}
+    missing = required.difference(frame.columns)
+    if missing:
+        return {
+            **not_testable,
+            "note": f"DFT-on-benchmark artifact lacks columns: {', '.join(sorted(missing))}",
+        }
+
+    peak = frame[
+        (frame["dft_calc_status"] == "ok") & (frame["label_type"] == "monomer_oxidation_peak")
+    ].copy()
+    dft = pd.to_numeric(peak["dft_Eox_V_vs_AgAgCl"], errors="coerce")
+    exp = pd.to_numeric(peak["exp_Eox_V_vs_AgAgCl"], errors="coerce")
+    mask = dft.notna() & exp.notna()
+    n = int(mask.sum())
+    if n == 0:
+        return {**not_testable, "note": f"DFT-on-benchmark artifact has no usable peak rows ({path})."}
+    mae = float((dft[mask] - exp[mask]).abs().mean())
+    return {
+        "computable": True,
+        "n_peak_points": n,
+        "dft_vs_exp_mae_V": mae,
+        "artifact": str(path),
+        "note": f"{n} peak monomer(s) from {path.name}.",
+    }
+
+
 def _compute_esw_gate_diagnostics(
     harvest_path: str | Path | None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
@@ -763,11 +819,13 @@ def _directive_metric_table(
     *,
     validation_config: dict[str, Any],
     eox_meta: dict[str, Any],
+    dft_eox_meta: dict[str, Any],
     esw_descriptor_meta: dict[str, Any],
     esw_gate_meta: dict[str, Any],
     feasibility_meta: dict[str, Any],
 ) -> list[dict[str, Any]]:
     tier1_target = float(validation_config.get("tier1_xtb_mae_target_V", 0.30))
+    tier2_target = float(validation_config.get("tier2_dft_mae_target_V", 0.15))
     esw_target = float(validation_config.get("solvent_esw_mae_target_V", 0.30))
     active = eox_meta.get("active_profile") or {}
     active_loo = active.get("loo_mae_after_V")
@@ -796,12 +854,20 @@ def _directive_metric_table(
             ),
         },
         {
-            "metric": "Tier-2 DFT held-out validation",
-            "directive target": f"< {float(validation_config.get('tier2_dft_mae_target_V', 0.15)):.2f} V",
-            "observed value": "not evaluated in this section-7 package",
-            "n": 0,
-            "status": STATUS_OUT_OF_SCOPE,
-            "caveat": "Existing DFT number is in-sample, not held-out Tier-2 validation.",
+            "metric": "Tier-2 DFT monomer Eox vs experiment MAE",
+            "directive target": f"< {tier2_target:.2f} V",
+            "observed value": _fmt(dft_eox_meta.get("dft_vs_exp_mae_V"), " V"),
+            "n": int(dft_eox_meta.get("n_peak_points", 0) or 0),
+            "status": _threshold_status(
+                dft_eox_meta.get("dft_vs_exp_mae_V"),
+                tier2_target,
+                int(dft_eox_meta.get("n_peak_points", 0) or 0),
+            ),
+            "caveat": (
+                "RAW B3LYP/SMD ΔSCF Eox vs experimental peak (V vs Ag/AgCl), no fit, from the "
+                f"DFT-on-benchmark artifact. {dft_eox_meta.get('note', '')} Do not claim below "
+                f"{REFERENCE_FLOOR_V:.2f} V reference floor."
+            ),
         },
         {
             "metric": "Solvent ESW descriptor anodic MAE",

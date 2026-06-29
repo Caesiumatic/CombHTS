@@ -11,9 +11,11 @@ from eps.engines import MockEngine
 from eps.validation.directive import (
     _applicability_domain_status,
     _bootstrap_mean_ci,
+    _compute_dft_eox_validation,
     _compute_esw_descriptor_points,
     _compute_esw_gate_diagnostics,
     _compute_feasibility_outputs,
+    _directive_metric_table,
     _feasibility_bootstrap_ci,
     run_directive_validation,
 )
@@ -261,3 +263,76 @@ def test_solvent_descriptor_csv_preserves_hash_smiles(tmp_path: Path) -> None:
 
     assert points.iloc[0]["smiles"] == "CC#N"
     assert meta["anodic_n"] == 1
+
+
+# --- Directive §7 Tier-2 DFT-vs-experiment validation (was hard-coded OUT_OF_SCOPE) -------------
+
+def _dft_points(path: Path, rows: list[dict]) -> Path:
+    cols = [
+        "monomer_name", "canonical_smiles", "label_type", "xtb_descriptor",
+        "dft_Eox_eV", "dft_Eox_V_vs_AgAgCl", "exp_Eox_V_vs_AgAgCl",
+        "dft_calc_status", "dft_calc_error",
+    ]
+    pd.DataFrame(rows, columns=cols).to_csv(path, index=False)
+    return path
+
+
+def test_dft_eox_validation_none_artifact_is_not_testable() -> None:
+    meta = _compute_dft_eox_validation(None)
+    assert meta["computable"] is False
+    assert meta["dft_vs_exp_mae_V"] is None
+    assert meta["n_peak_points"] == 0
+
+
+def test_dft_eox_validation_raw_mae_over_peak_rows(tmp_path: Path) -> None:
+    # Two peak rows (errors 0.05 and 0.15 -> MAE 0.10) plus one onset row that must be ignored.
+    path = _dft_points(
+        tmp_path / "dft.csv",
+        [
+            {"monomer_name": "thiophene", "canonical_smiles": "c1ccsc1",
+             "label_type": "monomer_oxidation_peak", "xtb_descriptor": 1.0,
+             "dft_Eox_eV": 6.0, "dft_Eox_V_vs_AgAgCl": 1.55, "exp_Eox_V_vs_AgAgCl": 1.50,
+             "dft_calc_status": "ok", "dft_calc_error": ""},
+            {"monomer_name": "EDOT", "canonical_smiles": "C1Oc2cscc2O1",
+             "label_type": "monomer_oxidation_peak", "xtb_descriptor": 0.9,
+             "dft_Eox_eV": 5.5, "dft_Eox_V_vs_AgAgCl": 1.15, "exp_Eox_V_vs_AgAgCl": 1.00,
+             "dft_calc_status": "ok", "dft_calc_error": ""},
+            {"monomer_name": "pyrrole", "canonical_smiles": "c1cc[nH]c1",
+             "label_type": "monomer_oxidation_onset", "xtb_descriptor": 0.8,
+             "dft_Eox_eV": 5.0, "dft_Eox_V_vs_AgAgCl": 0.90, "exp_Eox_V_vs_AgAgCl": 5.00,
+             "dft_calc_status": "ok", "dft_calc_error": ""},
+        ],
+    )
+    meta = _compute_dft_eox_validation(path)
+    assert meta["computable"] is True
+    assert meta["n_peak_points"] == 2  # onset row excluded
+    assert meta["dft_vs_exp_mae_V"] == pytest.approx(0.10, abs=1e-9)
+
+
+def test_directive_metric_table_grades_dft_row() -> None:
+    base = dict(
+        validation_config={"tier1_xtb_mae_target_V": 0.30, "tier2_dft_mae_target_V": 0.15,
+                           "solvent_esw_mae_target_V": 0.30},
+        eox_meta={"active_profile": {}, "active_production_profile": "p"},
+        esw_descriptor_meta={},
+        esw_gate_meta={},
+        feasibility_meta={},
+    )
+
+    def dft_row(table):
+        return next(r for r in table if r["metric"] == "Tier-2 DFT monomer Eox vs experiment MAE")
+
+    passing = dft_row(_directive_metric_table(
+        dft_eox_meta={"computable": True, "n_peak_points": 9, "dft_vs_exp_mae_V": 0.12, "note": ""},
+        **base))
+    assert passing["status"] == "PASS"
+
+    failing = dft_row(_directive_metric_table(
+        dft_eox_meta={"computable": True, "n_peak_points": 9, "dft_vs_exp_mae_V": 0.40, "note": ""},
+        **base))
+    assert failing["status"] == "FAIL"
+
+    untestable = dft_row(_directive_metric_table(
+        dft_eox_meta={"computable": False, "n_peak_points": 0, "dft_vs_exp_mae_V": None, "note": ""},
+        **base))
+    assert untestable["status"] == "NOT_YET_TESTABLE"

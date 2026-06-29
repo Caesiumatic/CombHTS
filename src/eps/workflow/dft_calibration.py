@@ -32,7 +32,7 @@ from eps.calibration import LinearCalibration, fit_linear_calibration
 from eps.chemspace import Solvent, load_solvents
 from eps.engines.base import CalcRequest, Engine, SpeciesSpec
 from eps.engines.mock import MockEngine
-from eps.properties import monomer_eox_vs_AgAgCl
+from eps.properties import ip_eV_to_potential_vs_AgAgCl, monomer_eox_vs_AgAgCl
 from eps.provenance import git_info
 from eps.storage import SQLiteCache, cached_run
 from eps.validation.benchmark import (
@@ -53,6 +53,7 @@ POINTS_COLUMNS = (
     "label_type",
     "xtb_descriptor",
     "dft_Eox_eV",
+    "dft_Eox_V_vs_AgAgCl",
     "exp_Eox_V_vs_AgAgCl",
     "dft_calc_status",
     "dft_calc_error",
@@ -107,6 +108,10 @@ class DFTCalibrationResult:
     reference_flag_fired: bool = False
     reference_flag_message: str = ""
     composed_xtb_to_agagcl: dict[str, float | int] | None = field(default=None)
+    # Directive §7 screen-ready anchor + dual accuracy targets (V vs Ag/AgCl).
+    xtb_to_dft_V: LinearCalibration | None = field(default=None)
+    dft_vs_exp_mae_V: float = field(default=float("nan"))
+    calibrated_xtb_vs_exp_mae_V: float = field(default=float("nan"))
 
 
 def run_dft_calibration(
@@ -149,7 +154,13 @@ def run_dft_calibration(
             lambda: monomer_eox_vs_AgAgCl(monomer, solvent, xtb_engine, cache, method=xtb_method)
         )
         dft_value, dft_error = _safe(
-            lambda: _dft_eox_eV(monomer, dft_engine, cache, method=dft_method)
+            lambda: _dft_eox_eV(monomer, solvent, dft_engine, cache, method=dft_method)
+        )
+        # Project the DFT adiabatic IP (eV) into the SAME V vs Ag/AgCl frame as the xTB descriptor
+        # and the experimental anchor, through the identical redox conversion the production screen
+        # uses. The directive §7 accuracy targets compare DFT Eox to experiment in V (no second fit).
+        dft_value_V = (
+            ip_eV_to_potential_vs_AgAgCl(dft_value) if np.isfinite(dft_value) else float("nan")
         )
 
         errors = []
@@ -170,6 +181,7 @@ def run_dft_calibration(
                 "label_type": str(record.get("label_type", "")),
                 "xtb_descriptor": xtb_value,
                 "dft_Eox_eV": dft_value,
+                "dft_Eox_V_vs_AgAgCl": dft_value_V,
                 "exp_Eox_V_vs_AgAgCl": exp_eox,
                 "dft_calc_status": status,
                 "dft_calc_error": error,
@@ -188,6 +200,26 @@ def run_dft_calibration(
     n_nonpeak_excluded = int(len(ok_points) - len(peak_points))
     dft_to_exp = _maybe_fit(peak_points["dft_Eox_eV"], peak_points["exp_Eox_V_vs_AgAgCl"])
     pinned = _load_pinned_xtb_to_exp(tier1_config_path)
+
+    # Directive §7 PRODUCTION calibration anchor: the xTB descriptor (V) -> DFT Eox (V), both in the
+    # identical Ag/AgCl frame, so the fitted slope/intercept are a drop-in for the Tier-1 oxidation
+    # calibration that is applied to all results BEFORE filtering. (The eV-based ``xtb_to_dft`` above
+    # is retained for backward-compatible artifacts; this V-space fit is the screen-ready anchor.)
+    xtb_to_dft_V = _maybe_fit(ok_points["xtb_descriptor"], ok_points["dft_Eox_V_vs_AgAgCl"])
+
+    # Directive §7 ACCURACY TARGETS — two RAW MAEs against experiment on PEAK rows (NOT fits):
+    #   (1) original DFT vs experiment  -> target < 0.15 V at Tier-2 DFT
+    #   (2) calibrated xTB vs experiment -> target < 0.30 V at Tier-1 xTB after calibration
+    # Leg (2) applies the xTB->DFT (V) anchor to the xTB descriptor, putting the cheap prediction in
+    # DFT space, then scores it against experiment — exactly "Tier-1 xTB after calibration".
+    dft_vs_exp_mae_V = _peak_mae(peak_points["dft_Eox_V_vs_AgAgCl"], peak_points["exp_Eox_V_vs_AgAgCl"])
+    if xtb_to_dft_V is not None and not peak_points.empty:
+        calibrated_xtb = xtb_to_dft_V.apply(peak_points["xtb_descriptor"].to_numpy(dtype=float))
+        calibrated_xtb_vs_exp_mae_V = _peak_mae(
+            pd.Series(calibrated_xtb), peak_points["exp_Eox_V_vs_AgAgCl"]
+        )
+    else:
+        calibrated_xtb_vs_exp_mae_V = float("nan")
 
     # Screen-ready composed calibration (directive §7): collapse Fit 1 (xTB->DFT) and Fit 2
     # (DFT->exp peak) into one xTB-descriptor -> V vs Ag/AgCl map, a drop-in for tier1.yaml.
@@ -221,6 +253,10 @@ def run_dft_calibration(
         dft_method=dft_method,
         method_label=method_label,
         benchmark_path=benchmark_path,
+        xtb_to_dft_V=xtb_to_dft_V,
+        dft_vs_exp_mae_V=dft_vs_exp_mae_V,
+        calibrated_xtb_vs_exp_mae_V=calibrated_xtb_vs_exp_mae_V,
+        n_peak_points=int(len(peak_points)),
     )
 
     report_path = out / "report.md"
@@ -261,6 +297,9 @@ def run_dft_calibration(
         reference_flag_fired=reference_flag_fired,
         reference_flag_message=reference_flag_message,
         composed_xtb_to_agagcl=composed,
+        xtb_to_dft_V=xtb_to_dft_V,
+        dft_vs_exp_mae_V=dft_vs_exp_mae_V,
+        calibrated_xtb_vs_exp_mae_V=calibrated_xtb_vs_exp_mae_V,
     )
 
 
@@ -300,25 +339,26 @@ def _calibration_monomers(
     return monomers
 
 
-def _dft_eox_eV(monomer, dft_engine: Engine, cache: SQLiteCache, *, method: str) -> float:
-    """DFT adiabatic ionization energy (Eox) in eV, cached per species.
+def _dft_eox_eV(monomer, solvent: Solvent, dft_engine: Engine, cache: SQLiteCache, *, method: str) -> float:
+    """DFT adiabatic ionization energy (Eox) in eV for a monomer in a solvent, cached per species.
 
-    Routed through the SQLite cache keyed by (canonical_smiles, charge=0, method, solvent,
-    adiabatic_ip). For the ``--engine gaussian`` path ``method`` is the config-encoded
-    ``Tier2Config.cache_method_label()`` (functional/basis/SMD-solvent/Freq), so changing
-    ``configs/tier2.yaml`` changes the key and forces a recompute (THINK T13) — the SMD solvent
-    and Freq toggle are carried in ``method`` rather than the ``solvent_name`` slot. On a cache
-    hit the engine is NOT called, so the underlying neutral AND cation DFT jobs are both reused
-    (never recomputed).
+    The DFT redox runs in the benchmark row's solvent (per-solvent SMD/CPCM continuum, the same
+    Tier-2 §4.2 path as production), so the resulting Eox is a true B3LYP/SMD value rather than a
+    gas-phase one — making the DFT-vs-experiment MAE the directive's "< 0.15 V at Tier-2 DFT"
+    quantity. Routed through the SQLite cache keyed by (canonical_smiles, charge=0, method,
+    solvent, adiabatic_ip); ``method`` is the config-encoded ``Tier2Config.cache_method_label()``
+    (functional/basis/SMD-solvent/Freq), so changing the DFT config forces a recompute (THINK T13).
+    On a cache hit the engine is NOT called, so the underlying neutral AND cation DFT jobs are both
+    reused (never recomputed).
     """
 
     req = CalcRequest(
         species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
         method=method,
-        solvent_eps_r=None,
+        solvent_eps_r=solvent.eps_r,
         quantity="adiabatic_ip",
     )
-    return cached_run(cache, dft_engine, req, solvent_name=None).value
+    return cached_run(cache, dft_engine, req, solvent_name=solvent.name).value
 
 
 def _maybe_fit(x: pd.Series, y: pd.Series) -> LinearCalibration | None:
@@ -327,6 +367,21 @@ def _maybe_fit(x: pd.Series, y: pd.Series) -> LinearCalibration | None:
     if len(x_values) < 2:
         return None
     return fit_linear_calibration(x_values, y_values)
+
+
+def _peak_mae(predicted: pd.Series, experimental: pd.Series) -> float:
+    """Raw mean absolute error ``|predicted - experimental|`` in V; NaN when no finite pairs.
+
+    A directive §7 accuracy target is a RAW error against experiment, not a fit residual — this
+    helper deliberately does not re-fit, so the returned value is the honest predictive MAE.
+    """
+
+    p = np.asarray(predicted, dtype=float)
+    e = np.asarray(experimental, dtype=float)
+    mask = np.isfinite(p) & np.isfinite(e)
+    if not mask.any():
+        return float("nan")
+    return float(np.mean(np.abs(p[mask] - e[mask])))
 
 
 def compose_xtb_to_agagcl(
@@ -454,6 +509,10 @@ def _write_json(
     dft_method: str,
     method_label: str,
     benchmark_path: str | Path,
+    xtb_to_dft_V: LinearCalibration | None = None,
+    dft_vs_exp_mae_V: float = float("nan"),
+    calibrated_xtb_vs_exp_mae_V: float = float("nan"),
+    n_peak_points: int = 0,
 ) -> None:
     fit = (
         {
@@ -465,6 +524,22 @@ def _write_json(
         if xtb_to_dft is not None
         else None
     )
+    # Directive §7 screen-ready anchor: the xTB descriptor (V) -> DFT Eox (V) linear map applied to
+    # all Tier-1 oxidation results before filtering. Drop-in for tier1.yaml calibration.xtb_to_dft.
+    fit_V = (
+        {
+            "slope": xtb_to_dft_V.slope,
+            "intercept": xtb_to_dft_V.intercept,
+            "r2": xtb_to_dft_V.r2,
+            "mae_V": xtb_to_dft_V.mae,
+        }
+        if xtb_to_dft_V is not None
+        else None
+    )
+
+    def _num(value: float) -> float | None:
+        return float(value) if np.isfinite(value) else None
+
     record = {
         "calibration": "xtb_to_dft",
         "description": "y_DFT_Eox_eV = slope * x_xtb_descriptor_V_vs_AgAgCl + intercept",
@@ -473,6 +548,20 @@ def _write_json(
         # tier1.yaml monomer_eox calibration, so it is a drop-in replacement (review + live
         # gaussian batch required before adopting). null when either stage fit is missing.
         "composed_xtb_to_AgAgCl_V": composed,
+        # Directive §7 PRODUCTION anchor (V vs Ag/AgCl) + the two accuracy targets, raw against exp.
+        "xtb_to_dft_V": fit_V,
+        "accuracy_targets": {
+            "dft_vs_exp_mae_V": _num(dft_vs_exp_mae_V),
+            "dft_vs_exp_target_V": 0.15,
+            "calibrated_xtb_vs_exp_mae_V": _num(calibrated_xtb_vs_exp_mae_V),
+            "calibrated_xtb_vs_exp_target_V": 0.30,
+            "n_peak_points": int(n_peak_points),
+            "note": (
+                "Raw MAEs against experiment on peak rows (no second fit). DFT-vs-exp is the "
+                "directive's '< 0.15 V at Tier-2 DFT'; calibrated-xTB-vs-exp is '< 0.3 V at "
+                "Tier-1 xTB after calibration' (xTB->DFT anchor applied to the xTB descriptor)."
+            ),
+        },
         "n_points": n_points,
         "n_skipped": n_skipped,
         "provenance": {
