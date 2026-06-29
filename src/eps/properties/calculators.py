@@ -327,14 +327,18 @@ def _gas_energy_eV(
     charge: int,
     multiplicity: int,
     method: str,
+    solvent_model_name: str | None = None,
+    solvent_name: str | None = None,
+    solvent_eps_r: float | None = None,
 ) -> float:
     req = CalcRequest(
         species=SpeciesSpec(smiles, charge=charge, multiplicity=multiplicity),
         method=method,
-        solvent_eps_r=None,
+        solvent_eps_r=solvent_eps_r,
+        solvent_model_name=solvent_model_name,
         quantity="gas_energy",
     )
-    return cached_run(cache, engine, req, solvent_name=None).value
+    return cached_run(cache, engine, req, solvent_name=solvent_name).value
 
 
 def dimerization_dG(
@@ -346,6 +350,9 @@ def dimerization_dG(
     spec: PolymerizationSpec,
     dimer_n: int = DIMER_N,
     proton_gibbs_eV: float = PROTON_GIBBS_EV,
+    solvent_model_name: str | None = None,
+    solvent_name: str | None = None,
+    solvent_eps_r: float | None = None,
 ) -> float:
     """Radical–radical coupling free energy in kcal/mol (directive §3.1/§4.2).
 
@@ -365,11 +372,17 @@ def dimerization_dG(
     """
 
     dimer_smiles = oligomer_smiles(monomer.canonical_smiles, spec, dimer_n)
+    solvent_kwargs = {
+        "solvent_model_name": solvent_model_name,
+        "solvent_name": solvent_name,
+        "solvent_eps_r": solvent_eps_r,
+    }
     g_dimer_neutral = _gas_energy_eV(
-        engine, cache, dimer_smiles, charge=0, multiplicity=1, method=method
+        engine, cache, dimer_smiles, charge=0, multiplicity=1, method=method, **solvent_kwargs
     )
     g_monomer_cation = _gas_energy_eV(
-        engine, cache, monomer.canonical_smiles, charge=1, multiplicity=2, method=method
+        engine, cache, monomer.canonical_smiles, charge=1, multiplicity=2, method=method,
+        **solvent_kwargs
     )
     delta_eV = g_dimer_neutral + 2.0 * proton_gibbs_eV - 2.0 * g_monomer_cation
     return delta_eV * EV_TO_KCAL_MOL
