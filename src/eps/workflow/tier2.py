@@ -495,6 +495,7 @@ def run_tier2_refined_screen(
     *,
     dft_results_path: str | Path | None = None,
     dimerization_dft_path: str | Path | None = None,
+    optical_dft_path: str | Path | None = None,
     tier1_config_path: str | Path | None = None,
     scoring_config_path: str | Path | None = None,
     refined_window_margin_V: float = DEFAULT_REFINED_WINDOW_MARGIN_V,
@@ -576,6 +577,17 @@ def run_tier2_refined_screen(
                 for d, o in zip(dft_dim, survivors["dimerization_dG_kcal_mol"], strict=False)
             ]
             survivors["dimerization_source"] = ["tier2_dft" if d is not None else "tier1" for d in dft_dim]
+    # f5: override the optical gap with the Tier-2 TD-DFT value (per monomer) where a DFT band-gap
+    # CSV is supplied (run_tier2_bandgap); else keep the Tier-1 sTDA-xTB gap.
+    if optical_dft_path is not None and Path(optical_dft_path).exists() and not survivors.empty:
+        opt = pd.read_csv(optical_dft_path)
+        ocol = "tier2_optical_gap_eV"
+        if ocol in opt.columns and {"monomer_canonical_smiles"}.issubset(opt.columns) and \
+                "monomer_canonical_smiles" in survivors.columns and "optical_gap_eV" in survivors.columns:
+            omap = opt.dropna(subset=[ocol]).set_index("monomer_canonical_smiles")[ocol].to_dict()
+            dft_opt = survivors["monomer_canonical_smiles"].map(omap.get)
+            survivors["optical_gap_eV"] = dft_opt.fillna(survivors["optical_gap_eV"])
+            survivors["optical_gap_source"] = dft_opt.notna().map({True: "tier2_tddft", False: "tier1_stda"})
     survivors = survivors.drop(
         columns=[c for c in ("composite_score", "pareto_front") if c in survivors.columns],
         errors="ignore",
@@ -664,6 +676,67 @@ def run_tier2_dimerization(
                 solvent_eps_r=solvent.eps_r,
             )
         except Exception as exc:  # noqa: BLE001 - record failure per pair, never crash the sweep.
+            row["status"] = f"failed: {type(exc).__name__}: {exc}"
+        rows.append(row)
+    result = pd.DataFrame(rows)
+    result.to_csv(out_path, index=False)
+    return result
+
+
+def run_tier2_bandgap(
+    survivors_path: str | Path,
+    output_path: str | Path,
+    *,
+    cache_path: str | Path | None = None,
+    polymerization_path: str | Path | None = None,
+    engine=None,
+    lengths: tuple[int, ...] = (1, 2, 3, 4, 5, 6),
+) -> pd.DataFrame:
+    """Directive §4.2 TD-DFT band-gap convergence per unique monomer via ORCA (CAM-B3LYP TD-DFT).
+
+    Runs the engine-generic optical-gap convergence over n in ``lengths`` with an ORCA TD-DFT
+    engine, capturing the largest-n gap as ``tier2_optical_gap_eV`` plus the convergence delta/flag.
+    Writes a CSV consumable by :func:`run_tier2_refined_screen` to override the §5 f5 band-gap term.
+    REAL ORCA on the cluster; ``engine`` is injectable for tests.
+    """
+
+    from eps.chemspace.models import Monomer
+    from eps.properties.optical_convergence import compute_optical_gap_convergence
+    from eps.structures.oligomer import load_polymerization_specs
+
+    frame = pd.read_csv(survivors_path)
+    if engine is None:
+        engine = OrcaEngine(OrcaConfig(optical_mode="tddft"))  # CAM-B3LYP/def2-SVP conventional TDA/TD-DFT
+    method = engine.config.method_label() if hasattr(engine, "config") else "tier2-tddft"
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    cache = SQLiteCache(Path(cache_path) if cache_path else out_path.parent / "tier2_bandgap_cache.sqlite")
+    specs = (
+        load_polymerization_specs(polymerization_path)
+        if polymerization_path else load_polymerization_specs()
+    )
+    smiles_col = next(
+        (c for c in ("monomer_canonical_smiles", "canonical_smiles") if c in frame.columns), None
+    )
+    if smiles_col is None:
+        raise ValueError("survivors CSV needs a monomer SMILES column")
+    name_col = "monomer_name" if "monomer_name" in frame.columns else smiles_col
+    largest = max(lengths)
+
+    rows: list[dict[str, Any]] = []
+    for _, r in frame[[smiles_col, name_col]].drop_duplicates().iterrows():
+        smi, name = str(r[smiles_col]), str(r[name_col])
+        spec = specs.get(name)
+        monomer = Monomer(name=name, monomer_class="", smiles=smi, canonical_smiles=smi)
+        row: dict[str, Any] = {"monomer_canonical_smiles": smi, "monomer_name": name, "method": method}
+        try:
+            conv = compute_optical_gap_convergence(
+                monomer, spec, engine, cache, method=method, lengths=lengths
+            )
+            row.update(conv)
+            row["tier2_optical_gap_eV"] = conv.get(f"optical_gap_n{largest}_eV")
+        except Exception as exc:  # noqa: BLE001 - record failure per monomer, never crash the sweep.
+            row["tier2_optical_gap_eV"] = None
             row["status"] = f"failed: {type(exc).__name__}: {exc}"
         rows.append(row)
     result = pd.DataFrame(rows)
