@@ -59,6 +59,11 @@ def run_analyze(harvest_path: str | Path, outdir: str | Path) -> AnalyzeResult:
     summary.to_csv(summary_path, index=False)
 
     shortlist_path = _write_shortlist(frame, out, notes)
+    pairings = non_obvious_pairings(frame)
+    if pairings is None:
+        notes.append("non_obvious_pairings.csv SKIPPED: harvest lacks monomer/solvent/score columns.")
+    else:
+        pairings.to_csv(out / "non_obvious_pairings.csv", index=False)
     figure_paths = _write_figures(frame, out, notes)
 
     return AnalyzeResult(
@@ -137,6 +142,68 @@ def build_shortlist(frame: pd.DataFrame, top_n: int = 30) -> pd.DataFrame | None
     front = front.sort_values("composite_score", ascending=False).head(top_n)
     front["diagnostic_note"] = DIAGNOSTIC_NOTE
     return front.reset_index(drop=True)
+
+
+# Directive §8 "under-explored monomers" (e.g. selenophenes or furans in ionic liquids): matched
+# by substring on monomer_class so naming variants (alkylfuran, oligofuran, ...) are all captured.
+_UNDEREXPLORED_CLASS_SUBSTRINGS = ("furan", "selenophen", "donor", "acceptor", "fused")
+_OBVIOUS_SOLVENT = "acetonitrile"
+
+
+def _is_underexplored(monomer_class: object) -> bool:
+    cls = str(monomer_class).lower()
+    return any(sub in cls for sub in _UNDEREXPLORED_CLASS_SUBSTRINGS)
+
+
+def non_obvious_pairings(frame: pd.DataFrame, *, top_n: int = 20) -> pd.DataFrame | None:
+    """Directive §8: best NON-obvious solvent–electrolyte pairings for under-explored monomers.
+
+    'Obvious' = acetonitrile (the default high-throughput solvent). Per monomer, surface the
+    top-scoring SURVIVING pairing in a non-acetonitrile solvent, flagged when it rivals or beats
+    that monomer's best acetonitrile pairing. εr is reported as the §3.2 ionic-conductivity proxy.
+    Returns None if the needed columns are absent. Read-only; never rescoring.
+    """
+
+    needed = {"monomer_name", "solvent_name", "composite_score"}
+    if not needed.issubset(frame.columns):
+        return None
+    df = frame.copy()
+    if SURVIVOR_COLUMN in df.columns:
+        df = df[df[SURVIVOR_COLUMN].astype(bool)]
+    if {"composite_score", "pareto_front"}.issubset(df.columns):
+        df = collapse_cation_degenerate_rows(df)
+    if df.empty:
+        return df
+
+    rows = []
+    for monomer, grp in df.groupby("monomer_name"):
+        non_obvious = grp[grp["solvent_name"] != _OBVIOUS_SOLVENT]
+        if non_obvious.empty:
+            continue
+        best = non_obvious.loc[non_obvious["composite_score"].idxmax()]
+        obvious = grp[grp["solvent_name"] == _OBVIOUS_SOLVENT]
+        best_obvious_score = float(obvious["composite_score"].max()) if not obvious.empty else float("nan")
+        best_score = float(best["composite_score"])
+        rows.append({
+            "monomer_name": monomer,
+            "monomer_class": best.get("monomer_class", ""),
+            "solvent_name": best["solvent_name"],
+            "salt": best.get("salt", best.get("salt_class", "")),
+            "composite_score": best_score,
+            "best_acetonitrile_score": best_obvious_score,
+            "beats_acetonitrile": bool(pd.isna(best_obvious_score) or best_score >= best_obvious_score),
+            "solvent_eps_r_conductivity_proxy": best.get("solvent_eps_r", float("nan")),
+            "under_explored_class": _is_underexplored(best.get("monomer_class", "")),
+        })
+    result = pd.DataFrame(rows)
+    if result.empty:
+        return result
+    # Surface under-explored + acetonitrile-beating pairings first, then by score.
+    result = result.sort_values(
+        ["under_explored_class", "beats_acetonitrile", "composite_score"],
+        ascending=[False, False, False],
+    ).head(top_n).reset_index(drop=True)
+    return result
 
 
 def _write_shortlist(frame: pd.DataFrame, out: Path, notes: list[str]) -> Path | None:
