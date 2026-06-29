@@ -54,6 +54,10 @@ _GIBBS_ENERGY_RE = re.compile(r"Final Gibbs free energy\s*\.*\s*(-?\d+\.\d+)\s*E
 _HIRSHFELD_ROW_RE = re.compile(
     r"^\s*\d+\s+[A-Z][a-z]?\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s*$", re.MULTILINE
 )
+# ORBITAL ENERGIES table row: "<NO> <OCC> <E(Eh)> <E(eV)>" — used to read the closed-shell HOMO/LUMO.
+_ORBITAL_ROW_RE = re.compile(
+    r"^\s*\d+\s+(\d+\.\d+)\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s*$", re.MULTILINE
+)
 
 
 @dataclass(frozen=True)
@@ -154,6 +158,23 @@ class OrcaEngine(Engine):
                     "basis": self.config.basis,
                     "solvent": self.config.optical_solvent,
                 },
+            )
+        if req.quantity in {"homo", "lumo"}:
+            # Directive §3.1: Kohn-Sham HOMO/LUMO at B3LYP/6-31G(d,p)(+SMD) as an initial filter.
+            # Single point on the embedded geometry (no opt) — cheap pre-ΔSCF screen.
+            smd_solvent = req.solvent_model_name if self.config.redox_smd else None
+            input_text = build_orca_homolumo_input(
+                req.species, functional=self.config.redox_functional,
+                basis=self.config.redox_basis, smd_solvent=smd_solvent,
+                nprocs=self.config.nprocs, maxcore_mb=self.config.maxcore_mb,
+            )
+            output = self._run(binary, input_text)
+            homo, lumo = parse_orca_homo_lumo_eV(output)
+            value = homo if req.quantity == "homo" else lumo
+            return CalcResult(
+                value=value, unit="eV", method=req.method,
+                raw={"engine": "OrcaEngine", "quantity": req.quantity,
+                     "homo_eV": homo, "lumo_eV": lumo, "smd_solvent": smd_solvent},
             )
         if req.quantity == "gas_energy":
             # Optimized single-species energy (ΔG if Freq, else SCF) at B3LYP/6-31G(d,p), per-request
@@ -374,6 +395,49 @@ def build_orca_redox_input(
         + coordinates
         + "\n*\n"
     )
+
+
+def build_orca_homolumo_input(
+    species: SpeciesSpec,
+    *,
+    functional: str = "B3LYP",
+    basis: str = "6-31G(d,p)",
+    smd_solvent: str | None = None,
+    nprocs: int = 4,
+    maxcore_mb: int = 2000,
+) -> str:
+    """Build an ORCA single-point input for the §3.1 Kohn-Sham HOMO/LUMO initial filter."""
+
+    blocks = [f"%pal nprocs {nprocs} end", f"%maxcore {maxcore_mb}"]
+    if smd_solvent:
+        blocks.append(f'%cpcm\n  smd true\n  SMDsolvent "{smd_solvent}"\nend')
+    return (
+        f"! {functional} {basis} TightSCF\n"
+        + "\n".join(blocks)
+        + "\n"
+        + f"* xyz {species.charge} {species.multiplicity}\n"
+        + _coordinates(species)
+        + "\n*\n"
+    )
+
+
+def parse_orca_homo_lumo_eV(output: str) -> tuple[float, float]:
+    """Parse the closed-shell HOMO/LUMO (eV) from the ORCA ORBITAL ENERGIES table.
+
+    HOMO = highest-energy occupied (OCC > 0.5) orbital; LUMO = lowest-energy virtual (OCC < 0.5).
+    """
+
+    if "ORBITAL ENERGIES" not in output:
+        raise ValueError("ORCA output has no ORBITAL ENERGIES block")
+    block = output.split("ORBITAL ENERGIES", 1)[1]
+    occ_eV: list[tuple[float, float]] = [
+        (float(occ), float(e_eV)) for occ, _e_eh, e_eV in _ORBITAL_ROW_RE.findall(block)
+    ]
+    homos = [e for occ, e in occ_eV if occ > 0.5]
+    lumos = [e for occ, e in occ_eV if occ <= 0.5]
+    if not homos or not lumos:
+        raise ValueError("Could not identify HOMO/LUMO from ORCA ORBITAL ENERGIES")
+    return max(homos), min(lumos)
 
 
 def parse_orca_final_scf_energy_eh(output: str) -> float:

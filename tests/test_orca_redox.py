@@ -15,6 +15,7 @@ from eps.engines.orca import (
     parse_orca_final_scf_energy_eh,
     parse_orca_gibbs_energy_eh,
     parse_orca_hirshfeld_spin_populations,
+    parse_orca_homo_lumo_eV,
 )
 
 _THIOPHENE = SpeciesSpec(canonical_smiles="c1ccsc1", charge=0, multiplicity=1)
@@ -64,6 +65,45 @@ def test_parse_hirshfeld_spin_populations() -> None:
     )
     spins = parse_orca_hirshfeld_spin_populations(out)
     assert spins == [0.350000, 0.120000, 0.530000]
+
+
+def test_parse_homo_lumo() -> None:
+    out = (
+        "ORBITAL ENERGIES\n----------------\n"
+        "  NO   OCC          E(Eh)            E(eV)\n"
+        "   0   2.0000     -10.123456      -275.4789\n"
+        "  19   2.0000      -0.250000        -6.8027\n"  # HOMO
+        "  20   0.0000      -0.050000        -1.3605\n"  # LUMO
+        "  21   0.0000       0.100000         2.7211\n"
+    )
+    homo, lumo = parse_orca_homo_lumo_eV(out)
+    assert homo == -6.8027
+    assert lumo == -1.3605
+
+
+def test_homo_quantity_returns_homo_with_smd(monkeypatch) -> None:
+    monkeypatch.setattr(orca.shutil, "which", lambda _name: "/fake/orca")
+    captured = {}
+
+    def fake_run(cmd, check=False, capture_output=False, text=False, cwd=None):  # noqa: ARG001
+        from pathlib import Path
+
+        captured["inp"] = Path(cmd[1]).read_text(encoding="utf-8")
+        return type("R", (), {"returncode": 0, "stderr": "", "stdout": (
+            "ORBITAL ENERGIES\n  NO OCC E(Eh) E(eV)\n"
+            "  0 2.0000 -0.30 -8.0\n  1 0.0000 -0.05 -1.5\n"
+            "ORCA TERMINATED NORMALLY\n"
+        )})()
+
+    monkeypatch.setattr(orca.subprocess, "run", fake_run)
+    engine = OrcaEngine(OrcaConfig(redox_smd=True))
+    req = CalcRequest(species=_THIOPHENE, method="m", solvent_eps_r=37.5,
+                      solvent_model_name="acetonitrile", quantity="homo")
+    result = engine.run(req)
+    assert result.value == -8.0
+    assert result.raw["lumo_eV"] == -1.5
+    assert "Opt" not in captured["inp"]  # single point, no optimization
+    assert 'SMDsolvent "acetonitrile"' in captured["inp"]
 
 
 def _normal(stdout: str):
