@@ -1,9 +1,17 @@
 """Tier-2 full §4.2 DFT scope: the planner emits the complete per-species state set."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 
-from eps.workflow.tier2 import _harvest_row, _manifest_rows_from_selection
+from eps.workflow.tier2 import (
+    _harvest_row,
+    _manifest_rows_from_selection,
+    harvest_tier2_results,
+    plan_tier2_pilot,
+    run_tier2_task,
+)
 
 
 def _selection() -> pd.DataFrame:
@@ -54,6 +62,29 @@ def test_full_scope_dedupes_solvent_across_triads() -> None:
     assert len(solvent_tasks) == 2  # one anodic + one cathodic for the single shared solvent
     monomer_ip = [r for r in rows if r["entity_type"] == "monomer" and r["quantity"] == "adiabatic_ip"]
     assert len(monomer_ip) == 2  # one per monomer
+
+
+def test_full_scope_plan_run_harvest_chain_mock(tmp_path: Path) -> None:
+    """End-to-end: plan(full) on the ORCA config -> run each task (mock) -> harvest, schema-clean."""
+    sel = tmp_path / "sel.csv"
+    _selection().to_csv(sel, index=False)
+    config = Path(__file__).resolve().parents[1] / "configs" / "tier2_orca.yaml"
+    plan = plan_tier2_pilot(sel, config, tmp_path / "plan", scope="full")
+    assert plan.n_tasks == 6  # 1 triad: monomer IP+EA, solvent anodic+cathodic, anion-ox, cation-red
+
+    manifest = tmp_path / "plan" / "task_manifest.csv"
+    for tid in pd.read_csv(manifest)["task_id"]:
+        # engine_name="mock" bypasses the orca engine-match guard; config_hash still validates.
+        run_tier2_task(manifest, tid, engine_name="mock",
+                       result_dir=tmp_path / "res", work_root=tmp_path / "work", config_path=config)
+    h = harvest_tier2_results(manifest, tmp_path / "res", tmp_path / "harvest.csv", tmp_path / "rep.md")
+    assert h.n_success == 6 and not h.partial
+    df = pd.read_csv(tmp_path / "harvest.csv")
+    assert "entity_type" in df.columns and "redox_potential_V_vs_AgAgCl" in df.columns
+    # monomer-Eox column populated ONLY for the monomer oxidation row
+    mono = df[df["entity_type"] == "monomer"]
+    assert mono[mono["quantity"] == "adiabatic_ip"]["tier2_monomer_Eox_V_vs_AgAgCl"].notna().all()
+    assert mono[mono["quantity"] == "adiabatic_ea"]["tier2_monomer_Eox_V_vs_AgAgCl"].isna().all()
 
 
 def test_harvest_row_blanks_monomer_eox_for_non_monomer_oxidation() -> None:
