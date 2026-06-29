@@ -1,0 +1,65 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -j y
+#$ -N combhts_dftcal_orca
+#$ -pe smp 4
+#$ -l h_rt=24:00:00
+#$ -o /home/shic4/combhts_dftcal_orca.o$JOB_ID.$TASK_ID
+# Directive §7 xTB->DFT calibration, ORCA edition, SGE-ARRAY sharded (one monomer per task).
+#
+# Each array task computes the DFT adiabatic_ip (neutral+cation, B3LYP/6-31G(d,p) + per-solvent SMD
+# + Freq -> ΔG) for its shard of the calibration-eligible benchmark monomers, plus the IPEA-xTB
+# descriptor for the SAME monomer, and writes a per-shard points CSV. A separate harvest step
+# (run locally) concatenates the shards and fits the screen-ready xtb_to_dft_V slope/intercept.
+#
+# WHY ARRAY: one serial process over the big di-aryl D-A benchmark compounds (Freq on ~50-atom
+# species) would blow the 24h wall (the full Tier-2 sweep already did). Sharding 1 monomer/task
+# runs them concurrently under the maxujobs=30 cap, so the wall is per-monomer, not cumulative.
+#
+# Submit (NSHARDS = number of deduped calibration-eligible monomers; one task each):
+#   N=$(eps-count)  # or read from the planning step below
+#   qsub -t 1-$N -v NSHARDS=$N scripts/run_dftcal_orca_array.sge
+#
+# ORCA runs SERIAL on Lop (nprocs=1 in configs/tier2_orca.yaml): parallel ORCA segfaults under
+# Lop's OpenMPI/hwloc. Throughput is from many concurrent serial tasks, not multi-core per task.
+
+set -uo pipefail
+
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+module load xtb/6.4.1 2>/dev/null || echo "NOTE: xtb module missing -> xtb_descriptor recorded as per-monomer failure"
+
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONUNBUFFERED=1
+export OMP_NUM_THREADS=1            # ORCA serial; xtb is light
+export OMP_STACKSIZE=4G
+ulimit -s unlimited || true
+
+NSHARDS="${NSHARDS:?set NSHARDS to the array size (number of calibration monomers)}"
+SHARD=$((SGE_TASK_ID - 1))
+OUTDIR="$PWD/outputs/dftcal_orca/shard_${SHARD}"
+CACHE="$PWD/outputs/dftcal_orca/cache_shard_${SHARD}.sqlite"
+mkdir -p "$OUTDIR"
+
+# Idempotent skip: a completed shard already wrote its points CSV.
+if [ -f "$OUTDIR/dft_calibration_points.csv" ] && grep -q ",ok," "$OUTDIR/dft_calibration_points.csv" 2>/dev/null; then
+    echo "SHARD $SHARD already has points; skipping."
+    exit 0
+fi
+
+echo "SHARD $SHARD of $NSHARDS -> $OUTDIR"
+eps calibrate-dft \
+    --engine orca \
+    --config configs/tier2_orca.yaml \
+    --n-shards "$NSHARDS" \
+    --shard-index "$SHARD" \
+    --cache "$CACHE" \
+    --outdir "$OUTDIR"
+echo "SHARD $SHARD DONE exit=$?"
