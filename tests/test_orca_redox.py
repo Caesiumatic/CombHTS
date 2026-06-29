@@ -206,6 +206,30 @@ def test_gas_energy_returns_optimized_energy_with_smd(monkeypatch) -> None:
     assert result.raw["energy_basis"] == "gibbs"
 
 
+def test_cpcm_epsilon_fallback_when_no_smd_name(monkeypatch) -> None:
+    # A solvent with NO ORCA SMD name (solvent_model_name=None) but a dielectric -> CPCM(epsilon),
+    # not gas phase (the PC/GBL/NMP fallback).
+    monkeypatch.setattr(orca.shutil, "which", lambda _name: "/fake/orca")
+    captured = {}
+
+    def fake_run(cmd, check=False, capture_output=False, text=False, cwd=None):  # noqa: ARG001
+        from pathlib import Path
+
+        captured["inp"] = Path(cmd[1]).read_text(encoding="utf-8")
+        return _normal("FINAL SINGLE POINT ENERGY  -100.0\nORCA TERMINATED NORMALLY\n")
+
+    monkeypatch.setattr(orca.subprocess, "run", fake_run)
+    engine = OrcaEngine(OrcaConfig(redox_smd=True, redox_hirshfeld=False))
+    req = CalcRequest(
+        species=_THIOPHENE, method="m", solvent_eps_r=64.9,  # propylene carbonate dielectric
+        solvent_model_name=None, quantity="gas_energy",
+    )
+    engine.run(req)
+    assert "CPCM" in captured["inp"].splitlines()[0]  # ! ... CPCM header keyword
+    assert "epsilon 64.9" in captured["inp"]
+    assert "smd true" not in captured["inp"]  # no built-in SMD
+
+
 def test_redox_gas_phase_when_smd_disabled(monkeypatch) -> None:
     monkeypatch.setattr(orca.shutil, "which", lambda _name: "/fake/orca")
     captured = {}

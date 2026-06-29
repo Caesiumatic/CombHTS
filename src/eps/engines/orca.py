@@ -162,10 +162,10 @@ class OrcaEngine(Engine):
         if req.quantity in {"homo", "lumo"}:
             # Directive §3.1: Kohn-Sham HOMO/LUMO at B3LYP/6-31G(d,p)(+SMD) as an initial filter.
             # Single point on the embedded geometry (no opt) — cheap pre-ΔSCF screen.
-            smd_solvent = req.solvent_model_name if self.config.redox_smd else None
+            smd_solvent, cpcm_epsilon = self._solvent_args(req)
             input_text = build_orca_homolumo_input(
                 req.species, functional=self.config.redox_functional,
-                basis=self.config.redox_basis, smd_solvent=smd_solvent,
+                basis=self.config.redox_basis, smd_solvent=smd_solvent, cpcm_epsilon=cpcm_epsilon,
                 nprocs=self.config.nprocs, maxcore_mb=self.config.maxcore_mb,
             )
             output = self._run(binary, input_text)
@@ -179,10 +179,11 @@ class OrcaEngine(Engine):
         if req.quantity == "gas_energy":
             # Optimized single-species energy (ΔG if Freq, else SCF) at B3LYP/6-31G(d,p), per-request
             # SMD. Building block for the §4.2 DFT dimerization ΔG (reaction energy of opt'd species).
-            smd_solvent = req.solvent_model_name if self.config.redox_smd else None
+            smd_solvent, cpcm_epsilon = self._solvent_args(req)
             parsed = self._run_redox_species(
                 binary, req.species, charge=req.species.charge,
-                multiplicity=req.species.multiplicity, smd_solvent=smd_solvent, hirshfeld=False,
+                multiplicity=req.species.multiplicity, smd_solvent=smd_solvent,
+                cpcm_epsilon=cpcm_epsilon, hirshfeld=False,
             )
             value = _redox_energy_eh(parsed) * HARTREE_TO_EV
             return CalcResult(
@@ -212,15 +213,15 @@ class OrcaEngine(Engine):
         initial = req.species
         final_charge = initial.charge + charge_delta
         final_multiplicity = initial.multiplicity + 1
-        smd_solvent = req.solvent_model_name if cfg.redox_smd else None
+        smd_solvent, cpcm_epsilon = self._solvent_args(req)
 
         initial_parsed = self._run_redox_species(
             binary, initial, charge=initial.charge, multiplicity=initial.multiplicity,
-            smd_solvent=smd_solvent, hirshfeld=False,
+            smd_solvent=smd_solvent, cpcm_epsilon=cpcm_epsilon, hirshfeld=False,
         )
         final_parsed = self._run_redox_species(
             binary, initial, charge=final_charge, multiplicity=final_multiplicity,
-            smd_solvent=smd_solvent, hirshfeld=cfg.redox_hirshfeld,
+            smd_solvent=smd_solvent, cpcm_epsilon=cpcm_epsilon, hirshfeld=cfg.redox_hirshfeld,
         )
         initial_energy = _redox_energy_eh(initial_parsed)
         final_energy = _redox_energy_eh(final_parsed)
@@ -242,6 +243,20 @@ class OrcaEngine(Engine):
             "final_parsed": final_parsed,
         }
 
+    def _solvent_args(self, req: CalcRequest) -> tuple[str | None, float | None]:
+        """Resolve (SMD solvent name, CPCM epsilon) for a request.
+
+        SMD when the request carries an ORCA SMD solvent name; else CPCM by the request's dielectric
+        (the PC/GBL/NMP fallback — not in ORCA's SMD set); both None -> gas phase. Disabled entirely
+        when redox_smd is off.
+        """
+
+        if not self.config.redox_smd:
+            return None, None
+        if req.solvent_model_name:
+            return req.solvent_model_name, None
+        return None, req.solvent_eps_r
+
     def _run_redox_species(
         self,
         binary: str,
@@ -250,6 +265,7 @@ class OrcaEngine(Engine):
         charge: int,
         multiplicity: int,
         smd_solvent: str | None,
+        cpcm_epsilon: float | None,
         hirshfeld: bool,
     ) -> dict:
         cfg = self.config
@@ -257,7 +273,7 @@ class OrcaEngine(Engine):
             species, charge, multiplicity,
             functional=cfg.redox_functional, basis=cfg.redox_basis,
             use_freq=cfg.redox_use_freq, hirshfeld=hirshfeld, smd_solvent=smd_solvent,
-            nprocs=cfg.nprocs, maxcore_mb=cfg.maxcore_mb,
+            cpcm_epsilon=cpcm_epsilon, nprocs=cfg.nprocs, maxcore_mb=cfg.maxcore_mb,
         )
         output = self._run(binary, input_text)
         scf_eh = parse_orca_final_scf_energy_eh(output)
@@ -357,6 +373,22 @@ def build_orca_optical_input(species: SpeciesSpec, config: OrcaConfig) -> str:
     )
 
 
+def _orca_solvation(smd_solvent: str | None, cpcm_epsilon: float | None) -> tuple[str, str | None]:
+    """Return (header keyword suffix, %cpcm block) for the chosen implicit-solvent model.
+
+    Preference: built-in SMD (directive's solvent-specific continuum) when ``smd_solvent`` is given;
+    else CPCM with an explicit dielectric (verified ORCA-6.1 fallback for solvents absent from the
+    SMD set — propylene carbonate / GBL / NMP); else gas phase. SMD uses no header keyword (the
+    %cpcm block carries it); CPCM-by-epsilon needs the ``CPCM`` header keyword.
+    """
+
+    if smd_solvent:
+        return "", f'%cpcm\n  smd true\n  SMDsolvent "{smd_solvent}"\nend'
+    if cpcm_epsilon is not None:
+        return " CPCM", f"%cpcm\n  epsilon {cpcm_epsilon}\nend"
+    return "", None
+
+
 def build_orca_redox_input(
     species: SpeciesSpec,
     charge: int,
@@ -367,27 +399,28 @@ def build_orca_redox_input(
     use_freq: bool = False,
     hirshfeld: bool = False,
     smd_solvent: str | None = None,
+    cpcm_epsilon: float | None = None,
     nprocs: int = 4,
     maxcore_mb: int = 2000,
 ) -> str:
-    """Build an ORCA §4.2 ΔSCF redox input (Opt, optional Freq / SMD / Hirshfeld).
+    """Build an ORCA §4.2 ΔSCF redox input (Opt, optional Freq / SMD or CPCM / Hirshfeld).
 
-    SMD is requested through the CPCM block (``smd true`` + ``SMDsolvent``), the directive's
-    solvent-specific continuum. Hirshfeld spin populations are requested via
-    ``%output Print[P_Hirshfeld] 1``.
+    SMD (built-in solvent) or CPCM-by-epsilon (fallback) per :func:`_orca_solvation`. Hirshfeld
+    spin populations are requested via ``%output Print[P_Hirshfeld] 1``.
     """
 
-    keywords = [f"! {functional} {basis} Opt TightSCF"]
+    header_solv, solv_block = _orca_solvation(smd_solvent, cpcm_epsilon)
+    keywords = f"! {functional} {basis} Opt TightSCF{header_solv}"
     if use_freq:
-        keywords[0] += " Freq"
+        keywords += " Freq"
     blocks = [f"%pal nprocs {nprocs} end", f"%maxcore {maxcore_mb}"]
-    if smd_solvent:
-        blocks.append(f'%cpcm\n  smd true\n  SMDsolvent "{smd_solvent}"\nend')
+    if solv_block:
+        blocks.append(solv_block)
     if hirshfeld:
         blocks.append("%output\n  Print[P_Hirshfeld] 1\nend")
     coordinates = _coordinates_for(species, charge)
     return (
-        "\n".join(keywords)
+        keywords
         + "\n"
         + "\n".join(blocks)
         + "\n"
@@ -403,16 +436,18 @@ def build_orca_homolumo_input(
     functional: str = "B3LYP",
     basis: str = "6-31G(d,p)",
     smd_solvent: str | None = None,
+    cpcm_epsilon: float | None = None,
     nprocs: int = 4,
     maxcore_mb: int = 2000,
 ) -> str:
     """Build an ORCA single-point input for the §3.1 Kohn-Sham HOMO/LUMO initial filter."""
 
+    header_solv, solv_block = _orca_solvation(smd_solvent, cpcm_epsilon)
     blocks = [f"%pal nprocs {nprocs} end", f"%maxcore {maxcore_mb}"]
-    if smd_solvent:
-        blocks.append(f'%cpcm\n  smd true\n  SMDsolvent "{smd_solvent}"\nend')
+    if solv_block:
+        blocks.append(solv_block)
     return (
-        f"! {functional} {basis} TightSCF\n"
+        f"! {functional} {basis} TightSCF{header_solv}\n"
         + "\n".join(blocks)
         + "\n"
         + f"* xyz {species.charge} {species.multiplicity}\n"

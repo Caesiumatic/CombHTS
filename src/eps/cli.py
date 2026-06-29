@@ -500,7 +500,7 @@ def main(argv: list[str] | None = None) -> int:
     tier2_run_task.add_argument("--task-id", required=True, help="Task ID from the manifest")
     tier2_run_task.add_argument(
         "--engine",
-        choices=("mock", "gaussian"),
+        choices=("mock", "gaussian", "orca"),
         default="mock",
         help="Calculation engine for this single task.",
     )

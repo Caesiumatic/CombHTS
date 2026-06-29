@@ -1,0 +1,55 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_tier2_array
+#$ -j y
+#$ -o /home/shic4/combhts_tier2_array.o$JOB_ID.$TASK_ID
+# Tier-2 DFT array on Lop: ONE ORCA task per Tier-2 manifest row (directive §4.2).
+# Submit with the array range matching the manifest task count, e.g.:
+#   qsub -t 1-$(($(wc -l < $MANIFEST)-1)) scripts/run_tier2_array.sge
+# Required env (pass via `qsub -v`):
+#   MANIFEST   absolute path to task_manifest.csv (from `eps tier2-plan --scope full`)
+#   RESULTS    per-task result dir (default outputs/tier2_full_task_results)
+#   WORKROOT   per-task ORCA work root (default outputs/tier2_full_work)
+#   T2CONFIG   Tier-2 config (default configs/tier2_orca.yaml)
+# Embarrassingly parallel: many array tasks run concurrently, each ORCA multi-core. Resumable —
+# a re-submit skips tasks whose result.json already exists (the runner is idempotent per task_id).
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export OMP_NUM_THREADS="${NSLOTS:-8}"
+
+MANIFEST="${MANIFEST:?set MANIFEST to the task_manifest.csv path}"
+RESULTS="${RESULTS:-$PWD/outputs/tier2_full_task_results}"
+WORKROOT="${WORKROOT:-$PWD/outputs/tier2_full_work}"
+T2CONFIG="${T2CONFIG:-configs/tier2_orca.yaml}"
+
+# Map this array index to its manifest task_id (task_id is column 1; header is line 1).
+LINE=$((SGE_TASK_ID + 1))
+TASK_ID=$(sed -n "${LINE}p" "$MANIFEST" | cut -d, -f1)
+if [ -z "$TASK_ID" ]; then
+    echo "ARRAY $SGE_TASK_ID: no task_id at line $LINE of $MANIFEST" >&2
+    exit 1
+fi
+
+# Idempotent skip: if this task already has a success result, don't recompute.
+if grep -q success "$RESULTS/$TASK_ID/status.txt" 2>/dev/null; then
+    echo "ARRAY $SGE_TASK_ID: $TASK_ID already done, skipping"
+    exit 0
+fi
+
+echo "ARRAY $SGE_TASK_ID -> task $TASK_ID"
+eps tier2-run-task \
+    --manifest "$MANIFEST" \
+    --task-id "$TASK_ID" \
+    --engine orca \
+    --result-dir "$RESULTS" \
+    --work-root "$WORKROOT" \
+    --config "$T2CONFIG"
+echo "ARRAY $SGE_TASK_ID DONE task=$TASK_ID exit=$?"
