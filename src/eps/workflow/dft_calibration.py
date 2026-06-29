@@ -128,6 +128,8 @@ def run_dft_calibration(
     method_label: str = "MockEngine (mock-b3lyp), gas phase, opt only",
     tier1_config_path: str | Path = DEFAULT_TIER1_CONFIG,
     core_monomers: tuple[str, ...] = CORE_MONOMER_NAMES,
+    n_shards: int = 1,
+    shard_index: int = 0,
 ) -> DFTCalibrationResult:
     """Run the xTB->DFT calibration and the DFT->experiment validation, mock-first.
 
@@ -141,7 +143,9 @@ def run_dft_calibration(
     cache = SQLiteCache(cache_path)
     solvents = {solvent.name: solvent for solvent in load_solvents()}
 
-    monomers = _calibration_monomers(benchmark_path, only=only, limit=limit)
+    monomers = _calibration_monomers(
+        benchmark_path, only=only, limit=limit, n_shards=n_shards, shard_index=shard_index
+    )
 
     rows: list[dict[str, object]] = []
     skipped: list[tuple[str, str]] = []
@@ -308,11 +312,17 @@ def _calibration_monomers(
     *,
     only: str | None,
     limit: int | None,
+    n_shards: int = 1,
+    shard_index: int = 0,
 ) -> list[dict[str, object]]:
     """Load calibration-eligible benchmark rows, dedup by canonical SMILES, apply only/limit.
 
     The first eligible row per canonical SMILES is kept; its solvent feeds the (identical)
     xTB descriptor path, and its converted experimental Eox feeds the DFT->experiment fit.
+
+    For an SGE array run, ``n_shards``/``shard_index`` deterministically partition the deduped
+    monomers (``[shard_index::n_shards]``) so concurrent tasks compute disjoint subsets; the
+    slice is taken AFTER dedup and ``only`` but BEFORE ``limit`` (limit is per-shard).
     """
 
     frame = _load_benchmark(benchmark_path)
@@ -334,6 +344,10 @@ def _calibration_monomers(
                 "label_type": str(row.get("label_type", "")),
             }
         )
+    if n_shards > 1:
+        if not 0 <= shard_index < n_shards:
+            raise ValueError(f"shard_index {shard_index} out of range for n_shards {n_shards}")
+        monomers = monomers[shard_index::n_shards]
     if limit is not None:
         monomers = monomers[:limit]
     return monomers

@@ -9,6 +9,7 @@ from eps.analysis import run_analyze
 from eps.doctor import run_doctor
 from eps.engines import GaussianEngine, MockEngine, XTBEngine
 from eps.engines.gaussian import GAUSSIAN_METHOD_LABEL, load_tier2_config
+from eps.engines.orca import OrcaConfig, OrcaEngine
 from eps.provenance import write_provenance
 from eps.validation.benchmark import (
     DEFAULT_CACHE_PATH as DEFAULT_VALIDATION_CACHE_PATH,
@@ -124,6 +125,32 @@ def _dft_calibration_engines(engine_name: str, config_path):
             # and Freq toggle are baked into the cache key, so editing configs/tier2.yaml
             # (gas -> SMD / opt -> freq) forces a recompute instead of reusing a stale value.
             # (Was the STATIC GAUSSIAN_METHOD_LABEL, which made the DFT cache config-blind.)
+            config.cache_method_label(),
+            config.method_label(),
+        )
+    if engine_name == "orca":
+        # Directive §7 production-grade DFT: real IPEA-xTB descriptor + real ORCA B3LYP/6-31G(d,p)
+        # with per-solvent SMD and Freq (configs/tier2_orca.yaml), the SAME redox path as Tier-2.
+        config = load_tier2_config(config_path)
+        if config.engine != "orca":
+            raise ValueError(
+                f"calibrate-dft --engine orca needs an ORCA tier-2 config; {config_path} declares "
+                f"engine={config.engine!r} (use configs/tier2_orca.yaml)"
+            )
+        dft_engine = OrcaEngine(
+            OrcaConfig(
+                redox_functional=config.method,
+                redox_basis=config.basis,
+                redox_use_freq=config.use_freq,
+                redox_smd=config.use_smd,
+                redox_hirshfeld=True,
+                nprocs=config.nprocshared,
+            )
+        )
+        return (
+            XTBEngine(),
+            "ipea-xtb",
+            dft_engine,
             config.cache_method_label(),
             config.method_label(),
         )
@@ -259,15 +286,29 @@ def main(argv: list[str] | None = None) -> int:
     )
     calibrate_dft.add_argument(
         "--engine",
-        choices=("mock", "gaussian"),
+        choices=("mock", "gaussian", "orca"),
         default="mock",
-        help="DFT engine for adiabatic_ip: mock (default, no binaries) or gaussian (real g16).",
+        help="DFT engine for adiabatic_ip: mock (default, no binaries), gaussian (real g16), or "
+        "orca (real ORCA B3LYP/SMD/Freq, the directive §7 Tier-2 path; needs configs/tier2_orca.yaml).",
     )
     calibrate_dft.add_argument(
         "--config",
         type=Path,
         default=None,
-        help="Tier-2 config (configs/tier2.yaml) for the gaussian engine; defaults to the shipped file.",
+        help="Tier-2 config (configs/tier2.yaml or tier2_orca.yaml) for the DFT engine; defaults to the shipped file.",
+    )
+    calibrate_dft.add_argument(
+        "--n-shards",
+        type=int,
+        default=1,
+        help="Total shards for an SGE array run: this task computes monomers [shard_index::n_shards] "
+        "after dedup, so concurrent array tasks parallelize the DFT (each its own --cache/--outdir).",
+    )
+    calibrate_dft.add_argument(
+        "--shard-index",
+        type=int,
+        default=0,
+        help="0-based shard index for this task (see --n-shards).",
     )
     calibrate_dft.add_argument(
         "--cache",
@@ -824,6 +865,8 @@ def main(argv: list[str] | None = None) -> int:
             only=args.only,
             limit=args.limit,
             method_label=method_label,
+            n_shards=args.n_shards,
+            shard_index=args.shard_index,
         )
         print(f"DFT-calibration engine: {args.engine} ({method_label})")
         print(f"Calibration points (ok): {result.n_points}; skipped: {result.n_skipped}")
