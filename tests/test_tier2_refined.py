@@ -8,6 +8,7 @@ from eps.engines import MockEngine
 from eps.workflow.tier1 import run_tier1
 from eps.workflow.tier2 import (
     DEFAULT_REFINED_WINDOW_MARGIN_V,
+    run_tier2_bandgap,
     run_tier2_dimerization,
     run_tier2_refined_screen,
 )
@@ -116,6 +117,33 @@ def test_refined_screen_consumes_dft_dimerization(tmp_path: Path) -> None:
     if not refined.empty:
         assert (refined["dimerization_source"] == "tier2_dft").all()
         assert (refined["dimerization_dG_kcal_mol"] == -25.0).all()
+
+
+def test_run_tier2_bandgap_mock(tmp_path: Path) -> None:
+    surv = tmp_path / "surv.csv"
+    pd.DataFrame([
+        {"monomer_canonical_smiles": "c1ccsc1", "monomer_name": "thiophene"},
+    ]).to_csv(surv, index=False)
+    out = run_tier2_bandgap(surv, tmp_path / "bg.csv", engine=MockEngine(), lengths=(1, 2))
+    row = out.iloc[0]
+    assert pd.notna(row["tier2_optical_gap_eV"])
+    assert (tmp_path / "bg.csv").exists()
+
+
+def test_refined_screen_consumes_dft_bandgap(tmp_path: Path) -> None:
+    _tier1(tmp_path)
+    surv = pd.read_csv(tmp_path / "ranked.csv")
+    monos = surv[["monomer_canonical_smiles"]].drop_duplicates()
+    monos["tier2_optical_gap_eV"] = 1.80  # exactly the target gap -> zero deviation
+    opt_path = tmp_path / "bg.csv"
+    monos.to_csv(opt_path, index=False)
+    result = run_tier2_refined_screen(
+        tmp_path / "ranked.csv", tmp_path / "refined_bg.csv", optical_dft_path=opt_path
+    )
+    refined = result.refined
+    if not refined.empty:
+        assert (refined["optical_gap_source"] == "tier2_tddft").all()
+        assert (refined["optical_gap_eV"] == 1.80).all()
 
 
 def test_refined_screen_keeps_anion_and_solubility_constraints(tmp_path: Path) -> None:
