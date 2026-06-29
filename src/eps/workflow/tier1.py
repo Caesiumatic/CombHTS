@@ -931,13 +931,26 @@ def infer_all_output_path(output_path: str | Path) -> Path:
     return output.with_name(f"{output.stem}_all{output.suffix or '.csv'}")
 
 
-def _oxidation_calibration(config: dict) -> dict[str, float | bool]:
-    # Single oxidation calibration shared by monomer Eox, solvent anodic limit, and anion Eox (T11).
-    monomer_config = config.get("monomer_eox", {})
+def _oxidation_calibration(config: dict) -> dict[str, float | bool | str]:
+    """Oxidation calibration shared by monomer Eox, solvent anodic limit, and anion Eox (T11).
+
+    Directive §7 mandates the correction be an xTB->DFT map applied to all Tier-1 results before
+    filtering. This loader PREFERS the DFT-anchored block ``calibration.xtb_to_dft.monomer_oxidation``
+    when it is present and enabled; otherwise it falls back to the legacy experiment-anchored
+    ``calibration.monomer_eox`` (kept until the live DFT-on-benchmark numbers are pinned). The
+    returned ``anchor`` records which one was used so the harvest is self-describing.
+    """
+
+    dft_block = config.get("xtb_to_dft", {}).get("monomer_oxidation", {})
+    if bool(dft_block.get("enabled", False)):
+        block, anchor = dft_block, "dft"
+    else:
+        block, anchor = config.get("monomer_eox", {}), str(config.get("monomer_eox", {}).get("anchor", "experiment"))
     return {
-        "enabled": bool(monomer_config.get("enabled", False)),
-        "slope": float(monomer_config.get("slope", 1.0)),
-        "intercept": float(monomer_config.get("intercept", 0.0)),
+        "enabled": bool(block.get("enabled", False)),
+        "slope": float(block.get("slope", 1.0)),
+        "intercept": float(block.get("intercept", 0.0)),
+        "anchor": anchor,
     }
 
 
