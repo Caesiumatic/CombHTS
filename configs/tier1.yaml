@@ -76,10 +76,27 @@ secondary_descriptors:
   # enter a hard filter or the composite score. Default on per the directive.
   enabled: true
 calibration:
+  # Directive §7 mandates the Tier-1 correction be an xTB->DFT linear map ("mapping xTB properties
+  # to DFT values ... apply these corrections to all Tier-1 results before filtering"). The loader
+  # _oxidation_calibration PREFERS xtb_to_dft.monomer_oxidation when enabled, else falls back to the
+  # experiment-anchored monomer_eox below. The DFT-anchored block is the directive target; its
+  # slope/intercept are pinned from the live ORCA DFT-on-benchmark run (eps calibrate-dft --engine
+  # orca). Flipping its `enabled` to true is the single switch that makes production directive-literal
+  # — it then REQUIRES a fresh Tier-1 re-harvest + re-validation (different survivor set).
+  xtb_to_dft:
+    anchor: dft
+    monomer_oxidation:
+      enabled: false              # PENDING the DFT-on-benchmark numbers (see source). Identity until pinned.
+      scope: all_computed_oxidation
+      source: PENDING_orca_dft_on_benchmark_2026_06
+      slope: 1.0
+      intercept: 0.0
+      notes: "Directive §7 xTB->DFT oxidation calibration (V vs Ag/AgCl): dft_Eox_V = slope*xtb_Eox_V + intercept, fit on the benchmark species where both IPEA-xTB and B3LYP/6-31G(d,p)/SMD exist. Applied to ALL computed oxidation potentials (monomer Eox, solvent ANODIC limit, anion Eox), mirroring the legacy T11 scope but DFT-anchored. Slope/intercept + n + R^2 pinned from outputs/dft_calibration/xtb_to_dft_calibration.json (xtb_to_dft_V) once the ORCA run lands; cathodic/EA/optical axes are calibrated separately (TD-DFT for optical, §4.1)."
   monomer_eox:
     enabled: true
+    anchor: experiment
     scope: all_computed_oxidation
     source: agagcl_peak_strict_2026_06_26_ipea_xtb
     slope: 0.9311635669090172
     intercept: -0.08359912823143266
-    notes: "Single oxidation calibration applied to ALL computed oxidation potentials per T11: monomer Eox, solvent ANODIC limit, and anion Eox. NOT applied to the solvent cathodic/reduction limit (a reduction potential, left raw/informational). Key name kept as monomer_eox for backward compatibility. ENGINE = IPEA-xTB vertical IP (directive §4.1; `xtb --vipea`, GFN1 + empirical shift, ALPB at each solvent dielectric), replacing the prior GFN2-adiabatic descriptor on 2026-06-26 to restore §4.1 compliance (THINK T18). Profile agagcl_peak_strict (tier-A native-AgAgCl peak rows, n_points=9); R^2=0.772; in-sample MAE=0.177 V; LOO-CV MAE=0.246 V (SGE 417986, 49-row benchmark). Honest-floor band 0.20-0.35 V (T3). NOTE: switching GFN2->IPEA raised strict LOO-CV 0.197->0.246 and NARROWS/REVERSES the strict-vs-relaxed gap (under IPEA, relaxed n=29 LOO 0.198 < strict 0.246, but strict keeps higher R^2 0.772 vs 0.559) — strict pinned for tier-A purity + R^2 + continuity; strict-vs-relaxed re-confirmation is a freeze-time item (THINK T1/T18). Fit on monomer data, so absolute calibrated solvent/anion numbers are screening-grade extrapolations (intercept cancels in every margin)."
+    notes: "INTERIM experiment-anchored map, ACTIVE until the directive §7 xtb_to_dft block above is pinned + enabled. Single oxidation calibration applied to ALL computed oxidation potentials per T11: monomer Eox, solvent ANODIC limit, and anion Eox. NOT applied to the solvent cathodic/reduction limit (a reduction potential, left raw/informational). Key name kept as monomer_eox for backward compatibility. ENGINE = IPEA-xTB vertical IP (directive §4.1; `xtb --vipea`, GFN1 + empirical shift, ALPB at each solvent dielectric), replacing the prior GFN2-adiabatic descriptor on 2026-06-26 to restore §4.1 compliance (THINK T18). Profile agagcl_peak_strict (tier-A native-AgAgCl peak rows, n_points=9); R^2=0.772; in-sample MAE=0.177 V; LOO-CV MAE=0.246 V (SGE 417986, 49-row benchmark). Honest-floor band 0.20-0.35 V (T3). NOTE: this is xTB->EXPERIMENT (the directive specifies xTB->DFT); it is retained as the interim because the DFT-on-benchmark numbers are not yet pinned. Fit on monomer data, so absolute calibrated solvent/anion numbers are screening-grade extrapolations (intercept cancels in every margin)."

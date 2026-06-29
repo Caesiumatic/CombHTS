@@ -10,9 +10,29 @@ from eps.engines import CalcRequest, CalcResult, Engine, MockEngine
 from eps.workflow.tier1 import (
     SCORING_CARRY_COLUMNS,
     _apply_linear_calibration,
+    _oxidation_calibration,
     annotate_tier1_filters,
     run_tier1,
 )
+
+
+def test_oxidation_calibration_prefers_dft_anchor_when_enabled() -> None:
+    # Directive §7: the production correction must be the xTB->DFT map when it is pinned + enabled.
+    config = {
+        "monomer_eox": {"enabled": True, "anchor": "experiment", "slope": 0.93, "intercept": -0.08},
+        "xtb_to_dft": {
+            "anchor": "dft",
+            "monomer_oxidation": {"enabled": True, "slope": 0.95, "intercept": -0.05},
+        },
+    }
+    cal = _oxidation_calibration(config)
+    assert cal == {"enabled": True, "slope": 0.95, "intercept": -0.05, "anchor": "dft"}
+
+    # Disabled DFT block -> falls back to the experiment-anchored interim, recorded as such.
+    config["xtb_to_dft"]["monomer_oxidation"]["enabled"] = False
+    fallback = _oxidation_calibration(config)
+    assert fallback["anchor"] == "experiment"
+    assert fallback["slope"] == 0.93
 
 
 def test_tier1_audit_exposes_raw_calibrated_filter_and_alias_columns(tmp_path: Path) -> None:
