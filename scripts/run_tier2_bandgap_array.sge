@@ -1,0 +1,31 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_tier2_bandgap
+#$ -j y
+#$ -pe smp 16
+#$ -l h_rt=24:00:00
+#$ -o /home/shic4/combhts_tier2_bandgap.o$JOB_ID.$TASK_ID
+# Tier-2 TD-DFT band-gap convergence (§4.2 f5), array-parallel. Each task handles one shard of the
+# unique survivor monomers (n=1..6 CAM-B3LYP TD-DFT), own cache + output; finalize concats.
+# Submit:  qsub -t 1-$NSHARDS -v SURV=...,OUTDIR=...,NSHARDS=... scripts/run_tier2_bandgap_array.sge
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export OMP_NUM_THREADS="${NSLOTS:-16}"
+
+SURV="${SURV:?set SURV}"; OUTDIR="${OUTDIR:?set OUTDIR}"; NSHARDS="${NSHARDS:?set NSHARDS}"
+mkdir -p "$OUTDIR/bandgap_shards"
+IDX=$((SGE_TASK_ID - 1))
+OUT="$OUTDIR/bandgap_shards/shard_${IDX}.csv"
+if [ -s "$OUT" ]; then echo "bandgap shard $IDX already done"; exit 0; fi
+python -m eps.cli tier2-bandgap \
+    --survivors "$SURV" --output "$OUT" --engine orca \
+    --cache "$OUTDIR/bandgap_shards/cache_${IDX}.sqlite" \
+    --n-shards "$NSHARDS" --shard-index "$IDX"
+echo "bandgap shard $IDX DONE exit=$?"

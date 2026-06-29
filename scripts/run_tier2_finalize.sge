@@ -1,0 +1,42 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_tier2_finalize
+#$ -j y
+#$ -pe smp 1
+#$ -l h_rt=01:00:00
+#$ -o /home/shic4/combhts_tier2_finalize.o$JOB_ID
+# Capstone: held on the redox + dimer + bandgap arrays. Harvests the redox results, concats the
+# dimer/bandgap shards, and runs the §4.2 refined screen with ALL DFT inputs (f1/f2 redox, f4
+# dimerization, f5 band gap) -> outputs/tier2_full/tier2_refined.csv.
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+
+OUTDIR="${OUTDIR:?set OUTDIR}"; SURV="${SURV:?set SURV}"
+PLANDIR="${PLANDIR:?set PLANDIR}"; RESULTS="${RESULTS:?set RESULTS}"
+
+python -m eps.cli tier2-harvest \
+    --manifest "$PLANDIR/task_manifest.csv" --result-dir "$RESULTS" \
+    --output "$OUTDIR/redox_harvest.csv" --report "$OUTDIR/redox_report.md" || true
+
+python - "$OUTDIR" <<'PY'
+import sys, glob, pandas as pd
+out = sys.argv[1]
+for name in ("dimer", "bandgap"):
+    files = sorted(glob.glob(f"{out}/{name}_shards/shard_*.csv"))
+    if files:
+        pd.concat([pd.read_csv(f) for f in files], ignore_index=True).to_csv(
+            f"{out}/{'dimerization' if name=='dimer' else 'bandgap'}.csv", index=False)
+    print(f"{name}: concatenated {len(files)} shards")
+PY
+
+DIM="$OUTDIR/dimerization.csv"; BG="$OUTDIR/bandgap.csv"
+ARGS=(--survivors "$SURV" --dft-results "$OUTDIR/redox_harvest.csv" --output "$OUTDIR/tier2_refined.csv")
+[ -f "$DIM" ] && ARGS+=(--dimerization-dft "$DIM")
+[ -f "$BG" ] && ARGS+=(--optical-dft "$BG")
+python -m eps.cli tier2-screen "${ARGS[@]}"
+echo "FINALIZE DONE -> $OUTDIR/tier2_refined.csv"

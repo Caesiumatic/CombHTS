@@ -119,6 +119,19 @@ def test_refined_screen_consumes_dft_dimerization(tmp_path: Path) -> None:
         assert (refined["dimerization_dG_kcal_mol"] == -25.0).all()
 
 
+def test_dimerization_sharding_partitions_pairs(tmp_path: Path) -> None:
+    surv = tmp_path / "surv.csv"
+    pd.DataFrame([
+        {"monomer_canonical_smiles": "c1ccsc1", "monomer_name": "thiophene", "solvent_name": "acetonitrile"},
+        {"monomer_canonical_smiles": "c1cc[nH]c1", "monomer_name": "pyrrole", "solvent_name": "acetonitrile"},
+    ]).to_csv(surv, index=False)
+    config = Path(__file__).resolve().parents[1] / "configs" / "tier2_orca.yaml"
+    s0 = run_tier2_dimerization(surv, config, tmp_path / "d0.csv", engine=MockEngine(), n_shards=2, shard_index=0)
+    s1 = run_tier2_dimerization(surv, config, tmp_path / "d1.csv", engine=MockEngine(), n_shards=2, shard_index=1)
+    assert len(s0) == 1 and len(s1) == 1  # 2 pairs split across 2 shards
+    assert set(s0["monomer_name"]) | set(s1["monomer_name"]) == {"thiophene", "pyrrole"}
+
+
 def test_run_tier2_bandgap_mock(tmp_path: Path) -> None:
     surv = tmp_path / "surv.csv"
     pd.DataFrame([
