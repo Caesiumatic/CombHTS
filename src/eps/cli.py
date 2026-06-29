@@ -70,6 +70,8 @@ from eps.workflow.tier2 import (
     DEFAULT_TIER2_WORK_ROOT,
     harvest_tier2_results,
     plan_tier2_pilot,
+    run_tier2_bandgap,
+    run_tier2_dimerization,
     run_tier2_refined_screen,
     run_tier2_task,
     write_tier2_dry_run_inputs,
@@ -581,6 +583,27 @@ def main(argv: list[str] | None = None) -> int:
         default=DEFAULT_REFINED_WINDOW_MARGIN_V,
         help="Refined window margin in V (monomer AIP must be this far below the solvent anodic limit).",
     )
+    tier2_screen.add_argument(
+        "--dimerization-dft", type=Path, default=None,
+        help="Optional Tier-2 DFT dimerization CSV (overrides the §5 f4 term).",
+    )
+    tier2_screen.add_argument(
+        "--optical-dft", type=Path, default=None,
+        help="Optional Tier-2 TD-DFT band-gap CSV (overrides the §5 f5 term).",
+    )
+
+    for _name, _help in (
+        ("tier2-dimerization", "Directive §4.2 DFT dimerization ΔG per (monomer,solvent) via ORCA (shardable)"),
+        ("tier2-bandgap", "Directive §4.2 TD-DFT band-gap convergence per monomer via ORCA (shardable)"),
+    ):
+        _p = subparsers.add_parser(_name, help=_help)
+        _p.add_argument("--survivors", type=Path, required=True, help="Tier-1 survivors CSV.")
+        _p.add_argument("--output", type=Path, required=True, help="Output CSV (shard-specific in an array).")
+        _p.add_argument("--config", type=Path, default=Path("configs/tier2_orca.yaml"), help="Tier-2 ORCA config.")
+        _p.add_argument("--cache", type=Path, default=None, help="SQLite cache (shard-specific in an array).")
+        _p.add_argument("--engine", choices=("mock", "orca"), default="orca", help="Calculation engine.")
+        _p.add_argument("--n-shards", type=int, default=1, help="Total array shards (parallelism).")
+        _p.add_argument("--shard-index", type=int, default=0, help="0-based shard index for this task.")
 
     tier3 = subparsers.add_parser(
         "tier3",
@@ -1090,6 +1113,19 @@ def main(argv: list[str] | None = None) -> int:
             print("WARNING: partial harvest; failed/missing values were not filled from Tier-1.")
         return 2 if result.partial else 0
 
+    if args.command in ("tier2-dimerization", "tier2-bandgap"):
+        engine = MockEngine() if args.engine == "mock" else None  # None -> real OrcaEngine
+        common = dict(
+            cache_path=args.cache, engine=engine,
+            n_shards=args.n_shards, shard_index=args.shard_index,
+        )
+        if args.command == "tier2-dimerization":
+            out = run_tier2_dimerization(args.survivors, args.config, args.output, **common)
+        else:
+            out = run_tier2_bandgap(args.survivors, args.output, **common)
+        print(f"{args.command}: shard {args.shard_index}/{args.n_shards}, {len(out)} items -> {args.output}")
+        return 0
+
     if args.command == "tier2-screen":
         if not Path(args.survivors).exists():
             print(f"ERROR: Tier-1 survivors CSV not found: {args.survivors}")
@@ -1099,6 +1135,8 @@ def main(argv: list[str] | None = None) -> int:
             args.survivors,
             args.output,
             dft_results_path=args.dft_results,
+            dimerization_dft_path=args.dimerization_dft,
+            optical_dft_path=args.optical_dft,
             refined_window_margin_V=args.margin,
         )
         print(f"Tier-2 refined screen (window margin {result.refined_window_margin_V:.2f} V)")

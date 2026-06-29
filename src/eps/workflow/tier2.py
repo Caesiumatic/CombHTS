@@ -618,6 +618,8 @@ def run_tier2_dimerization(
     cache_path: str | Path | None = None,
     polymerization_path: str | Path | None = None,
     engine=None,
+    n_shards: int = 1,
+    shard_index: int = 0,
 ) -> pd.DataFrame:
     """Directive §4.2 DFT dimerization ΔG per unique (monomer, solvent) via ORCA.
 
@@ -655,7 +657,9 @@ def run_tier2_dimerization(
         raise ValueError("survivors CSV needs a monomer SMILES column and solvent_name")
     name_col = "monomer_name" if "monomer_name" in frame.columns else smiles_col
 
-    pairs = frame[[smiles_col, name_col, "solvent_name"]].drop_duplicates()
+    pairs = frame[[smiles_col, name_col, "solvent_name"]].drop_duplicates().reset_index(drop=True)
+    if n_shards > 1:  # array-parallel: this task handles every n_shards-th pair (own cache+output)
+        pairs = pairs.iloc[shard_index::n_shards]
     rows: list[dict[str, Any]] = []
     for _, r in pairs.iterrows():
         smi, name, sname = str(r[smiles_col]), str(r[name_col]), str(r["solvent_name"])
@@ -691,6 +695,8 @@ def run_tier2_bandgap(
     polymerization_path: str | Path | None = None,
     engine=None,
     lengths: tuple[int, ...] = (1, 2, 3, 4, 5, 6),
+    n_shards: int = 1,
+    shard_index: int = 0,
 ) -> pd.DataFrame:
     """Directive §4.2 TD-DFT band-gap convergence per unique monomer via ORCA (CAM-B3LYP TD-DFT).
 
@@ -723,8 +729,11 @@ def run_tier2_bandgap(
     name_col = "monomer_name" if "monomer_name" in frame.columns else smiles_col
     largest = max(lengths)
 
+    monomers = frame[[smiles_col, name_col]].drop_duplicates().reset_index(drop=True)
+    if n_shards > 1:  # array-parallel: this task handles every n_shards-th monomer
+        monomers = monomers.iloc[shard_index::n_shards]
     rows: list[dict[str, Any]] = []
-    for _, r in frame[[smiles_col, name_col]].drop_duplicates().iterrows():
+    for _, r in monomers.iterrows():
         smi, name = str(r[smiles_col]), str(r[name_col])
         spec = specs.get(name)
         monomer = Monomer(name=name, monomer_class="", smiles=smi, canonical_smiles=smi)

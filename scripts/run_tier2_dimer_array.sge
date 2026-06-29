@@ -1,0 +1,32 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N combhts_tier2_dimer
+#$ -j y
+#$ -pe smp 16
+#$ -l h_rt=24:00:00
+#$ -o /home/shic4/combhts_tier2_dimer.o$JOB_ID.$TASK_ID
+# Tier-2 DFT dimerization (§4.2 f4), array-parallel. Each task handles one shard of the unique
+# (monomer, solvent) survivor pairs, with its OWN cache + output, then the finalize step concats.
+# Submit:  qsub -t 1-$NSHARDS -v SURV=...,OUTDIR=...,NSHARDS=...,T2CONFIG=... scripts/run_tier2_dimer_array.sge
+set -uo pipefail
+if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh; fi
+module load anaconda/3-2023.09
+module load openmpi/4.1.8
+module load orca/6.1.0-418
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate combhts
+cd "$HOME/CombHTS"
+export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
+export OMP_NUM_THREADS="${NSLOTS:-16}"
+
+SURV="${SURV:?set SURV}"; OUTDIR="${OUTDIR:?set OUTDIR}"; NSHARDS="${NSHARDS:?set NSHARDS}"
+T2CONFIG="${T2CONFIG:-configs/tier2_orca.yaml}"
+mkdir -p "$OUTDIR/dimer_shards"
+IDX=$((SGE_TASK_ID - 1))
+OUT="$OUTDIR/dimer_shards/shard_${IDX}.csv"
+if [ -s "$OUT" ]; then echo "dimer shard $IDX already done"; exit 0; fi
+python -m eps.cli tier2-dimerization \
+    --survivors "$SURV" --output "$OUT" --config "$T2CONFIG" --engine orca \
+    --cache "$OUTDIR/dimer_shards/cache_${IDX}.sqlite" \
+    --n-shards "$NSHARDS" --shard-index "$IDX"
+echo "dimer shard $IDX DONE exit=$?"

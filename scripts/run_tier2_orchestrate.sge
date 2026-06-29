@@ -41,12 +41,32 @@ python -m eps.cli tier2-plan \
     --scope full --allow-large-scale \
     --outdir outputs/tier2_full_plan
 
-MANIFEST="$PWD/outputs/tier2_full_plan/task_manifest.csv"
+SURV="$PWD/outputs/tier1_ipea_cosmors/survivors.csv"
+PLANDIR="$PWD/outputs/tier2_full_plan"
+MANIFEST="$PLANDIR/task_manifest.csv"
+RESULTS="$PWD/outputs/tier2_full_task_results"
+WORKROOT="$PWD/outputs/tier2_full_work"
+OUTDIR="$PWD/outputs/tier2_full"
+NSHARDS=32
+mkdir -p "$OUTDIR"
 N=$(( $(wc -l < "$MANIFEST") - 1 ))
-echo "ORCH TIER2 TASKS: $N"
+echo "ORCH TIER2 redox tasks: $N"
 if [ "$N" -lt 1 ]; then echo "ORCH ABORT: no tasks planned."; exit 1; fi
 
-qsub -t 1-"$N" \
-    -v MANIFEST="$MANIFEST",RESULTS="$PWD/outputs/tier2_full_task_results",WORKROOT="$PWD/outputs/tier2_full_work",T2CONFIG=configs/tier2_orca.yaml \
-    scripts/run_tier2_array.sge
-echo "ORCH: submitted Tier-2 DFT array of $N tasks (16 cores each)"
+# Fire all three §4.2 DFT streams in parallel; capture each job id for the finalize hold.
+REDOX=$(qsub -t 1-"$N" \
+    -v MANIFEST="$MANIFEST",RESULTS="$RESULTS",WORKROOT="$WORKROOT",T2CONFIG=configs/tier2_orca.yaml \
+    scripts/run_tier2_array.sge | grep -oE '[0-9]+' | head -1)
+DIMER=$(qsub -t 1-"$NSHARDS" \
+    -v SURV="$SURV",OUTDIR="$OUTDIR",NSHARDS="$NSHARDS",T2CONFIG=configs/tier2_orca.yaml \
+    scripts/run_tier2_dimer_array.sge | grep -oE '[0-9]+' | head -1)
+BG=$(qsub -t 1-"$NSHARDS" \
+    -v SURV="$SURV",OUTDIR="$OUTDIR",NSHARDS="$NSHARDS" \
+    scripts/run_tier2_bandgap_array.sge | grep -oE '[0-9]+' | head -1)
+echo "ORCH: redox=$REDOX ($N tasks), dimer=$DIMER ($NSHARDS shards), bandgap=$BG ($NSHARDS shards)"
+
+# Capstone: harvest + concat + refined screen with ALL DFT inputs, held on the three arrays.
+qsub -hold_jid "$REDOX,$DIMER,$BG" \
+    -v OUTDIR="$OUTDIR",SURV="$SURV",PLANDIR="$PLANDIR",RESULTS="$RESULTS" \
+    scripts/run_tier2_finalize.sge
+echo "ORCH: finalize held on $REDOX,$DIMER,$BG -> $OUTDIR/tier2_refined.csv"
