@@ -155,6 +155,21 @@ class OrcaEngine(Engine):
                     "solvent": self.config.optical_solvent,
                 },
             )
+        if req.quantity == "gas_energy":
+            # Optimized single-species energy (ΔG if Freq, else SCF) at B3LYP/6-31G(d,p), per-request
+            # SMD. Building block for the §4.2 DFT dimerization ΔG (reaction energy of opt'd species).
+            smd_solvent = req.solvent_model_name if self.config.redox_smd else None
+            parsed = self._run_redox_species(
+                binary, req.species, charge=req.species.charge,
+                multiplicity=req.species.multiplicity, smd_solvent=smd_solvent, hirshfeld=False,
+            )
+            value = _redox_energy_eh(parsed) * HARTREE_TO_EV
+            return CalcResult(
+                value=value, unit="eV", method=req.method,
+                raw={"engine": "OrcaEngine", "quantity": req.quantity,
+                     "energy_basis": parsed["energy_basis"], "smd_solvent": smd_solvent,
+                     "method_label": self.config.redox_method_label()},
+            )
         if req.quantity == "adiabatic_ip":
             value, raw = self._adiabatic_redox(binary, req, charge_delta=1)
             return CalcResult(value=value, unit="eV", method=req.method, raw=raw)

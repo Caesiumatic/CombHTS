@@ -139,6 +139,33 @@ def test_redox_uses_gibbs_when_freq_on(monkeypatch) -> None:
     assert abs(result.value - 0.3 * HARTREE_TO_EV) < 1e-6
 
 
+def test_gas_energy_returns_optimized_energy_with_smd(monkeypatch) -> None:
+    monkeypatch.setattr(orca.shutil, "which", lambda _name: "/fake/orca")
+    captured = {}
+
+    def fake_run(cmd, check=False, capture_output=False, text=False, cwd=None):  # noqa: ARG001
+        from pathlib import Path
+
+        captured["inp"] = Path(cmd[1]).read_text(encoding="utf-8")
+        return _normal(
+            "FINAL SINGLE POINT ENERGY  -553.250000\n"
+            "Final Gibbs free energy  ...  -553.100000 Eh\n"
+            "ORCA TERMINATED NORMALLY\n"
+        )
+
+    monkeypatch.setattr(orca.subprocess, "run", fake_run)
+    engine = OrcaEngine(OrcaConfig(redox_use_freq=True, redox_smd=True))
+    req = CalcRequest(
+        species=_THIOPHENE, method="m", solvent_eps_r=37.5,
+        solvent_model_name="acetonitrile", quantity="gas_energy",
+    )
+    result = engine.run(req)
+    # Freq on -> Gibbs (-553.1 Eh) selected, converted to eV; SMD block present.
+    assert abs(result.value - (-553.100000 * HARTREE_TO_EV)) < 1e-6
+    assert 'SMDsolvent "acetonitrile"' in captured["inp"]
+    assert result.raw["energy_basis"] == "gibbs"
+
+
 def test_redox_gas_phase_when_smd_disabled(monkeypatch) -> None:
     monkeypatch.setattr(orca.shutil, "which", lambda _name: "/fake/orca")
     captured = {}

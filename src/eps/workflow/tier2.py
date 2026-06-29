@@ -517,22 +517,50 @@ def run_tier2_refined_screen(
     filters = tier1_config["filters"]
 
     eox_used, pending = _resolve_monomer_eox(frame, dft_results_path)
+    dft = _load_dft_for_screen(dft_results_path)
     refined = frame.copy()
     refined["monomer_Eox_used_V_vs_AgAgCl"] = eox_used
     refined["tier2_dft_pending"] = pending
+
+    # Solvent anodic limit: prefer the Tier-2 DFT value (entity_type=solvent, adiabatic_ip),
+    # else keep the Tier-1 value (directive §4.2 refined filter uses the solvent anodic limit).
+    solvent_anodic_dft = refined["solvent_name"].map(
+        _dft_potential_map(dft, entity_type="solvent", quantity="adiabatic_ip")
+    )
+    refined["solvent_anodic_used_V"] = solvent_anodic_dft.fillna(refined["solvent_anodic_limit_V"])
+    refined["solvent_anodic_source"] = solvent_anodic_dft.notna().map(
+        {True: "tier2_dft", False: "tier1"}
+    )
     refined["refined_window_margin_V"] = (
-        refined["solvent_anodic_limit_V"] - refined["monomer_Eox_used_V_vs_AgAgCl"]
+        refined["solvent_anodic_used_V"] - refined["monomer_Eox_used_V_vs_AgAgCl"]
+    )
+
+    # Anion oxidation: prefer the Tier-2 DFT value (entity_type=electrolyte_anion, adiabatic_ip),
+    # keyed by the anion SMILES; else keep the Tier-1 anion stability margin.
+    anion_eox_dft = (
+        refined["anion_canonical_smiles"].map(
+            _dft_potential_map(dft, entity_type="electrolyte_anion", quantity="adiabatic_ip")
+        )
+        if "anion_canonical_smiles" in refined.columns
+        else pd.Series([float("nan")] * len(refined), index=refined.index)
+    )
+    anion_margin_dft = anion_eox_dft - refined["monomer_Eox_used_V_vs_AgAgCl"]
+    refined["anion_stability_margin_used_V"] = anion_margin_dft.fillna(
+        refined["anion_stability_margin_V"]
     )
 
     pass_window = refined["refined_window_margin_V"] > float(refined_window_margin_V)
-    pass_anion = refined["anion_stability_margin_V"] > float(filters["min_anion_stability_margin_V"])
+    pass_anion = refined["anion_stability_margin_used_V"] > float(filters["min_anion_stability_margin_V"])
     pass_solubility = refined["solvation_dG_kcal_mol"] < float(filters["max_solvation_dG_kcal_mol"])
     refined["pass_refined_window_margin"] = pass_window
     refined["passes_tier2_refined_filters"] = pass_window & pass_anion & pass_solubility
 
     survivors = refined.loc[refined["passes_tier2_refined_filters"]].reset_index(drop=True)
-    # Re-rank the refined survivors with the §5 composite (drop the stale Tier-1 score columns so
-    # add_composite_score recomputes cleanly over the refined set).
+    # Re-rank with the §5 composite over the REFINED (Tier-2-DFT-where-available) inputs: feed the
+    # refined window + anion margins into the composite's input columns so the score, not just the
+    # filter, reflects Tier-2. Drop stale Tier-1 score columns so add_composite_score recomputes.
+    survivors["window_margin_V"] = survivors["refined_window_margin_V"]
+    survivors["anion_stability_margin_V"] = survivors["anion_stability_margin_used_V"]
     survivors = survivors.drop(
         columns=[c for c in ("composite_score", "pareto_front") if c in survivors.columns],
         errors="ignore",
@@ -584,6 +612,38 @@ def _resolve_monomer_eox(
                 eox = eox.fillna(frame["monomer_Eox_filter_V_vs_AgAgCl"])
                 return eox, False
     return frame["monomer_Eox_filter_V_vs_AgAgCl"], True
+
+
+def _load_dft_for_screen(dft_results_path: str | Path | None) -> pd.DataFrame | None:
+    """Load a full-scope Tier-2 harvest for the refined screen, or None if absent/old-schema.
+
+    A monomer-only harvest (no entity_type/redox_potential columns) returns None, so solvent/anion
+    DFT overrides simply fall back to Tier-1 — backward compatible with the old harvest shape.
+    """
+
+    if dft_results_path is None or not Path(dft_results_path).exists():
+        return None
+    df = pd.read_csv(dft_results_path)
+    required = {"entity_type", "quantity", "redox_potential_V_vs_AgAgCl"}
+    return df if required.issubset(df.columns) else None
+
+
+def _dft_potential_map(
+    dft: pd.DataFrame | None,
+    *,
+    entity_type: str,
+    quantity: str,
+    key_column: str | None = None,
+) -> dict[str, float]:
+    """Map {solvent_name | species SMILES -> redox_potential_V} for one entity_type+quantity."""
+
+    if dft is None:
+        return {}
+    sub = dft[(dft["entity_type"] == entity_type) & (dft["quantity"] == quantity)]
+    sub = sub.dropna(subset=["redox_potential_V_vs_AgAgCl"])
+    if key_column is None:
+        key_column = "solvent_name" if entity_type == "solvent" else "canonical_smiles"
+    return dict(zip(sub[key_column], sub["redox_potential_V_vs_AgAgCl"], strict=False))
 
 
 def _manifest_rows_from_selection(

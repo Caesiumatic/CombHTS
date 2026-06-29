@@ -53,6 +53,36 @@ def test_refined_screen_uses_dft_eox_when_supplied(tmp_path: Path) -> None:
         assert (refined["monomer_Eox_used_V_vs_AgAgCl"] == 0.42).all()
 
 
+def test_refined_screen_uses_dft_solvent_anodic_when_full_scope_harvest(tmp_path: Path) -> None:
+    t1 = _tier1(tmp_path)
+    monomers = t1.ranked["monomer_canonical_smiles"].drop_duplicates().tolist()
+    solvents = t1.ranked["solvent_name"].drop_duplicates().tolist()
+    rows = []
+    for m in monomers:  # monomer oxidation rows (populate the monomer-Eox column)
+        rows.append({
+            "entity_type": "monomer", "quantity": "adiabatic_ip",
+            "monomer_canonical_smiles": m, "canonical_smiles": m, "solvent_name": solvents[0],
+            "tier2_monomer_Eox_V_vs_AgAgCl": 0.50, "redox_potential_V_vs_AgAgCl": 0.50,
+        })
+    for s in solvents:  # solvent anodic rows with a deliberately HIGH DFT anodic limit (9.0 V)
+        rows.append({
+            "entity_type": "solvent", "quantity": "adiabatic_ip",
+            "monomer_canonical_smiles": "", "canonical_smiles": "CC#N", "solvent_name": s,
+            "tier2_monomer_Eox_V_vs_AgAgCl": None, "redox_potential_V_vs_AgAgCl": 9.0,
+        })
+    dft_path = tmp_path / "dft_full.csv"
+    pd.DataFrame(rows).to_csv(dft_path, index=False)
+
+    result = run_tier2_refined_screen(
+        tmp_path / "ranked.csv", tmp_path / "refined_full.csv", dft_results_path=dft_path
+    )
+    refined = result.refined
+    if not refined.empty:
+        assert (refined["solvent_anodic_source"] == "tier2_dft").all()
+        # refined window = DFT anodic (9.0) - DFT monomer Eox (0.50) = 8.5 V
+        assert (refined["refined_window_margin_V"].round(2) == 8.50).all()
+
+
 def test_refined_screen_keeps_anion_and_solubility_constraints(tmp_path: Path) -> None:
     _tier1(tmp_path)
     result = run_tier2_refined_screen(tmp_path / "ranked.csv", tmp_path / "refined.csv")
