@@ -6,7 +6,8 @@
 # Usage:   bash scripts/launch_tier2_fullsweep.sh [TIER1_JOBID]
 #   With TIER1_JOBID: the arrays are submitted with -hold_jid so they wait for Tier-1 to finish.
 #   Without it: submits immediately (use once Tier-1 has already produced tier1_all.csv).
-set -uo pipefail
+# No `set -u`: the optional empty HOLDOPT array trips "unbound variable" on Lop's older bash.
+set -o pipefail
 HOLD="${1:-}"
 cd "$HOME/CombHTS"
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
