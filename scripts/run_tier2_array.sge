@@ -2,6 +2,8 @@
 #$ -S /bin/bash
 #$ -N combhts_tier2_array
 #$ -j y
+#$ -pe smp 16
+#$ -l h_rt=24:00:00
 #$ -o /home/shic4/combhts_tier2_array.o$JOB_ID.$TASK_ID
 # Tier-2 DFT array on Lop: ONE ORCA task per Tier-2 manifest row (directive §4.2).
 # Submit with the array range matching the manifest task count, e.g.:

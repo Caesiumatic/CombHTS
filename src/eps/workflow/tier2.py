@@ -494,6 +494,7 @@ def run_tier2_refined_screen(
     output_path: str | Path,
     *,
     dft_results_path: str | Path | None = None,
+    dimerization_dft_path: str | Path | None = None,
     tier1_config_path: str | Path | None = None,
     scoring_config_path: str | Path | None = None,
     refined_window_margin_V: float = DEFAULT_REFINED_WINDOW_MARGIN_V,
@@ -561,6 +562,20 @@ def run_tier2_refined_screen(
     # filter, reflects Tier-2. Drop stale Tier-1 score columns so add_composite_score recomputes.
     survivors["window_margin_V"] = survivors["refined_window_margin_V"]
     survivors["anion_stability_margin_V"] = survivors["anion_stability_margin_used_V"]
+    # f4: override the dimerization ΔG with the Tier-2 DFT value (per monomer×solvent) where a DFT
+    # dimerization CSV is supplied (run_tier2_dimerization); else keep the Tier-1 GFN2 value.
+    if dimerization_dft_path is not None and Path(dimerization_dft_path).exists() and not survivors.empty:
+        dim = pd.read_csv(dimerization_dft_path)
+        col = "tier2_dimerization_dG_kcal_mol"
+        keys = ["monomer_canonical_smiles", "solvent_name"]
+        if col in dim.columns and set(keys).issubset(dim.columns) and set(keys).issubset(survivors.columns):
+            dmap = dim.dropna(subset=[col]).set_index(keys)[col].to_dict()
+            dft_dim = survivors.set_index(keys).index.map(dmap.get)
+            survivors["dimerization_dG_kcal_mol"] = [
+                d if d is not None else o
+                for d, o in zip(dft_dim, survivors["dimerization_dG_kcal_mol"], strict=False)
+            ]
+            survivors["dimerization_source"] = ["tier2_dft" if d is not None else "tier1" for d in dft_dim]
     survivors = survivors.drop(
         columns=[c for c in ("composite_score", "pareto_front") if c in survivors.columns],
         errors="ignore",
@@ -581,6 +596,79 @@ def run_tier2_refined_screen(
         tier2_dft_pending=bool(pending),
         output_path=out,
     )
+
+
+def run_tier2_dimerization(
+    survivors_path: str | Path,
+    config_path: str | Path,
+    output_path: str | Path,
+    *,
+    cache_path: str | Path | None = None,
+    polymerization_path: str | Path | None = None,
+    engine=None,
+) -> pd.DataFrame:
+    """Directive §4.2 DFT dimerization ΔG per unique (monomer, solvent) via ORCA.
+
+    ΔG[2 M⁺· → M–M(neutral) + 2H⁺] at the Tier-2 functional/basis in each solvent's implicit
+    continuum (SMD name, else CPCM-by-epsilon fallback). Writes a CSV with
+    ``tier2_dimerization_dG_kcal_mol`` consumable by :func:`run_tier2_refined_screen` to override
+    the §5 f4 term. REAL ORCA on the cluster; ``engine`` is injectable for tests.
+    """
+
+    from eps.chemspace.models import Monomer
+    from eps.properties.calculators import dimerization_dG
+    from eps.structures.oligomer import load_polymerization_specs
+
+    frame = pd.read_csv(survivors_path)
+    config = load_tier2_config(config_path)
+    method = config.cache_method_label()
+    if engine is None:
+        engine = OrcaEngine(OrcaConfig(
+            redox_functional=config.method, redox_basis=config.basis,
+            redox_use_freq=config.use_freq, redox_smd=config.use_smd,
+            redox_hirshfeld=False, nprocs=config.nprocshared,
+        ))
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    cache = SQLiteCache(Path(cache_path) if cache_path else out_path.parent / "tier2_dimer_cache.sqlite")
+    solvents = {s.name: s for s in load_solvents()}
+    specs = (
+        load_polymerization_specs(polymerization_path)
+        if polymerization_path else load_polymerization_specs()
+    )
+    smiles_col = next(
+        (c for c in ("monomer_canonical_smiles", "canonical_smiles") if c in frame.columns), None
+    )
+    if smiles_col is None or "solvent_name" not in frame.columns:
+        raise ValueError("survivors CSV needs a monomer SMILES column and solvent_name")
+    name_col = "monomer_name" if "monomer_name" in frame.columns else smiles_col
+
+    pairs = frame[[smiles_col, name_col, "solvent_name"]].drop_duplicates()
+    rows: list[dict[str, Any]] = []
+    for _, r in pairs.iterrows():
+        smi, name, sname = str(r[smiles_col]), str(r[name_col]), str(r["solvent_name"])
+        spec, solvent = specs.get(name), solvents.get(sname)
+        row: dict[str, Any] = {
+            "monomer_canonical_smiles": smi, "monomer_name": name, "solvent_name": sname,
+            "tier2_dimerization_dG_kcal_mol": None, "method": method, "status": "ok",
+        }
+        if spec is None or solvent is None:
+            row["status"] = "skipped_no_spec_or_solvent"
+            rows.append(row)
+            continue
+        monomer = Monomer(name=name, monomer_class="", smiles=smi, canonical_smiles=smi)
+        try:
+            row["tier2_dimerization_dG_kcal_mol"] = dimerization_dG(
+                monomer, engine, cache, method=method, spec=spec,
+                solvent_model_name=solvent.orca_smd_name, solvent_name=sname,
+                solvent_eps_r=solvent.eps_r,
+            )
+        except Exception as exc:  # noqa: BLE001 - record failure per pair, never crash the sweep.
+            row["status"] = f"failed: {type(exc).__name__}: {exc}"
+        rows.append(row)
+    result = pd.DataFrame(rows)
+    result.to_csv(out_path, index=False)
+    return result
 
 
 def _resolve_monomer_eox(

@@ -6,7 +6,11 @@ import pandas as pd
 
 from eps.engines import MockEngine
 from eps.workflow.tier1 import run_tier1
-from eps.workflow.tier2 import DEFAULT_REFINED_WINDOW_MARGIN_V, run_tier2_refined_screen
+from eps.workflow.tier2 import (
+    DEFAULT_REFINED_WINDOW_MARGIN_V,
+    run_tier2_dimerization,
+    run_tier2_refined_screen,
+)
 
 
 def _tier1(tmp_path: Path):
@@ -81,6 +85,37 @@ def test_refined_screen_uses_dft_solvent_anodic_when_full_scope_harvest(tmp_path
         assert (refined["solvent_anodic_source"] == "tier2_dft").all()
         # refined window = DFT anodic (9.0) - DFT monomer Eox (0.50) = 8.5 V
         assert (refined["refined_window_margin_V"].round(2) == 8.50).all()
+
+
+def test_run_tier2_dimerization_mock(tmp_path: Path) -> None:
+    surv = tmp_path / "surv.csv"
+    pd.DataFrame([
+        {"monomer_canonical_smiles": "c1ccsc1", "monomer_name": "thiophene", "solvent_name": "acetonitrile"},
+    ]).to_csv(surv, index=False)
+    config = Path(__file__).resolve().parents[1] / "configs" / "tier2_orca.yaml"
+    out = run_tier2_dimerization(surv, config, tmp_path / "dim.csv", engine=MockEngine())
+    row = out.iloc[0]
+    assert row["status"] == "ok"
+    assert pd.notna(row["tier2_dimerization_dG_kcal_mol"])
+    assert (tmp_path / "dim.csv").exists()
+
+
+def test_refined_screen_consumes_dft_dimerization(tmp_path: Path) -> None:
+    _tier1(tmp_path)
+    surv = pd.read_csv(tmp_path / "ranked.csv")
+    pairs = surv[["monomer_canonical_smiles", "solvent_name"]].drop_duplicates()
+    # synthetic strongly-favorable DFT dimerization for every surviving pair
+    pairs["tier2_dimerization_dG_kcal_mol"] = -25.0
+    dim_path = tmp_path / "dim.csv"
+    pairs.to_csv(dim_path, index=False)
+
+    result = run_tier2_refined_screen(
+        tmp_path / "ranked.csv", tmp_path / "refined_dim.csv", dimerization_dft_path=dim_path
+    )
+    refined = result.refined
+    if not refined.empty:
+        assert (refined["dimerization_source"] == "tier2_dft").all()
+        assert (refined["dimerization_dG_kcal_mol"] == -25.0).all()
 
 
 def test_refined_screen_keeps_anion_and_solubility_constraints(tmp_path: Path) -> None:
