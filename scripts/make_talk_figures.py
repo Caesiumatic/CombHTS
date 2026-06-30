@@ -60,10 +60,8 @@ def tier1_validation():
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 5.4))
     # parity: calibrated vs experiment
     ax = axes[0]
-    ax.scatter(ok["exp_Eox_V_vs_AgAgCl"], ok["calibrated_Eox_V_vs_AgAgCl"],
-               s=28, c=GREY, alpha=0.5, label=f"all benchmark (n={len(ok)})")
     ax.scatter(incal["exp_Eox_V_vs_AgAgCl"], incal["calibrated_Eox_V_vs_AgAgCl"],
-               s=70, c=NAVY, edgecolor="white", label=f"calibration set (n={len(incal)})", zorder=3)
+               s=70, c=NAVY, edgecolor="white", label=f"experimental CV anchors (n={len(incal)})", zorder=3)
     lo = float(min(ok["exp_Eox_V_vs_AgAgCl"].min(), ok["calibrated_Eox_V_vs_AgAgCl"].min())) - 0.1
     hi = float(max(ok["exp_Eox_V_vs_AgAgCl"].max(), ok["calibrated_Eox_V_vs_AgAgCl"].max())) + 0.1
     ax.plot([lo, hi], [lo, hi], "--", c=RED, lw=1.5, label="y = x")
@@ -89,7 +87,7 @@ def tier1_validation():
     for b, v in zip(bars, vals.values()):
         ax.text(b.get_x() + b.get_width() / 2, v + 0.005, f"{v:.3f}", ha="center", fontweight="bold")
     ax.set_ylabel("MAE (V)"); ax.set_ylim(0, 0.42)
-    ax.set_title(f"Tier-1 calibrated $E_{{ox}}$ accuracy (relaxed peak, n={int(s['n_points'])}, R²={s['r2']:.2f})")
+    ax.set_title(f"Tier-1 calibrated $E_{{ox}}$ accuracy (n={int(s['n_points'])}, R²={s['r2']:.2f})")
     ax.legend(fontsize=9, loc="upper right")
     fig.suptitle("Tier-1 — calibration validated against experiment (directive §7)",
                  fontsize=15, fontweight="bold", y=1.02)
@@ -191,17 +189,15 @@ def calibration_parity():
     cmp = pd.read_csv(ROOT / "outputs" / "validate_ipea_profile_comparison.csv")
     s = cmp[cmp["profile_name"] == "agagcl_peak_relaxed"].iloc[0]
     fig, ax = plt.subplots(figsize=(7.2, 6.6))
-    ax.scatter(ok["exp_Eox_V_vs_AgAgCl"], ok["calibrated_Eox_V_vs_AgAgCl"], s=26,
-               facecolors="none", edgecolors=NAVY, alpha=0.5, label=f"applied to all (n={len(ok)})")
     ax.scatter(incal["exp_Eox_V_vs_AgAgCl"], incal["calibrated_Eox_V_vs_AgAgCl"], s=85, c=RED,
-               edgecolor="black", zorder=3, label=f"relaxed peak fit (n={int(s['n_points'])})")
+               edgecolor="black", zorder=3, label=f"experimental CV anchors (n={int(s['n_points'])})")
     lo, hi = 0.6, 2.7
     ax.plot([lo, hi], [lo, hi], "--", c="gray", label="y = x")
     ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
     ax.set_xlabel("Experimental $E_{ox}$ (V vs Ag/AgCl)")
     ax.set_ylabel("Calibrated IPEA-xTB $E_{ox}$ (V vs Ag/AgCl)")
-    ax.set_title("Tier-1 monomer $E_{ox}$ calibration — IPEA-xTB → Ag/AgCl\n(relaxed tier-A+B peak anchor, PRODUCTION)")
-    ax.text(0.03, 0.97, f"relaxed fit (n={int(s['n_points'])}):\nslope {s['slope']:.3f}, intercept {s['intercept']:.3f}\n"
+    ax.set_title("Tier-1 monomer $E_{ox}$ calibration — IPEA-xTB → experimental Ag/AgCl")
+    ax.text(0.03, 0.97, f"calibration (n={int(s['n_points'])}):\nslope {s['slope']:.3f}, intercept {s['intercept']:.3f}\n"
             f"R² {s['r2']:.2f}   Spearman ρ {s['spearman_rho']:.2f}\nin-sample MAE {s['mae_after_V']:.2f} V\n"
             f"LOO-CV MAE {s['loo_mae_after_V']:.2f} V\nhonest floor 0.20–0.35 V",
             transform=ax.transAxes, va="top", fontsize=10,
