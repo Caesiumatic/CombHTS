@@ -87,8 +87,8 @@ def test_both_linear_fits_and_artifacts_written(tmp_path: Path) -> None:
     assert "DFT -> experiment validation" in report
     assert "Side-by-side" in report
     # The pinned xTB->experiment slope/intercept appear, clearly labeled and unchanged.
-    assert "0.931164" in report
-    assert "-0.083599" in report
+    assert "0.730448" in report
+    assert "0.092948" in report
 
     record = json.loads(result.json_path.read_text(encoding="utf-8"))
     assert record["calibration"] == "xtb_to_dft"
@@ -361,7 +361,7 @@ def test_composed_calibration_emitted_to_json_and_report(tmp_path: Path) -> None
     # Report has the clearly-labeled section + the pinned side-by-side + the switch note.
     report = result.report_path.read_text(encoding="utf-8")
     assert "Screen-ready calibration (DFT-anchored, directive §7)" in report
-    assert "0.931164" in report and "-0.083599" in report  # pinned IPEA-xTB line, shown unchanged
+    assert "0.730448" in report and "0.092948" in report  # pinned IPEA-xTB line (relaxed peak), shown unchanged
     assert "replace the tier1.yaml monomer_eox slope/intercept with these composed values" in report
 
     # tier1.yaml is NEVER written by this workflow.
