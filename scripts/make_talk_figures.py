@@ -212,28 +212,49 @@ def xtb_to_dft_calibration():
 # ---------------------------------------------------------------- 7. relaxed clean Pareto (standalone, overwrite strict)
 def pareto_clean():
     d = pd.read_csv(ROOT / "outputs" / "tier1_relaxed" / "survivors.csv", low_memory=False)
-    x = pd.to_numeric(d["window_margin_V"], errors="coerce")
-    y = -pd.to_numeric(d["solvation_dG_kcal_mol"], errors="coerce")  # more positive = more soluble
-    m = x.notna() & y.notna()
-    x, y = x[m].to_numpy(), y[m].to_numpy()
-    # Pareto front: maximize both
+    mcol = "monomer_name" if "monomer_name" in d.columns else "monomer_canonical_smiles"
+    # Collapse the cation-permutation degeneracy: window & solubility are (monomer, solvent)
+    # properties, so one point per distinct (monomer, solvent) — no piled-up duplicate red dots.
+    d = d.drop_duplicates(subset=[mcol, "solvent_name"]).copy()
+    d["_x"] = pd.to_numeric(d["window_margin_V"], errors="coerce")
+    d["_y"] = -pd.to_numeric(d["solvation_dG_kcal_mol"], errors="coerce")  # more positive = more soluble
+    d = d[d["_x"].notna() & d["_y"].notna()]
+    x = d["_x"].to_numpy(); y = d["_y"].to_numpy()
     order = np.argsort(-x)
     pareto, best = [], -np.inf
     for i in order:
         if y[i] >= best:
             pareto.append(i); best = y[i]
     pareto = np.array(pareto)
-    fig, ax = plt.subplots(figsize=(9, 6.2))
-    ax.scatter(x, y, s=10, c=GREY, alpha=0.45, label=f"survivors (n={len(x)})")
-    ax.scatter(x[pareto], y[pareto], s=70, c=RED, edgecolor="black", zorder=3,
-               label=f"Pareto-optimal (n={len(pareto)})")
+    pf = d.iloc[pareto].sort_values("_x")
+
+    fig, ax = plt.subplots(figsize=(9.2, 6.3))
+    ax.scatter(x, y, s=14, c=GREY, alpha=0.5, label=f"distinct monomer×solvent (n={len(x)})")
+    # stepped frontier line so it reads as a trade-off front, not scattered outliers
+    ax.step(pf["_x"], pf["_y"], where="post", c=RED, lw=1.6, alpha=0.7, zorder=2)
+    ax.scatter(pf["_x"], pf["_y"], s=80, c=RED, edgecolor="black", zorder=3,
+               label=f"Pareto-optimal (n={len(pf)})")
+    # annotate the (few) distinct monomers that own the frontier
+    seen = set()
+    for _, r in pf.iterrows():
+        name = str(r[mcol])
+        if name not in seen:
+            seen.add(name)
+            ax.annotate(name, (r["_x"], r["_y"]), xytext=(8, 6), textcoords="offset points",
+                        fontsize=10, fontweight="bold", color=NAVY)
     ax.set_xlabel("Window margin  $E_{ox}$(solvent) − $E_{ox}$(monomer)  (V)")
-    ax.set_ylabel("Solubility score  (−ΔG$_{solv}$, kcal/mol)")
-    ax.set_title("Tier-1 Pareto front — electrochemical window vs solubility\n"
-                 f"CombHTS: {len(x):,} survivors of 7,488 (IPEA-xTB + openCOSMO-RS)")
-    ax.legend(loc="lower right", fontsize=10)
-    ax.text(0.02, 0.97, "Pareto front is 5-D (window/anion/solubility/dimer/gap), projected to 2 axes.",
-            transform=ax.transAxes, va="top", fontsize=8.5, color="#666")
+    ax.set_ylabel("Solvation-affinity score  (−ΔG$_{solv}$, kcal/mol)")
+    ax.set_title("Tier-1 trade-off front — electrochemical window vs solvation affinity\n"
+                 f"CombHTS: {len(x):,} distinct monomer×solvent of 3,275 survivors")
+    ax.legend(loc="lower left", fontsize=10)
+    ax.set_ylim(top=float(y.max()) + 1.4)
+    fig.subplots_adjust(bottom=0.20)
+    fig.text(0.5, 0.045,
+             "2-D projection of the 5-D screen (window/anion/solubility/dimer/gap); the durable ranking is the §5 composite.",
+             ha="center", fontsize=8.4, color="#666")
+    fig.text(0.5, 0.015,
+             "Solvation-affinity (−ΔG$_{solv}$) is size-confounded → the largest/most-alkylated monomers own the high-affinity edge; read as diagnostic.",
+             ha="center", fontsize=8.4, color="#666")
     p = ROOT / "outputs" / "presentation" / "real" / "pareto_clean.png"
     fig.savefig(p); plt.close(fig); print("wrote", p)
 
