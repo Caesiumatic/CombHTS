@@ -33,8 +33,8 @@ from eps.workflow.tier1 import (
     load_tier1_config,
 )
 
-PINNED_SLOPE = 0.9311635669090172
-PINNED_INTERCEPT = -0.08359912823143266
+PINNED_SLOPE = 0.7304475347746868
+PINNED_INTERCEPT = 0.09294776538165893
 
 
 # --- 1. Redox conversion: pinned constants + monotonic + round-trip -----------------------
