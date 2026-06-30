@@ -27,8 +27,8 @@ def funnel():
     stages = [
         ("Directive design space  (~100×25×20, §9)", 50000, GREY, "aspiration"),
         ("Frozen validated scale  (36 mon × 13 solv × 16 elec)", 7488, NAVY, "scale_guard"),
-        ("Tier-1 survivors  (xTB: window + anion + solubility)", 2718, TEAL, "§4.1"),
-        ("Tier-2 refined, partial  (DFT window −0.5 V)", 2354, AMBER, "§4.2"),
+        ("Tier-1 survivors  (xTB: window + anion + solubility)", 3275, TEAL, "§4.1"),
+        ("Tier-2 refined, partial  (DFT window −0.5 V)", 2906, AMBER, "§4.2"),
         ("Recommended shortlist for CV", 40, GREEN, "§8"),
     ]
     fig, ax = plt.subplots(figsize=(12, 5.8))
@@ -54,7 +54,7 @@ def funnel():
 
 # ---------------------------------------------------------------- 2. Tier-1 validation
 def tier1_validation():
-    df = pd.read_csv(ROOT / "outputs" / "validate_ipea_strict.csv")
+    df = pd.read_csv(ROOT / "outputs" / "validate_ipea_relaxed.csv")
     ok = df[df["monomer_eox_calc_status"] == "ok"].copy()
     incal = ok[ok["in_calibration_set"] == True]  # noqa: E712
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 5.4))
@@ -78,7 +78,7 @@ def tier1_validation():
     # MAE bars vs target
     ax = axes[1]
     cmp = pd.read_csv(ROOT / "outputs" / "validate_ipea_profile_comparison.csv")
-    s = cmp[cmp["profile_name"] == "agagcl_peak_strict"].iloc[0]
+    s = cmp[cmp["profile_name"] == "agagcl_peak_relaxed"].iloc[0]
     vals = {"MAE before\ncalibration": float((ok["residual_before_V"].abs().mean())),
             "MAE after\ncalibration": float(s["mae_after_V"]),
             "LOO-CV MAE\n(headline)": float(s["loo_mae_after_V"])}
@@ -89,7 +89,7 @@ def tier1_validation():
     for b, v in zip(bars, vals.values()):
         ax.text(b.get_x() + b.get_width() / 2, v + 0.005, f"{v:.3f}", ha="center", fontweight="bold")
     ax.set_ylabel("MAE (V)"); ax.set_ylim(0, 0.42)
-    ax.set_title(f"Tier-1 calibrated $E_{{ox}}$ accuracy (strict, n={int(s['n_points'])}, R²={s['r2']:.2f})")
+    ax.set_title(f"Tier-1 calibrated $E_{{ox}}$ accuracy (relaxed peak, n={int(s['n_points'])}, R²={s['r2']:.2f})")
     ax.legend(fontsize=9, loc="upper right")
     fig.suptitle("Tier-1 — calibration validated against experiment (directive §7)",
                  fontsize=15, fontweight="bold", y=1.02)
@@ -125,7 +125,7 @@ def tier2_output():
 def section7_scorecard():
     rows = [
         ("Calibration anchor", "xTB → DFT", "xTB→DFT preferred (computing)", "in_progress"),
-        ("Tier-1 calibrated $E_{ox}$ vs exp", "MAE < 0.30 V", "LOO-CV 0.246 V (n=9)", "pass"),
+        ("Tier-1 calibrated $E_{ox}$ vs exp", "MAE < 0.30 V", "LOO-CV 0.198 V (n=29)", "pass"),
         ("Tier-2 DFT $E_{ox}$ vs exp", "MAE < 0.15 V", "graded; DFT computing", "in_progress"),
         ("Solvent ESW vs exp", "MAE < 0.30 V", "benchmark rows pending", "pending"),
         ("Feasibility yes/no", "> 85% bal. acc.", "wired; coverage-gated", "partial"),
@@ -183,5 +183,61 @@ def compliance_map():
              ha="center", fontsize=9.5, color="#666")
     save(fig, "05_directive_compliance.png")
 
+# ---------------------------------------------------------------- 6. relaxed calibration parity (standalone, overwrite strict)
+def calibration_parity():
+    df = pd.read_csv(ROOT / "outputs" / "validate_ipea_relaxed.csv")
+    ok = df[df["monomer_eox_calc_status"] == "ok"].copy()
+    incal = ok[ok["in_calibration_set"] == True]  # noqa: E712
+    cmp = pd.read_csv(ROOT / "outputs" / "validate_ipea_profile_comparison.csv")
+    s = cmp[cmp["profile_name"] == "agagcl_peak_relaxed"].iloc[0]
+    fig, ax = plt.subplots(figsize=(7.2, 6.6))
+    ax.scatter(ok["exp_Eox_V_vs_AgAgCl"], ok["calibrated_Eox_V_vs_AgAgCl"], s=26,
+               facecolors="none", edgecolors=NAVY, alpha=0.5, label=f"applied to all (n={len(ok)})")
+    ax.scatter(incal["exp_Eox_V_vs_AgAgCl"], incal["calibrated_Eox_V_vs_AgAgCl"], s=85, c=RED,
+               edgecolor="black", zorder=3, label=f"relaxed peak fit (n={int(s['n_points'])})")
+    lo, hi = 0.6, 2.7
+    ax.plot([lo, hi], [lo, hi], "--", c="gray", label="y = x")
+    ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
+    ax.set_xlabel("Experimental $E_{ox}$ (V vs Ag/AgCl)")
+    ax.set_ylabel("Calibrated IPEA-xTB $E_{ox}$ (V vs Ag/AgCl)")
+    ax.set_title("Tier-1 monomer $E_{ox}$ calibration — IPEA-xTB → Ag/AgCl\n(relaxed tier-A+B peak anchor, PRODUCTION)")
+    ax.text(0.03, 0.97, f"relaxed fit (n={int(s['n_points'])}):\nslope {s['slope']:.3f}, intercept {s['intercept']:.3f}\n"
+            f"R² {s['r2']:.2f}   Spearman ρ {s['spearman_rho']:.2f}\nin-sample MAE {s['mae_after_V']:.2f} V\n"
+            f"LOO-CV MAE {s['loo_mae_after_V']:.2f} V\nhonest floor 0.20–0.35 V",
+            transform=ax.transAxes, va="top", fontsize=10,
+            bbox=dict(boxstyle="round", fc="white", ec="gray"))
+    ax.legend(loc="lower right", fontsize=10)
+    p = ROOT / "outputs" / "presentation" / "ipea_calibration_parity.png"
+    fig.savefig(p); plt.close(fig); print("wrote", p)
+
+# ---------------------------------------------------------------- 7. relaxed clean Pareto (standalone, overwrite strict)
+def pareto_clean():
+    d = pd.read_csv(ROOT / "outputs" / "tier1_relaxed" / "survivors.csv", low_memory=False)
+    x = pd.to_numeric(d["window_margin_V"], errors="coerce")
+    y = -pd.to_numeric(d["solvation_dG_kcal_mol"], errors="coerce")  # more positive = more soluble
+    m = x.notna() & y.notna()
+    x, y = x[m].to_numpy(), y[m].to_numpy()
+    # Pareto front: maximize both
+    order = np.argsort(-x)
+    pareto, best = [], -np.inf
+    for i in order:
+        if y[i] >= best:
+            pareto.append(i); best = y[i]
+    pareto = np.array(pareto)
+    fig, ax = plt.subplots(figsize=(9, 6.2))
+    ax.scatter(x, y, s=10, c=GREY, alpha=0.45, label=f"survivors (n={len(x)})")
+    ax.scatter(x[pareto], y[pareto], s=70, c=RED, edgecolor="black", zorder=3,
+               label=f"Pareto-optimal (n={len(pareto)})")
+    ax.set_xlabel("Window margin  $E_{ox}$(solvent) − $E_{ox}$(monomer)  (V)")
+    ax.set_ylabel("Solubility score  (−ΔG$_{solv}$, kcal/mol)")
+    ax.set_title("Tier-1 Pareto front — electrochemical window vs solubility\n"
+                 f"CombHTS: {len(x):,} survivors of 7,488 (IPEA-xTB relaxed + openCOSMO-RS)")
+    ax.legend(loc="lower right", fontsize=10)
+    ax.text(0.02, 0.97, "Pareto front is 5-D (window/anion/solubility/dimer/gap), projected to 2 axes.",
+            transform=ax.transAxes, va="top", fontsize=8.5, color="#666")
+    p = ROOT / "outputs" / "presentation" / "real" / "pareto_clean.png"
+    fig.savefig(p); plt.close(fig); print("wrote", p)
+
 funnel(); tier1_validation(); tier2_output(); section7_scorecard(); compliance_map()
+calibration_parity(); pareto_clean()
 print("\nDONE ->", OUT)
