@@ -258,6 +258,50 @@ def pareto_clean():
     p = ROOT / "outputs" / "presentation" / "real" / "pareto_clean.png"
     fig.savefig(p); plt.close(fig); print("wrote", p)
 
+# ---------------------------------------------------------------- 8. optical axis: HONEST diagnostic (declined-for-cause)
+def optical_calibration():
+    from eps.calibration import fit_linear_calibration
+    m = pd.read_csv(ROOT / "outputs" / "_optical_anchor_match.csv")
+    x = pd.to_numeric(m["optical_gap_n6_eV"], errors="coerce").to_numpy()
+    y = pd.to_numeric(m["optical_gap_eV"], errors="coerce").to_numpy()
+    conv = m["optical_gap_converged"].astype(str).str.lower().isin(["true", "1"]).to_numpy()
+    fit = fit_linear_calibration(x, y)
+    res = []
+    for i in range(len(x)):
+        mm = np.ones(len(x), bool); mm[i] = False
+        f = fit_linear_calibration(x[mm], y[mm]); res.append(f.apply(x[i]) - y[i])
+    loo = float(np.mean(np.abs(res)))
+    fig, ax = plt.subplots(figsize=(8.2, 6.8))
+    lo, hi = 1.0, 4.4
+    ax.plot([lo, hi], [lo, hi], "--", c="gray", lw=1.3, label="y = x")
+    xs = np.array([x.min() - 0.2, x.max() + 0.2])
+    ax.plot(xs, fit.slope * xs + fit.intercept, "-", c=NAVY, lw=2, label="linear fit")
+    ax.scatter(x[conv], y[conv], s=90, c=TEAL, edgecolor="black", zorder=3,
+               label=f"n=6 converged ({int(conv.sum())})")
+    ax.scatter(x[~conv], y[~conv], s=90, facecolors="none", edgecolors=RED, linewidths=1.8, zorder=3,
+               label=f"NOT converged ({int((~conv).sum())})")
+    for _, r in m.iterrows():
+        nm = str(r["polymer"]).split("(")[0].split(",")[0][:14]
+        ax.annotate(nm, (r["optical_gap_n6_eV"], r["optical_gap_eV"]), xytext=(5, -3),
+                    textcoords="offset points", fontsize=7.5, color="#555")
+    ax.set_xlabel("sTDA-xTB hexamer (n=6) optical gap (eV)")
+    ax.set_ylabel("Experimental neutral-polymer optical gap (eV)")
+    ax.set_title("Tier-1 OPTICAL axis — sTDA-xTB vs experiment\nDIAGNOSTIC: does NOT graduate to scoring")
+    ax.text(0.03, 0.97, f"n={len(x)} anchors (every class a singleton)\nR² {fit.r2:.2f}   "
+            f"LOO-CV MAE {loo:.2f} eV\nraw bias (n6−exp) +{np.mean(x-y):.2f} eV\n"
+            f"converged at n=6: {int(conv.sum())}/{len(x)}",
+            transform=ax.transAxes, va="top", fontsize=10,
+            bbox=dict(boxstyle="round", fc="#fff3e0", ec=AMBER))
+    ax.legend(loc="lower right", fontsize=9)
+    ax.set_xlim(lo, hi); ax.set_ylim(lo, 3.3)
+    fig.subplots_adjust(bottom=0.18)
+    fig.text(0.5, 0.05, "LOO error (0.27 eV) EXCEEDS the ±0.1–0.2 eV anchor floor → calibrating would add noise; kept 15% DIAGNOSTIC (reported, not gating).",
+             ha="center", fontsize=8.2, color="#666")
+    fig.text(0.5, 0.02, "Graduation needs ≥3 anchors/class + a TD-DFT reference on the same hexamers (sTDA-xTB documented-weak for sulfur & low-gap D–A).",
+             ha="center", fontsize=8.2, color="#666")
+    out = ROOT / "outputs" / "presentation" / "optical_calibration_status.png"
+    fig.savefig(out); plt.close(fig); print("wrote", out)
+
 funnel(); tier1_validation(); tier2_output(); section7_scorecard(); compliance_map()
-xtb_to_dft_calibration(); pareto_clean()
+xtb_to_dft_calibration(); pareto_clean(); optical_calibration()
 print("\nDONE ->", OUT)
