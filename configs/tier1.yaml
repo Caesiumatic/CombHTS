@@ -84,14 +84,28 @@ calibration:
   # orca). Flipping its `enabled` to true is the single switch that makes production directive-literal
   # — it then REQUIRES a fresh Tier-1 re-harvest + re-validation (different survivor set).
   xtb_to_dft:
+    # Directive §7 CALIBRATION OF RECORD (step 1): the xTB descriptor (V vs Ag/AgCl) -> DFT Eox (V),
+    # fit on benchmark monomers with both IPEA-xTB and B3LYP/6-31G(d,p)/SMD/Freq. This IS the
+    # directive-mandated calibration. It is recorded here as the calibration of record and shown in
+    # the calibration figure; it is NOT applied RAW to the production FILTER because the window gate
+    # compares monomer Eox to the measured-first solvent anodic limit, which is in EXPERIMENTAL volts.
+    # DFT sits ~0.5 V below experiment (validation: raw DFT->exp MAE 0.496 V; a linear DFT->exp fit
+    # removes the offset -> 0.151 V residual), so applying raw xTB->DFT against an experimental-V gate
+    # is a T11/T14-class cross-scale comparison (it inflates survivors 3,275->4,211 and flips the §7
+    # Tier-1-vs-exp PASS->FAIL). The directive's "apply these corrections" = the COMPOSED
+    # xTB->DFT->exp chain, whose experimental-scale realization (composed 0.648/0.116) agrees with the
+    # active monomer_eox line (0.730/0.093) within ~0.1 V — so the FILTER uses monomer_eox (below) and
+    # stays scale-consistent with the measured gate, while this block carries the xTB->DFT step.
     anchor: dft
     monomer_oxidation:
-      enabled: false              # PENDING the DFT-on-benchmark numbers (see source). Identity until pinned.
+      enabled: false              # calibration of record; filter applies its experimental-scale realization (monomer_eox)
       scope: all_computed_oxidation
-      source: PENDING_orca_dft_on_benchmark_2026_06
-      slope: 1.0
-      intercept: 0.0
-      notes: "Directive §7 xTB->DFT oxidation calibration (V vs Ag/AgCl): dft_Eox_V = slope*xtb_Eox_V + intercept, fit on the benchmark species where both IPEA-xTB and B3LYP/6-31G(d,p)/SMD exist. Applied to ALL computed oxidation potentials (monomer Eox, solvent ANODIC limit, anion Eox), mirroring the legacy T11 scope but DFT-anchored. Slope/intercept + n + R^2 pinned from outputs/dft_calibration/xtb_to_dft_calibration.json (xtb_to_dft_V) once the ORCA run lands; cathodic/EA/optical axes are calibrated separately (TD-DFT for optical, §4.1)."
+      source: dftcal_orca_partial_2026_06_29_n15   # SGE 418096, 15/37 benchmark monomers (small core; D-A pending)
+      slope: 0.7674700404189657
+      intercept: -0.5789495913940623
+      r2: 0.8831217643300772
+      n_points: 15
+      notes: "xTB->DFT (V vs Ag/AgCl): dft_Eox_V = 0.7675*xtb_Eox_V - 0.5789, R^2 0.883, MAE 0.122 V, n=15 (SGE 418096, partial — small-monomer core done, big D-A compounds still computing; refit when full). DFT->exp validation (peak, n=10): raw MAE 0.496 V (systematic reference offset, ~0.5 V), linear-corrected MAE 0.151 V. Composed xTB->DFT->exp = 0.6477/0.1164 ~= the active experimental-scale monomer_eox line (0.7304/0.0929), cross-validating the two-stage chain (cf. 417442). Cathodic/EA/optical calibrated separately."
   monomer_eox:
     enabled: true
     anchor: experiment
