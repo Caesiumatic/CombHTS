@@ -73,25 +73,26 @@ def tier1_validation():
     ax.legend(fontsize=10, loc="upper left"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
     ax.text(0.97, 0.05, "dotted = ±0.3 V directive band", transform=ax.transAxes,
             ha="right", fontsize=9, color=AMBER)
-    # MAE bars vs target
+    # two validation legs vs experiment (the directive's two accuracy targets)
     ax = axes[1]
     cmp = pd.read_csv(ROOT / "outputs" / "validate_ipea_profile_comparison.csv")
     s = cmp[cmp["profile_name"] == "agagcl_peak_relaxed"].iloc[0]
-    vals = {"MAE before\ncalibration": float((ok["residual_before_V"].abs().mean())),
-            "MAE after\ncalibration": float(s["mae_after_V"]),
-            "LOO-CV MAE\n(headline)": float(s["loo_mae_after_V"])}
-    colors = [GREY, TEAL, NAVY]
-    bars = ax.bar(list(vals), list(vals.values()), color=colors, width=0.6)
-    ax.axhline(0.30, ls="--", c=RED, lw=1.8, label="directive Tier-1 target < 0.30 V")
-    ax.axhspan(0.20, 0.35, color=AMBER, alpha=0.12, label="honest accuracy floor 0.20–0.35 V")
-    for b, v in zip(bars, vals.values()):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.005, f"{v:.3f}", ha="center", fontweight="bold")
-    ax.set_ylabel("MAE (V)"); ax.set_ylim(0, 0.42)
-    ax.set_title(f"Tier-1 calibrated $E_{{ox}}$ accuracy (n={int(s['n_points'])}, R²={s['r2']:.2f})")
-    ax.legend(fontsize=9, loc="upper right")
-    fig.suptitle("Tier-1 — calibration validated against experiment (directive §7)",
+    labels = ["xTB→exp\nLOO-CV (n=29)", "DFT→exp\nraw (n=10)", "DFT→exp\noffset-corrected"]
+    vals = [float(s["loo_mae_after_V"]), 0.496, 0.151]
+    colors = [NAVY, GREY, TEAL]
+    bars = ax.bar(labels, vals, color=colors, width=0.62)
+    ax.axhline(0.30, ls="--", c=AMBER, lw=1.6, label="Tier-1 xTB target < 0.30 V")
+    ax.axhline(0.15, ls="--", c=RED, lw=1.6, label="Tier-2 DFT target < 0.15 V")
+    for b, v in zip(bars, vals):
+        ax.text(b.get_x() + b.get_width() / 2, v + 0.008, f"{v:.3f}", ha="center", fontweight="bold")
+    ax.set_ylabel("MAE vs experiment (V)"); ax.set_ylim(0, 0.56)
+    ax.set_title("Validation against experiment (peak)")
+    ax.legend(fontsize=8.5, loc="upper center")
+    fig.suptitle("Tier-1/2 — two validation legs against experiment (directive §7)",
                  fontsize=15, fontweight="bold", y=1.02)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.text(0.5, -0.02, "DFT carries a ~0.5 V systematic reference offset (raw); a linear DFT→exp fit removes it "
+             "→ 0.15 V residual. xTB→exp (direct) already meets the Tier-1 target.", ha="center", fontsize=8.5, color="#666")
+    fig.tight_layout(rect=[0, 0.02, 1, 0.95])
     save(fig, "02_tier1_validation.png")
 
 # ---------------------------------------------------------------- 3. Tier-2 output (partial)
@@ -122,9 +123,9 @@ def tier2_output():
 # ---------------------------------------------------------------- 4. §7 scorecard
 def section7_scorecard():
     rows = [
-        ("Calibration anchor", "xTB → DFT", "xTB→DFT preferred (computing)", "in_progress"),
-        ("Tier-1 calibrated $E_{ox}$ vs exp", "MAE < 0.30 V", "LOO-CV 0.198 V (n=29)", "pass"),
-        ("Tier-2 DFT $E_{ox}$ vs exp", "MAE < 0.15 V", "graded; DFT computing", "in_progress"),
+        ("Calibration anchor (xTB→DFT)", "xTB → DFT", "fitted: R² 0.88, n=15 (partial)", "in_progress"),
+        ("Validation: xTB→exp", "MAE < 0.30 V", "LOO-CV 0.198 V (n=29)", "pass"),
+        ("Validation: DFT→exp", "MAE < 0.15 V", "raw 0.50; offset-corrected 0.15 (n=10)", "in_progress"),
         ("Solvent ESW vs exp", "MAE < 0.30 V", "benchmark rows pending", "pending"),
         ("Feasibility yes/no", "> 85% bal. acc.", "wired; coverage-gated", "partial"),
     ]
@@ -182,29 +183,31 @@ def compliance_map():
     save(fig, "05_directive_compliance.png")
 
 # ---------------------------------------------------------------- 6. relaxed calibration parity (standalone, overwrite strict)
-def calibration_parity():
-    df = pd.read_csv(ROOT / "outputs" / "validate_ipea_relaxed.csv")
-    ok = df[df["monomer_eox_calc_status"] == "ok"].copy()
-    incal = ok[ok["in_calibration_set"] == True]  # noqa: E712
-    cmp = pd.read_csv(ROOT / "outputs" / "validate_ipea_profile_comparison.csv")
-    s = cmp[cmp["profile_name"] == "agagcl_peak_relaxed"].iloc[0]
-    fig, ax = plt.subplots(figsize=(7.2, 6.6))
-    ax.scatter(incal["exp_Eox_V_vs_AgAgCl"], incal["calibrated_Eox_V_vs_AgAgCl"], s=85, c=RED,
-               edgecolor="black", zorder=3, label=f"experimental CV anchors (n={int(s['n_points'])})")
-    lo, hi = 0.6, 2.7
-    ax.plot([lo, hi], [lo, hi], "--", c="gray", label="y = x")
-    ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
-    ax.set_xlabel("Experimental $E_{ox}$ (V vs Ag/AgCl)")
-    ax.set_ylabel("Calibrated IPEA-xTB $E_{ox}$ (V vs Ag/AgCl)")
-    ax.set_title("Tier-1 monomer $E_{ox}$ calibration — IPEA-xTB → experimental Ag/AgCl")
-    ax.text(0.03, 0.97, f"calibration (n={int(s['n_points'])}):\nslope {s['slope']:.3f}, intercept {s['intercept']:.3f}\n"
-            f"R² {s['r2']:.2f}   Spearman ρ {s['spearman_rho']:.2f}\nin-sample MAE {s['mae_after_V']:.2f} V\n"
-            f"LOO-CV MAE {s['loo_mae_after_V']:.2f} V\nhonest floor 0.20–0.35 V",
-            transform=ax.transAxes, va="top", fontsize=10,
+def xtb_to_dft_calibration():
+    """Directive §7 CALIBRATION figure: xTB descriptor -> DFT Eox (the calibration of record)."""
+    p = pd.read_csv(ROOT / "outputs" / "dftcal_orca_points.csv")
+    ok = p[p["dft_calc_status"] == "ok"].copy()
+    x = pd.to_numeric(ok["xtb_descriptor"], errors="coerce")
+    y = pd.to_numeric(ok["dft_Eox_V_vs_AgAgCl"], errors="coerce")
+    m = x.notna() & y.notna(); x, y = x[m].to_numpy(), y[m].to_numpy()
+    slope, intercept = np.polyfit(x, y, 1)
+    yhat = slope * x + intercept
+    r2 = 1 - float(np.sum((y - yhat) ** 2)) / float(np.sum((y - y.mean()) ** 2))
+    mae = float(np.mean(np.abs(y - yhat)))
+    fig, ax = plt.subplots(figsize=(7.4, 6.6))
+    ax.scatter(x, y, s=80, c=TEAL, edgecolor="black", zorder=3, label=f"benchmark monomers (n={len(x)})")
+    xs = np.array([x.min() - 0.1, x.max() + 0.1])
+    ax.plot(xs, slope * xs + intercept, "-", c=NAVY, lw=2, label="xTB→DFT fit")
+    ax.set_xlabel("IPEA-xTB descriptor $E_{ox}$ (V vs Ag/AgCl)")
+    ax.set_ylabel("DFT $E_{ox}$  (B3LYP/6-31G(d,p)/SMD, V vs Ag/AgCl)")
+    ax.set_title("Tier-1 CALIBRATION — IPEA-xTB → DFT  (directive §7, step 1)")
+    ax.text(0.03, 0.97, f"xTB→DFT (n={len(x)}, partial):\nslope {slope:.3f}, intercept {intercept:.3f}\n"
+            f"R² {r2:.2f}   MAE {mae:.2f} V",
+            transform=ax.transAxes, va="top", fontsize=11,
             bbox=dict(boxstyle="round", fc="white", ec="gray"))
     ax.legend(loc="lower right", fontsize=10)
-    p = ROOT / "outputs" / "presentation" / "ipea_calibration_parity.png"
-    fig.savefig(p); plt.close(fig); print("wrote", p)
+    out = ROOT / "outputs" / "presentation" / "xtb_to_dft_calibration.png"
+    fig.savefig(out); plt.close(fig); print("wrote", out)
 
 # ---------------------------------------------------------------- 7. relaxed clean Pareto (standalone, overwrite strict)
 def pareto_clean():
@@ -227,7 +230,7 @@ def pareto_clean():
     ax.set_xlabel("Window margin  $E_{ox}$(solvent) − $E_{ox}$(monomer)  (V)")
     ax.set_ylabel("Solubility score  (−ΔG$_{solv}$, kcal/mol)")
     ax.set_title("Tier-1 Pareto front — electrochemical window vs solubility\n"
-                 f"CombHTS: {len(x):,} survivors of 7,488 (IPEA-xTB relaxed + openCOSMO-RS)")
+                 f"CombHTS: {len(x):,} survivors of 7,488 (IPEA-xTB + openCOSMO-RS)")
     ax.legend(loc="lower right", fontsize=10)
     ax.text(0.02, 0.97, "Pareto front is 5-D (window/anion/solubility/dimer/gap), projected to 2 axes.",
             transform=ax.transAxes, va="top", fontsize=8.5, color="#666")
@@ -235,5 +238,5 @@ def pareto_clean():
     fig.savefig(p); plt.close(fig); print("wrote", p)
 
 funnel(); tier1_validation(); tier2_output(); section7_scorecard(); compliance_map()
-calibration_parity(); pareto_clean()
+xtb_to_dft_calibration(); pareto_clean()
 print("\nDONE ->", OUT)
