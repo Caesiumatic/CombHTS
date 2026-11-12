@@ -16,7 +16,6 @@ Output: outputs/lambda_feasibility/secondary_descriptors_extra.csv
 from __future__ import annotations
 
 import csv
-import sys
 from pathlib import Path
 
 from rdkit import Chem

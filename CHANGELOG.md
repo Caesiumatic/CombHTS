@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-12 — CI formatting cleanup
+
+- Split semicolon-separated plotting statements, sorted imports, and removed an unused standard-library import.
+- Preserved plotting syntax trees across statement splitting and retained screening calculations and configuration.
+- Ruff reports no remaining errors; the full suite passed (386 passed, 5 skipped, 2 existing warnings).
+
 ## 2026-11-12 — repository update
 
 - Prepared the reviewed source cleanup, concise README, and supporting documentation for publication on the existing main branch.

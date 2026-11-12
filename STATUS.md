@@ -22,7 +22,13 @@ has 2,143 per-salt survivors and 1,127 score classes. The oxidation validation,
 solvent-window policy, and optical diagnostics are documented in
 [the code/workflow map](docs/code_structure.md) and `docs/runs/`.
 
-## Verification — 2026-11-11
+## Verification — 2026-11-12
+
+The publication check identified 38 existing Ruff errors. Import ordering and
+plotting statement formatting have been corrected; Ruff now passes.
+The full suite completed with 386 passed, 5 skipped, and 2 existing warnings.
+
+## Previous verification — 2026-11-11
 
 The existing test suite completed with 386 passed, 5 skipped, and 2 warnings
 (local core-count detection and a mixed-type CSV column). No cluster calculation

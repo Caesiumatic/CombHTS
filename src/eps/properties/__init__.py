@@ -3,9 +3,9 @@
 from eps.properties.calculators import (
     anion_oxidation_potential,
     dimerization_dG,
+    load_cosmors_solvation_table,
     monomer_eox_vs_AgAgCl,
     monomer_solvation,
-    load_cosmors_solvation_table,
     oligomer_eox_raw_eV,
     oligomer_eox_sidechain_truncated,
     optical_gap_oligomer,

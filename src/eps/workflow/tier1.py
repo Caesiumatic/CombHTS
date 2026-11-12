@@ -22,9 +22,9 @@ from eps.engines.mock import MockEngine
 from eps.properties import (
     anion_oxidation_potential,
     dimerization_dG,
+    load_cosmors_solvation_table,
     monomer_eox_vs_AgAgCl,
     monomer_solvation,
-    load_cosmors_solvation_table,
     optical_gap_oligomer,
     polymer_optical_gap,
     polymer_optical_gap_method,

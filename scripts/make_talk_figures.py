@@ -1,10 +1,13 @@
 """Generate talk figures (progress + directive compliance) into outputs/presentation/talk/."""
 from __future__ import annotations
+
 import math
 from pathlib import Path
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
@@ -20,7 +23,9 @@ NAVY, TEAL, AMBER, RED, GREEN, GREY = "#1f3a5f", "#2a9d8f", "#e9a13b", "#c0392b"
 
 def save(fig, name):
     p = OUT / name
-    fig.savefig(p); plt.close(fig); print("wrote", p)
+    fig.savefig(p)
+    plt.close(fig)
+    print("wrote", p)
 
 # ---------------------------------------------------------------- 1. progress funnel
 def funnel():
@@ -46,7 +51,9 @@ def funnel():
             pct = 100 * val / stages[i - 1][1]
             ax.text(0.0, y + 0.46, f"↓ {pct:.0f}% retained", ha="left", va="center",
                     fontsize=9.5, color="#666", style="italic")
-    ax.set_xlim(0, 2.05); ax.set_ylim(-0.7, len(stages) - 0.15); ax.axis("off")
+    ax.set_xlim(0, 2.05)
+    ax.set_ylim(-0.7, len(stages) - 0.15)
+    ax.axis("off")
     ax.set_title("Screening cascade — progress through the 3-tier pipeline  (bar ∝ log count)", pad=12)
     fig.text(0.5, 0.015, "Frozen-then-scale: 7,488 validated (freeze); full 50k gated on PI sign-off. "
              "Tier-2 partial = 71 DFT redox done so far.", ha="center", fontsize=9, color="#666")
@@ -70,7 +77,9 @@ def tier1_validation():
     ax.set_xlabel("Experimental $E_{ox}$ (V vs Ag/AgCl)")
     ax.set_ylabel("Calibrated xTB $E_{ox}$ (V)")
     ax.set_title("Calibrated xTB vs experiment")
-    ax.legend(fontsize=10, loc="upper left"); ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
+    ax.legend(fontsize=10, loc="upper left")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
     ax.text(0.97, 0.05, "dotted = ±0.3 V directive band", transform=ax.transAxes,
             ha="right", fontsize=9, color=AMBER)
     # two validation legs vs experiment (the directive's two accuracy targets)
@@ -85,7 +94,8 @@ def tier1_validation():
     ax.axhline(0.15, ls="--", c=RED, lw=1.6, label="Tier-2 DFT target < 0.15 V")
     for b, v in zip(bars, vals):
         ax.text(b.get_x() + b.get_width() / 2, v + 0.008, f"{v:.3f}", ha="center", fontweight="bold")
-    ax.set_ylabel("MAE vs experiment (V)"); ax.set_ylim(0, 0.56)
+    ax.set_ylabel("MAE vs experiment (V)")
+    ax.set_ylim(0, 0.56)
     ax.set_title("Validation against experiment (peak)")
     ax.legend(fontsize=8.5, loc="upper center")
     fig.suptitle("Tier-1/2 — two validation legs against experiment (directive §7)",
@@ -104,7 +114,9 @@ def tier2_output():
     counts = h.groupby(["entity_type", "quantity"]).size().unstack(fill_value=0)
     counts.plot(kind="bar", stacked=True, ax=ax, color=[NAVY, TEAL], width=0.6)
     ax.set_title(f"Tier-2 DFT redox done so far (n={len(h)})")
-    ax.set_xlabel(""); ax.set_ylabel("count"); ax.tick_params(axis="x", rotation=20)
+    ax.set_xlabel("")
+    ax.set_ylabel("count")
+    ax.tick_params(axis="x", rotation=20)
     ax.legend(title="quantity", fontsize=10)
     for c in ax.containers:
         ax.bar_label(c, label_type="center", fontsize=9, color="white", fmt=lambda v: int(v) if v else "")
@@ -114,8 +126,10 @@ def tier2_output():
     eox = pd.to_numeric(mono["dft_monomer_Eox_V_vs_AgAgCl"], errors="coerce").dropna()
     ax.hist(eox, bins=12, color=AMBER, edgecolor="white")
     ax.axvline(eox.median(), c=RED, ls="--", lw=1.6, label=f"median {eox.median():.2f} V")
-    ax.set_xlabel("DFT monomer $E_{ox}$ (V vs Ag/AgCl)"); ax.set_ylabel("count")
-    ax.set_title(f"B3LYP/SMD/ΔG monomer $E_{{ox}}$ (n={len(eox)})"); ax.legend(fontsize=10)
+    ax.set_xlabel("DFT monomer $E_{ox}$ (V vs Ag/AgCl)")
+    ax.set_ylabel("count")
+    ax.set_title(f"B3LYP/SMD/ΔG monomer $E_{{ox}}$ (n={len(eox)})")
+    ax.legend(fontsize=10)
     fig.suptitle("Tier-2 — partial DFT refinement (B3LYP/6-31G(d,p)/SMD/Freq, §4.2)",
                  fontsize=15, fontweight="bold")
     save(fig, "03_tier2_output_partial.png")
@@ -131,7 +145,8 @@ def section7_scorecard():
     ]
     cmap = {"pass": GREEN, "in_progress": AMBER, "partial": "#b07d2b", "pending": GREY}
     sym = {"pass": "PASS", "in_progress": "IN PROGRESS", "partial": "PARTIAL", "pending": "NOT YET"}
-    fig, ax = plt.subplots(figsize=(12, 5.4)); ax.axis("off")
+    fig, ax = plt.subplots(figsize=(12, 5.4))
+    ax.axis("off")
     ax.set_title("Directive §7 — validation scorecard (code complete; numbers landing)", pad=18)
     headers = ["Metric", "Directive target", "Current status", ""]
     xcol = [0.02, 0.32, 0.52, 0.99]
@@ -148,7 +163,8 @@ def section7_scorecard():
         ax.add_patch(FancyBboxPatch((0.86, y - 0.045), 0.135, 0.09, boxstyle="round,pad=0.004",
                      fc=cmap[k], ec="none"))
         ax.text(0.9275, y, sym[k], fontsize=9.5, fontweight="bold", color="white", ha="center", va="center")
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
     fig.text(0.5, 0.02, "Both experiment legs now graded in code (DFT-vs-exp no longer OUT_OF_SCOPE); "
              "production prefers xTB→DFT once the benchmark DFT (37-monomer ORCA run) lands.",
              ha="center", fontsize=9, color="#666")
@@ -168,7 +184,8 @@ def compliance_map():
     ]
     cmap = {"done": GREEN, "running": AMBER, "pending": GREY}
     lab = {"done": "implemented", "running": "in progress", "pending": "planned"}
-    fig, ax = plt.subplots(figsize=(11, 5.6)); ax.axis("off")
+    fig, ax = plt.subplots(figsize=(11, 5.6))
+    ax.axis("off")
     ax.set_title("Directive compliance map — section-by-section", pad=16)
     for i, (name, k) in enumerate(items):
         y = len(items) - 1 - i
@@ -177,7 +194,8 @@ def compliance_map():
         ax.text(0.1, y, name, fontsize=12, va="center")
         ax.text(0.99, y, lab[k], fontsize=10.5, va="center", ha="right",
                 color=cmap[k], fontweight="bold")
-    ax.set_xlim(0, 1); ax.set_ylim(-0.6, len(items) - 0.3)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-0.6, len(items) - 0.3)
     fig.text(0.5, 0.02, "Green = implemented & tested · amber = compute in progress · grey = planned (Tier-3 optional).",
              ha="center", fontsize=9.5, color="#666")
     save(fig, "05_directive_compliance.png")
@@ -189,7 +207,8 @@ def xtb_to_dft_calibration():
     ok = p[p["dft_calc_status"] == "ok"].copy()
     x = pd.to_numeric(ok["xtb_descriptor"], errors="coerce")
     y = pd.to_numeric(ok["dft_Eox_V_vs_AgAgCl"], errors="coerce")
-    m = x.notna() & y.notna(); x, y = x[m].to_numpy(), y[m].to_numpy()
+    m = x.notna() & y.notna()
+    x, y = x[m].to_numpy(), y[m].to_numpy()
     slope, intercept = np.polyfit(x, y, 1)
     yhat = slope * x + intercept
     r2 = 1 - float(np.sum((y - yhat) ** 2)) / float(np.sum((y - y.mean()) ** 2))
@@ -207,7 +226,9 @@ def xtb_to_dft_calibration():
             bbox=dict(boxstyle="round", fc="white", ec="gray"))
     ax.legend(loc="lower right", fontsize=10)
     out = ROOT / "outputs" / "presentation" / "xtb_to_dft_calibration.png"
-    fig.savefig(out); plt.close(fig); print("wrote", out)
+    fig.savefig(out)
+    plt.close(fig)
+    print("wrote", out)
 
 # ---------------------------------------------------------------- 7. relaxed clean Pareto (standalone, overwrite strict)
 def pareto_clean():
@@ -219,12 +240,14 @@ def pareto_clean():
     d["_x"] = pd.to_numeric(d["window_margin_V"], errors="coerce")
     d["_y"] = -pd.to_numeric(d["solvation_dG_kcal_mol"], errors="coerce")  # more positive = more soluble
     d = d[d["_x"].notna() & d["_y"].notna()]
-    x = d["_x"].to_numpy(); y = d["_y"].to_numpy()
+    x = d["_x"].to_numpy()
+    y = d["_y"].to_numpy()
     order = np.argsort(-x)
     pareto, best = [], -np.inf
     for i in order:
         if y[i] >= best:
-            pareto.append(i); best = y[i]
+            pareto.append(i)
+            best = y[i]
     pareto = np.array(pareto)
     pf = d.iloc[pareto].sort_values("_x")
 
@@ -256,7 +279,9 @@ def pareto_clean():
              "Solvation-affinity (−ΔG$_{solv}$) is size-confounded → the largest/most-alkylated monomers own the high-affinity edge; read as diagnostic.",
              ha="center", fontsize=8.4, color="#666")
     p = ROOT / "outputs" / "presentation" / "real" / "pareto_clean.png"
-    fig.savefig(p); plt.close(fig); print("wrote", p)
+    fig.savefig(p)
+    plt.close(fig)
+    print("wrote", p)
 
 # ---------------------------------------------------------------- 8. optical axis: HONEST diagnostic (declined-for-cause)
 def optical_calibration():
@@ -268,8 +293,10 @@ def optical_calibration():
     fit = fit_linear_calibration(x, y)
     res = []
     for i in range(len(x)):
-        mm = np.ones(len(x), bool); mm[i] = False
-        f = fit_linear_calibration(x[mm], y[mm]); res.append(f.apply(x[i]) - y[i])
+        mm = np.ones(len(x), bool)
+        mm[i] = False
+        f = fit_linear_calibration(x[mm], y[mm])
+        res.append(f.apply(x[i]) - y[i])
     loo = float(np.mean(np.abs(res)))
     fig, ax = plt.subplots(figsize=(8.2, 6.8))
     lo, hi = 1.0, 4.4
@@ -293,15 +320,24 @@ def optical_calibration():
             transform=ax.transAxes, va="top", fontsize=10,
             bbox=dict(boxstyle="round", fc="#fff3e0", ec=AMBER))
     ax.legend(loc="lower right", fontsize=9)
-    ax.set_xlim(lo, hi); ax.set_ylim(lo, 3.3)
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, 3.3)
     fig.subplots_adjust(bottom=0.18)
     fig.text(0.5, 0.05, "LOO error (0.27 eV) EXCEEDS the ±0.1–0.2 eV anchor floor → calibrating would add noise; kept 15% DIAGNOSTIC (reported, not gating).",
              ha="center", fontsize=8.2, color="#666")
     fig.text(0.5, 0.02, "Graduation needs ≥3 anchors/class + a TD-DFT reference on the same hexamers (sTDA-xTB documented-weak for sulfur & low-gap D–A).",
              ha="center", fontsize=8.2, color="#666")
     out = ROOT / "outputs" / "presentation" / "optical_calibration_status.png"
-    fig.savefig(out); plt.close(fig); print("wrote", out)
+    fig.savefig(out)
+    plt.close(fig)
+    print("wrote", out)
 
-funnel(); tier1_validation(); tier2_output(); section7_scorecard(); compliance_map()
-xtb_to_dft_calibration(); pareto_clean(); optical_calibration()
+funnel()
+tier1_validation()
+tier2_output()
+section7_scorecard()
+compliance_map()
+xtb_to_dft_calibration()
+pareto_clean()
+optical_calibration()
 print("\nDONE ->", OUT)

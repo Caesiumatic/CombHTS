@@ -12,8 +12,8 @@ from eps.engines import xtb as xtb_module
 from eps.engines.xtb import (
     parse_atomic_spin_populations,
     parse_frontier_orbital_eV,
-    parse_ipea_value,
     parse_homo_lumo,
+    parse_ipea_value,
     parse_stda_lowest_excitation,
     parse_total_energy,
     parse_xtb_json,
