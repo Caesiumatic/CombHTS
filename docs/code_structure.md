@@ -1,5 +1,39 @@
 # CombHTS Code Structure
 
+[Project overview](../README.md) · [Related workspaces](project-map.md)
+
+## Local setup
+
+Use Python 3.11 or later. From the repository root:
+
+```bash
+python -m pip install -e .
+eps --help
+python -m pytest -q tests/test_chemspace.py tests/test_cache.py tests/test_tier1_rescore.py
+```
+
+These tests cover library loading, cached calculation identity, and ranking.
+The deterministic `MockEngine` supports workflow development without quantum
+chemistry executables. Real calculations use the configured xTB or DFT backend;
+the engine/cache contract below describes those paths.
+
+## Recorded screening results
+
+The June 2026 Tier-1 library contains 36 monomers, 13 solvents, and 16 salts
+(7,488 triads). Salt-role correction retains 2,143 per-salt combinations,
+representing 1,127 score classes. The candidate-analysis export contains 30
+distinct ranked entries. Active monomer oxidation calibration has a
+leave-one-out MAE of 0.186 V on the recorded benchmark.
+
+Solvent eligibility follows the measured-window policy. Raw isolated-solvent
+descriptors did not meet the practical-window validation target, and optical
+estimates remain diagnostic. The later full-space workflow uses a separate
+dataset and run lineage.
+
+- [Salt-role-corrected screening record](runs/2026-06-22_tier1-rescore-salt-fixed-417569.md)
+- [Candidate analysis](runs/2026-06-22_analyze-salt-fixed-417571.md)
+- [Property validation](runs/2026-06-23_directive-section7-validation-417671.md)
+
 ## 1. Project Purpose
 
 CombHTS screens monomer-solvent-electrolyte triads for electropolymerization under

@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-12 — repository update
+
+- Prepared the reviewed source cleanup, concise README, and supporting documentation for publication on the existing main branch.
+- Checked document links and the final commit contents; retained the previously recorded code validation.
+
+## 2026-11-12 — concise repository introduction
+
+- Removed the standalone project-value section; retained methods, recorded results, and documentation links.
+- Documentation-only local revision, not committed or published.
+
+## 2026-11-11 — commit metadata maintenance
+
+- Updated existing remote history while preserving file trees, human authors, timestamps, and commit topology.
+- Synchronized existing local refs; retained all pending working files. The presentation revision remains uncommitted and unpublished.
+
+## 2026-11-11 — project overview and implementation guide
+
+- Applied the approved README focused on the selection problem, method, recorded results, and value.
+- Moved local setup and detailed screening context into `docs/code_structure.md`, linking existing run records.
+- Checked local document links. Calculation source, settings, data, branches, and commits are unchanged in this documentation follow-up.
+
+## 2026-11-11 — local project entry and documentation organization
+
+- Rewrote the overview around descriptor reuse, calibration, screening, and the recorded 7,488-triad results.
+- Added a project map connecting the later calibration, full-space, and surrogate workspaces while retaining their data contracts.
+- Preserved the previous status under `docs/history/`; no calculation policy, scientific results, or Git history changed.
+- Existing suite: 386 passed, 5 skipped, 2 warnings.
+
 ## 2026-06-25 — director run: oligomer-Eox monotonicity flag + applicability-domain decision
 
 - **Oligomer Eox monotonicity flag** (directive §3.1, T12): added `oligomer_Eox_monotonic_status`
