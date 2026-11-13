@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-13 — repository name follow-up
+
+- Updated current README and workflow descriptions, the local workspace map, and clone instructions to `electropoly-jointopt-hts`.
+- Replaced the old repository label in the talk-figure title with its June Tier-1 screen context.
+- Documented the existing cluster checkout/environment names; retained package identifiers, original source titles, and dated research records for reproducibility.
+
 ## 2026-11-13 — repository rename
 
 - Renamed `Caesiumatic/CombHTS` to `Caesiumatic/electropoly-jointopt-hts` and updated the README and status titles.

@@ -1,12 +1,14 @@
-# CombHTS Code Structure
+# electropoly-jointopt-hts: code structure
 
 [Project overview](../README.md) · [Related workspaces](project-map.md)
 
 ## Local setup
 
-Use Python 3.11 or later. From the repository root:
+Use Python 3.11 or later. Clone the repository, then install from its root:
 
 ```bash
+git clone https://github.com/Caesiumatic/electropoly-jointopt-hts.git
+cd electropoly-jointopt-hts
 python -m pip install -e .
 eps --help
 python -m pytest -q tests/test_chemspace.py tests/test_cache.py tests/test_tier1_rescore.py
@@ -37,7 +39,7 @@ dataset and run lineage.
 
 ## 1. Project Purpose
 
-CombHTS screens monomer-solvent-electrolyte triads for electropolymerization under
+`electropoly-jointopt-hts` screens monomer-solvent-electrolyte triads for electropolymerization under
 `Directive_CombHTS`. The production ranking enforces three hard constraints: monomer oxidation
 potential inside the solvent electrochemical window, electrolyte anion stability at that potential,
 and a solvation/solubility proxy for monomer-medium compatibility. It then ranks surviving triads

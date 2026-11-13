@@ -1,13 +1,13 @@
 # electropoly-jointopt-hts
 
-CombHTS screens monomer–solvent–electrolyte combinations for
+`electropoly-jointopt-hts` screens monomer–solvent–electrolyte combinations for
 electropolymerization. It addresses a coupled selection problem: a promising
 monomer also needs a compatible solvent and supporting electrolyte under the
 conditions required for oxidation and polymer growth.
 
 ## Approach
 
-CombHTS separates molecular calculations from combinatorial ranking. It
+The workflow separates molecular calculations from combinatorial ranking. It
 calibrates per-species property estimates, applies compatibility constraints,
 and ranks the surviving combinations.
 

@@ -1,8 +1,8 @@
 # Electropolymerization screening: project map
 
 The project progresses from reusable species calculations to calibration,
-full-space collection, and property-surrogate modeling. CombHTS is the entry
-point for the implemented screening method and its recorded pilot results.
+full-space collection, and property-surrogate modeling. `electropoly-jointopt-hts`
+is the entry point for the implemented screening method and its recorded pilot results.
 
 ## Local workspaces
 
@@ -11,7 +11,7 @@ Each retains its own source history, input registries, and run definitions.
 
 | Directory | Role | Entry point |
 | --- | --- | --- |
-| `CombHTS` | Descriptor reuse, screening, calibration, and ranking | `src/eps/`, `README.md` |
+| `electropoly-jointopt-hts` | Descriptor reuse, screening, calibration, and ranking | `src/eps/`, `README.md` |
 | `JOHTVS` | Subsequent workflow and orchestration implementation | `src/johtvs/`, `orchestration/` |
 | `20260707` | Tier-1/Tier-2 calibration and experimental-validation workspace | `calibration/`, `validation/`, `docs/` |
 | `jhtvs` | Extracted full-space source, collection/QC, and apply-only calibration model | `fullspace/src/`, `models/active/` |
@@ -41,7 +41,7 @@ The full-space source lives in `jhtvs`, separately from the older `eps` package.
 calibration revisions, and geometry contracts differ, so importing files into
 one namespace would require an explicit schema migration.
 
-The June CombHTS ranking, later calibration studies, and full-space results keep
+The June triad ranking, later calibration studies, and full-space results keep
 separate result tables. A figure or metric should identify its input library,
 model revision, and run record. In particular, the June top-30 export belongs to
 the 7,488-triad screen.

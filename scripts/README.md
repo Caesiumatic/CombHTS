@@ -1,8 +1,14 @@
 # Cluster job templates (SGE / Grid Engine)
 
-Version-controlled `qsub` templates for running CombHTS on the SCS Lop cluster.
+Version-controlled `qsub` templates for running `electropoly-jointopt-hts` on the
+SCS Lop cluster.
 Before submission, review the selected engine, input paths, and resource requests
 (`-pe smp`, `-l h_rt`). Cluster submissions require the applicable run authorization.
+
+The templates use the existing cluster checkout names (`CombHTS`, `CombHTS-main`,
+and run-specific directories), the `combhts` conda environment, and the
+`COMBHTS_ROOT` override where supported. These operational names are independent
+of the GitHub repository name.
 
 `audit_lit_curation_staging.py` is a local, no-engine staging-data audit wrapper. Its reusable
 logic lives in `eps.curation.staging_audit`; the script preserves the historical command-line

@@ -268,7 +268,7 @@ def pareto_clean():
     ax.set_xlabel("Window margin  $E_{ox}$(solvent) − $E_{ox}$(monomer)  (V)")
     ax.set_ylabel("Solvation-affinity score  (−ΔG$_{solv}$, kcal/mol)")
     ax.set_title("Tier-1 trade-off front — electrochemical window vs solvation affinity\n"
-                 f"CombHTS: {len(x):,} distinct monomer×solvent of 3,275 survivors")
+                 f"June Tier-1 screen: {len(x):,} distinct monomer×solvent of 3,275 survivors")
     ax.legend(loc="lower left", fontsize=10)
     ax.set_ylim(top=float(y.max()) + 1.4)
     fig.subplots_adjust(bottom=0.20)

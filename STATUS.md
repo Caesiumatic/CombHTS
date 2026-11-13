@@ -2,8 +2,8 @@
 
 ## Current state
 
-CombHTS provides cached per-species calculations, calibration, compatibility
-filters, and ranking for monomer–solvent–electrolyte combinations. Its recorded
+`electropoly-jointopt-hts` provides cached per-species calculations, calibration,
+compatibility filters, and ranking for monomer–solvent–electrolyte combinations. Its recorded
 June 2026 screen covers 7,488 triads; the salt-role-corrected ranking has 2,143
 per-salt survivors and 1,127 score classes.
 
@@ -17,6 +17,11 @@ in `docs/runs/` and `THINK.md`.
 
 ## Documentation verification — 2026-11-13
 
+- Updated current project descriptions, the local workspace map, clone commands,
+  and the talk-figure title after the repository rename. Cluster paths, package
+  identifiers, source-document names, and dated research records retain their
+  recorded names. Checked 21 local link targets and verified that the plotting
+  script's syntax tree changes only in the intended title string.
 - Renamed the repository to `electropoly-jointopt-hts` and updated the README
   title. The talk-figure script resolves its repository root from its own path.
 - Added the README screening figure from the recorded June 22 GFN2-xTB snapshot.
@@ -29,8 +34,8 @@ in `docs/runs/` and `THINK.md`.
   0.186 V calibration metric to its June 23 validation record.
 - Clarified workflow, engine, diagnostic, and optional-method docstrings,
   including IPEA request types already used by the property calculators.
-- Checked Python syntax trees with docstrings removed and token streams with
-  comments/docstrings removed; executable code and runtime strings are unchanged.
+- The earlier wording edit passed Python syntax-tree and token-stream comparisons
+  with comments/docstrings removed; executable code and runtime strings were unchanged.
 - Checked local links and `git diff --check`. Calculation settings, data,
   thresholds, and recorded results are unchanged; no calculations were run.
 
