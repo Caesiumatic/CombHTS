@@ -1,4 +1,4 @@
-# CombHTS status
+# electropoly-jointopt-hts status
 
 ## Current state
 
@@ -17,6 +17,8 @@ in `docs/runs/` and `THINK.md`.
 
 ## Documentation verification — 2026-11-13
 
+- Renamed the repository to `electropoly-jointopt-hts` and updated the README
+  title. The talk-figure script resolves its repository root from its own path.
 - Added the README screening figure from the recorded June 22 GFN2-xTB snapshot.
   The complete parent harvest reproduces 2,143 retained rows, 1,127 score classes,
   the recorded tie counts, and all 30 exported Pareto candidates. The committed

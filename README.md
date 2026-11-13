@@ -1,4 +1,4 @@
-# CombHTS
+# electropoly-jointopt-hts
 
 CombHTS screens monomer–solvent–electrolyte combinations for
 electropolymerization. It addresses a coupled selection problem: a promising

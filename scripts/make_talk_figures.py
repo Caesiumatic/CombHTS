@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
-ROOT = Path("/Users/shichen/GitHub/CombHTS")
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs" / "presentation" / "talk"
 OUT.mkdir(parents=True, exist_ok=True)
 plt.rcParams.update({"font.size": 13, "axes.titlesize": 15, "axes.titleweight": "bold",

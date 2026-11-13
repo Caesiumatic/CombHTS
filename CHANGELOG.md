@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-13 — repository rename
+
+- Renamed `Caesiumatic/CombHTS` to `Caesiumatic/electropoly-jointopt-hts` and updated the README and status titles.
+- Made the talk-figure script resolve its repository root from its file location so it works after a checkout is renamed or moved.
+
 ## 2026-11-13 — recorded screening figure
 
 - Added a README figure showing retention across all 13 solvents and the distributions of 1,127 distinct score classes, with the 30 exported Pareto candidates highlighted.
