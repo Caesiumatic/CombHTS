@@ -32,6 +32,13 @@ The June 2026 screen evaluated 7,488 combinations from 36 monomers, 13 solvents,
 and 16 salts. Applying the salt-role and compatibility filters retained 2,143
 combinations, from which 30 distinct ranked candidates were exported for review.
 
+![Recorded screen: retention and composite-score distributions by solvent](docs/figures/screening_snapshot_20260622.svg)
+
+The June 22 computational-screen snapshot: bars show retained triads; whiskers,
+boxes, and ticks show the range, middle 50%, and median of all 1,127 distinct
+score classes. Orange points mark the 30 exported Pareto candidates.
+[Figure data and provenance](docs/figures/screening_snapshot_20260622.json).
+
 The [June 23 validation](docs/runs/2026-06-23_directive-section7-validation-417671.md)
 recorded a monomer-oxidation leave-one-out mean absolute error of 0.186 V.
 The [calibration manifest](configs/CALIBRATION_ACTIVE.md) tracks subsequent

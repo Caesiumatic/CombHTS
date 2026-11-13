@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-13 — recorded screening figure
+
+- Added a README figure showing retention across all 13 solvents and the distributions of 1,127 distinct score classes, with the 30 exported Pareto candidates highlighted.
+- Reconstructed the June 22 salt-role snapshot from the preserved real-GFN2-xTB capped-ESW harvest. Counts, exclusions, class multiplicities, and all 30 recorded shortlist rows match the archived run records.
+- Plot inputs contain per-solvent aggregates and shortlist scores. The full harvest remains in ignored `outputs/`; `scripts/plot_readme_screening.py` reproduces the SVG and optionally verifies the source reconstruction.
+
 ## 2026-11-13 — documentation and comment clarity
 
 - Focused the overview on per-species calculation reuse and ranked screening results; tied the 0.186 V metric to its June 23 validation record and linked later calibration revisions and the partial June 29 Tier-2 record.

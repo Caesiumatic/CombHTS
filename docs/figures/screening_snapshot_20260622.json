@@ -1,0 +1,246 @@
+{
+  "snapshot_date": "2026-06-22",
+  "source": {
+    "artifact": "outputs/tier1_real_7488_capped_esw/tier1_all.csv",
+    "sha256": "c4eee9ce3b77264b5370e1b2421fbbfd50962259e81e0c450fcb9e38c41d4076",
+    "lineage": "real GFN2-xTB harvest 417538 → capped-ESW replay 417562 → salt-role replay 417569 → analysis 417571",
+    "records": [
+      "docs/runs/2026-06-22_tier1-rescore-capped-esw-417562.md",
+      "docs/runs/2026-06-22_tier1-rescore-salt-fixed-417569.md",
+      "docs/runs/2026-06-22_analyze-salt-fixed-417571.md"
+    ],
+    "reconstruction": "The exact salt-fixed CSV is absent locally. Apply the recorded role exclusions to the preserved complete capped-ESW harvest, retain its scores and Pareto flags, then collapse exact cation-only score classes.",
+    "verified": {
+      "all_rows": 7488,
+      "capped_survivors": 2938,
+      "role_exclusions": {
+        "AgClO4": 262,
+        "HClO4": 262,
+        "H2SO4": 255,
+        "pTSA": 16,
+        "CSA": 0
+      },
+      "retained_rows": 2143,
+      "distinct_score_classes": 1127,
+      "classes_by_tie_count": {
+        "1": 373,
+        "2": 492,
+        "3": 262
+      },
+      "shortlist": "All 30 ranks match recorded monomer/solvent, representative salt, tied members, tie count, and score within 0.5e-6."
+    }
+  },
+  "interpretation": {
+    "count_unit": "Full per-salt triads; each solvent has 36 monomers × 16 salts.",
+    "score_unit": "One value per exact monomer/solvent/anion/scoring-input class; cation duplicates collapsed.",
+    "intervals": "Min–max, interquartile range, and median of retained class scores; descriptive intervals, not uncertainty estimates.",
+    "shortlist": "30 exported Pareto-front classes ranked by composite score, not the 30 largest scores in the whole pool.",
+    "scope": "Screening-grade composite with uncalibrated optical/dimerization/solvation-affinity axes. These are computational candidates, not measured experimental outcomes. Later IPEA and calibration revisions are separate snapshots."
+  },
+  "solvents": [
+    {
+      "solvent": "propylene carbonate",
+      "evaluated_triads": 576,
+      "retained_triads": 283,
+      "score_classes": 143,
+      "score_quantiles": {
+        "min": 0.3088177306178592,
+        "q25": 0.41371130355722957,
+        "median": 0.4754705903565178,
+        "q75": 0.5178623019965498,
+        "max": 0.6486279313545841
+      },
+      "shortlist_scores": [
+        0.6486279313545841,
+        0.6423959107046956,
+        0.5962837271505875,
+        0.5903183592827949,
+        0.5900517065006989,
+        0.5840863386329064,
+        0.5760853994826778,
+        0.5705221903308187,
+        0.5642901696809302,
+        0.5589278098360901,
+        0.5526957891862015,
+        0.552691753885008,
+        0.523741195278681,
+        0.5177758274108885,
+        0.5003475496810114,
+        0.49797965845891234,
+        0.4943821818132188,
+        0.4863852779641837,
+        0.4745860128612426
+      ]
+    },
+    {
+      "solvent": "GBL",
+      "evaluated_triads": 576,
+      "retained_triads": 276,
+      "score_classes": 140,
+      "score_quantiles": {
+        "min": 0.25613370809565933,
+        "q25": 0.36982423561474675,
+        "median": 0.4261256515402484,
+        "q75": 0.4680512556389572,
+        "max": 0.597843136580941
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "nitromethane",
+      "evaluated_triads": 576,
+      "retained_triads": 275,
+      "score_classes": 139,
+      "score_quantiles": {
+        "min": 0.24965140093784297,
+        "q25": 0.3601168206661458,
+        "median": 0.4140018926799063,
+        "q75": 0.457308314095513,
+        "max": 0.5739833329656402
+      },
+      "shortlist_scores": [
+        0.5526499612121838,
+        0.5474230364353462,
+        0.4785117530624221
+      ]
+    },
+    {
+      "solvent": "acetonitrile",
+      "evaluated_triads": 576,
+      "retained_triads": 265,
+      "score_classes": 169,
+      "score_quantiles": {
+        "min": 0.2177018605678095,
+        "q25": 0.34948364875052795,
+        "median": 0.4128246423501525,
+        "q75": 0.48631555811275695,
+        "max": 0.6840052380446873
+      },
+      "shortlist_scores": [
+        0.6840052380446873,
+        0.6476756197280703,
+        0.631061879313685,
+        0.6242289717538171,
+        0.6109095071043533,
+        0.6090752404762609
+      ]
+    },
+    {
+      "solvent": "sulfolane",
+      "evaluated_triads": 576,
+      "retained_triads": 261,
+      "score_classes": 133,
+      "score_quantiles": {
+        "min": 0.2175493941105414,
+        "q25": 0.3320184591500893,
+        "median": 0.39108351534978747,
+        "q75": 0.4312375660270107,
+        "max": 0.5573595948472664
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "THF",
+      "evaluated_triads": 576,
+      "retained_triads": 186,
+      "score_classes": 94,
+      "score_quantiles": {
+        "min": 0.19750350280158757,
+        "q25": 0.2905462827465673,
+        "median": 0.3404833194871434,
+        "q75": 0.3779240646659374,
+        "max": 0.4764513051938146
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "NMP",
+      "evaluated_triads": 576,
+      "retained_triads": 139,
+      "score_classes": 71,
+      "score_quantiles": {
+        "min": 0.18618560714803098,
+        "q25": 0.28878553632944126,
+        "median": 0.3380926918523417,
+        "q75": 0.39562932305745857,
+        "max": 0.4822806708257593
+      },
+      "shortlist_scores": [
+        0.4822806708257593,
+        0.4763996014391393
+      ]
+    },
+    {
+      "solvent": "benzonitrile",
+      "evaluated_triads": 576,
+      "retained_triads": 125,
+      "score_classes": 65,
+      "score_quantiles": {
+        "min": 0.17695025234656214,
+        "q25": 0.2686383421735904,
+        "median": 0.31977477951118516,
+        "q75": 0.3851208290215684,
+        "max": 0.46581008487315456
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "nitrobenzene",
+      "evaluated_triads": 576,
+      "retained_triads": 125,
+      "score_classes": 65,
+      "score_quantiles": {
+        "min": 0.16791695198384612,
+        "q25": 0.2586156843634539,
+        "median": 0.3100085164301881,
+        "q75": 0.3665295993948706,
+        "max": 0.4406678075446323
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "DCM",
+      "evaluated_triads": 576,
+      "retained_triads": 109,
+      "score_classes": 57,
+      "score_quantiles": {
+        "min": 0.16069449295461885,
+        "q25": 0.2534449600094539,
+        "median": 0.30858461083637023,
+        "q75": 0.3642053728523618,
+        "max": 0.44018637587252507
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "DMF",
+      "evaluated_triads": 576,
+      "retained_triads": 99,
+      "score_classes": 51,
+      "score_quantiles": {
+        "min": 0.1604885264598525,
+        "q25": 0.2599049172054211,
+        "median": 0.3248662802586651,
+        "q75": 0.3684942642953444,
+        "max": 0.4565835901375809
+      },
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "DMSO",
+      "evaluated_triads": 576,
+      "retained_triads": 0,
+      "score_classes": 0,
+      "score_quantiles": null,
+      "shortlist_scores": []
+    },
+    {
+      "solvent": "water",
+      "evaluated_triads": 576,
+      "retained_triads": 0,
+      "score_classes": 0,
+      "score_quantiles": null,
+      "shortlist_scores": []
+    }
+  ]
+}

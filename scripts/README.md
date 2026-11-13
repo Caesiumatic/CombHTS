@@ -98,3 +98,14 @@ qstat -j <job_id>                  # detailed job info
   pre-commit cluster snapshots).
 
 Do **not** run production calculations in an interactive login session — submit via `qsub`.
+
+## README screening figure
+
+`python scripts/plot_readme_screening.py` regenerates the README SVG from the
+compact [figure data](../docs/figures/screening_snapshot_20260622.json) using
+NumPy and Matplotlib. Pass `--preview /tmp/screening.png` for a local PNG.
+
+The optional `--rebuild-from outputs/tier1_real_7488_capped_esw/tier1_all.csv`
+validates the archived source hash, counts, class multiplicities, and the
+recorded Pareto shortlist before rebuilding the aggregate JSON. The raw harvest
+stays in ignored `outputs/`; this command performs no quantum-chemistry calculations.

@@ -4,6 +4,7 @@
 
 | date | label | engine | scope | status | headline | manifest |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | README screening figure | none (aggregation/plotting) | recorded June 22 real-xTB 7,488-row screen | completed | 2,143 retained triads; 1,127 score classes; all 30 exported Pareto rows matched | [link](2026-11-13_readme-screening-figure.md) |
 | 2026-06-26 | production optical re-harvest (real sTDA-xTB) | gfn2-xtb + sTDA real | 7,488 triads; optical recompute (cache-seeded) | completed/PASS (SGE 417866) | all 36 monomers optical_gap_method=stda-xtb, 0 NaN; sane hexamer gaps (PT 2.84 / PEDOT 2.66 / carbazole 4.04 eV); oligomer-Eox monotonic_decreasing ×36 | [link](2026-06-26_optical-reharvest-417866.md) |
 | 2026-06-25 | sTDA-xTB optical unblock + eps smoke | gfn2-xtb + sTDA real | install stda/xtb4stda; 1-molecule eps smoke | completed/PASS (SGE 417865) | engine now yields optical_gap_method=stda-xtb (5.354 eV), not fallback; production re-harvest pending (T6) | [link](2026-06-25_optical-stda-unblock-417865.md) |
 | 2026-06-25 | B1 coupling-feasibility descriptor batch | gfn2-xtb real | 10 size-matched monomers × MeCN × TBAPF6 |  completed (SGE 417848; 417846 qdel'd redundant) | B1 decided: only position-block separable; size-matched dimerization does not separate electronic/β-steric NOs; B2/B3 done (bal-acc 0.50→0.71) | [link](2026-06-25_b1-coupling-descriptor-batch-417844.md) |

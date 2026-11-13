@@ -17,6 +17,12 @@ in `docs/runs/` and `THINK.md`.
 
 ## Documentation verification — 2026-11-13
 
+- Added the README screening figure from the recorded June 22 GFN2-xTB snapshot.
+  The complete parent harvest reproduces 2,143 retained rows, 1,127 score classes,
+  the recorded tie counts, and all 30 exported Pareto candidates. The committed
+  JSON stores plotting aggregates and provenance; the full harvest stays in
+  ignored `outputs/`. The figure summarizes candidate scores, not experimental
+  performance or independent replicate measurements.
 - Focused the README on descriptor reuse and screening results; attributed the
   0.186 V calibration metric to its June 23 validation record.
 - Clarified workflow, engine, diagnostic, and optional-method docstrings,
