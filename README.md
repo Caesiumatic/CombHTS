@@ -7,8 +7,9 @@ conditions required for oxidation and polymer growth.
 
 ## Approach
 
-The workflow combines molecular calculations, property calibration, and
-constraint-based ranking.
+CombHTS separates molecular calculations from combinatorial ranking. It
+calibrates per-species property estimates, applies compatibility constraints,
+and ranks the surviving combinations.
 
 Molecular descriptors are computed for individual species and solvent
 environments, then reused across candidate combinations. This avoids repeating
@@ -31,9 +32,11 @@ The June 2026 screen evaluated 7,488 combinations from 36 monomers, 13 solvents,
 and 16 salts. Applying the salt-role and compatibility filters retained 2,143
 combinations, from which 30 distinct ranked candidates were exported for review.
 
-The active monomer-oxidation calibration achieved a leave-one-out mean absolute
-error of 0.186 V on its recorded benchmark. These results belong to the CombHTS
-screen; subsequent full-space studies have separate datasets and run records.
+The [June 23 validation](docs/runs/2026-06-23_directive-section7-validation-417671.md)
+recorded a monomer-oxidation leave-one-out mean absolute error of 0.186 V.
+The [calibration manifest](configs/CALIBRATION_ACTIVE.md) tracks subsequent
+engine and calibration revisions. Full-space studies use separate datasets and
+run records.
 
 ## Documentation
 

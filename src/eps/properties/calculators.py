@@ -55,7 +55,7 @@ def monomer_eox_vs_AgAgCl(
     cache: SQLiteCache,
     method: str = DEFAULT_METHOD,
 ) -> float:
-    """Return monomer oxidation potential in V vs Ag/AgCl for a solvent dielectric."""
+    """Convert the monomer's IPEA-xTB vertical IP to V vs Ag/AgCl in the given solvent."""
 
     req = CalcRequest(
         species=SpeciesSpec(monomer.canonical_smiles, charge=0, multiplicity=1),
@@ -74,8 +74,11 @@ def solvent_anodic_limit(
     cache: SQLiteCache,
     method: str = DEFAULT_METHOD,
 ) -> float:
-    """Adiabatic ΔSCF oxidation potential of the solvent molecule in its own implicit
-    solvent, in V vs Ag/AgCl (spec §3.2). Raw, uncalibrated, screening-grade."""
+    """Convert the solvent molecule's IPEA-xTB vertical IP to V vs Ag/AgCl.
+
+    Uses the molecule's own implicit-solvent environment and returns the raw,
+    uncalibrated screening descriptor (spec §3.2).
+    """
 
     req = CalcRequest(
         species=SpeciesSpec(solvent.canonical_smiles, charge=0, multiplicity=1),
@@ -94,16 +97,13 @@ def solvent_cathodic_limit(
     cache: SQLiteCache,
     method: str = DEFAULT_METHOD,
 ) -> float:
-    """Adiabatic ΔSCF reduction potential of the solvent molecule in its own implicit
-    solvent, in V vs Ag/AgCl (spec §3.2). Raw, uncalibrated, screening-grade.
+    """Convert the solvent molecule's IPEA-xTB vertical EA to V vs Ag/AgCl.
 
-    The engine returns the adiabatic EA in eV (E(neutral) − E(anion)); the
-    solvent/solvent⁻ reduction potential projects to V vs Ag/AgCl through the SAME
-    function used for IP: E(vs Ag/AgCl) = EA − 4.28 − 0.197.
+    Uses the molecule's own implicit-solvent environment. The EA in eV maps to
+    the reference scale as E(vs Ag/AgCl) = EA − 4.28 − 0.197.
 
-    Computed solvent EA via GFN2-xTB is unreliable for closed-shell solvents
-    (unbound anions); this cathodic value is informational only and is NOT used in any
-    Tier-1 filter.
+    Unbound anions limit the interpretation of solvent EA estimates. This raw
+    cathodic descriptor is reported for diagnostics and does not enter Tier-1 filters.
     """
 
     req = CalcRequest(

@@ -46,7 +46,7 @@ class CalcRequest:
 
     Attributes:
         species: Molecular species and electronic state.
-        method: Engine method label, such as ``mock-gfn2`` or later ``gfn2-xtb``.
+        method: Engine method label, such as ``mock-gfn2`` or ``gfn2-xtb``.
         solvent_eps_r: Relative dielectric constant of the solvent, or None for gas phase.
         xtb_gbsa_name: Optional xTB ALPB solvent keyword for real xTB backends.
         solvent_model_name: Optional backend-native solvent name (for example the ORCA

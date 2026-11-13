@@ -1,4 +1,4 @@
-"""Tier-1 mock workflow: per-species calculations, triad join, filters, scoring."""
+"""Tier-1 screening: cached per-species calculations, triad assembly, and ranking."""
 
 from __future__ import annotations
 
@@ -132,7 +132,7 @@ def run_tier1(
     scoring_config_path: str | Path = DEFAULT_SCORING_CONFIG,
     allow_large_scale: bool = False,
 ) -> Tier1Result:
-    """Run Tier-1 over seed libraries with per-species cached MockEngine calls."""
+    """Screen the libraries with cached per-species calls through the selected engine."""
 
     engine = engine or MockEngine()
     cache = SQLiteCache(cache_path)
@@ -308,13 +308,13 @@ def compute_monomer_table(
 ) -> pd.DataFrame:
     """Compute monomer-only properties once per monomer.
 
-    The optical gap is now the sTDA-xTB (or HOMO–LUMO proxy) gap of the assembled n-mer
-    oligomer, and dimerization is the real radical–radical coupling ΔG (directive §3.1/§4.2)
-    — neither is a single-monomer placeholder any longer.
+    The optical descriptor is the assembled n-mer's sTDA-xTB gap or HOMO–LUMO
+    fallback. Dimerization uses the radical–radical coupling energy
+    (directive §3.1/§4.2); the selected engine determines the calculation level.
 
-    Additionally reports the oligomer Eox-vs-length trend + 1/n infinite-chain extrapolation as
-    a REPORTED descriptor (reused oligomer assembly + side-chain truncation). These columns are
-    purely additive: none enters a hard filter or the composite score.
+    Oligomer Eox trends and the 1/n infinite-chain extrapolation are reported
+    descriptors, reusing oligomer assembly and side-chain truncation. These
+    columns do not enter hard filters or the composite score.
     """
 
     specs = specs if specs is not None else load_polymerization_specs()

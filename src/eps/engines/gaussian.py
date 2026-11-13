@@ -1,20 +1,17 @@
-"""Gaussian 16 (B3LYP) Tier-2 DFT backend for the Engine interface — BUILD ONLY.
+"""Gaussian 16 Tier-2 DFT backend with configurable solvent and thermal treatment.
 
-This adapter mirrors ``XTBEngine``'s structure and the SAME charge/multiplicity convention
-for adiabatic redox (oxidation -> charge+1, multiplicity+1; the Eox-relevant ΔSCF is
-``ΔG = G(cation) − G(neutral)``). It NEVER fabricates a value: if the ``g16`` binary is
-absent, ``run()`` raises a clear RuntimeError. Following the Task-1a lesson, the subprocess
-return code is checked BEFORE the log is parsed, so a present-but-truncated log cannot mask a
-real Gaussian failure.
+The adapter shares ``XTBEngine``'s charge/multiplicity convention for adiabatic
+redox: oxidation increments charge and multiplicity by one. Oxidation energy is
+the cation-minus-neutral energy difference. A missing ``g16`` executable raises
+``RuntimeError``. The subprocess return code is checked before parsing the log,
+so a truncated output cannot conceal an execution failure.
 
-The SMD solvent and the Freq/thermal-correction toggle are read from ``configs/tier2.yaml``
-(via :func:`load_tier2_config`), not hardcoded: v1 defaults (smd_solvent=null, use_freq=false)
-keep the original gas-phase ΔSCF behavior, while flipping those keys upgrades Eox to a solvated
-ΔG. Gaussian Link0 ``%mem`` / ``%nprocshared`` lines are likewise config-driven so a real g16
-job uses the requested memory and core count instead of single-core defaults.
+``configs/tier2.yaml`` controls the SMD solvent, frequency calculation, memory,
+and core count. Gas-phase, optimization-only defaults use SCF energy differences;
+SMD plus frequency calculations provide solvated Gibbs-energy differences.
 
-No Gaussian job is launched anywhere in the test suite; live behavior is exercised only when
-``g16`` is actually on PATH (the live test skips otherwise, exactly like the xtb tests).
+Live execution requires ``g16`` on PATH. Input generation and log parsing can be
+checked independently of the executable.
 """
 
 from __future__ import annotations
@@ -131,7 +128,7 @@ def load_tier2_config(path: str | Path = DEFAULT_TIER2_CONFIG) -> Tier2Config:
 
 
 class GaussianEngine(Engine):
-    """Run Gaussian 16 ΔSCF calculations through subprocess (build-only scaffold).
+    """Run Gaussian 16 ΔSCF calculations and parse their energies.
 
     Charge/multiplicity rule for adiabatic redox (identical to XTBEngine):
     - IP oxidizes (q, m) -> (q+1, m+1); ΔG = G(cation) − G(neutral).
@@ -150,7 +147,7 @@ class GaussianEngine(Engine):
         self.work_root = Path(work_root) if work_root is not None else None
 
     def run(self, req: CalcRequest) -> CalcResult:
-        """Run one Gaussian request and return a scalar result. Never fakes a value."""
+        """Run one request and return its parsed scalar result, raising on failure."""
 
         if shutil.which(self.binary) is None:
             raise RuntimeError(

@@ -1,19 +1,15 @@
-"""Reusable n-mer oligomer assembly for Tier-1 band-gap and dimerization physics.
+"""RDKit n-mer assembly for Tier-1 optical-gap and dimerization calculations.
 
-The directive (§4.1) names ``stk`` for oligomer assembly. ``stk`` is installable here (it
-resolves with ``numpy<2`` + ``rdkit``), but it is deliberately NOT used: it wraps RDKit and the
-n-mer it constructs is byte-identical to this module's output (same canonical SMILES — proven in
-``docs/research/stk_vs_rdkit_oligomer_equivalence_20260628.md``), while pulling ~15 heavy
-transitive deps (a MongoDB client, polars, pathos, …) into a screening repo. This module
-therefore implements the same capability with pure RDKit (a documented, scientifically-equivalent
-substitution — see that note and the §4.1 compliance audit). Coupling regiochemistry is DATA-DRIVEN:
-each monomer's ditopic building block (two ``[*]`` dummies marking the coupling atoms, isotope
-1 = head, 2 = tail) lives in ``data/polymerization.csv`` and is human-reviewable. For the
-clean 5-membered heteroaromatics the two α-coupling carbons can also be auto-derived
-(``detect_alpha_carbons``); the CSV building block stays authoritative.
+Building blocks join head-to-tail into a linear n-mer with hydrogen-capped ends.
+``data/polymerization.csv`` defines each monomer's coupling regiochemistry using
+two ``[*]`` dummy atoms: isotope 1 marks the head and isotope 2 the tail. For
+five-membered heteroaromatics, ``detect_alpha_carbons`` can also derive the two
+alpha-coupling sites; a supplied CSV building block takes precedence.
 
-Assembly links building blocks head-to-tail into a linear n-mer and caps the ends with H.
-Pure RDKit; no engine, no network — fully unit-testable without xtb.
+This implementation uses RDKit directly. The comparison with the directive's
+``stk`` route records matching canonical SMILES for the checked structures in
+``docs/research/stk_vs_rdkit_oligomer_equivalence_20260628.md``. Assembly requires
+neither a quantum-chemistry engine nor network access.
 """
 
 from __future__ import annotations
@@ -145,13 +141,12 @@ def oligomer_smiles(monomer_smiles: str, spec: PolymerizationSpec, n: int) -> st
 def truncate_inert_alkyl_to_methyl(smiles: str) -> tuple[str, bool]:
     """Trim long inert saturated alkyl substituents down to methyl; return (smiles, truncated).
 
-    The optical / HOMO-LUMO gap is a property of the conjugated backbone; saturated side chains
-    (e.g. the 9,9-dioctyl of polyfluorene, the 3-hexyl of P3HT) are electronically innocent and
-    do not meaningfully shift the gap, but they bloat the oligomer and make large hexamers fail
-    3D embedding. This leaf-trims pure-hydrocarbon sp3 chain carbons until each side chain
-    attached to the conjugated/ring system is at most one carbon (a methyl). Ring carbons,
-    aromatic carbons, and any carbon bonded to a heteroatom are preserved, so the backbone and
-    the dioxy bridges are untouched. Use for the OPTICAL-GAP oligomer ONLY.
+    Shortening saturated side chains reduces geometry size for optical-gap
+    screening. The approximation leaf-trims hydrocarbon sp3 chains until each
+    substituent attached to a conjugated or ring system has at most one carbon.
+    Ring atoms, aromatic atoms, and carbons bonded to heteroatoms are preserved,
+    retaining the conjugated backbone and dioxy bridges. Use this approximation
+    only for the optical-gap oligomer.
     """
 
     mol = Chem.MolFromSmiles(smiles)

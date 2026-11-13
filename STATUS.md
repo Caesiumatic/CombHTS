@@ -2,33 +2,36 @@
 
 ## Current state
 
-Commit metadata maintenance is complete on the existing remote branches and tag.
-File trees, human authors, timestamps, and commit topology were verified against
-the backup. The README, supporting documentation, and reviewed source cleanup are ready for publication.
-The overview has been shortened to a technical repository introduction.
+CombHTS provides cached per-species calculations, calibration, compatibility
+filters, and ranking for monomer–solvent–electrolyte combinations. Its recorded
+June 2026 screen covers 7,488 triads; the salt-role-corrected ranking has 2,143
+per-salt survivors and 1,127 score classes.
 
-The repository revision adds a method/result README and a project map
-linking the screening, calibration, full-space, and surrogate workspaces.
-Calculation methods, data libraries, calibration, thresholds, and ranking logic
-are unchanged.
+The [workflow guide](docs/code_structure.md) connects the implementation to
+screening and validation records. The [calibration manifest](configs/CALIBRATION_ACTIVE.md)
+tracks subsequent engine and calibration revisions, and the
+[project map](docs/project-map.md) distinguishes later full-space studies from
+this screen. The workflow guide also links the June 29 partial Tier-2 ORCA
+harvest and refined screen. Optical diagnostics and open scientific questions remain recorded
+in `docs/runs/` and `THINK.md`.
 
-The README describes the method, recorded results, and documentation entry points. Local setup
-and detailed screening counts are collected in `docs/code_structure.md`, with
-links to the existing calculation and validation records. This follow-up changes
-documentation only; no calculations or package tests were rerun.
+## Documentation verification — 2026-11-13
 
-The recorded CombHTS screen covers 7,488 triads. The salt-role-corrected ranking
-has 2,143 per-salt survivors and 1,127 score classes. The oxidation validation,
-solvent-window policy, and optical diagnostics are documented in
-[the code/workflow map](docs/code_structure.md) and `docs/runs/`.
+- Focused the README on descriptor reuse and screening results; attributed the
+  0.186 V calibration metric to its June 23 validation record.
+- Clarified workflow, engine, diagnostic, and optional-method docstrings,
+  including IPEA request types already used by the property calculators.
+- Checked Python syntax trees with docstrings removed and token streams with
+  comments/docstrings removed; executable code and runtime strings are unchanged.
+- Checked local links and `git diff --check`. Calculation settings, data,
+  thresholds, and recorded results are unchanged; no calculations were run.
 
-## Verification — 2026-11-12
+## Recorded verification — 2026-11-12
 
-The publication check identified 38 existing Ruff errors. Import ordering and
-plotting statement formatting have been corrected; Ruff now passes.
-The full suite completed with 386 passed, 5 skipped, and 2 existing warnings.
+Ruff passed after import-ordering and plotting-format corrections. The full
+suite completed with 386 passed, 5 skipped, and 2 existing warnings.
 
-## Previous verification — 2026-11-11
+## Earlier verification — 2026-11-11
 
 The existing test suite completed with 386 passed, 5 skipped, and 2 warnings
 (local core-count detection and a mixed-type CSV column). No cluster calculation
@@ -36,11 +39,9 @@ or new scientific experiment was started.
 
 ## Remaining work
 
-Scientific issues and unfinished calculation work remain as recorded in
-[the previous status snapshot](docs/history/status-before-2026-11-11.md) and
-`THINK.md`. This revision does not resume those runs.
-
-Source consolidation with the later full-space implementation needs a defined
-schema/interface migration; [the project map](docs/project-map.md) describes the
-boundary. Next action: review the local documentation and verification results
-after publication.
+Scientific issues and unfinished calculations are recorded in
+[the earlier status snapshot](docs/history/status-before-2026-11-11.md) and
+[THINK.md](THINK.md). Source consolidation with the later full-space implementation
+requires an agreed schema and package interface; the project map identifies that
+boundary. The next engineering step is to review that interface before moving
+source between workspaces.

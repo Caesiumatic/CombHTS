@@ -22,8 +22,9 @@ the engine/cache contract below describes those paths.
 The June 2026 Tier-1 library contains 36 monomers, 13 solvents, and 16 salts
 (7,488 triads). Salt-role correction retains 2,143 per-salt combinations,
 representing 1,127 score classes. The candidate-analysis export contains 30
-distinct ranked entries. Active monomer oxidation calibration has a
-leave-one-out MAE of 0.186 V on the recorded benchmark.
+distinct ranked entries. The June 23 validation recorded a monomer-oxidation
+leave-one-out MAE of 0.186 V. Subsequent engine and calibration revisions are
+listed in the [calibration manifest](../configs/CALIBRATION_ACTIVE.md).
 
 Solvent eligibility follows the measured-window policy. Raw isolated-solvent
 descriptors did not meet the practical-window validation target, and optical
@@ -43,10 +44,10 @@ and a solvation/solubility proxy for monomer-medium compatibility. It then ranks
 with a weighted composite score that includes secondary polymer quality descriptors such as optical
 gap, dimerization/radical-coupling energy, and related diagnostic axes.
 
-## 2. Current Scientific State
+## 2. Screening and validation records
 
-- A real Tier-1 xTB harvest exists for the current 36 x 13 x 16 library, and the corrected
-  salt-role-fixed re-score is the current production ranking state.
+- The June Tier-1 xTB harvest covers the 36 x 13 x 16 library. Its salt-role-corrected
+  re-score supplies the screening results summarized above.
 - The salt-role supporting-electrolyte gate and measured-first conservative solvent-window gate are
   implemented. Measured windows may tighten production eligibility; sparse generic windows must not
   admit rows by widening a measured-safe gate.
@@ -56,14 +57,17 @@ gap, dimerization/radical-coupling energy, and related diagnostic axes.
   feasibility as not yet testable from the small matched label set.
 - Section 7 staging audit is integrated as review-only curation under `data/lit_curation/` and
   `docs/research/`; it does not promote rows into production CSVs.
-- Tier-2 pilot orchestration is integrated as a mock-first, array-safe Gaussian scaffold with
-  plan, one-task run, and harvest steps. No real Tier-2 scientific values are currently promoted.
+- Tier-2 orchestration provides planning, single-task execution, and validated
+  harvesting through Gaussian or ORCA. The [June 29 partial ORCA record](runs/2026-06-29_section7_dft_calibration_418096.md)
+  contains 71 validated redox successes and a 2,354-row refined screen; its
+  dimerization and band-gap stages had not started at that checkpoint.
 - SGE 417587 completed the ORCA neutral-dimer optical baseline for six anchors, but the
   dimer-vs-polymer fits are weak. The optical axis remains diagnostic, and no optical scoring or
   calibration policy changed.
 
-Do not overread the current state: the project has useful validation evidence and a real Tier-1
-ranking, but several scientific axes remain diagnostic or underpowered.
+These records establish the Tier-1 ranking and property-specific validation
+results. Optical estimates remain diagnostic, and feasibility validation requires
+a larger matched label set.
 
 ## 3. Repository Top-Level Layout
 
@@ -187,7 +191,7 @@ harvested as valid scientific values.
 | Oligomer Eox series | `compute_oligomer_eox_series`, Tier-1 artifact writer | No | Not production ranking by default | Reported descriptor artifact | Extrapolation depends on oligomer construction and side-chain truncation. |
 | Secondary descriptors | `secondary_descriptors.py`, Tier-1 descriptor artifact writer | No | Mostly supporting/diagnostic | Useful for analysis and future model features | Do not introduce them into scoring without a scoring task. |
 | Feasibility validation | `validation/feasibility.py`, `validation/directive.py`, `data/polymerizability_labels.csv` | No | No | Not yet testable at directive target; matched set is small | Needs better condition-relevant negatives and exact-anion labels. |
-| Tier-2 refined window/Eox | `workflow/tier2.py`, `engines/gaussian.py`, `configs/tier2.yaml` | Potential refined screen when real values exist | Potential refined screen | Orchestration exists; no promoted real Tier-2 pilot values yet | Do not fill missing Tier-2 values with Tier-1 values or treat mock results as science. |
+| Tier-2 refined window/Eox | `workflow/tier2.py`, Gaussian/ORCA engines, Tier-2 configs | Refined window filter | Refined ranking | June 29 records a partial ORCA redox harvest and refined screen | Harvest excludes failed/missing calculations; screening retains labeled Tier-1 fallbacks where refined values are absent. |
 
 ## 9. Run-Manifest and Provenance Convention
 

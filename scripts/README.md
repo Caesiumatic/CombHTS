@@ -1,8 +1,8 @@
 # Cluster job templates (SGE / Grid Engine)
 
-Version-controlled `qsub` templates for running CombHTS on the SCS Lop cluster. They are
-**templates** — review and adjust resources (`-pe smp`, `-l h_rt`) before submitting, and do
-not submit them blindly from CI or an overnight agent.
+Version-controlled `qsub` templates for running CombHTS on the SCS Lop cluster.
+Before submission, review the selected engine, input paths, and resource requests
+(`-pe smp`, `-l h_rt`). Cluster submissions require the applicable run authorization.
 
 `audit_lit_curation_staging.py` is a local, no-engine staging-data audit wrapper. Its reusable
 logic lives in `eps.curation.staging_audit`; the script preserves the historical command-line
@@ -25,15 +25,16 @@ defaults and writes review-only audit CSVs under `data/lit_curation/`.
 | `run_optical_calibration_n6.sge` | `python scripts/run_optical_calibration_n6.py --engine orca` | ORCA 6.1 sTDA + TDA/TD-DFT |
 
 `run_dft_calibration.sge` is the only template that loads **Gaussian 16** (`module load
-gaussian/g16`). It runs the SMALL xTB->DFT calibration batch (~32 unique monomers x neutral+cation
-gas-phase opts), which is DISTINCT from the full Tier-2 production screen (a separate PI decision).
-It sets a NODE-LOCAL `GAUSS_SCRDIR` (Gaussian's large scratch files must not land on the networked
-home dir) and cleans it up on exit.
+gaussian/g16`). It runs the xTB-to-DFT calibration batch (~32 unique monomers,
+with neutral and cation gas-phase optimizations). The full Tier-2 production
+screen requires a separate PI decision. The template uses node-local
+`GAUSS_SCRDIR` to keep Gaussian scratch files off the networked home directory
+and removes that scratch directory on exit.
 
-The two ORCA templates are deliberately small, serial route-validation pilots. Lop's older compute
+The two ORCA templates run serial route-validation pilots. Lop's older compute
 nodes expose an OpenMPI/hwloc topology crash when ORCA 6.1 starts parallel workers, so these pilots
 request one slot. They retain raw ORCA inputs/outputs under the matching gitignored `outputs/`
-directory and never present failed calculations or mock values as scientific results.
+directory. Failed calculations and mock outputs retain their explicit status.
 
 The n=6 optical template is also serial. It reads the six HIGH experimental anchors directly from
 the staging-derived selection CSV, writes to `outputs/optical_calibration_n6/`, and keeps its cache
@@ -49,7 +50,7 @@ submit ORCA/Gaussian work through this template.
 `run_tier2_pilot_array.sge` is the array-safe Tier-2 monomer-Eox pilot template. It requires
 absolute `TIER2_MANIFEST` and `TIER2_OUTPUT_ROOT` values, maps `SGE_TASK_ID` to one manifest
 `task_id`, and writes a task-local SQLite cache plus persistent Gaussian input/log directories.
-It loads Gaussian only when `TIER2_ENGINE=gaussian`; mock mode is plumbing-only and non-scientific.
+It loads Gaussian only when `TIER2_ENGINE=gaussian`; mock mode checks workflow behavior with synthetic outputs.
 
 `run_tier2_pilot_harvest.sge` is the separate no-engine harvest step. It validates per-task
 `result.json` files against the manifest and never fills missing/failed Tier-2 values from Tier-1.

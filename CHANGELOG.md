@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-13 — documentation and comment clarity
+
+- Focused the overview on per-species calculation reuse and ranked screening results; tied the 0.186 V metric to its June 23 validation record and linked later calibration revisions and the partial June 29 Tier-2 record.
+- Replaced repetitive caveats and development-history narration with explicit contracts in workflow and engine documentation, preserving scientific scope and failure behavior.
+- Refreshed the status snapshot. Verified local documentation links, whitespace, and unchanged Python behavior after excluding docstrings from the syntax-tree comparison.
+
 ## 2026-11-12 — CI formatting cleanup
 
 - Split semicolon-separated plotting statements, sorted imports, and removed an unused standard-library import.

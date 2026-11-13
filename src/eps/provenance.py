@@ -1,13 +1,13 @@
 """Native provenance sidecars for primary outputs.
 
-Whenever a command writes a primary output, ``write_provenance`` drops a
-``<output>.provenance.json`` next to it recording enough to reproduce the run: a UTC
+``write_provenance`` writes ``<output>.provenance.json`` next to a primary output.
+The sidecar records run context: a UTC
 timestamp, the git commit (short+long) and a dirty flag, the installed ``eps`` version, the
 engine/method, SHA-256 hashes of the pinned config files, and the library (CSV) row counts.
 
-Pure standard library + pandas; no new dependencies and no network. Everything degrades
-gracefully (git missing / not a repo / package not installed / config absent) to ``"unknown"``
-or ``"missing"`` rather than raising, so a provenance hiccup never breaks the actual command.
+The helper uses the standard library and pandas without network access. Unavailable
+Git, package, or configuration metadata is recorded as ``"unknown"`` or ``"missing"``
+so the output retains an explicit record of missing provenance.
 """
 
 from __future__ import annotations

@@ -1,15 +1,14 @@
-"""Tier-3 high-rigor scaffold (directive §4.3) — OPTIONAL and NOT validated.
+"""Tier-3 input generation and optional method interfaces (directive §4.3).
 
-Method (a) — a RANGE-SEPARATED hybrid DFT (CAM-B3LYP or wB97X-D / 6-311+G(d,p) / SMD) — is a REAL
-config option on the existing Gaussian engine: ``configs/tier3.yaml`` uses the SAME schema as
-``configs/tier2.yaml``, so ``GaussianEngine(config=load_tier3_config())`` runs it unchanged. The
-build path here writes the ``.gjf`` inputs for inspection and never launches g16 in the test suite
-(a live run is gated on g16 being on PATH and a PI decision).
+Method (a) generates Gaussian inputs for range-separated hybrid DFT using the
+Tier-2 configuration schema. ``configs/tier3.yaml`` selects the functional,
+basis, solvent, and frequency treatment. The input writer does not launch g16;
+live execution requires the executable and a PI decision.
 
-Methods (b) explicit-solvation shell (2–4 explicit solvents, cluster-continuum), (c) GFN2-xTB BOMD
-(5–10 ps) radical stability, and (d) Au(111)/ITO slab adsorption are DOCUMENTED HOOKS that return a
-flagged ``tier3_optional_not_run`` result until wired. None runs in the test suite. The whole tier
-is optional and not validated; nothing here pins a production decision.
+Methods (b) explicit solvation (2–4 solvent molecules), (c) GFN2-xTB BOMD radical
+stability (5–10 ps), and (d) Au(111)/ITO slab adsorption are unimplemented hooks
+that return ``tier3_optional_not_run``. Tier-3 remains optional and unvalidated,
+and its outputs do not establish production screening policy.
 """
 
 from __future__ import annotations
@@ -27,7 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_TIER3_CONFIG = PROJECT_ROOT / "configs" / "tier3.yaml"
 
 # Tier-3 method identifiers.
-RANGE_SEPARATED_DFT = "range_separated_dft"            # (a) REAL on the Gaussian engine.
+RANGE_SEPARATED_DFT = "range_separated_dft"            # (a) Gaussian configuration route.
 EXPLICIT_SOLVATION = "explicit_solvation_shell"        # (b) documented hook.
 AIMD_RADICAL_STABILITY = "aimd_radical_stability"      # (c) documented hook.
 SLAB_ADSORPTION = "slab_adsorption"                    # (d) documented hook.
@@ -81,9 +80,9 @@ def write_tier3_dft_inputs(
 ) -> Tier3DftResult:
     """Write neutral+cation range-separated-DFT ``.gjf`` inputs per unique survivor monomer.
 
-    Method (a): REAL config on the Gaussian engine — uses the Tier-3 functional/basis/SMD/Freq. Does
-    NOT run g16 (build-only, like the Tier-2 dry run); a human inspects the inputs and a live batch
-    is a PI decision.
+    Uses the Tier-3 functional, basis, SMD, and frequency settings to generate
+    inputs for review. This function does not execute g16; a live batch requires
+    a PI decision.
     """
 
     config = config if config is not None else load_tier3_config()
@@ -128,7 +127,7 @@ def write_tier3_dft_inputs(
 
 @dataclass(frozen=True)
 class Tier3HookResult:
-    """A documented Tier-3 optional method that is NOT wired/run."""
+    """Status record for an unimplemented Tier-3 optional method."""
 
     method: str
     ran: bool
@@ -139,8 +138,8 @@ class Tier3HookResult:
 def run_tier3_optional_hook(method: str, **_kwargs) -> Tier3HookResult:
     """Return the flagged not-run result for an optional Tier-3 method (b/c/d).
 
-    These are documented placeholders; they never run anything (no DFT/MD/slab job is launched).
-    Wiring one is future work and a PI decision.
+    The hook launches no DFT, MD, or slab calculation. Implementing an optional
+    method requires a PI decision.
     """
 
     if method not in _HOOK_DESCRIPTIONS:

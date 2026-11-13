@@ -1,9 +1,9 @@
 """``eps doctor`` — a no-compute environment readiness self-check.
 
-Reports PASS / WARN / FAIL for the things that have actually bitten this project (a broken
-venv, a missing module, an unparseable config, an absent data file). It runs no calculations,
-makes no network calls, and uses no subprocess beyond ``shutil.which`` for the cluster
-binaries. ``xtb`` / ``g16`` / ``orca`` are cluster-only, so absence is a WARN, never a FAIL.
+Reports PASS / WARN / FAIL for Python dependencies, configuration parsing, data files,
+and executable availability. Checks use local imports, file reads, and ``shutil.which``;
+they launch no calculations or network requests. Missing cluster executables
+(``xtb``, ``g16``, ``orca``) produce WARN so local development remains supported.
 """
 
 from __future__ import annotations

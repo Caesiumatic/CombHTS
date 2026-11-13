@@ -1,10 +1,9 @@
 """Physical sanity checks on the calibrated monomer Eox harvest.
 
-These are DIRECTIONAL checks on calibrated monomer oxidation potentials only: known
-substituent/conjugation effects should lower Eox. Because the calibrated monomer Eox is
-solvent-dependent, every comparison is made WITHIN A SINGLE SOLVENT (acetonitrile by
-default). No oligomer assembly is attempted (not built); these only compare monomer Eox
-values already present in the Tier-1 harvest CSV.
+These directional checks compare calibrated monomer oxidation potentials for expected
+substituent and conjugation effects. Each comparison uses one solvent (acetonitrile by
+default) to control for solvent dependence. Inputs are monomer Eox values already
+recorded in the Tier-1 harvest CSV; the checks perform no oligomer assembly.
 """
 
 from __future__ import annotations

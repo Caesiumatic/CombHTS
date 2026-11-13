@@ -1,12 +1,11 @@
 """Directive §7 solvent-ESW MAE: score the computed solvent anodic/cathodic limits against a
 measured electrochemical-window benchmark.
 
-The benchmark (``data/solvent_benchmark.csv``) is seeded header-only — its rows are curated later
-from the solvent-ESW research. With ZERO rows the metric is NOT computable and is reported as such
-(never fabricated); as soon as measured rows land it becomes a real MAE = mean |computed anodic
-limit − measured anodic| (and the cathodic analog), computed through the SAME cached per-species
-engine path the screen uses. RAW computed limits (uncalibrated adiabatic ΔSCF) are compared, so the
-metric reflects the underlying physics rather than the monomer-fit oxidation calibration.
+The benchmark is loaded from ``data/solvent_benchmark.csv``. Matched rows yield
+MAE = mean |computed limit − measured limit| for anodic and cathodic potentials
+separately; an empty or unmatched benchmark yields an explicit non-computable result.
+Limits use the screening workflow's cached per-species engine path. The comparison
+uses raw potentials before the monomer-oxidation calibration is applied.
 """
 
 from __future__ import annotations
@@ -73,11 +72,11 @@ def compute_solvent_esw_mae(
     benchmark_path: str | Path = DEFAULT_SOLVENT_BENCHMARK_PATH,
     solvents: list[Solvent] | None = None,
 ) -> SolventEswMaeResult:
-    """Compute the §7 solvent-ESW MAE over whatever benchmark rows exist (0 rows -> not computable).
+    """Compute solvent-window MAE for benchmark solvents present in the library.
 
-    Compares the RAW computed adiabatic ΔSCF anodic/cathodic limits (``solvent_anodic_limit_computed_V``
+    Compares raw computed anodic/cathodic limits (``solvent_anodic_limit_computed_V``
     / ``solvent_cathodic_limit_computed_V``) to the measured values, joined by solvent name over the
-    solvents present in BOTH the benchmark and the library. With no rows it short-circuits (no engine
+    solvents present in both the benchmark and the library. With no rows it short-circuits (no engine
     calls) and returns ``computable=False``.
     """
 
